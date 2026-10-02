@@ -225,9 +225,27 @@
         50%{box-shadow:0 3px 16px rgba(239,68,68,.7), 0 0 0 4px rgba(239,68,68,.15)}
       }
 
-      /* Plan row layout */
-      .sem-body > div .unified-course-btn{
-        margin-right:8px;
+      /* Plan row — compact button that fits inline */
+      .plan-course-row .unified-course-btn{
+        width:28px;
+        height:28px;
+        border-radius:8px;
+        font-size:.95rem;
+        margin:0;
+        flex-shrink:0;
+      }
+      .plan-course-row:hover{
+        background:var(--grad-soft);
+        border-radius:8px;
+      }
+      .plan-course-row .unified-course-btn.not-added{
+        animation:none;
+      }
+      .plan-course-row .unified-course-btn.added{
+        animation:none;
+      }
+      .plan-course-row .unified-course-btn:hover{
+        transform:scale(1.15);
       }
 
       /* Timetable cell — small button */
@@ -662,47 +680,118 @@
   };
 
   /* ============================================================
-     OVERRIDE: renderPlan — attach unified buttons
+     OVERRIDE: renderPlan — unified buttons built-in
      ============================================================ */
-  var _origRenderPlan = window.renderPlan;
   window.renderPlan = function(){
-    if(_origRenderPlan) _origRenderPlan.apply(this, arguments);
-    setTimeout(attachPlanButtons, 100);
-  };
+    var c = document.getElementById('semesters'); if(!c) return;
+    var openSems = window.S.get('openSems', [0]);
+    if(!Array.isArray(openSems)) openSems = [0];
+    var SEMESTERS = window.SEMESTERS || [];
 
-  function attachPlanButtons(){
-    var sem = document.getElementById('semesters');
-    if(!sem) return;
-    sem.querySelectorAll('.sem-body > div').forEach(function(row){
-      if(row.dataset.unifiedAttached) return;
-      row.dataset.unifiedAttached = '1';
+    c.innerHTML = '';
+    SEMESTERS.forEach(function(s, i){
+      var el = document.createElement('div');
+      el.className = 'card';
+      el.dataset.year = s.year;
+      el.style.marginBottom = '12px';
 
-      /* Extract code from row */
-      var text = row.textContent || '';
-      var codeMatch = text.match(/\b(0?\d{9,10})\b/) || text.match(/\b(0?\d{6,8})\b/);
-      if(!codeMatch) return;
+      var total = s.courses.reduce(function(a, x){ return a + x.h; }, 0);
 
-      var code = codeMatch[1];
-      var found = window.findCourseByCode ? window.findCourseByCode(code) : null;
-      if(!found) return;
+      /* Build rows with buttons built-in */
+      var coursesHtml = '';
+      s.courses.forEach(function(x){
+        /* Resolve course data from DB (by code) for accurate name/hours */
+        var found = null;
+        if(x.code && x.code !== '—' && window.findCourseByCode){
+          found = window.findCourseByCode(x.code);
+        }
+        var cName   = found && found.name ? found.name : x.n;
+        var cCode   = (found && found.info && found.info.code) ? found.info.code : (x.code || '');
+        var cHours  = (found && found.info && found.info.h) ? found.info.h : (x.h || 3);
+        var added   = isCourseAdded(cName);
 
-      /* Remove any old plan-add-btn */
-      row.querySelectorAll('.plan-add-btn').forEach(function(b){ b.remove(); });
+        coursesHtml +=
+          '<div class="plan-course-row" style="display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--border);font-size:.86rem">' +
+            '<button type="button" class="unified-course-btn ' + (added ? 'added' : 'not-added') + '" ' +
+              'data-course-name="' + esc(cName) + '" ' +
+              'data-code="' + esc(cCode) + '" ' +
+              'data-hours="' + cHours + '" ' +
+              'title="' + (added ? 'حذف من كل الأماكن' : 'إضافة إلى موادي') + '">' +
+              (added ? '🗑' : '+') +
+            '</button>' +
+            '<div style="flex:1;min-width:0;display:flex;align-items:center;gap:6px;flex-wrap:wrap">' +
+              '<span>' + esc(x.n) + '</span>' +
+              (x.code && x.code !== '—'
+                ? '<span style="font-size:.7rem;color:var(--muted2);font-family:monospace">' + esc(x.code) + '</span>'
+                : '') +
+              (x.type === 'lab'
+                ? '<span style="font-size:.66rem;padding:1px 7px;border-radius:5px;background:rgba(52,211,153,.15);color:var(--green)">مختبر</span>'
+                : '') +
+            '</div>' +
+            '<span style="color:var(--cyan);font-weight:700;font-size:.8rem;white-space:nowrap;flex-shrink:0">' + x.h + ' س</span>' +
+          '</div>';
+      });
 
-      var btn = createUnifiedBtn(found.name, found.info ? found.info.code : code, found.info ? found.info.h : 3);
+      el.innerHTML =
+        '<div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer" class="sem-head">' +
+          '<div style="display:flex;align-items:center;gap:12px">' +
+            '<span style="background:var(--grad);color:#0b0f1a;padding:3px 10px;border-radius:20px;font-size:.7rem;font-weight:800">سنة ' + s.year + '</span>' +
+            '<h3 style="margin:0">' + esc(s.name) + '</h3>' +
+          '</div>' +
+          '<div style="display:flex;gap:10px;align-items:center;font-size:.78rem;color:var(--muted)">' +
+            '<span style="background:var(--bg2);padding:3px 10px;border-radius:8px;color:var(--cyan)">' + total + ' ساعة</span>' +
+            '<span class="arrow">▼</span>' +
+          '</div>' +
+        '</div>' +
+        '<div class="sem-body" style="max-height:0;overflow:hidden;transition:.4s">' + coursesHtml + '</div>';
 
-      var lastChild = row.lastElementChild;
-      if(lastChild){
-        var wrapper = document.createElement('div');
-        wrapper.style.cssText = 'display:flex;align-items:center;gap:8px;flex-shrink:0';
-        row.insertBefore(wrapper, lastChild);
-        wrapper.appendChild(lastChild);
-        wrapper.appendChild(btn);
-      } else {
-        row.appendChild(btn);
+      /* Collapse/expand */
+      var head  = el.querySelector('.sem-head');
+      var body  = el.querySelector('.sem-body');
+      var arrow = el.querySelector('.arrow');
+
+      if(openSems.indexOf(i) > -1){
+        body.style.maxHeight = '2000px';
+        arrow.style.transform = 'rotate(180deg)';
       }
+      head.addEventListener('click', function(e){
+        /* Ignore clicks on buttons inside head (not present but safe) */
+        if(e.target.closest('.unified-course-btn')) return;
+        var isOpen = body.style.maxHeight && body.style.maxHeight !== '0px';
+        body.style.maxHeight = isOpen ? '0px' : '2000px';
+        arrow.style.transform = isOpen ? '' : 'rotate(180deg)';
+        var arr = window.S.get('openSems', []);
+        if(!Array.isArray(arr)) arr = [];
+        if(!isOpen){ if(arr.indexOf(i) === -1) arr.push(i); }
+        else { var p = arr.indexOf(i); if(p > -1) arr.splice(p, 1); }
+        window.S.set('openSems', arr);
+      });
+
+      /* Wire buttons */
+      el.querySelectorAll('.unified-course-btn').forEach(function(btn){
+        btn.addEventListener('click', function(e){
+          e.stopPropagation();
+          e.preventDefault();
+          var name  = btn.dataset.courseName;
+          var code  = btn.dataset.code;
+          var hours = parseInt(btn.dataset.hours, 10) || 3;
+          if(isCourseAdded(name)){
+            if(window.customConfirm){
+              window.customConfirm('حذف "' + name + '" من كل الأماكن؟', function(){
+                window.removeCourseEverywhere(name);
+              });
+            } else if(confirm('حذف "' + name + '"؟')){
+              window.removeCourseEverywhere(name);
+            }
+          } else {
+            window.addCourseEverywhere(name, code, hours);
+          }
+        });
+      });
+
+      c.appendChild(el);
     });
-  }
+  };
 
   /* ============================================================
      INIT
@@ -716,8 +805,7 @@
       window.switchTab = function(tab){
         var r = orig.apply(this, arguments);
         setTimeout(function(){
-          if(tab === 'plan') attachPlanButtons();
-          if(tab === 'courses' || tab === 'attendance' || tab === 'gradecalc' || tab === 'exams'){
+          if(tab === 'courses' || tab === 'attendance' || tab === 'gradecalc' || tab === 'exams' || tab === 'plan'){
             syncAllUI();
           }
         }, 150);
@@ -742,17 +830,11 @@
       window.S._courseSyncWrapped = true;
     }
 
-    setTimeout(attachPlanButtons, 800);
-    setTimeout(attachPlanButtons, 2500);
-
     console.log('🔄 course-sync.js loaded — unified course management');
   }
 
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
 
-  /* Watch for changes */
-  setInterval(function(){
-    if(document.getElementById('semesters')) attachPlanButtons();
-  }, 2000);
+
 })();
