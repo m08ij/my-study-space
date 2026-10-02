@@ -1,8 +1,5 @@
 /* ============================================================
-   🔄 sync.js — Cross-tab consistency + UI fixes
-   - Fix + button (turns green)
-   - Cross-tab sync (timetable ↔ courses ↔ plan)
-   - Better feedback when adding courses
+   🔄 sync.js v3 — Cross-tab + Exact matching + Attendance fix
    ============================================================ */
 (function(){
   'use strict';
@@ -12,8 +9,59 @@
   function toast(m,t,d){ if(window.toast) window.toast(m,t,d); }
   function saveSpace(){ if(window.saveSpace) window.saveSpace(); }
   function space(){ return window.space || {}; }
+  function getS(){ return window.S || {get:function(k,d){return d;},set:function(){}}; }
 
-  /* ============ 1. زر الإضافة — حقن CSS مباشرة ============ */
+  /* ============ Helpers ============ */
+  function getCodeFromRow(row){
+    if(row.dataset && row.dataset.code) return row.dataset.code;
+    var text = row.textContent || '';
+    var m = text.match(/\b(0?\d{9,10})\b/);
+    if(m) return m[1];
+    var m2 = text.match(/\b(0?\d{6,8})\b/);
+    if(m2) return m2[1];
+    return null;
+  }
+
+  function getCourseFromRow(row){
+    var code = getCodeFromRow(row);
+    if(!code) return null;
+    if(typeof window.findCourseByCode === 'function'){
+      var r = window.findCourseByCode(code);
+      if(r && r.name) return { name: r.name, info: r.info, code: code };
+    }
+    var DB = window.COURSES_DB || {};
+    var normalized = code.replace(/^0+/, '');
+    var keys = Object.keys(DB);
+    for(var i = 0; i < keys.length; i++){
+      var info = DB[keys[i]];
+      if(String(info.code).replace(/^0+/, '') === normalized){
+        return { name: keys[i], info: info, code: code };
+      }
+      if(info.aliases){
+        for(var a = 0; a < info.aliases.length; a++){
+          var av = info.aliases[a];
+          if(typeof av === 'string' && av.replace(/^0+/, '') === normalized){
+            return { name: keys[i], info: info, code: code };
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  function isInMyCourses(course){
+    if(!course) return false;
+    var courses = space().courses || [];
+    var normCode = String(course.code || '').replace(/^0+/, '');
+    for(var i = 0; i < courses.length; i++){
+      var c = courses[i];
+      if(c.code && String(c.code).replace(/^0+/, '') === normCode) return true;
+      if(c.name === course.name) return true;
+    }
+    return false;
+  }
+
+  /* ============ 1. CSS ============ */
   function injectPlanBtnCSS(){
     if(document.getElementById('plan-btn-fix')) return;
     var s = document.createElement('style');
@@ -44,8 +92,6 @@
         60%{transform:scale(1.25);opacity:1}
         100%{transform:scale(1);opacity:1}
       }
-
-      /* Sync badge — يعرض حالة المزامنة */
       .sync-toast{
         position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
         z-index:9998;padding:10px 20px;border-radius:24px;
@@ -65,13 +111,12 @@
     document.head.appendChild(s);
   }
 
-  /* ============ 2. Cross-tab sync — إضافة مادة من أي مكان ============ */
+  /* ============ 2. Add course from anywhere ============ */
   window.addCourseFromAnywhere = function(name, code, hours, options){
     options = options || {};
     var sp = space();
     if(!sp.courses) sp.courses = [];
 
-    /* التحقق من الوجود */
     var exists = sp.courses.some(function(c){
       return c.name === name || (code && c.code && String(c.code).replace(/^0+/,'') === String(code).replace(/^0+/,''));
     });
@@ -80,7 +125,6 @@
       return false;
     }
 
-    /* إذا الكود غير ممرر، حاول تلاقيه */
     var DB = window.COURSES_DB || {};
     if(!code && DB[name]) code = DB[name].code;
     if(!hours && DB[name]) hours = DB[name].h;
@@ -96,10 +140,7 @@
     });
 
     saveSpace();
-
-    /* Cross-tab sync */
     syncAllTabs();
-
     if(!options.silent) toast('✅ أُضيفت "' + name + '"', 'success', 2200);
     return true;
   };
@@ -117,11 +158,11 @@
     return false;
   };
 
-  /* المزامنة الشاملة بين كل التابات */
+  /* ============ 3. Sync all tabs ============ */
   window.syncAllTabs = function(){
     var sp = space();
 
-    /* 1. Timetable sync — أي مادة في الجدول لازم تكون في sp.courses */
+    /* Timetable → courses */
     var tt = sp.timetable || {};
     var seen = {};
     Object.keys(tt).forEach(function(key){
@@ -145,9 +186,11 @@
       }
     });
 
-    /* 2. Attendance sync — كل مادة بحضور لازم تكون موجودة */
+    /* Attendance → courses (تجاهل المحذوفة) */
     var att = sp.attendance || {};
+    var deletedAtt = getS().get('ss_deleted_attendance', []);
     Object.keys(att).forEach(function(name){
+      if(deletedAtt.indexOf(name) > -1) return;
       var exists = (sp.courses || []).some(function(c){ return c.name === name; });
       if(!exists){
         var DB2 = window.COURSES_DB || {};
@@ -164,131 +207,160 @@
       }
     });
 
-    /* 3. Sync courses الحالية إلى plan (المادة لازم تنميز "مضافة" في الخطة) */
     saveSpace();
 
-    /* 4. إعادة رسم كل التابات */
     try{ if(window.renderCourses) window.renderCourses(); }catch(e){}
     try{ if(window.renderPlan) window.renderPlan(); }catch(e){}
     try{ if(window.renderTimetable) window.renderTimetable(); }catch(e){}
     try{ if(window.renderDashboard) window.renderDashboard(); }catch(e){}
     try{ if(window.renderAttendance) window.renderAttendance(); }catch(e){}
 
-    /* 5. تحديث كل أزرار + في صفحة الخطة */
-    setTimeout(refreshPlanButtons, 100);
+    setTimeout(refreshAllPlanButtons, 100);
   };
 
-  /* ============ 3. تحديد حالة زر + في الخطة ============ */
-  function refreshPlanButtons(){
-    var sp = space();
-    var courses = sp.courses || [];
-    document.querySelectorAll('.plan-add-btn').forEach(function(btn){
-      if(btn.disabled) return;
-      var row = btn.closest('div[style*="border-top"], .sem-body > div, [data-plan-row]');
-      if(!row) return;
-      var text = (row.textContent || '').trim();
-      var DB = window.COURSES_DB || {};
-      /* Find course name in this row */
-      var foundName = null;
-      var keys = Object.keys(DB);
-      for(var i = 0; i < keys.length; i++){
-        if(text.indexOf(keys[i]) > -1){ foundName = keys[i]; break; }
+  /* ============ 4. Refresh plan buttons (exact) ============ */
+  function refreshAllPlanButtons(){
+    var sem = document.getElementById('semesters');
+    if(!sem) return;
+
+    sem.querySelectorAll('.sem-body > div').forEach(function(row){
+      var course = getCourseFromRow(row);
+      if(!course) return;
+
+      var btn = row.querySelector('.plan-add-btn');
+      if(!btn){
+        btn = document.createElement('button');
+        btn.className = 'plan-add-btn';
+        btn.type = 'button';
+        btn.title = 'أضف إلى موادي';
+        btn.textContent = '+';
+        btn.addEventListener('click', function(e){
+          e.stopPropagation(); e.preventDefault();
+          if(btn.disabled) return;
+          var added = window.addCourseFromAnywhere(
+            course.name,
+            course.info ? course.info.code : course.code,
+            course.info ? course.info.h : 3
+          );
+          if(added){
+            btn.classList.add('added');
+            btn.textContent = '✓';
+            btn.disabled = true;
+          }
+        });
+
+        var lastChild = row.lastElementChild;
+        if(lastChild){
+          var wrapper = document.createElement('div');
+          wrapper.style.cssText = 'display:flex;align-items:center;gap:8px;flex-shrink:0';
+          row.insertBefore(wrapper, lastChild);
+          wrapper.appendChild(lastChild);
+          wrapper.appendChild(btn);
+        } else {
+          row.appendChild(btn);
+        }
       }
-      if(!foundName) return;
-      var exists = courses.some(function(c){ return c.name === foundName; });
-      if(exists){
+
+      if(isInMyCourses(course)){
         btn.classList.add('added');
         btn.textContent = '✓';
         btn.disabled = true;
-      }
-    });
-  }
-
-  /* ============ 4. حقن زر الإضافة الذكي في خطة المواد ============ */
-  function enhancePlanUI(){
-    var sem = document.getElementById('semesters');
-    if(!sem) return;
-    var DB = window.COURSES_DB || {};
-    var sp = space();
-    var courses = sp.courses || [];
-
-    sem.querySelectorAll('.sem-body > div').forEach(function(row){
-      if(row.dataset.syncEnhanced) return;
-      row.dataset.syncEnhanced = '1';
-
-      /* Find course name */
-      var text = (row.textContent || '').trim();
-      var foundName = null;
-      var codeMatch = text.match(/\b(0?\d{6,10})\b/);
-      if(codeMatch && window.findCourseByCode){
-        var r = window.findCourseByCode(codeMatch[1]);
-        if(r) foundName = r.name;
-      }
-      if(!foundName){
-        var keys = Object.keys(DB);
-        for(var j = 0; j < keys.length; j++){
-          if(text.indexOf(keys[j]) > -1){ foundName = keys[j]; break; }
-        }
-      }
-      if(!foundName) return;
-
-      if(row.querySelector('.plan-add-btn')) return;
-      var btn = document.createElement('button');
-      btn.className = 'plan-add-btn';
-      btn.type = 'button';
-      btn.title = 'أضف إلى موادي';
-      var exists = courses.some(function(c){ return c.name === foundName; });
-      if(exists){ btn.classList.add('added'); btn.textContent = '✓'; btn.disabled = true; }
-      else { btn.textContent = '+'; }
-
-      var info = DB[foundName];
-      btn.addEventListener('click', function(e){
-        e.stopPropagation(); e.preventDefault();
-        if(btn.disabled) return;
-        var added = window.addCourseFromAnywhere(foundName, info ? info.code : '', info ? info.h : 3);
-        if(added){
-          btn.classList.add('added');
-          btn.textContent = '✓';
-          btn.disabled = true;
-        }
-      });
-
-      var lastChild = row.lastElementChild;
-      if(lastChild && lastChild !== btn){
-        var wrapper = document.createElement('div');
-        wrapper.style.cssText = 'display:flex;align-items:center;gap:8px;flex-shrink:0';
-        row.insertBefore(wrapper, lastChild);
-        wrapper.appendChild(lastChild);
-        wrapper.appendChild(btn);
       } else {
-        row.appendChild(btn);
+        btn.classList.remove('added');
+        btn.textContent = '+';
+        btn.disabled = false;
       }
     });
   }
 
-  /* ============ 5. مراقب التغييرات في sp.courses ============ */
+  /* ============ 5. Watch courses ============ */
+  var lastHash = '';
   function watchCourses(){
-    if(window._coursesWatcher) return;
-    window._coursesWatcher = true;
-    var lastHash = '';
     setInterval(function(){
       var sp = space();
-      var hash = JSON.stringify((sp.courses || []).map(function(c){ return c.name + '|' + c.code; }));
+      var hash = JSON.stringify((sp.courses || []).map(function(c){
+        return (c.code || '').replace(/^0+/, '') + '|' + c.name;
+      }).sort());
       if(hash !== lastHash){
         lastHash = hash;
-        refreshPlanButtons();
+        refreshAllPlanButtons();
       }
-    }, 1500);
+    }, 800);
   }
 
-  /* ============ 6. إصلاح Smart Timetable — يقبل الأكواد الرسمية ============ */
-  function patchSmartTimetable(){
-    /* The findCourseByCode function is called from sttLookupByCode */
-    /* Already supports aliases via data.js v7 */
-    /* Just make sure normalize is right */
+  /* ============ 6. Hooks ============ */
+  function hookTabSwitch(){
+    if(window._syncTabPatched) return;
+    if(typeof window.switchTab !== 'function') return;
+    var orig = window.switchTab;
+    window.switchTab = function(tab){
+      var r = orig.apply(this, arguments);
+      setTimeout(function(){
+        if(tab === 'plan'){ refreshAllPlanButtons(); }
+        if(tab === 'courses'){ syncAllTabs(); }
+      }, 150);
+      return r;
+    };
+    window._syncTabPatched = true;
   }
 
-  /* ============ 7. شريط المزامنة ============ */
+  function hookRenderPlan(){
+    if(window._syncRenderPlanPatched) return;
+    if(typeof window.renderPlan !== 'function') return;
+    var orig = window.renderPlan;
+    window.renderPlan = function(){
+      var r = orig.apply(this, arguments);
+      setTimeout(refreshAllPlanButtons, 150);
+      return r;
+    };
+    window._syncRenderPlanPatched = true;
+  }
+
+  function hookAddMyCourse(){
+    if(typeof window.addMyCourse !== 'function') return;
+    if(window._addMyCoursePatched) return;
+    var orig = window.addMyCourse;
+    window.addMyCourse = function(){
+      var r = orig.apply(this, arguments);
+      setTimeout(syncAllTabs, 200);
+      return r;
+    };
+    window._addMyCoursePatched = true;
+  }
+
+  function hookImportFromPlan(){
+    if(typeof window.importFromPlan !== 'function') return;
+    if(window._importPlanPatched) return;
+    var orig = window.importFromPlan;
+    window.importFromPlan = function(){
+      var r = orig.apply(this, arguments);
+      setTimeout(syncAllTabs, 300);
+      return r;
+    };
+    window._importPlanPatched = true;
+  }
+
+  /* ============ 7. Fix removeAttendance ============ */
+  function hookRemoveAttendance(){
+    if(typeof window.removeAttendance !== 'function') return;
+    if(window._removeAttPatched) return;
+    var orig = window.removeAttendance;
+    window.removeAttendance = function(name){
+      /* سجّل المادة كمحذوفة */
+      var deleted = getS().get('ss_deleted_attendance', []);
+      if(deleted.indexOf(name) === -1) deleted.push(name);
+      getS().set('ss_deleted_attendance', deleted);
+
+      var r = orig.apply(this, arguments);
+      setTimeout(function(){
+        if(window.syncAllTabs) window.syncAllTabs();
+      }, 200);
+      return r;
+    };
+    window._removeAttPatched = true;
+  }
+
+  /* ============ 8. Sync Toast ============ */
   window.showSyncToast = function(msg, icon){
     var existing = document.querySelector('.sync-toast');
     if(existing) existing.remove();
@@ -302,78 +374,21 @@
     }, 2200);
   };
 
-  /* ============ 8. Patch addMyCourse — sync + celebration ============ */
-  function patchAddMyCourse(){
-    if(typeof window.addMyCourse !== 'function') return;
-    if(window._addMyCoursePatched) return;
-    var orig = window.addMyCourse;
-    window.addMyCourse = function(){
-      var r = orig.apply(this, arguments);
-      setTimeout(syncAllTabs, 200);
-      return r;
-    };
-    window._addMyCoursePatched = true;
-  }
-
-  /* ============ 9. Patch importFromPlan ============ */
-  function patchImportFromPlan(){
-    if(typeof window.importFromPlan !== 'function') return;
-    if(window._importPlanPatched) return;
-    var orig = window.importFromPlan;
-    window.importFromPlan = function(){
-      var r = orig.apply(this, arguments);
-      setTimeout(syncAllTabs, 300);
-      return r;
-    };
-    window._importPlanPatched = true;
-  }
-
-  /* ============ 10. Patch renderPlan — re-enhance after render ============ */
-  function patchRenderPlan(){
-    if(typeof window.renderPlan !== 'function') return;
-    if(window._renderPlanSyncPatched) return;
-    var orig = window.renderPlan;
-    window.renderPlan = function(){
-      var r = orig.apply(this, arguments);
-      setTimeout(enhancePlanUI, 100);
-      setTimeout(refreshPlanButtons, 200);
-      return r;
-    };
-    window._renderPlanSyncPatched = true;
-  }
-
   /* ============ INIT ============ */
   function init(){
     injectPlanBtnCSS();
-    patchAddMyCourse();
-    patchImportFromPlan();
-    patchRenderPlan();
+    hookTabSwitch();
+    hookRenderPlan();
+    hookAddMyCourse();
+    hookImportFromPlan();
+    hookRemoveAttendance();
     watchCourses();
 
-    setTimeout(function(){
-      enhancePlanUI();
-      refreshPlanButtons();
-    }, 800);
-    setTimeout(function(){
-      enhancePlanUI();
-      refreshPlanButtons();
-    }, 2500);
+    setTimeout(refreshAllPlanButtons, 1000);
+    setTimeout(refreshAllPlanButtons, 2500);
+    setTimeout(refreshAllPlanButtons, 4000);
 
-    /* Re-run on plan tab */
-    if(window.switchTab && !window._syncTabPatched){
-      var origSwitch = window.switchTab;
-      window.switchTab = function(tab){
-        var r = origSwitch.apply(this, arguments);
-        setTimeout(function(){
-          if(tab === 'plan'){ enhancePlanUI(); refreshPlanButtons(); }
-          if(tab === 'courses'){ syncAllTabs(); }
-        }, 150);
-        return r;
-      };
-      window._syncTabPatched = true;
-    }
-
-    console.log('🔄 sync.js loaded');
+    console.log('🔄 sync.js v3 loaded (exact matching + attendance fix)');
   }
 
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

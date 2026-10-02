@@ -1,17 +1,16 @@
 /* ============================================================
    sw.js v62 — Cache Clean (بدون ملفات محذوفة)
    ============================================================ */
-var CACHE_NAME = 'ss-cache-v62'; 
+var CACHE_NAME = 'ss-cache-v63';
 var URLS_TO_CACHE = [
   './', './index.html', './app.css',
   './core.js', './data.js', './supabase.js',
   './features.js', './widgets.js', './ai.js', './integrations.js',
-  './sync.js',                 
+  './sync.js',    // ✨ جديد
   './extras.js',
   './pwa.js', './app.js', './tests.js',
   './manifest.json'
 ];
-
 self.addEventListener('install', function(e){
   e.waitUntil(
     caches.open(CACHE_NAME).then(function(cache){

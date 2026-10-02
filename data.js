@@ -401,7 +401,7 @@ var STUDY_TIPS = [
 var HU_LINKS = {
   main: [
     {icon:'🎓', title:'بوابة الطالب المباشرة', desc:'الرسوم، الجدول، العلامات، البريد', url:'https://reg1.hu.edu.jo/'},
-    {icon:'📚', title:'التعلم الإلكتروني (Moodle)', desc:'المحاضرات، الواجبات، المواد', url:'https://elearning.hu.edu.jo/'},
+    {icon:'📚', title:'التعلم الإلكتروني (Moodle)', desc:'المحاضرات، الواجبات، المواد', url:'https://lms.hu.edu.jo/my/'},
     {icon:'📝', title:'الالتحاق والتسجيل', desc:'طلبات الالتحاق للطلبة الجدد', url:'https://admission.hu.edu.jo/'},
     {icon:'🌐', title:'الموقع الرسمي للجامعة', desc:'الأخبار، الإعلانات، الكليات', url:'https://hu.edu.jo/'},
     {icon:'📊', title:'الخطة الدراسية', desc:'الخطط الدراسية للتخصصات', url:'https://hu.edu.jo/unitCenter/class_a.aspx?t=0&unitid=40000000'},
