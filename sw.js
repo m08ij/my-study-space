@@ -1,12 +1,12 @@
 /* ============================================================
    sw.js v62 — Cache Clean (بدون ملفات محذوفة)
    ============================================================ */
-var CACHE_NAME = 'ss-cache-v63';
+var CACHE_NAME = 'ss-cache-v64';
 var URLS_TO_CACHE = [
   './', './index.html', './app.css',
   './core.js', './data.js', './supabase.js',
   './features.js', './widgets.js', './ai.js', './integrations.js',
-  './sync.js',    // ✨ جديد
+  './course-sync.js',    
   './extras.js',
   './pwa.js', './app.js', './tests.js',
   './manifest.json'
