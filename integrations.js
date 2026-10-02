@@ -397,27 +397,23 @@
   function sttEmptyRow(){
     return {
       code:'', name:'', matched:null, days:[],
-      timeFrom:'', timeTo:'', room:'',
-      section:'', notes:''
+      timeFrom:'', timeTo:'', room:''
     };
   }
   function sttCreateRows(n){
     var r = []; for(var i = 0; i < n; i++) r.push(sttEmptyRow()); return r;
   }
-
-  var STT_CSS = 'stt-style-v6';
+  var STT_CSS = 'stt-style-v7';
   function sttInjectCSS(){
+    var old1 = document.getElementById('stt-style-v6');
+    if(old1) old1.remove();
     if(document.getElementById(STT_CSS)) return;
     var css = `
       .stt-backdrop{position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.78);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:16px}
-      .stt-modal{background:var(--card);border:1px solid var(--border);border-radius:22px;width:100%;max-width:1400px;max-height:94vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.6);position:relative}
+      .stt-modal{background:var(--card);border:1px solid var(--border);border-radius:22px;width:100%;max-width:1200px;max-height:94vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.6);position:relative}
       .stt-header{display:flex;justify-content:space-between;align-items:center;padding:16px 22px;border-bottom:1px solid var(--border);background:linear-gradient(135deg,rgba(34,211,238,.08),rgba(167,139,250,.08));flex-shrink:0;gap:10px;flex-wrap:wrap}
-      .stt-header-left{display:flex;align-items:center;gap:10px}
-      .stt-header h3{margin:0;font-size:1.05rem;font-weight:800;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-      .stt-header-actions{display:flex;gap:6px;align-items:center}
-      .stt-icon-btn{height:34px;padding:0 12px;border-radius:10px;background:var(--card2);border:1px solid var(--border);color:var(--muted);cursor:pointer;font-family:inherit;font-size:.78rem;font-weight:700;display:inline-flex;align-items:center;gap:6px;transition:.2s}
-      .stt-icon-btn:hover{background:var(--grad-soft);border-color:var(--cyan);color:var(--cyan)}
-      .stt-close{width:34px;height:34px;border-radius:10px;background:var(--card2);border:1px solid var(--border);color:var(--muted);cursor:pointer;font-size:1.3rem;display:flex;align-items:center;justify-content:center}
+      .stt-header h3{margin:0;font-size:1.05rem;font-weight:800;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+      .stt-close{width:34px;height:34px;border-radius:10px;background:var(--card2);border:1px solid var(--border);color:var(--muted);cursor:pointer;font-size:1.3rem;display:flex;align-items:center;justify-content:center;font-family:inherit;line-height:1}
       .stt-close:hover{background:rgba(239,68,68,.15);border-color:var(--red);color:var(--red)}
       .stt-stats{display:flex;gap:10px;padding:12px 22px;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto}
       .stt-stat{flex:1;min-width:110px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px 14px;display:flex;flex-direction:column;gap:2px}
@@ -426,55 +422,38 @@
       .stt-stat.green .stt-stat-v{color:var(--green)}
       .stt-stat.amber .stt-stat-v{color:var(--amber)}
       .stt-stat.purple .stt-stat-v{color:var(--purple)}
-      .stt-quickbar{padding:10px 22px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;gap:6px;flex-wrap:wrap;align-items:center;flex-shrink:0}
-      .stt-quickbar-label{font-size:.72rem;color:var(--muted);font-weight:800;margin-left:4px}
-      .stt-quick-btn{padding:6px 12px;background:var(--card);border:1px solid var(--border);color:var(--muted);border-radius:20px;font-family:inherit;font-size:.72rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:.2s}
-      .stt-quick-btn:hover{border-color:var(--cyan);color:var(--cyan);transform:translateY(-1px)}
-      .stt-quick-btn.danger:hover{border-color:var(--red);color:var(--red)}
       .stt-draft-notice{padding:8px 22px;background:rgba(251,191,36,.1);border-bottom:1px solid rgba(251,191,36,.25);font-size:.75rem;color:var(--amber);display:none;align-items:center;gap:8px}
       .stt-draft-notice.show{display:flex}
       .stt-draft-notice button{margin-right:auto;padding:4px 10px;border-radius:8px;background:transparent;border:1px solid currentColor;color:inherit;cursor:pointer;font-family:inherit;font-size:.7rem;font-weight:700}
-      .stt-rows{flex:1;overflow-y:auto;padding:14px 18px;display:flex;flex-direction:column;gap:8px;background:var(--bg)}
-      .stt-row{display:grid;grid-template-columns:28px 38px 140px minmax(160px,1fr) 240px 170px 100px 90px 90px;gap:8px;align-items:center;padding:12px;background:var(--bg2);border:1.5px solid var(--border);border-radius:14px;transition:.25s;position:relative}
+      .stt-rows-head{display:grid;grid-template-columns:36px 130px minmax(160px,1fr) 240px 220px 130px 70px;gap:8px;padding:8px 22px;background:var(--bg2);border-bottom:1px solid var(--border);font-size:.7rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.3px}
+      .stt-rows-head > div{text-align:center}
+      .stt-rows{flex:1;overflow-y:auto;padding:12px 22px;display:flex;flex-direction:column;gap:8px;background:var(--bg)}
+      .stt-row{display:grid;grid-template-columns:36px 130px minmax(160px,1fr) 240px 220px 130px 70px;gap:8px;align-items:center;padding:10px;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;transition:.25s}
       .stt-row.matched{border-color:rgba(52,211,153,.4);background:linear-gradient(135deg,rgba(52,211,153,.04),transparent)}
       .stt-row.ready{border-color:rgba(52,211,153,.5)}
-      .stt-row.dragging{opacity:.4;transform:scale(.98)}
-      .stt-row.drag-over{border-color:var(--cyan);box-shadow:0 0 0 3px var(--glow)}
-      .stt-drag{width:24px;height:36px;display:flex;align-items:center;justify-content:center;cursor:grab;color:var(--muted2);font-size:1.1rem;border-radius:8px;transition:.2s;user-select:none}
-      .stt-drag:hover{background:var(--card2);color:var(--cyan)}
-      .stt-drag:active{cursor:grabbing}
-      .stt-num{width:32px;height:32px;border-radius:9px;background:var(--grad);color:#0b0f1a;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem}
+      .stt-num{width:28px;height:28px;border-radius:8px;background:var(--grad);color:#0b0f1a;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.8rem;justify-self:center}
       .stt-row.matched .stt-num{background:linear-gradient(135deg,#34d399,#10b981)}
       .stt-input{width:100%;background:var(--card);border:1.5px solid var(--border);color:var(--text);padding:8px 10px;border-radius:9px;font-family:inherit;font-size:.85rem;outline:none;height:38px;transition:.2s;min-width:0}
       .stt-input:focus{border-color:var(--cyan);box-shadow:0 0 0 3px var(--glow)}
       .stt-code{font-family:ui-monospace,monospace;direction:ltr;text-align:left;letter-spacing:.5px;font-weight:700}
       .stt-name-cell{display:flex;flex-direction:column;gap:2px;min-width:0}
-      .stt-name-cell .stt-input{height:36px}
+      .stt-name-cell .stt-input{height:38px}
       .stt-match{font-size:.65rem;color:var(--green);font-weight:700;padding:0 4px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-height:12px}
       .stt-match.no-match{color:var(--amber)}
       .stt-match:empty{display:none}
-      .stt-days{display:flex;gap:2px;padding:4px;background:var(--card);border:1.5px solid var(--border);border-radius:9px;height:38px;align-items:center;justify-content:center}
-      .stt-day{flex:1;height:26px;border-radius:6px;background:transparent;border:none;color:var(--muted);cursor:pointer;font-family:inherit;font-size:.65rem;font-weight:800;display:flex;align-items:center;justify-content:center;transition:.2s;padding:0;letter-spacing:.2px;text-transform:uppercase}
+      .stt-days{display:flex;gap:3px;padding:4px;background:var(--card);border:1.5px solid var(--border);border-radius:9px;height:38px;align-items:center;justify-content:center}
+      .stt-day{flex:1;height:26px;border-radius:6px;background:transparent;border:none;color:var(--muted);cursor:pointer;font-family:inherit;font-size:.62rem;font-weight:800;display:flex;align-items:center;justify-content:center;transition:.2s;padding:0;letter-spacing:.2px;text-transform:uppercase}
       .stt-day:hover{color:var(--text);background:var(--card2)}
-      .stt-day.active{background:var(--grad);color:#0b0f1a;transform:scale(1.08);box-shadow:0 2px 6px var(--glow)}
+      .stt-day.active{background:var(--grad);color:#0b0f1a;box-shadow:0 2px 6px var(--glow)}
       .stt-time{display:flex;align-items:center;gap:4px;position:relative}
-      .stt-time-sel{flex:1;background:var(--card);border:1.5px solid var(--border);color:var(--text);padding:0 6px;border-radius:9px;font-family:ui-monospace,monospace;font-size:.82rem;outline:none;height:38px;direction:ltr;text-align:center;cursor:pointer;font-weight:700;min-width:0}
-      .stt-time-sel:focus{border-color:var(--cyan);box-shadow:0 0 0 3px var(--glow)}
-      .stt-arrow{color:var(--muted2);font-weight:700;font-size:.75rem}
-      .stt-duration{position:absolute;bottom:-14px;right:50%;transform:translateX(50%);font-size:.6rem;font-weight:800;color:var(--cyan);background:var(--card);padding:1px 6px;border-radius:5px;border:1px solid var(--border);white-space:nowrap;pointer-events:none}
+      .stt-time input[type="time"]{flex:1;background:var(--card);border:1.5px solid var(--border);color:var(--text);padding:0 6px;border-radius:9px;font-family:ui-monospace,monospace;font-size:.82rem;outline:none;height:38px;direction:ltr;text-align:center;font-weight:700;min-width:0;color-scheme:dark}
+      .stt-time input[type="time"]::-webkit-calendar-picker-indicator{filter:invert(.7);cursor:pointer}
+      .stt-time input[type="time"]:focus{border-color:var(--cyan);box-shadow:0 0 0 3px var(--glow)}
+      .stt-arrow{color:var(--muted2);font-weight:700;font-size:.75rem;flex-shrink:0}
+      .stt-duration{position:absolute;bottom:-11px;right:50%;transform:translateX(50%);font-size:.6rem;font-weight:800;color:var(--cyan);background:var(--card);padding:1px 6px;border-radius:5px;border:1px solid var(--border);white-space:nowrap;pointer-events:none}
       .stt-duration:empty{display:none}
-      .stt-room-cell{display:flex;flex-direction:column;gap:2px;position:relative;min-width:0}
-      .stt-room-suggest{position:absolute;top:100%;right:0;left:0;z-index:20;background:var(--card);border:1px solid var(--border);border-radius:9px;margin-top:4px;box-shadow:var(--shadow-lg);max-height:160px;overflow-y:auto;display:none}
-      .stt-room-suggest.show{display:block}
-      .stt-room-suggest-item{padding:8px 12px;font-size:.8rem;cursor:pointer;text-align:right;transition:.15s}
-      .stt-room-suggest-item:hover{background:var(--grad-soft);color:var(--cyan)}
-      .stt-section{width:100%;background:var(--card);border:1.5px solid var(--border);color:var(--text);padding:8px 6px;border-radius:9px;font-family:ui-monospace,monospace;font-size:.82rem;outline:none;height:38px;text-align:center;font-weight:700}
-      .stt-section:focus{border-color:var(--cyan);box-shadow:0 0 0 3px var(--glow)}
-      .stt-notes{width:100%;background:var(--card);border:1.5px dashed var(--border);color:var(--text);padding:8px 10px;border-radius:9px;font-family:inherit;font-size:.78rem;outline:none;height:38px}
-      .stt-notes:focus{border-color:var(--purple);border-style:solid;box-shadow:0 0 0 3px rgba(167,139,250,.2)}
-      .stt-notes::placeholder{color:var(--muted2)}
-      .stt-row-actions{display:flex;gap:3px}
-      .stt-row-btn{width:32px;height:32px;border-radius:8px;background:transparent;border:1.5px solid var(--border);color:var(--muted);cursor:pointer;font-size:.95rem;display:flex;align-items:center;justify-content:center;transition:.2s;padding:0;font-family:inherit}
+      .stt-row-actions{display:flex;gap:3px;justify-content:flex-end}
+      .stt-row-btn{width:30px;height:30px;border-radius:8px;background:transparent;border:1.5px solid var(--border);color:var(--muted);cursor:pointer;font-size:.9rem;display:flex;align-items:center;justify-content:center;transition:.2s;padding:0;font-family:inherit;line-height:1}
       .stt-row-btn:hover{background:var(--card2);border-color:var(--cyan);color:var(--cyan)}
       .stt-row-btn.del:hover{background:rgba(239,68,68,.15);border-color:var(--red);color:var(--red)}
       .stt-row-btn.copy:hover{background:rgba(167,139,250,.15);border-color:var(--purple);color:var(--purple)}
@@ -505,40 +484,33 @@
       .stt-preview-stat-v{font-size:1.5rem;font-weight:900;color:var(--cyan);line-height:1}
       .stt-preview-stat-l{font-size:.68rem;color:var(--muted);margin-top:4px}
       .stt-preview-footer{padding:14px 22px;border-top:1px solid var(--border);background:var(--card2);display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
-      .stt-templates-menu{position:absolute;top:60px;left:22px;background:var(--card);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow-lg);padding:6px;min-width:250px;z-index:120;display:none}
-      .stt-templates-menu.show{display:block}
-      .stt-template-item{padding:10px 12px;border-radius:8px;cursor:pointer;font-size:.82rem;display:flex;justify-content:space-between;gap:8px;align-items:center;transition:.15s}
-      .stt-template-item:hover{background:var(--grad-soft);color:var(--cyan)}
-      .stt-template-empty{padding:14px;text-align:center;font-size:.78rem;color:var(--muted2)}
       .stt-issue-row{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;margin-bottom:6px}
       .stt-issue-ic{font-size:1.1rem;flex-shrink:0}
       .stt-issue-body{flex:1;min-width:0;font-size:.82rem;line-height:1.6}
       @media (max-width: 1100px){
-        .stt-row{grid-template-columns:24px 34px 120px minmax(140px,1fr) 200px 150px 80px 80px 70px;gap:6px;padding:10px}
+        .stt-rows-head, .stt-row{grid-template-columns:36px 110px minmax(140px,1fr) 200px 180px 100px 60px;gap:6px}
       }
       @media (max-width: 860px){
+        .stt-rows-head{display:none}
         .stt-row{
-          grid-template-columns:24px 32px 1fr 70px 60px 32px;
+          grid-template-columns:32px 1fr 60px;
           grid-template-areas:
-            "drag num name actions actions actions"
-            "code code code code code code"
-            "days days days days days days"
-            "time time time time time time"
-            "room room room room room room"
-            "section section section notes notes notes";
-          gap:6px;padding:10px;
+            "num name actions"
+            "code code code"
+            "days days days"
+            "time time time"
+            "room room room";
+          gap:8px;padding:12px;
         }
-        .stt-drag{grid-area:drag}
         .stt-num{grid-area:num}
-        .stt-name-cell{grid-area:name}
         .stt-code{grid-area:code}
+        .stt-name-cell{grid-area:name}
         .stt-days{grid-area:days}
         .stt-time{grid-area:time}
-        .stt-room-cell{grid-area:room}
-        .stt-section{grid-area:section}
-        .stt-notes{grid-area:notes}
-        .stt-row-actions{grid-area:actions;justify-content:flex-end}
-        .stt-input,.stt-section,.stt-notes,.stt-time-sel,.stt-days{height:42px}
+        .stt-room-input{grid-area:room}
+        .stt-row-actions{grid-area:actions}
+        .stt-input,.stt-time input[type="time"]{height:44px}
+        .stt-days{height:44px}
       }
       @media (max-width: 520px){
         .stt-modal{border-radius:16px;max-height:96vh}
@@ -547,7 +519,6 @@
         .stt-stats{padding:8px 14px}
         .stt-stat{padding:8px 10px;min-width:90px}
         .stt-stat-v{font-size:1.1rem}
-        .stt-quickbar{padding:8px 14px}
         .stt-rows{padding:10px;gap:10px}
         .stt-footer{padding:10px 14px}
       }
@@ -578,10 +549,7 @@
     var startRows = initialRows && initialRows.length ? initialRows :
                     (draft && draft.length ? draft : sttCreateRows(MIN_ROWS));
 
-    var state = {
-      rows: startRows,
-      dragIdx: null
-    };
+    var state = { rows: startRows };
 
     var backdrop = document.createElement('div');
     backdrop.className = 'stt-backdrop';
@@ -590,23 +558,13 @@
     modal.className = 'stt-modal';
     backdrop.appendChild(modal);
 
-    /* Header */
+    /* Header — بدون قوالب */
     var header = document.createElement('div');
     header.className = 'stt-header';
     header.innerHTML =
-      '<div class="stt-header-left">' +
-        '<h3>✨ إضافة جدول — دفعة واحدة</h3>' +
-      '</div>' +
-      '<div class="stt-header-actions">' +
-        '<button class="stt-icon-btn" data-hdr="templates" type="button">📁 القوالب</button>' +
-        '<button class="stt-icon-btn" data-hdr="save-tpl" type="button">💾 حفظ كقالب</button>' +
-        '<button class="stt-close" type="button">×</button>' +
-      '</div>';
+      '<h3>✨ إضافة جدول — دفعة واحدة</h3>' +
+      '<button class="stt-close" type="button" title="إغلاق">×</button>';
     modal.appendChild(header);
-
-    var tplMenu = document.createElement('div');
-    tplMenu.className = 'stt-templates-menu';
-    header.appendChild(tplMenu);
 
     /* Stats */
     var statsBar = document.createElement('div');
@@ -615,28 +573,22 @@
       '<div class="stt-stat"><div class="stt-stat-v" data-stat="rows">0</div><div class="stt-stat-l">📋 صفوف جاهزة</div></div>' +
       '<div class="stt-stat green"><div class="stt-stat-v" data-stat="hours">0</div><div class="stt-stat-l">⏱️ ساعة أسبوعياً</div></div>' +
       '<div class="stt-stat purple"><div class="stt-stat-v" data-stat="courses">0</div><div class="stt-stat-l">📚 مواد فريدة</div></div>' +
-      '<div class="stt-stat amber"><div class="stt-stat-v" data-stat="conflicts">0</div><div class="stt-stat-l">⚠️ تعارضات محتملة</div></div>';
+      '<div class="stt-stat amber"><div class="stt-stat-v" data-stat="conflicts">0</div><div class="stt-stat-l">⚠️ تعارضات</div></div>';
     modal.appendChild(statsBar);
 
     /* Draft notice */
     var draftNotice = document.createElement('div');
     draftNotice.className = 'stt-draft-notice';
-    draftNotice.innerHTML = '<span>📝 عندك مسودّة محفوظة من قبل — استرجعناها لك</span>' +
+    draftNotice.innerHTML = '<span>📝 عندك مسودّة محفوظة — استرجعناها لك</span>' +
       '<button type="button" data-draft="clear">مسح المسودّة</button>';
     modal.appendChild(draftNotice);
     if(draft && draft.length) draftNotice.classList.add('show');
 
-    /* Quickbar */
-    var quickbar = document.createElement('div');
-    quickbar.className = 'stt-quickbar';
-    quickbar.innerHTML =
-      '<span class="stt-quickbar-label">⚡ سريع:</span>' +
-      '<button class="stt-quick-btn" data-quick="weekdays" type="button">🗓️ أيام الدوام Sun-Thu</button>' +
-      '<button class="stt-quick-btn" data-quick="1h" type="button">⏱️ ساعة كاملة</button>' +
-      '<button class="stt-quick-btn" data-quick="1.5h" type="button">⏱️ ساعة ونصف</button>' +
-      '<button class="stt-quick-btn danger" data-quick="clear-days" type="button">✕ مسح الأيام</button>' +
-      '<button class="stt-quick-btn danger" data-quick="clear-all" type="button">🗑️ مسح الكل</button>';
-    modal.appendChild(quickbar);
+    /* Rows head */
+    var rowsHead = document.createElement('div');
+    rowsHead.className = 'stt-rows-head';
+    rowsHead.innerHTML = '<div>#</div><div>الكود</div><div>المادة</div><div>الأيام</div><div>الوقت</div><div>القاعة</div><div></div>';
+    modal.appendChild(rowsHead);
 
     var rowsWrap = document.createElement('div');
     rowsWrap.className = 'stt-rows';
@@ -667,6 +619,481 @@
         '<button class="stt-btn stt-btn-primary" data-preview="confirm" type="button">✅ تأكيد وحفظ</button>' +
       '</div>';
     modal.appendChild(previewOverlay);
+
+    /* ============ Helpers ============ */
+    function isRowComplete(row){
+      return !!(row.name && row.days && row.days.length && row.timeFrom && row.timeTo);
+    }
+    function countConflicts(){
+      var seen = {};
+      var conflicts = 0;
+      state.rows.forEach(function(row){
+        if(!row.name || !row.days || !row.days.length || !row.timeFrom) return;
+        row.days.forEach(function(d){
+          var key = d + '-' + row.timeFrom;
+          if(seen[key]) conflicts++;
+          else seen[key] = true;
+        });
+      });
+      return conflicts;
+    }
+    function updateStats(){
+      var ready = state.rows.filter(isRowComplete);
+      var totalMin = ready.reduce(function(a, r){ return a + calcDuration(r.timeFrom, r.timeTo); }, 0);
+      var uniqCourses = {};
+      ready.forEach(function(r){ uniqCourses[r.name] = true; });
+      statsBar.querySelector('[data-stat="rows"]').textContent = ready.length;
+      statsBar.querySelector('[data-stat="hours"]').textContent = (totalMin/60).toFixed(1);
+      statsBar.querySelector('[data-stat="courses"]').textContent = Object.keys(uniqCourses).length;
+      statsBar.querySelector('[data-stat="conflicts"]').textContent = countConflicts();
+    }
+    function updateFooter(){
+      var ready = state.rows.filter(isRowComplete).length;
+      var saveBtn = footer.querySelector('[data-action="save"]');
+      var previewBtn = footer.querySelector('[data-action="preview"]');
+      var hint = footer.querySelector('[data-hint]');
+      if(ready === 0){
+        saveBtn.disabled = true;
+        previewBtn.disabled = true;
+        saveBtn.textContent = '💾 حفظ الكل';
+        hint.textContent = 'املأ صف واحد على الأقل';
+      } else {
+        saveBtn.disabled = false;
+        previewBtn.disabled = false;
+        saveBtn.textContent = '💾 حفظ الكل (' + ready + ')';
+        hint.textContent = ready + ' صف جاهز من ' + state.rows.length;
+      }
+      updateStats();
+    }
+    var draftTimer = null;
+    function scheduleDraftSave(){
+      clearTimeout(draftTimer);
+      draftTimer = setTimeout(function(){ saveDraft(state.rows); }, 800);
+    }
+    function updateRowStatus(idx){
+      var row = state.rows[idx]; if(!row) return;
+      var rowEl = rowsWrap.querySelector('.stt-row[data-idx="' + idx + '"]');
+      if(!rowEl) return;
+      var matchEl = rowEl.querySelector('[data-match]');
+      if(matchEl){
+        if(row.matched){
+          var info = row.matched.info || {};
+          var ex = [];
+          if(info.h) ex.push(info.h + ' ساعات');
+          matchEl.textContent = '✓ ' + (ex.length ? ex.join(' · ') : row.matched.name);
+          matchEl.classList.remove('no-match');
+        } else if(row.code && row.code.length >= 6){
+          matchEl.textContent = '⚠ كود غير معروف';
+          matchEl.classList.add('no-match');
+        } else {
+          matchEl.textContent = '';
+          matchEl.classList.remove('no-match');
+        }
+      }
+      var durEl = rowEl.querySelector('[data-duration]');
+      if(durEl){
+        var min = calcDuration(row.timeFrom, row.timeTo);
+        durEl.textContent = formatDuration(min);
+      }
+      rowEl.classList.toggle('matched', !!row.matched);
+      rowEl.classList.toggle('ready', isRowComplete(row));
+    }
+
+    function buildRowEl(row, idx){
+      var el = document.createElement('div');
+      el.className = 'stt-row';
+      el.dataset.idx = idx;
+
+      var num = document.createElement('div');
+      num.className = 'stt-num';
+      num.textContent = String(idx + 1);
+      el.appendChild(num);
+
+      var code = document.createElement('input');
+      code.type = 'text';
+      code.className = 'stt-input stt-code';
+      code.placeholder = '0110108101';
+      code.value = row.code || '';
+      code.autocomplete = 'off';
+      code.dataset.field = 'code';
+      el.appendChild(code);
+
+      var nameCell = document.createElement('div');
+      nameCell.className = 'stt-name-cell';
+      var nameInput = document.createElement('input');
+      nameInput.type = 'text';
+      nameInput.className = 'stt-input stt-name';
+      nameInput.placeholder = 'اسم المادة';
+      nameInput.value = row.name || '';
+      nameInput.autocomplete = 'off';
+      nameInput.dataset.field = 'name';
+      nameCell.appendChild(nameInput);
+      var matchEl = document.createElement('div');
+      matchEl.className = 'stt-match';
+      matchEl.dataset.match = '1';
+      nameCell.appendChild(matchEl);
+      el.appendChild(nameCell);
+
+      var days = document.createElement('div');
+      days.className = 'stt-days';
+      STT_DAYS_ALL.forEach(function(d){
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'stt-day';
+        btn.dataset.day = d.k;
+        btn.title = d.full;
+        btn.textContent = d.l;
+        if(row.days && row.days.indexOf(d.k) > -1) btn.classList.add('active');
+        days.appendChild(btn);
+      });
+      el.appendChild(days);
+
+      var timeWrap = document.createElement('div');
+      timeWrap.className = 'stt-time';
+      var fromInput = document.createElement('input');
+      fromInput.type = 'time';
+      fromInput.dataset.field = 'timeFrom';
+      fromInput.value = row.timeFrom || '';
+      timeWrap.appendChild(fromInput);
+      var arrow = document.createElement('span');
+      arrow.className = 'stt-arrow';
+      arrow.textContent = '→';
+      timeWrap.appendChild(arrow);
+      var toInput = document.createElement('input');
+      toInput.type = 'time';
+      toInput.dataset.field = 'timeTo';
+      toInput.value = row.timeTo || '';
+      timeWrap.appendChild(toInput);
+      var durBadge = document.createElement('div');
+      durBadge.className = 'stt-duration';
+      durBadge.dataset.duration = '1';
+      timeWrap.appendChild(durBadge);
+      el.appendChild(timeWrap);
+
+      var room = document.createElement('input');
+      room.type = 'text';
+      room.className = 'stt-input stt-room-input';
+      room.placeholder = '104';
+      room.value = row.room || '';
+      room.autocomplete = 'off';
+      room.dataset.field = 'room';
+      el.appendChild(room);
+
+      var actions = document.createElement('div');
+      actions.className = 'stt-row-actions';
+      var copyBtn = document.createElement('button');
+      copyBtn.type = 'button';
+      copyBtn.className = 'stt-row-btn copy';
+      copyBtn.title = 'نسخ الصف';
+      copyBtn.textContent = '⧉';
+      copyBtn.dataset.action = 'copy-row';
+      actions.appendChild(copyBtn);
+      var delBtn = document.createElement('button');
+      delBtn.type = 'button';
+      delBtn.className = 'stt-row-btn del';
+      delBtn.title = 'حذف';
+      delBtn.textContent = '×';
+      delBtn.dataset.action = 'del';
+      actions.appendChild(delBtn);
+      el.appendChild(actions);
+
+      updateRowStatus(idx);
+      return el;
+    }
+
+    function renderRows(){
+      rowsWrap.innerHTML = '';
+      state.rows.forEach(function(row, idx){ rowsWrap.appendChild(buildRowEl(row, idx)); });
+      updateFooter();
+    }
+
+    /* ============ Events ============ */
+    rowsWrap.addEventListener('input', function(e){
+      var input = e.target.closest('[data-field]'); if(!input) return;
+      var rowEl = input.closest('.stt-row'); if(!rowEl) return;
+      var idx = parseInt(rowEl.dataset.idx, 10);
+      var field = input.dataset.field;
+      var val = input.value;
+      var row = state.rows[idx]; if(!row) return;
+
+      if(field === 'code'){
+        row.code = val.trim();
+        clearTimeout(row._lookupTimer);
+        row._lookupTimer = setTimeout(function(){
+          var found = sttLookupByCode(row.code);
+          var nameInput = rowEl.querySelector('.stt-name');
+          if(found){
+            row.matched = found;
+            row.name = found.name;
+            if(nameInput) nameInput.value = found.name;
+          } else row.matched = null;
+          updateRowStatus(idx);
+          updateFooter();
+          scheduleDraftSave();
+        }, 220);
+      } else if(field === 'name'){ row.name = val.trim(); updateFooter(); scheduleDraftSave(); }
+      else if(field === 'room'){ row.room = val.trim(); scheduleDraftSave(); }
+    });
+
+    rowsWrap.addEventListener('change', function(e){
+      var inp = e.target.closest('input[type="time"][data-field]');
+      if(!inp) return;
+      var rowEl = inp.closest('.stt-row'); if(!rowEl) return;
+      var idx = parseInt(rowEl.dataset.idx, 10);
+      var field = inp.dataset.field;
+      var val = inp.value;
+      var row = state.rows[idx]; if(!row) return;
+
+      if(field === 'timeFrom'){
+        row.timeFrom = val;
+        /* Auto-fill وقت النهاية = بداية + 60 دقيقة */
+        if(val && (!row.timeTo || calcDuration(val, row.timeTo) <= 0)){
+          row.timeTo = addMinutesToTime(val, 60);
+          var toInp = rowEl.querySelector('[data-field="timeTo"]');
+          if(toInp) toInp.value = row.timeTo;
+        }
+        updateRowStatus(idx); updateFooter(); scheduleDraftSave();
+      } else if(field === 'timeTo'){
+        row.timeTo = val;
+        if(row.timeFrom && val && calcDuration(row.timeFrom, val) <= 0){
+          row.timeTo = addMinutesToTime(row.timeFrom, 60);
+          var toInp2 = rowEl.querySelector('[data-field="timeTo"]');
+          if(toInp2) toInp2.value = row.timeTo;
+        }
+        updateRowStatus(idx); updateFooter(); scheduleDraftSave();
+      }
+    });
+
+    rowsWrap.addEventListener('click', function(e){
+      var dayBtn = e.target.closest('.stt-day');
+      if(dayBtn){
+        e.preventDefault();
+        var rowEl = dayBtn.closest('.stt-row');
+        var idx = parseInt(rowEl.dataset.idx, 10);
+        var dayKey = dayBtn.dataset.day;
+        var row = state.rows[idx]; if(!row) return;
+        if(!row.days) row.days = [];
+        var pos = row.days.indexOf(dayKey);
+        if(pos > -1) row.days.splice(pos, 1);
+        else row.days.push(dayKey);
+        var order = STT_DAYS_ALL.map(function(d){ return d.k; });
+        row.days.sort(function(a,b){ return order.indexOf(a) - order.indexOf(b); });
+        dayBtn.classList.toggle('active');
+        updateFooter(); updateRowStatus(idx); scheduleDraftSave();
+        return;
+      }
+      var copyBtn = e.target.closest('[data-action="copy-row"]');
+      if(copyBtn){
+        e.preventDefault();
+        var rowEl3 = copyBtn.closest('.stt-row');
+        var idx3 = parseInt(rowEl3.dataset.idx, 10);
+        var orig = state.rows[idx3];
+        if(!orig) return;
+        var copy = JSON.parse(JSON.stringify(orig));
+        copy._lookupTimer = null;
+        state.rows.splice(idx3 + 1, 0, copy);
+        renderRows();
+        scheduleDraftSave();
+        toast('📋 نُسخ الصف', 'info', 1200);
+        return;
+      }
+      var delBtn = e.target.closest('[data-action="del"]');
+      if(delBtn){
+        e.preventDefault();
+        var rowEl4 = delBtn.closest('.stt-row');
+        var idx4 = parseInt(rowEl4.dataset.idx, 10);
+        if(state.rows.length <= 1){ toast('لازم يبقى صف واحد', 'warn'); return; }
+        state.rows.splice(idx4, 1);
+        while(state.rows.length < MIN_ROWS) state.rows.push(sttEmptyRow());
+        renderRows();
+        scheduleDraftSave();
+        return;
+      }
+    });
+
+    draftNotice.addEventListener('click', function(e){
+      if(e.target.closest('[data-draft="clear"]')){
+        clearDraft();
+        draftNotice.classList.remove('show');
+        toast('🗑 مُسحت المسودّة', 'info', 1500);
+      }
+    });
+
+    header.addEventListener('click', function(e){
+      if(e.target.closest('.stt-close')) close();
+    });
+
+    footer.addEventListener('click', function(e){
+      var btn = e.target.closest('[data-action]'); if(!btn) return;
+      var action = btn.dataset.action;
+      if(action === 'add-row'){
+        state.rows.push(sttEmptyRow());
+        renderRows();
+        scheduleDraftSave();
+        setTimeout(function(){
+          rowsWrap.scrollTop = rowsWrap.scrollHeight;
+          var last = rowsWrap.querySelector('.stt-row:last-child .stt-code');
+          if(last) last.focus();
+        }, 60);
+      } else if(action === 'cancel'){ close(); }
+      else if(action === 'preview'){ showPreview(); }
+      else if(action === 'save'){ saveAll(); }
+    });
+
+    function showPreview(){
+      var body = previewOverlay.querySelector('[data-preview="body"]');
+      var ready = state.rows.filter(isRowComplete);
+      if(!ready.length){ toast('ما في صفوف جاهزة', 'warn', 2000); return; }
+      var totalMin = ready.reduce(function(a,r){ return a + calcDuration(r.timeFrom, r.timeTo); }, 0);
+      var uniq = {};
+      ready.forEach(function(r){ uniq[r.name] = true; });
+      var conflicts = countConflicts();
+      var html = '<div class="stt-preview-stats">' +
+        '<div class="stt-preview-stat"><div class="stt-preview-stat-v">' + ready.length + '</div><div class="stt-preview-stat-l">صفوف</div></div>' +
+        '<div class="stt-preview-stat"><div class="stt-preview-stat-v">' + Object.keys(uniq).length + '</div><div class="stt-preview-stat-l">مواد</div></div>' +
+        '<div class="stt-preview-stat"><div class="stt-preview-stat-v">' + (totalMin/60).toFixed(1) + '</div><div class="stt-preview-stat-l">ساعة</div></div>' +
+        '<div class="stt-preview-stat"><div class="stt-preview-stat-v" style="color:' + (conflicts ? 'var(--red)' : 'var(--green)') + '">' + conflicts + '</div><div class="stt-preview-stat-l">تعارضات</div></div>' +
+      '</div>';
+      var seen = {};
+      var conflictRows = {};
+      ready.forEach(function(r, i){
+        r.days.forEach(function(d){
+          var k = d + '-' + r.timeFrom;
+          if(seen[k]){ conflictRows[i] = true; conflictRows[seen[k].idx] = true; }
+          else seen[k] = { idx: i };
+        });
+      });
+      html += '<table class="stt-preview-table"><thead><tr>' +
+        '<th style="width:36px">#</th>' +
+        '<th style="width:100px">الكود</th>' +
+        '<th>المادة</th>' +
+        '<th style="width:200px">الأيام</th>' +
+        '<th style="width:140px">الوقت</th>' +
+        '<th style="width:100px">القاعة</th>' +
+      '</tr></thead><tbody>';
+      ready.forEach(function(r, i){
+        var cls = conflictRows[i] ? 'conflict' : '';
+        var daysHtml = (r.days || []).map(function(d){ return '<span class="stt-preview-day">' + d + '</span>'; }).join('');
+        var dur = formatDuration(calcDuration(r.timeFrom, r.timeTo));
+        html += '<tr class="' + cls + '">' +
+          '<td>' + (i+1) + '</td>' +
+          '<td style="font-family:monospace;direction:ltr;text-align:left;font-size:.72rem">' + esc(r.code || '—') + '</td>' +
+          '<td><b>' + esc(r.name) + '</b></td>' +
+          '<td><div class="stt-preview-days">' + daysHtml + '</div></td>' +
+          '<td style="font-family:monospace;direction:ltr;font-size:.75rem">' + (r.timeFrom || '') + ' → ' + (r.timeTo || '') +
+            (dur ? ' <span style="color:var(--muted2);font-size:.65rem">(' + dur + ')</span>' : '') + '</td>' +
+          '<td>' + esc(r.room || '—') + '</td>' +
+        '</tr>';
+      });
+      html += '</tbody></table>';
+      if(conflicts){
+        html = '<div style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:10px;padding:12px;margin-bottom:14px;font-size:.82rem;color:var(--red);font-weight:700">' +
+          '⚠️ عندك ' + conflicts + ' تعارض — راجع الصفوف الحمراء</div>' + html;
+      }
+      body.innerHTML = html;
+      previewOverlay.classList.add('show');
+    }
+
+    previewOverlay.addEventListener('click', function(e){
+      if(e.target.closest('[data-preview="close"]') || e.target.closest('[data-preview="close2"]')){
+        previewOverlay.classList.remove('show');
+      } else if(e.target.closest('[data-preview="confirm"]')){
+        previewOverlay.classList.remove('show');
+        saveAll();
+      }
+    });
+
+    function close(){
+      clearTimeout(draftTimer);
+      document.removeEventListener('keydown', escHandler);
+      backdrop.remove();
+    }
+    backdrop.addEventListener('click', function(e){ if(e.target === backdrop) close(); });
+    var escHandler = function(e){
+      if(e.key === 'Escape'){
+        if(previewOverlay.classList.contains('show')) previewOverlay.classList.remove('show');
+        else close();
+      }
+    };
+    document.addEventListener('keydown', escHandler);
+
+    function saveAll(){
+      var sp = window.space;
+      if(!sp.timetable) sp.timetable = {};
+      if(!sp.courses) sp.courses = [];
+      if(!sp.attendance) sp.attendance = {};
+
+      var stats = { courses: 0, classes: 0, skipped: [], incomplete: [], unknownCodes: [] };
+
+      state.rows.forEach(function(row, idx){
+        if(!isRowComplete(row)){
+          var missing = [];
+          if(!row.name) missing.push('الاسم');
+          if(!row.days || !row.days.length) missing.push('الأيام');
+          if(!row.timeFrom) missing.push('وقت البداية');
+          if(!row.timeTo) missing.push('وقت النهاية');
+          if(missing.length && (row.code || row.name)){
+            stats.incomplete.push({ row: idx + 1, missing: missing.join(' + ') });
+          }
+          return;
+        }
+        if(row.code && row.code.length >= 6 && !row.matched){
+          stats.unknownCodes.push({ row: idx + 1, code: row.code, name: row.name });
+        }
+        var finalName = row.matched ? row.matched.name : row.name;
+        var finalCode = row.code || (row.matched && row.matched.info ? row.matched.info.code : '');
+        var hours = (row.matched && row.matched.info && row.matched.info.h) ? row.matched.info.h : 3;
+        var exists = sp.courses.some(function(c){
+          return c.name === finalName || (finalCode && c.code && String(c.code) === String(finalCode));
+        });
+        if(!exists){
+          sp.courses.push({
+            id: uid(), name: finalName, code: finalCode, hours: hours,
+            instructor: '', room: row.room || ''
+          });
+          stats.courses++;
+        }
+        row.days.forEach(function(dayKey){
+          var key = dayKey + '-' + row.timeFrom;
+          if(sp.timetable[key] && sp.timetable[key].name !== finalName){
+            stats.skipped.push({ row: idx + 1, day: dayKey, time: row.timeFrom, newName: finalName, conflictWith: sp.timetable[key].name });
+            return;
+          }
+          sp.timetable[key] = {
+            name: finalName, room: row.room || '', instructor: ''
+          };
+          stats.classes++;
+        });
+        if(!sp.attendance[finalName]) sp.attendance[finalName] = { present: 0, absent: 0 };
+        if(row.room) addToSTTCache('rooms', row.room);
+      });
+
+      saveSpace();
+      clearDraft();
+      try{ window.renderTimetable && window.renderTimetable(); }catch(e){}
+      try{ window.renderCourses && window.renderCourses(); }catch(e){}
+      try{ window.renderDashboard && window.renderDashboard(); }catch(e){}
+      try{ window.renderAttendance && window.renderAttendance(); }catch(e){}
+      try{ window.renderGradeCalc && window.renderGradeCalc(); }catch(e){}
+
+      var issues = stats.skipped.length + stats.incomplete.length + stats.unknownCodes.length;
+      if(issues === 0){
+        var msg = '✅ ' + stats.courses + ' مادة · ' + stats.classes + ' محاضرة';
+        if(stats.courses === 0 && stats.classes === 0) toast('لم تُضف أي شيء جديد', 'info', 3000);
+        else toast(msg, 'success', 4000);
+        close();
+      } else {
+        close();
+        showSaveResult(stats);
+      }
+    }
+
+    renderRows();
+    setTimeout(function(){
+      var firstCode = rowsWrap.querySelector('.stt-code');
+      if(firstCode) firstCode.focus();
+    }, 200);
+  }
 
     function isRowComplete(row){
       return !!(row.name && row.days && row.days.length && row.timeFrom && row.timeTo);
