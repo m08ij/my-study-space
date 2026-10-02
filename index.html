@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=5.0">
+<meta name="color-scheme" content="dark light">
+<title>مساحتي الدراسية 📚</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0b0f1a">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%9A%3C/text%3E%3C/svg%3E">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="مساحتي">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+<div class="debug-panel" id="debugPanel"></div>
+
+<div class="welcome-overlay" id="welcomeOverlay">
+  <div class="welcome-card">
+    <div class="welcome-icon">📚</div>
+    <h1 id="welcomeTitle">أهلاً بك في مساحتك الدراسية</h1>
+    <p id="welcomeSub">رفيقك الذكي خلال سنوات الجامعة</p>
+    <input id="welcomeName" placeholder="اكتب اسمك للبدء..." autocomplete="off" maxlength="40">
+    <button id="welcomeBtn" type="button">ابدأ رحلتك 🚀</button>
+  </div>
+</div>
+
+<header class="topbar">
+  <button class="icon-btn menu-toggle" id="menuToggle" title="القائمة">☰</button>
+  <div class="brand">
+    <div class="brand-icon">📚</div>
+    <div class="brand-name">مساحتي الدراسية</div>
+  </div>
+  <div class="search-wrap">
+    <input type="search" id="searchInput" placeholder="ابحث..." autocomplete="off">
+    <div class="search-results" id="searchResults"></div>
+  </div>
+  <div class="topbar-actions">
+    <button class="icon-btn" id="serverStatus" title="جاري الفحص...">⏳</button>
+    <div class="settings-wrap">
+      <button class="icon-btn" id="settingsBtn" title="الإعدادات">⚙️</button>
+      <div class="settings-menu" id="settingsMenu">
+        <button class="settings-item" id="notifBtn"><span>🔔</span> <span id="notifBtnText">تفعيل الإشعارات</span></button>
+        <button class="settings-item" id="themeBtn"><span>🎨</span> الثيمات</button>
+        <button class="settings-item" id="pwaInstallBtn" style="display:none"><span>📲</span> تثبيت التطبيق</button>
+        <button class="settings-item" id="syncCodeBtn"><span>☁️</span> المزامنة السحابية</button>
+        <div class="settings-divider"></div>
+        <button class="settings-item" id="pdfBtn"><span>🖨️</span> تصدير PDF</button>
+        <button class="settings-item" id="backupBtn"><span>💾</span> تصدير نسخة</button>
+        <button class="settings-item" id="restoreBtn"><span>📥</span> استيراد نسخة</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="theme-panel" id="themePanel">
+  <h4>🎨 اختر الثيم</h4>
+  <div class="theme-grid" id="themeGrid"></div>
+</div>
+
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+<aside class="sidebar" id="sidebar">
+  <div class="nav-item active" data-tab="dashboard"><span class="ic">📊</span><span class="label">لوحة التحكم</span></div>
+  <div class="nav-section">الدراسة</div>
+  <div class="nav-item" data-tab="timetable"><span class="ic">📅</span><span class="label">الجدول الأسبوعي</span></div>
+  <div class="nav-item" data-tab="courses"><span class="ic">📚</span><span class="label">موادي</span></div>
+  <div class="nav-item" data-tab="tasks"><span class="ic">📝</span><span class="label">المهام</span></div>
+  <div class="nav-item" data-tab="exams"><span class="ic">⏳</span><span class="label">الامتحانات</span></div>
+  <div class="nav-item" data-tab="attendance"><span class="ic">✅</span><span class="label">الحضور</span></div>
+  <div class="nav-section">المذاكرة</div>
+  <div class="nav-item" data-tab="timer"><span class="ic">⏱️</span><span class="label">بومودورو</span></div>
+  <div class="nav-item" data-tab="flashcards"><span class="ic">🃏</span><span class="label">بطاقات تعليمية</span></div>
+  <div class="nav-section">الأدوات</div>
+  <div class="nav-item" data-tab="gradecalc"><span class="ic">📊</span><span class="label">علاماتي</span></div>
+  <div class="nav-item" data-tab="budget"><span class="ic">💰</span><span class="label">الميزانية</span></div>
+  <div class="nav-item" data-tab="notes"><span class="ic">📔</span><span class="label">ملاحظاتي</span></div>
+  <div class="nav-item" data-tab="plan"><span class="ic">📖</span><span class="label">الخطة والمواد</span></div>
+  <div class="nav-section">الجامعة</div>
+  <div class="nav-item" data-tab="hulinks"><span class="ic">🎓</span><span class="label">روابط الجامعة</span></div>
+</aside>
+
+<main>
+  <section id="dashboard" class="section active">
+    <div class="page-head">
+      <h2 class="page-title">📊 لوحة التحكم</h2>
+      <p class="page-sub" id="greetLine">—</p>
+    </div>
+    <div class="daily-quote">
+      <div class="quote-text" id="dailyQuoteText">—</div>
+      <div class="quote-author" id="dailyQuoteAuthor">—</div>
+    </div>
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-head"><h3>🎓 تقدم الترم</h3>
+        <span class="card-action" data-goto="gradecalc">علاماتي ←</span></div>
+      <div id="dashTermProgress"></div>
+    </div>
+    <div class="grid grid-4" style="margin-bottom:20px" id="dashStats"></div>
+    <div class="grid grid-2" style="margin-bottom:16px">
+      <div class="card">
+        <div class="card-head"><h3>📅 محاضرات اليوم</h3>
+          <span class="card-action" data-goto="timetable">الجدول ←</span></div>
+        <div id="todayClasses"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>⏰ مهام قادمة</h3>
+          <span class="card-action" data-goto="tasks">الكل ←</span></div>
+        <div id="upcomingTasks"></div>
+      </div>
+    </div>
+    <div class="grid grid-2" style="margin-bottom:16px">
+      <div class="mini-timer">
+        <div class="ring">
+          <svg viewBox="0 0 56 56">
+            <defs><linearGradient id="miniGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#22d3ee"/><stop offset="100%" stop-color="#a78bfa"/>
+            </linearGradient></defs>
+            <circle class="bg" cx="28" cy="28" r="24"/>
+            <circle class="fill" id="miniRing" cx="28" cy="28" r="24" stroke-dasharray="150.8" stroke-dashoffset="0"/>
+          </svg>
+          <div class="inner" id="miniPct">25:00</div>
+        </div>
+        <div class="info">
+          <div class="mode" id="miniMode">🎯 تركيز</div>
+          <div class="time" id="miniTime">25:00</div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-sm" id="miniStartBtn">▶</button>
+          <button class="btn btn-sm btn-ghost" id="miniResetBtn">↺</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>💰 نظرة الميزانية</h3>
+          <span class="card-action" data-goto="budget">التفاصيل ←</span></div>
+        <div id="dashBudget"></div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-head"><h3>📔 آخر الملاحظات</h3>
+        <span class="card-action" data-goto="notes">الكل ←</span></div>
+      <div id="dashNotes"></div>
+    </div>
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-head"><h3>📈 إحصائيات الدراسة</h3></div>
+      <div class="chart-title">⏱️ ساعات الدراسة (آخر 7 أيام)</div>
+      <div class="bar-chart" id="studyChart"></div>
+      <div class="grid grid-3" id="statsCards" style="margin-top:24px"></div>
+    </div>
+  </section>
+
+  <section id="timetable" class="section">
+    <div class="page-head"><h2 class="page-title">📅 الجدول الأسبوعي</h2>
+      <p class="page-sub">أضف يدويًا، أو ارفع صورة جدولك</p></div>
+    <div class="grid grid-2" style="margin-bottom:16px">
+      <div class="card">
+        <h3>📸 رفع صورة الجدول (OCR)</h3>
+        <div class="upload-zone" id="uploadZone">
+          <div class="uz-icon">📤</div>
+          <div class="uz-title">اضغط لرفع صورة</div>
+          <div class="uz-sub">PNG أو JPG</div>
+          <input type="file" id="ocrFile" accept="image/*">
+        </div>
+        <div class="ocr-progress" id="ocrProgress">
+          <div class="bar-outer"><div class="bar-inner" id="ocrBar"></div></div>
+          <div class="text" id="ocrText">جاري التحليل...</div>
+        </div>
+        <div class="ocr-preview" id="ocrPreview"></div>
+        <div class="ocr-result" id="ocrResult">
+          <label style="font-size:.82rem;color:var(--muted);display:block;margin-bottom:6px">📝 النص المستخرج</label>
+          <textarea id="ocrTextarea"></textarea>
+          <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+            <button class="btn btn-sm" id="btnParseOcr">🔍 تحليل</button>
+            <button class="btn btn-sm btn-ghost" id="btnClearOcr">🗑 مسح</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>✨ أدوات سريعة</h3>
+        <button class="btn" style="width:100%;margin-bottom:10px" id="btnLoadExample">🎯 تجربة مثال</button>
+        <button class="btn" style="width:100%;margin-bottom:10px;background:var(--grad-soft);color:var(--cyan);border:1px solid var(--cyan)" id="btnPasteOcr">📋 تجربة OCR</button>
+        <button class="btn" style="width:100%;margin-bottom:10px;background:transparent;color:var(--text);border:1px solid var(--border)" id="btnAutoFill">✨ توليد من موادي</button>
+        <button class="btn" style="width:100%;background:transparent;color:var(--text);border:1px solid var(--border)" id="btnPrintTt">🖨️ طباعة</button>
+      </div>
+    </div>
+    <div class="controls">
+      <button class="btn" id="btnAddClass">+ محاضرة</button>
+      <button class="btn btn-sm btn-ghost" id="btnClearTt">🗑 مسح الجدول</button>
+    </div>
+    <div class="timetable-wrap"><table class="timetable" id="timetableTable"></table></div>
+  </section>
+
+  <section id="courses" class="section">
+    <div class="page-head"><h2 class="page-title">📚 موادي</h2><p class="page-sub">موادك الدراسية</p></div>
+    <div class="controls">
+      <button class="btn" id="btnAddCourse">+ مادة</button>
+      <button class="btn btn-ghost" id="btnImportPlan">📥 استيراد من الخطة</button>
+    </div>
+    <div class="grid grid-2" id="myCoursesGrid"></div>
+  </section>
+
+  <section id="tasks" class="section">
+    <div class="page-head"><h2 class="page-title">📝 المهام</h2><p class="page-sub">تابع واجباتك</p></div>
+    <div class="controls">
+      <button class="btn" id="btnAddTask">+ مهمة</button>
+      <button class="chip active" data-tf="all">الكل</button>
+      <button class="chip" data-tf="pending">قيد الانتظار</button>
+      <button class="chip" data-tf="overdue">متأخرة</button>
+      <button class="chip" data-tf="done">مكتملة</button>
+    </div>
+    <div id="tasksList"></div>
+  </section>
+
+  <section id="exams" class="section">
+    <div class="page-head"><h2 class="page-title">⏳ الامتحانات</h2><p class="page-sub">مواعيد امتحاناتك</p></div>
+    <div class="controls"><button class="btn" id="btnAddExam">+ امتحان</button></div>
+    <div id="examsList"></div>
+  </section>
+
+  <section id="attendance" class="section">
+    <div class="page-head"><h2 class="page-title">✅ الحضور</h2><p class="page-sub">سجّل حضورك</p></div>
+    <div class="controls"><button class="btn" id="btnAddAtt">+ مادة</button></div>
+    <div id="attendanceList"></div>
+  </section>
+
+  <section id="timer" class="section">
+    <div class="page-head"><h2 class="page-title">⏱️ بومودورو</h2><p class="page-sub">ركّز، ارتح، وأنجز</p></div>
+    <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+      <button class="btn btn-ghost btn-sm" id="btnTimerSettings">⚙️ تخصيص</button>
+    </div>
+    <div class="timer-main">
+      <span class="timer-mode" id="timerMode">🎯 وقت التركيز</span>
+      <div class="timer-ring">
+        <svg viewBox="0 0 260 260">
+          <defs><linearGradient id="timerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#22d3ee"/><stop offset="100%" stop-color="#a78bfa"/>
+          </linearGradient></defs>
+          <circle class="bg-circle" cx="130" cy="130" r="116"/>
+          <circle class="progress-circle" id="progressCircle" cx="130" cy="130" r="116" stroke-dasharray="728.8" stroke-dashoffset="0"/>
+        </svg>
+        <div class="inner"><div class="timer-display" id="timerDisplay">25:00</div></div>
+      </div>
+      <div class="mode-switch">
+        <button class="chip active" data-mode="focus" id="btnFocus">🎯 تركيز (25)</button>
+        <button class="chip" data-mode="short" id="btnShort">☕ راحة (5)</button>
+        <button class="chip" data-mode="long" id="btnLong">🌴 طويلة (15)</button>
+        <button class="chip" data-mode="stopwatch" id="btnStopwatch">⏱️ تصاعدي</button>
+      </div>
+      <div class="timer-controls">
+        <button class="btn" id="startBtn">▶ ابدأ</button>
+        <button class="btn btn-ghost" id="resetBtn">↺ إعادة</button>
+      </div>
+      <div class="timer-stats">
+        <div class="timer-stat"><div class="v" id="sessionsDone">0</div><div class="l">جلسات</div></div>
+        <div class="timer-stat"><div class="v" id="focusMinutes">0</div><div class="l">دقيقة</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="flashcards" class="section">
+    <div class="page-head"><h2 class="page-title">🃏 بطاقات تعليمية</h2><p class="page-sub">راجع مفاهيمك</p></div>
+    <div class="controls"><button class="btn" id="btnAddDeck">+ مجموعة</button></div>
+    <div id="decksList"></div>
+  </section>
+
+  <section id="budget" class="section">
+    <div class="page-head"><h2 class="page-title">💰 الميزانية</h2><p class="page-sub">دخلك ومصاريفك</p></div>
+    <div class="budget-summary" id="budgetSummary"></div>
+    <div class="controls">
+      <button class="btn" id="btnAddIncome">+ دخل</button>
+      <button class="btn" id="btnAddExpense">+ مصروف</button>
+      <button class="btn btn-sm btn-danger" id="btnClearBudget">🗑 مسح</button>
+    </div>
+    <div class="budget-tabs" id="budgetTabs">
+      <button class="budget-tab active" data-bt="all">الكل</button>
+      <button class="budget-tab" data-bt="income">📈 دخل</button>
+      <button class="budget-tab" data-bt="expense">📉 مصروف</button>
+    </div>
+    <div class="budget-cats" id="budgetCats"></div>
+    <div id="budgetList"></div>
+  </section>
+
+  <section id="notes" class="section">
+    <div class="page-head"><h2 class="page-title">📔 ملاحظاتي</h2><p class="page-sub">تُحفظ تلقائيًا</p></div>
+    <div class="controls">
+      <button class="btn" id="btnAddNote">+ ملاحظة</button>
+      <span style="color:var(--muted);font-size:.8rem;margin-right:auto" id="notesCount">0</span>
+    </div>
+    <div id="notesList"></div>
+  </section>
+
+  <section id="gradecalc" class="section">
+    <div class="page-head">
+      <h2 class="page-title">📊 علاماتي</h2>
+      <p class="page-sub">علاماتك + كم تحتاج + حاسبة المعدل</p>
+    </div>
+    <div class="section-tabs">
+      <button class="section-tab active" data-gc-tab="need">🎯 كم أحتاج</button>
+      <button class="section-tab" data-gc-tab="tracker">📈 علاماتي</button>
+      <button class="section-tab" data-gc-tab="gpa">📊 حاسبة المعدل</button>
+    </div>
+    <div class="subsection active" data-gc-sub="need">
+      <div class="card">
+        <h3>🎯 كم أحتاج في الفاينل؟</h3>
+        <div class="grid grid-2">
+          <div class="form-group"><label>علامتك الحالية</label><input id="ncCurrent" type="number" min="0" max="100" value="72"></div>
+          <div class="form-group"><label>وزن الفاينل (%)</label><input id="ncWeight" type="number" min="1" max="100" value="40"></div>
+          <div class="form-group"><label>الهدف</label>
+            <select id="ncTarget">
+              <option value="95">A — 95</option><option value="87">A- — 87</option>
+              <option value="82">B+ — 82</option><option value="77">B — 77</option>
+              <option value="72">B- — 72</option><option value="67">C+ — 67</option>
+              <option value="62">C — 62</option><option value="60" selected>نجاح — 60</option>
+            </select></div>
+          <div class="form-group"><label>&nbsp;</label><button class="btn" style="width:100%" id="ncCalc">احسب</button></div>
+        </div>
+        <div id="ncResult" style="margin-top:12px;padding:14px;border-radius:10px;display:none;text-align:center"></div>
+      </div>
+    </div>
+    <div class="subsection" data-gc-sub="tracker">
+      <div class="card">
+        <div class="card-head"><h3>📈 علامات المواد</h3>
+          <button class="btn btn-sm" id="btnAddGrade">+ مادة</button></div>
+        <div id="gradeTrackerList"></div>
+      </div>
+    </div>
+    <div class="subsection" data-gc-sub="gpa">
+      <div class="controls">
+        <button class="btn btn-sm" id="btnAddGpa">+ مادة</button>
+        <button class="btn btn-sm btn-ghost" id="btnLoadGpaSample">📋 مثال</button>
+        <button class="btn btn-sm btn-danger" id="btnClearGpa">🗑 مسح</button>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="gpa-table">
+          <thead><tr><th style="width:45%">المادة</th><th style="width:15%">الساعات</th>
+            <th style="width:30%">التقدير</th><th style="width:10%"></th></tr></thead>
+          <tbody id="gpaBody"></tbody>
+        </table>
+      </div>
+      <div class="gpa-result">
+        <div style="color:var(--muted);font-size:.84rem">المعدل التراكمي</div>
+        <div class="big" id="gpaVal">0.00</div>
+        <div class="gpa-details">
+          <div><div class="v" id="gpaHrs">0</div><div class="l">مجموع الساعات</div></div>
+          <div><div class="v" id="gpaCourses">0</div><div class="l">عدد المواد</div></div>
+          <div><div class="v" id="gpaGrade">—</div><div class="l">التقدير</div></div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:18px">
+        <h3>🎯 محاكي "ماذا لو"</h3>
+        <div class="grid grid-2">
+          <div class="form-group"><label>الساعات</label><input id="whatIfHrs" type="number" value="3" min="1" max="6"></div>
+          <div class="form-group"><label>التقدير المتوقع</label><select id="whatIfGrade"></select></div>
+          <div class="form-group"><label>&nbsp;</label><button class="btn" style="width:100%" id="btnCalcWhatIf">احسب</button></div>
+        </div>
+        <div id="whatIfResult" style="margin-top:12px;padding:14px;background:var(--grad-soft);border-radius:10px;font-size:.86rem;color:var(--cyan);font-weight:600;display:none"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="plan" class="section">
+    <div class="page-head">
+      <h2 class="page-title">📖 الخطة والمواد</h2>
+      <p class="page-sub">خطة هندسة الحاسوب + وصف المواد</p>
+    </div>
+    <div class="section-tabs">
+      <button class="section-tab active" data-plan-tab="plan">📖 الخطة الدراسية</button>
+      <button class="section-tab" data-plan-tab="desc">📕 وصف المواد</button>
+    </div>
+    <div class="subsection active" data-plan-sub="plan">
+      <div class="controls">
+        <button class="chip active" data-filter="all">الكل</button>
+        <button class="chip" data-filter="1">سنة 1</button>
+        <button class="chip" data-filter="2">سنة 2</button>
+        <button class="chip" data-filter="3">سنة 3</button>
+        <button class="chip" data-filter="4">سنة 4</button>
+        <button class="chip" data-filter="5">سنة 5</button>
+      </div>
+      <div id="semesters"></div>
+    </div>
+    <div class="subsection" data-plan-sub="desc">
+      <div class="controls">
+        <input type="search" id="cdSearch" placeholder="🔍 ابحث..." style="flex:1;min-width:220px;padding:10px 14px;background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:10px;font-family:inherit">
+        <button class="chip active" data-cd-year="all">الكل</button>
+        <button class="chip" data-cd-year="1">سنة 1</button>
+        <button class="chip" data-cd-year="2">سنة 2</button>
+        <button class="chip" data-cd-year="3">سنة 3</button>
+        <button class="chip" data-cd-year="4">سنة 4</button>
+        <button class="chip" data-cd-year="5">سنة 5</button>
+      </div>
+      <div id="cdList"></div>
+    </div>
+  </section>
+
+  <section id="hulinks" class="section">
+    <div class="page-head">
+      <h2 class="page-title">🎓 روابط الجامعة الهاشمية</h2>
+      <p class="page-sub">كل ما تحتاجه من خدمات الجامعة</p>
+    </div>
+    <div class="hu-hero">
+      <div class="hu-hero-icon">🎓</div>
+      <div class="hu-hero-info">
+        <h3>الجامعة الهاشمية</h3>
+        <p>بوابة الطالب، البريد، المكتبة، التعلم الإلكتروني</p>
+      </div>
+    </div>
+    <h3 style="margin:20px 0 12px;font-size:1rem;color:var(--cyan)">🔗 الخدمات الأساسية</h3>
+    <div class="grid grid-2" id="huMainLinks"></div>
+    <h3 style="margin:20px 0 12px;font-size:1rem;color:var(--cyan)">📚 المكتبة والمصادر</h3>
+    <div class="grid grid-2" id="huLibraryLinks"></div>
+    <h3 style="margin:20px 0 12px;font-size:1rem;color:var(--cyan)">📱 التطبيقات الرسمية</h3>
+    <div class="grid grid-2" id="huAppLinks"></div>
+    <h3 style="margin:20px 0 12px;font-size:1rem;color:var(--cyan)">🆘 الدعم والمساعدة</h3>
+    <div class="grid grid-2" id="huSupportLinks"></div>
+  </section>
+</main>
+
+<button class="fab-main" id="fabMain">+</button>
+<div class="fab-menu" id="fabMenu">
+  <button class="fab-action" data-fab="quick"><span class="fa-ic">⚡</span> إضافة سريعة</button>
+  <button class="fab-action" data-fab="task"><span class="fa-ic">📝</span> مهمة جديدة</button>
+  <button class="fab-action" data-fab="course"><span class="fa-ic">📚</span> مادة جديدة</button>
+  <button class="fab-action" data-fab="exam"><span class="fa-ic">⏳</span> امتحان جديد</button>
+  <button class="fab-action" data-fab="note"><span class="fa-ic">📔</span> ملاحظة سريعة</button>
+  <button class="fab-action" data-fab="budget"><span class="fa-ic">💰</span> مصروف جديد</button>
+</div>
+
+<button class="ai-fab" id="aiFab">🤖</button>
+<div class="ai-panel" id="aiPanel">
+  <div class="ai-header">
+    <div class="ai-avatar">🤖</div>
+    <div class="ai-info">
+      <div class="ai-name">مساعدك الذكي</div>
+      <div class="ai-status">متصل</div>
+    </div>
+    <button class="ai-close" id="aiClose">×</button>
+  </div>
+  <div class="ai-messages" id="aiMessages"></div>
+  <div class="ai-suggestions" id="aiSuggestions"></div>
+  <div class="ai-input-wrap">
+    <input id="aiInput" placeholder="اسألني...">
+    <button id="aiSend">➤</button>
+  </div>
+</div>
+
+<div class="backup-badge" id="backupBadge">
+  <span class="dot"></span>
+  <span id="backupText">تم الحفظ</span>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- مكتبات خارجية -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- الملفات الأساسية (الترتيب مهم جداً!) -->
+<script src="core.js"></script>
+<script src="data.js"></script>
+<script src="supabase.js"></script>
+<script src="features.js"></script>
+<script src="widgets.js"></script>
+<script src="ai.js"></script>
+<script src="integrations.js"></script>
+<script src="pwa.js"></script>
+<script src="app.js"></script>
+<script src="tests.js"></script>
+
+</body>
+</html>
