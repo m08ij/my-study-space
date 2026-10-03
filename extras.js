@@ -230,7 +230,6 @@
     var sec = document.createElement('div');
     sec.id = 'enhancedStatsSection';
     sec.className = 'card';
-    sec.style.marginTop = '16px';
     sec.innerHTML =
       '<div class="card-head"><h3>📊 إحصائيات متقدمة</h3>' +
       '<span class="card-action" id="enhStatsRefresh">🔄 تحديث</span></div>' +
@@ -270,15 +269,8 @@
         '</div>' +
       '</div>';
 
-    var lastCard = null;
-    for(var i = 0; i < dash.children.length; i++){
-      var ch = dash.children[i];
-      if(ch.classList && ch.classList.contains('card')) lastCard = ch;
-    }
-    try{
-      if(lastCard && lastCard.parentNode === dash) dash.insertBefore(sec, lastCard);
-      else dash.appendChild(sec);
-    }catch(e){ dash.appendChild(sec); }
+    /* كل قسم يدخل slot ثابت في index.html فيبقى الترتيب مضبوطاً مهما كان توقيت البناء */
+    (document.getElementById('slotEnhanced') || dash).appendChild(sec);
 
     var refresh = document.getElementById('enhStatsRefresh');
     if(refresh){
@@ -600,14 +592,13 @@
     var sec = document.createElement('div');
     sec.id = 'lmsWidget';
     sec.className = 'card moodle-widget';
-    sec.style.marginTop = '16px';
 
     var html = '';
 
     /* === LMS قسم === */
     html += '<div class="card-head" style="margin-bottom:10px">' +
       '<h3>🎓 LMS HU — روابط سريعة</h3>' +
-      '<span class="card-action" style="color:#ff9800;font-size:.7rem;font-family:monospace">lms.hu.edu.jo</span>' +
+      '<span class="card-action" style="color:var(--amber);font-size:.7rem;font-family:monospace">lms.hu.edu.jo</span>' +
       '</div>';
 
     LMS_LINKS.forEach(function(l){
@@ -625,7 +616,7 @@
     html += '<div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border)">' +
       '<div class="card-head" style="margin-bottom:10px">' +
       '<h3 style="font-size:.9rem">💬 Microsoft Teams</h3>' +
-      '<span class="card-action" style="color:#6264A7;font-size:.7rem;font-family:monospace">teams.microsoft.com</span>' +
+      '<span class="card-action" style="color:var(--purple);font-size:.7rem;font-family:monospace">teams.microsoft.com</span>' +
       '</div>';
 
     TEAMS_LINKS.forEach(function(l){
@@ -651,15 +642,8 @@
 
     sec.innerHTML = html;
 
-    var lastCard = null;
-    for(var i = 0; i < dash.children.length; i++){
-      var ch = dash.children[i];
-      if(ch.classList && ch.classList.contains('card')) lastCard = ch;
-    }
-    try{
-      if(lastCard && lastCard.parentNode === dash) dash.insertBefore(sec, lastCard);
-      else dash.appendChild(sec);
-    }catch(e){ dash.appendChild(sec); }
+    /* كل قسم يدخل slot ثابت في index.html فيبقى الترتيب مضبوطاً مهما كان توقيت البناء */
+    (document.getElementById('slotLms') || dash).appendChild(sec);
 
     var importBtn = document.getElementById('moodleImportBtn');
     var fileInput = document.getElementById('moodleIcsFile');

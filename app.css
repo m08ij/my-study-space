@@ -3,7 +3,7 @@
    ============================================================ */
 
 /* ============ Block 1: Theme Variables & Base ============ */
-:root,[data-theme="dark"]{--on-accent:#0b0f1a;--blob-opacity:.35;--bg:#0b0f1a;--bg2:#0f1522;--card:#141c2e;--card2:#1a2338;--border:#243049;--border2:#2f3d5c;--text:#e8eefb;--muted:#8a96b8;--muted2:#5b6885;--cyan:#22d3ee;--purple:#a78bfa;--green:#34d399;--amber:#fbbf24;--red:#f87171;--pink:#f472b6;--grad:linear-gradient(135deg,#22d3ee,#a78bfa);--grad-soft:linear-gradient(135deg,rgba(34,211,238,.12),rgba(167,139,250,.12));--shadow:0 8px 32px rgba(0,0,0,.35);--shadow-lg:0 20px 60px rgba(0,0,0,.5);--glow:rgba(34,211,238,.35);--topbar-bg:rgba(15,21,34,.88);--radius:14px;--radius-lg:20px}
+:root,[data-theme="dark"]{--on-accent:#0b0f1a;--blob-opacity:.35;--bg:#0b0f1a;--bg2:#0f1522;--card:#141c2e;--card2:#1a2338;--border:#243049;--border2:#2f3d5c;--text:#e8eefb;--muted:#8a96b8;--muted2:#7d8aab;--cyan:#22d3ee;--purple:#a78bfa;--green:#34d399;--amber:#fbbf24;--red:#f87171;--pink:#f472b6;--grad:linear-gradient(135deg,#22d3ee,#a78bfa);--grad-soft:linear-gradient(135deg,rgba(34,211,238,.12),rgba(167,139,250,.12));--shadow:0 8px 32px rgba(0,0,0,.35);--shadow-lg:0 20px 60px rgba(0,0,0,.5);--glow:rgba(34,211,238,.35);--topbar-bg:rgba(15,21,34,.88);--radius:14px;--radius-lg:20px}
 /* سماء (Sky): ثيم فاتح بارد — نهار جامعي، نيلي + أزرق سماوي */
 [data-theme="sky"]{--bg:#eef3fb;--bg2:#e4ecf8;--card:#ffffff;--card2:#f1f5fc;--border:#d5dfef;--border2:#b7c6e0;--text:#16213a;--muted:#52607d;--muted2:#5a6883;--cyan:#4338ca;--purple:#0369a1;--green:#137638;--amber:#945a06;--red:#b91c1c;--pink:#be185d;--grad:linear-gradient(135deg,#4f46e5,#0369a1);--grad-soft:linear-gradient(135deg,rgba(79,70,229,.10),rgba(3,105,161,.10));--shadow:0 8px 28px rgba(30,50,100,.10);--shadow-lg:0 20px 50px rgba(30,50,100,.16);--glow:rgba(79,70,229,.25);--topbar-bg:rgba(238,243,251,.92);--on-accent:#ffffff;--blob-opacity:.12}
 /* جرافيت (Graphite): رمادي محايد احترافي — ليموني + تركوازي */
@@ -1164,3 +1164,56 @@ button.hub-li:hover{border-color:var(--cyan)}
 .tt-row{display:flex;align-items:center;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px}
 .tt-row .tt-weeklabel{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
 .tt-days{flex-wrap:nowrap}
+
+/* ============================================================
+   🎛️ Dashboard layout + UI consistency pass (آخر الملف عمداً: يبني على المتغيرات الحالية)
+   ============================================================ */
+:root{--ring:0 0 0 3px var(--glow);--gap:16px}
+
+/* لوحة التحكم: عمود واحد بمسافة موحدة (الترتيب من index.html مباشرة) */
+#dashboard.active{display:flex;flex-direction:column;gap:var(--gap)}
+#dashboard > .page-head{margin-bottom:0}
+#dashboard > .grid,#dashboard > .card,#dashboard > .daily-quote{margin:0}
+#dashboard > .dash-slot{display:contents}
+#dashboard > .dash-slot:empty{display:none}
+#dashboard > .dash-slot > .card{margin:0}
+.dash-term{padding:16px 20px}
+.dash-term .card-head{margin-bottom:10px}
+.daily-quote{padding:14px 18px}
+
+/* حركة هادفة فقط: لا حركة مستمرة تشتت الانتباه */
+body::before,body::after{animation:none}
+.empty .ic,.welcome-card .welcome-icon,.badge.urgent,.task.urgent .badge,
+.sc-progress-fill::after,.att-fill::after{animation:none}
+.card:hover{transform:none;box-shadow:var(--shadow)}
+.card::before{display:none}
+.card:hover{border-color:var(--border2)}
+
+/* استجابة بصرية موحّدة للعناصر القابلة للضغط */
+.card-action,.section-tab,.chip,.nav-item,.tt-block,.task,.hub-card,.stat[data-goto]{transition:background .18s ease,color .18s ease,border-color .18s ease,transform .18s ease}
+.card-action:active,.chip:active,.hub-card:active,.stat[data-goto]:active{transform:scale(.97)}
+.card-action{display:inline-flex;align-items:center;min-height:30px}
+.card-action:focus-visible,.chip:focus-visible,.nav-item:focus-visible,.section-tab:focus-visible,.tt-block:focus-visible,.hub-card:focus-visible,a:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--cyan);outline-offset:2px;box-shadow:var(--ring)}
+
+/* أهداف لمس مناسبة على الشاشات اللمسية */
+@media (pointer:coarse){
+  .btn,.btn-sm,.chip,.icon-btn,.section-tab,.card-action{min-height:40px}
+  .nav-item{min-height:44px}
+}
+
+/* موبايل: كروت أخف وأرقام أصغر لتقليل التمرير */
+@media (max-width:600px){
+  :root{--gap:12px}
+  .page-title{font-size:1.4rem}
+  .card{padding:14px}
+  .dash-term{padding:12px 14px}
+  #dashStats{grid-template-columns:1fr 1fr;gap:10px}
+  #dashStats .stat{padding:12px;gap:10px}
+  #dashStats .stat .ic{width:38px;height:38px;font-size:1.1rem}
+  #dashStats .stat .v{font-size:1.25rem}
+  #dashboard > .grid.dash-row{grid-template-columns:1fr}
+}
+/* عنوان الصفحة: نص عادي عالي التباين (التعبئة الشفافة كانت تحوّل الإيموجي إلى مربع ملوّن) */
+.page-title{background:none!important;-webkit-text-fill-color:currentColor!important;color:var(--text)}
+#dashStats{grid-template-columns:repeat(4,1fr)}
+@media (max-width:760px){#dashStats{grid-template-columns:repeat(2,1fr)}}
