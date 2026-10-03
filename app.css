@@ -32,21 +32,6 @@ body::after{width:600px;height:600px;bottom:-250px;left:-150px;background:radial
 ::selection{background:var(--glow)}
 button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
 
-/* ============ Welcome Overlay ============ */
-.welcome-overlay{position:fixed;inset:0;z-index:2000;display:none;align-items:center;justify-content:center;padding:20px;background:var(--bg);backdrop-filter:blur(15px);transition:opacity .5s}
-.welcome-overlay.show{display:flex}
-.welcome-overlay.hide{opacity:0;pointer-events:none}
-.welcome-card{background:var(--card);border:1px solid var(--border);border-radius:28px;padding:52px 40px;max-width:480px;width:100%;text-align:center;box-shadow:var(--shadow-lg),0 0 60px var(--glow);position:relative;overflow:hidden;animation:welcomeIn .7s}
-.welcome-card::after{content:'';position:absolute;top:0;right:0;left:0;height:4px;background:var(--grad);border-radius:28px 28px 0 0}
-@keyframes welcomeIn{from{opacity:0;transform:scale(.9) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
-.welcome-card > *{position:relative;z-index:1}
-.welcome-icon{font-size:4.5rem;margin-bottom:16px;display:inline-block;filter:drop-shadow(0 0 20px var(--glow))}
-.welcome-card h1{font-size:1.9rem;margin-bottom:12px;font-weight:800;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.welcome-card p{color:var(--muted);font-size:.95rem;margin-bottom:28px}
-.welcome-card input{width:100%;padding:15px 20px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:14px;font-family:inherit;font-size:1rem;outline:none;text-align:center;transition:.3s;margin-bottom:16px}
-.welcome-card input:focus{border-color:var(--cyan);box-shadow:0 0 0 5px var(--glow)}
-.welcome-card button{width:100%;padding:15px;background:var(--grad);border:none;color:var(--on-accent);font-family:inherit;font-size:1rem;font-weight:800;border-radius:14px;cursor:pointer;transition:.3s}
-.welcome-card button:hover{transform:translateY(-3px);box-shadow:0 15px 35px var(--glow)}
 
 /* ============ Topbar ============ */
 .topbar{position:fixed;top:10px;right:14px;left:14px;height:60px;z-index:90;background:var(--topbar-bg);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);border:1px solid var(--border);border-radius:999px;display:flex;align-items:center;gap:14px;padding:0 16px;box-shadow:0 10px 40px rgba(0,0,0,.28),0 2px 10px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.06)}
@@ -113,14 +98,6 @@ main{margin-right:250px;margin-top:82px;padding:24px 28px 120px;max-width:1300px
 .section{display:none}
 .section.active{display:block}
 
-/* دخول المحتوى — fade + تكبير خفيف في نفس المكان، بدون نزول */
-.section.tab-play > *{
-  animation:childIn .22s cubic-bezier(.2,0,0,1) backwards;
-}
-@keyframes childIn{
-  from{opacity:0;transform:scale(.97)}
-  to{opacity:1;transform:scale(1)}
-}
 @keyframes tabIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 @keyframes fade{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 .page-head{margin-bottom:22px;position:relative;padding-bottom:14px;border-bottom:1px solid var(--border)}
@@ -604,21 +581,6 @@ button.badge[data-goto-tab]{padding:6px 12px;min-height:32px}
   to{opacity:1;transform:translateX(0) scale(1)}
 }
 
-.card{
-  animation: uiCardIn .35s cubic-bezier(.2,0,0,1) backwards;
-}
-@keyframes uiCardIn{
-  from{opacity:0;transform:translateY(8px)}
-  to{opacity:1;transform:translateY(0)}
-}
-
-.grid > .card:nth-child(1){ animation-delay:0s }
-.grid > .card:nth-child(2){ animation-delay:.04s }
-.grid > .card:nth-child(3){ animation-delay:.08s }
-.grid > .card:nth-child(4){ animation-delay:.12s }
-.grid > .card:nth-child(5){ animation-delay:.16s }
-.grid > .card:nth-child(6){ animation-delay:.2s }
-
 .btn{
   transition: transform .22s cubic-bezier(.34,1.56,.64,1),
               box-shadow .22s ease,
@@ -652,19 +614,6 @@ button.badge[data-goto-tab]{padding:6px 12px;min-height:32px}
   transform: translateX(-2px) !important;
 }
 
-.task{
-  animation: uiTaskIn .3s cubic-bezier(.2,0,0,1) backwards;
-}
-@keyframes uiTaskIn{
-  from{opacity:0;transform:translateX(-8px)}
-  to{opacity:1;transform:translateX(0)}
-}
-#tasksList .task:nth-child(1){ animation-delay:0s }
-#tasksList .task:nth-child(2){ animation-delay:.03s }
-#tasksList .task:nth-child(3){ animation-delay:.06s }
-#tasksList .task:nth-child(4){ animation-delay:.09s }
-#tasksList .task:nth-child(5){ animation-delay:.12s }
-
 .modal-backdrop.show .modal{
   animation: uiModalIn .3s cubic-bezier(.22,1,.36,1) !important;
 }
@@ -687,15 +636,6 @@ button.badge[data-goto-tab]{padding:6px 12px;min-height:32px}
 @keyframes uiFabPulse{
   0%,100%{box-shadow:0 8px 32px var(--glow)}
   50%{box-shadow:0 8px 40px var(--glow), 0 0 0 6px rgba(34,211,238,.08)}
-}
-
-.stat .v{
-  animation: uiNumberPop .5s cubic-bezier(.34,1.56,.64,1) backwards;
-}
-@keyframes uiNumberPop{
-  0%{opacity:0;transform:scale(.5)}
-  60%{opacity:1;transform:scale(1.08)}
-  100%{opacity:1;transform:scale(1)}
 }
 
 .empty .ic{
@@ -730,14 +670,6 @@ button.badge[data-goto-tab]{padding:6px 12px;min-height:32px}
 @keyframes uiSearchIn{
   from{opacity:0;transform:translateY(-8px) scale(.98)}
   to{opacity:1;transform:translateY(0) scale(1)}
-}
-
-.welcome-card .welcome-icon{
-  animation: uiWelcomeFloat 2.5s ease-in-out infinite;
-}
-@keyframes uiWelcomeFloat{
-  0%,100%{transform:translateY(0) rotate(-2deg)}
-  50%{transform:translateY(-8px) rotate(2deg)}
 }
 
 .badge.urgent,
@@ -882,7 +814,7 @@ button.badge[data-goto-tab]{padding:6px 12px;min-height:32px}
 .onb-card::before{
   content:'';position:absolute;top:0;right:0;left:0;height:4px;background:var(--grad);
 }
-.onb-icon{font-size:4rem;margin-bottom:14px;display:inline-block;animation:onbFloat 2.5s ease-in-out infinite}
+.onb-icon{font-size:4rem;margin-bottom:14px;display:inline-block;animation:onbFloat 2.5s ease-in-out 2}
 @keyframes onbFloat{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-10px) rotate(3deg)}}
 .onb-card h3{font-size:1.3rem;font-weight:800;margin-bottom:10px;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .onb-card p{color:var(--muted);font-size:.9rem;line-height:1.8;margin-bottom:22px;min-height:60px}
@@ -1184,7 +1116,7 @@ button.hub-li:hover{border-color:var(--cyan)}
 
 /* حركة هادفة فقط: لا حركة مستمرة تشتت الانتباه */
 body::before,body::after{animation:none}
-.empty .ic,.welcome-card .welcome-icon,.badge.urgent,.task.urgent .badge,
+.empty .ic,.badge.urgent,.task.urgent .badge,
 .sc-progress-fill::after,.att-fill::after{animation:none}
 .card:hover{transform:none;box-shadow:var(--shadow)}
 .card::before{display:none}
@@ -1289,3 +1221,70 @@ body .lw-expand-btn:hover,body .lw-expand-btn:focus-visible{width:42px;opacity:1
 @media (max-width:900px){body .lw-expand-btn{width:20px;height:54px;font-size:.95rem}body .lw-expand-btn:hover,body .lw-expand-btn:focus-visible{width:44px}}
 main{padding-left:max(24px,env(safe-area-inset-left))}
 @media (max-width:900px){main{padding-left:20px}}
+/* ============================================================
+   🌟 الشاشة الترحيبية (Welcome) — تصميم جديد: خلفية متدرجة هادئة + عمودان على الشاشات الكبيرة
+   الحركة: ظهور تدريجي لمرة واحدة (opacity/transform فقط)، بدون حركة مستمرة. كل الألوان من متغيرات الثيم.
+   ============================================================ */
+.welcome-overlay{position:fixed;inset:0;z-index:2000;display:none;overflow-y:auto;overscroll-behavior:contain;background:var(--bg);opacity:1;transition:opacity .35s ease}
+.welcome-overlay.show,html.is-new .welcome-overlay{display:block}
+.welcome-overlay.hide{opacity:0;pointer-events:none}
+.welcome-bg{position:fixed;inset:0;pointer-events:none;background:
+  radial-gradient(circle at 88% -8%,var(--glow),transparent 52%),
+  radial-gradient(circle at 4% 108%,var(--glow),transparent 48%)}
+.welcome-bg::after{content:'';position:absolute;inset:0;background-image:radial-gradient(var(--border) 1px,transparent 1.2px);background-size:26px 26px;opacity:.55;-webkit-mask-image:linear-gradient(to bottom,#000,transparent 72%);mask-image:linear-gradient(to bottom,#000,transparent 72%)}
+.welcome-shell{position:relative;min-height:100%;display:flex;align-items:center;justify-content:center;padding:clamp(20px,5vw,56px)}
+.welcome-card{width:100%;max-width:560px;display:grid;grid-template-columns:minmax(0,1fr);text-align:start}
+.welcome-brand{display:flex;align-items:center;gap:12px;margin-bottom:clamp(18px,3vw,30px)}
+.welcome-icon{width:46px;height:46px;border-radius:14px;background:var(--grad);display:grid;place-items:center;font-size:1.45rem;box-shadow:0 8px 22px var(--glow)}
+.welcome-brand-name{font-weight:800;font-size:1.05rem;color:var(--text)}
+.welcome-card h1{font-size:clamp(1.85rem,5vw,3rem);line-height:1.28;font-weight:800;color:var(--text);margin:0 0 14px;letter-spacing:-.01em}
+.welcome-grad{background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
+.welcome-card > p#welcomeSub{font-size:clamp(.95rem,2.2vw,1.1rem);color:var(--muted);line-height:1.8;margin:0;max-width:46ch}
+.welcome-feats{list-style:none;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 22px;margin:28px 0 8px;padding:0}
+.welcome-feats li{display:flex;align-items:flex-start;gap:12px;min-width:0}
+.wf-ic{flex:none;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-size:1.15rem;background:var(--grad-soft);border:1px solid var(--border)}
+.wf-tx{display:flex;flex-direction:column;gap:1px;min-width:0}
+.wf-tx b{font-size:.92rem;color:var(--text);font-weight:700;line-height:1.5}
+.wf-tx small{font-size:.78rem;color:var(--muted);line-height:1.55}
+.welcome-form{margin-top:26px;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:22px;box-shadow:var(--shadow-lg)}
+.welcome-label{display:block;font-size:.85rem;font-weight:700;color:var(--text);margin-bottom:8px}
+.welcome-form input{width:100%;height:52px;padding:0 16px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:14px;font-family:inherit;font-size:1rem;outline:none;transition:border-color .18s ease,box-shadow .18s ease}
+.welcome-form input::placeholder{color:var(--muted2)}
+.welcome-form input:focus{border-color:var(--cyan);box-shadow:var(--ring)}
+.welcome-form.has-err input{border-color:var(--red)}
+.welcome-err{min-height:1.3em;margin:6px 2px 10px;font-size:.8rem;color:var(--red);font-weight:600}
+.welcome-form button{width:100%;height:52px;display:inline-flex;align-items:center;justify-content:center;gap:10px;background:var(--grad);border:0;color:var(--on-accent);font-family:inherit;font-size:1.02rem;font-weight:800;border-radius:14px;cursor:pointer;transition:transform .18s ease,box-shadow .18s ease,opacity .18s ease}
+.welcome-form button:hover{transform:translateY(-1px);box-shadow:0 10px 26px var(--glow)}
+.welcome-form button:active{transform:scale(.98)}
+.welcome-form button:focus-visible{outline:2px solid var(--text);outline-offset:3px}
+.welcome-form.busy button{opacity:.7;pointer-events:none}
+.welcome-arrow::before{content:'←'}
+[dir="ltr"] .welcome-arrow::before{content:'→'}
+.welcome-note{margin:14px 0 0;font-size:.78rem;color:var(--muted);text-align:center}
+/* ظهور تدريجي لمرة واحدة عند فتح الشاشة */
+.welcome-overlay.show .welcome-card > *,html.is-new .welcome-overlay .welcome-card > *{animation:wIn .55s cubic-bezier(.22,1,.36,1) backwards}
+.welcome-card > :nth-child(2){animation-delay:.05s!important}
+.welcome-card > :nth-child(3){animation-delay:.1s!important}
+.welcome-card > :nth-child(4){animation-delay:.15s!important}
+.welcome-card > :nth-child(5){animation-delay:.22s!important}
+.welcome-card > :nth-child(6){animation-delay:.28s!important}
+@keyframes wIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.welcome-overlay.hide .welcome-card{transform:translateY(8px) scale(.99);transition:transform .35s ease}
+@media (min-width:960px){
+  .welcome-card{max-width:1060px;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);grid-template-areas:"brand form" "title form" "sub form" "feats note";column-gap:72px;align-content:center;align-items:start}
+  .welcome-brand{grid-area:brand}
+  .welcome-card h1{grid-area:title}
+  .welcome-card > p#welcomeSub{grid-area:sub}
+  .welcome-feats{grid-area:feats}
+  .welcome-form{grid-area:form;margin-top:0;padding:30px;align-self:center}
+  .welcome-note{grid-area:note;align-self:start;margin-top:0;text-align:start}
+}
+@media (max-width:599px){
+  .welcome-feats{grid-template-columns:minmax(0,1fr);gap:10px;margin-top:22px}
+  .wf-tx small{display:none}
+  .wf-ic{width:36px;height:36px}
+  .welcome-form{margin-top:20px;padding:18px}
+}
+@media (max-height:640px) and (max-width:599px){ .welcome-feats{display:none} }
+.welcome-card h1{text-wrap:balance}
+.welcome-card > p#welcomeSub,.wf-tx small{text-wrap:pretty}

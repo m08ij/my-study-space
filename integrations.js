@@ -32,6 +32,7 @@
      showModal
      ============================================================ */
   window.showModal = function(title, fields, values, onSubmit, onDelete){
+    var opener = document.activeElement;
     document.querySelectorAll('.modal-backdrop').forEach(function(m){ m.remove(); });
     var bd = document.createElement('div');
     bd.className = 'modal-backdrop show';
@@ -50,9 +51,9 @@
       } else {
         inputHtml = '<input id="mf_' + f.key + '" type="' + (f.type || 'text') + '" value="' + esc(val) + '" placeholder="' + esc(f.placeholder || '') + '">';
       }
-      fieldsHtml += '<div class="form-group"><label>' + esc(f.label) + '</label>' + inputHtml + '</div>';
+      fieldsHtml += '<div class="form-group"><label for="mf_' + f.key + '">' + esc(f.label) + '</label>' + inputHtml + '</div>';
     });
-    bd.innerHTML = '<div class="modal"><h3>' + esc(title) + '</h3>' + fieldsHtml +
+    bd.innerHTML = '<div class="modal" role="dialog" aria-modal="true" aria-label="' + esc(title) + '"><h3>' + esc(title) + '</h3>' + fieldsHtml +
       '<div class="modal-actions">' +
         (onDelete ? '<button class="btn btn-sm btn-danger" id="mDel">🗑 حذف</button>' : '') +
         '<button class="btn btn-sm btn-ghost" id="mCancel">إلغاء</button>' +
@@ -60,11 +61,20 @@
       '</div></div>';
     document.body.appendChild(bd);
 
-    function close(){ bd.remove(); }
+    var closed = false;
+    function close(){
+      if(closed) return; closed = true; bd.remove();
+      if(opener && opener.focus && document.contains(opener)){ try{ opener.focus(); }catch(e){} }   /* رجوع التركيز لما فتح النافذة */
+    }
     bd.querySelector('#mCancel').onclick = close;
     bd.onclick = function(e){ if(e.target === bd) close(); };
+    /* Enter يحفظ (عدا حقول النص الطويل) */
+    bd.addEventListener('keydown', function(e){
+      if(e.key === 'Enter' && !e.shiftKey && !e.isComposing && e.target && /^(INPUT|SELECT)$/.test(e.target.tagName)){ e.preventDefault(); bd.querySelector('#mSave').click(); }
+    });
 
     bd.querySelector('#mSave').onclick = function(){
+      if(closed) return;                      /* نقرة ثانية بعد الإغلاق لا تنفّذ شيئاً */
       var data = {};
       fields.forEach(function(f){
         var el = document.getElementById('mf_' + f.key);

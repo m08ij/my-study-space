@@ -973,7 +973,7 @@
 
   function dsConfirmReset(done){
     var run = function(){ dsReset(); if(window.toast) window.toast('تمت استعادة الترتيب الافتراضي', 'success'); if(done) done(); };
-    if(window.customConfirm) window.customConfirm('استعادة الترتيب الافتراضي وإظهار كل الأقسام التي أخفيتها؟', run); else if(confirm('استعادة الترتيب الافتراضي؟')) run();
+    if(window.customConfirm) window.customConfirm('استعادة الترتيب الافتراضي وإظهار كل الأقسام التي أخفيتها؟', run, { title: 'استعادة الترتيب', icon: '↺', okLabel: 'استعادة', danger: false }); else if(confirm('استعادة الترتيب الافتراضي؟')) run();
   }
 
   /* --- نافذة التخصيص --- */

@@ -62,7 +62,7 @@
     .lw-focus-info{flex:1;min-width:0}
     .lw-focus-title{font-weight:800;font-size:.86rem;margin-bottom:2px}
     .lw-focus-sub{font-size:.66rem;color:var(--muted);line-height:1.4}
-    .lw-focus-start{padding:8px 14px;background:var(--grad);color:#0b0f1a;border:none;border-radius:10px;font-family:inherit;font-weight:800;font-size:.74rem;cursor:pointer;transition:.2s;width:100%;margin-top:10px}
+    .lw-focus-start{padding:8px 14px;background:var(--grad);color:var(--on-accent);border:none;border-radius:10px;font-family:inherit;font-weight:800;font-size:.74rem;cursor:pointer;transition:.2s;width:100%;margin-top:10px}
     .lw-item{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid var(--border);font-size:.78rem}
     .lw-item:last-child{border-bottom:none;padding-bottom:0}
     .lw-item:first-child{padding-top:0}
@@ -129,7 +129,7 @@
     .focus-time-sub{font-size:.74rem;color:var(--muted);margin-top:6px}
     .focus-controls{display:flex;gap:10px;margin-top:24px;flex-wrap:wrap;justify-content:center}
     .focus-btn{padding:11px 22px;border-radius:12px;font-family:inherit;font-weight:800;font-size:.82rem;cursor:pointer;transition:.2s;border:none}
-    .focus-btn.primary{background:var(--grad);color:#0b0f1a}
+    .focus-btn.primary{background:var(--grad);color:var(--on-accent)}
     .focus-btn.ghost{background:transparent;color:var(--text);border:1px solid var(--border)}
     .focus-tasks-panel{background:var(--card);border:1px solid var(--border);border-radius:24px;padding:24px;display:flex;flex-direction:column;overflow:hidden}
     .focus-tasks-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:10px}

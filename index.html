@@ -12,21 +12,36 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="مساحتي">
 <link rel="stylesheet" href="app.css">
+<script>/* مستخدم جديد: تظهر شاشة الترحيب من أول رسم (بدون وميض اللوحة خلفها)، ويزيل app.js الصنف عند اكتمال الدخول */
+try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement.classList.add("is-new"); }catch(e){}</script>
 </head>
 <body>
 
 <div class="debug-panel" id="debugPanel"></div>
 
-<div class="welcome-overlay" id="welcomeOverlay">
-  <div class="welcome-card">
-    <div class="welcome-icon">📚</div>
-    <h1 id="welcomeTitle">أهلاً بك في مساحتك الدراسية</h1>
-    <p id="welcomeSub">رفيقك الذكي خلال سنوات الجامعة</p>
-    <input id="welcomeName" placeholder="اكتب اسمك للبدء..." autocomplete="off" maxlength="40">
-    <button id="welcomeBtn" type="button">ابدأ رحلتك 🚀</button>
+<div class="welcome-overlay" id="welcomeOverlay" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle" aria-describedby="welcomeSub">
+  <div class="welcome-bg" aria-hidden="true"></div>
+  <div class="welcome-shell">
+    <div class="welcome-card">
+      <div class="welcome-brand"><span class="welcome-icon" aria-hidden="true">📚</span><span class="welcome-brand-name">مساحتي الدراسية</span></div>
+      <h1 id="welcomeTitle">نظّم دراستك الجامعية <span class="welcome-grad">في مكان واحد</span></h1>
+      <p id="welcomeSub">جدولك ومهامك وامتحاناتك وموادك — واضحة ومرتبة، بدون تعقيد.</p>
+      <ul class="welcome-feats" aria-label="أهم ما في التطبيق">
+        <li><span class="wf-ic" aria-hidden="true">📅</span><span class="wf-tx"><b>جدول أسبوعي ذكي</b><small>المحاضرة الحالية والقادمة والوقت المتبقي</small></span></li>
+        <li><span class="wf-ic" aria-hidden="true">📝</span><span class="wf-tx"><b>مهام بمواعيد وأولويات</b><small>ما تأخر وما اقترب بنظرة واحدة</small></span></li>
+        <li><span class="wf-ic" aria-hidden="true">⏳</span><span class="wf-tx"><b>عدّ تنازلي للامتحانات</b><small>مع تنبيهات داخل التطبيق</small></span></li>
+        <li><span class="wf-ic" aria-hidden="true">📚</span><span class="wf-tx"><b>مركز المواد</b><small>ملفات وعلامات وحضور لكل مادة</small></span></li>
+      </ul>
+      <div class="welcome-form">
+        <label for="welcomeName" class="welcome-label">ما اسمك؟</label>
+        <input id="welcomeName" placeholder="اكتب اسمك للبدء" autocomplete="given-name" enterkeyhint="go" maxlength="40" aria-describedby="welcomeErr">
+        <div class="welcome-err" id="welcomeErr" role="alert" aria-live="polite"></div>
+        <button id="welcomeBtn" type="button"><span>ابدأ الآن</span><span class="welcome-arrow" aria-hidden="true"></span></button>
+      </div>
+      <p class="welcome-note">🔒 بياناتك تُحفظ على جهازك، والمزامنة السحابية اختيارية.</p>
+    </div>
   </div>
 </div>
-
 <header class="topbar">
   <button class="icon-btn menu-toggle" id="menuToggle" title="القائمة">☰</button>
   <div class="brand">
@@ -463,7 +478,7 @@
    1) إن لم يطابق window.APP_BUILD رقم BUILD هنا → يمسح كاش التطبيق ويعيد التحميل مرة واحدة (حارس sessionStorage يمنع التكرار).
    2) أقسام اللوحة المتقدمة (تحليلات/LMS/إحصائيات) تُنقل إلى خانتها الثابتة إذا أضافتها سكربتات قديمة بمكان آخر. */
 (function(){
-  var BUILD = '86';
+  var BUILD = '87';
   var SLOTS = { insightsSection: 'slotInsights', lmsWidget: 'slotLms', enhancedStatsSection: 'slotEnhanced' };
   function heal(){
     var dash = document.getElementById('dashboard'); if(!dash) return;
