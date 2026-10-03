@@ -576,28 +576,40 @@
   /* ============================================================
      6️⃣  Moodle HU Integration
      ============================================================ */
-  var MOODLE_LINKS = [
-    { icon:'📖', title:'Moodle HU — الرئيسية', desc:'منصة التعلم الإلكتروني', url:'https://elearning.hu.edu.jo/' },
-    { icon:'📅', title:'تقويم Moodle', desc:'مواعيد الواجبات والاختبارات', url:'https://elearning.hu.edu.jo/calendar/view.php' },
-    { icon:'📝', title:'واجباتي', desc:'كل الواجبات المطلوبة', url:'https://elearning.hu.edu.jo/my/' },
-    { icon:'💬', title:'المنتديات', desc:'نقاشات المواد', url:'https://elearning.hu.edu.jo/mod/forum/index.php' },
-    { icon:'📊', title:'علاماتي في Moodle', desc:'نقاط التقويم والواجبات', url:'https://elearning.hu.edu.jo/grade/report/overview/index.php' },
-    { icon:'📧', title:'Outlook الجامعي', desc:'البريد الرسمي', url:'https://outlook.office.com/mail/' }
+  var LMS_LINKS = [
+    { icon:'📖', title:'LMS HU — الرئيسية',   desc:'منصة التعلم الإلكتروني',          url:'https://lms.hu.edu.jo/my/' },
+    { icon:'📅', title:'التقويم',              desc:'مواعيد الواجبات والاختبارات',     url:'https://lms.hu.edu.jo/calendar/view.php?view=month' },
+    { icon:'📝', title:'واجباتي',              desc:'كل الواجبات المطلوبة',            url:'https://lms.hu.edu.jo/my/' },
+    { icon:'📊', title:'علاماتي',              desc:'نقاط التقويم والواجبات',          url:'https://lms.hu.edu.jo/grade/report/overview/index.php' },
+    { icon:'💬', title:'المنتديات',            desc:'نقاشات المواد',                   url:'https://lms.hu.edu.jo/mod/forum/index.php' },
+    { icon:'🎓', title:'بوابة الطالب',          desc:'العلامات والرسوم والجدول',        url:'https://reg1.hu.edu.jo/' }
+  ];
+
+  var TEAMS_LINKS = [
+    { icon:'💬', title:'Microsoft Teams',      desc:'المحاضرات والاجتماعات',           url:'https://teams.microsoft.com/' },
+    { icon:'📧', title:'Outlook الجامعي',       desc:'البريد الرسمي',                   url:'https://outlook.office.com/mail/' },
+    { icon:'📁', title:'OneDrive',              desc:'الملفات والتخزين السحابي',        url:'https://onedrive.live.com/' },
+    { icon:'📅', title:'تقويم Outlook',         desc:'مواعيدك من Teams و Office',       url:'https://outlook.office.com/calendar/' }
   ];
 
   function injectMoodleWidget(){
     var dash = document.getElementById('dashboard');
-    if(!dash || document.getElementById('moodleWidget')) return;
+    if(!dash || document.getElementById('lmsWidget')) return;
 
     var sec = document.createElement('div');
-    sec.id = 'moodleWidget';
+    sec.id = 'lmsWidget';
     sec.className = 'card moodle-widget';
     sec.style.marginTop = '16px';
 
-    var html = '<div class="card-head"><h3>🎓 Moodle HU — روابط سريعة</h3>' +
-      '<span class="card-action" style="color:#ff9800">elearning.hu.edu.jo</span></div>';
+    var html = '';
 
-    MOODLE_LINKS.forEach(function(l){
+    /* === LMS قسم === */
+    html += '<div class="card-head" style="margin-bottom:10px">' +
+      '<h3>🎓 LMS HU — روابط سريعة</h3>' +
+      '<span class="card-action" style="color:#ff9800;font-size:.7rem;font-family:monospace">lms.hu.edu.jo</span>' +
+      '</div>';
+
+    LMS_LINKS.forEach(function(l){
       html += '<a class="moodle-link" href="' + l.url + '" target="_blank" rel="noopener">' +
         '<div class="moodle-icon">' + l.icon + '</div>' +
         '<div class="moodle-info">' +
@@ -608,12 +620,31 @@
       '</a>';
     });
 
-    /* .ics import */
+    /* === Teams قسم === */
+    html += '<div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border)">' +
+      '<div class="card-head" style="margin-bottom:10px">' +
+      '<h3 style="font-size:.9rem">💬 Microsoft Teams</h3>' +
+      '<span class="card-action" style="color:#6264A7;font-size:.7rem;font-family:monospace">teams.microsoft.com</span>' +
+      '</div>';
+
+    TEAMS_LINKS.forEach(function(l){
+      html += '<a class="moodle-link" href="' + l.url + '" target="_blank" rel="noopener" style="border-color:rgba(98,100,167,.3)">' +
+        '<div class="moodle-icon" style="background:linear-gradient(135deg,#6264A7,#5059C9)">' + l.icon + '</div>' +
+        '<div class="moodle-info">' +
+          '<div class="moodle-title">' + l.title + '</div>' +
+          '<div class="moodle-desc">' + l.desc + '</div>' +
+        '</div>' +
+        '<div style="color:var(--muted2)">←</div>' +
+      '</a>';
+    });
+    html += '</div>';
+
+    /* === .ics import === */
     html += '<div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">' +
       '<div style="font-size:.8rem;color:var(--muted);margin-bottom:10px;line-height:1.7">' +
-        '📥 <b>استيراد تقويم Moodle:</b> نزّل ملف <code>.ics</code> من Moodle → استورده هنا لدمج الواجبات مع جدولك.' +
+        '📥 <b>استيراد تقويم LMS:</b> نزّل ملف <code>.ics</code> من LMS → استورده هنا لدمج الواجبات مع جدولك.' +
       '</div>' +
-      '<button class="btn btn-sm" id="moodleImportBtn">📅 استيراد تقويم Moodle (.ics)</button>' +
+      '<button class="btn btn-sm" id="moodleImportBtn">📅 استيراد تقويم (.ics)</button>' +
       '<input type="file" id="moodleIcsFile" accept=".ics,text/calendar" style="display:none">' +
     '</div>';
 
@@ -712,15 +743,15 @@
   function getContext(){
     var sp = space();
     var now = new Date();
-    var today = today();
+    var todayStr = today();   // ✅ اسم مختلف
     return {
       space: sp,
-      today: today,
+      today: todayStr,
       now: now,
       hour: now.getHours(),
       tasks: (sp.tasks || []).filter(function(t){ return !t.done; }),
-      overdue: (sp.tasks || []).filter(function(t){ return !t.done && t.due && t.due < today; }),
-      todayTasks: (sp.tasks || []).filter(function(t){ return !t.done && t.due === today; }),
+      overdue: (sp.tasks || []).filter(function(t){ return !t.done && t.due && t.due < todayStr; }),
+      todayTasks: (sp.tasks || []).filter(function(t){ return !t.done && t.due === todayStr; }),
       exams: (sp.exams || []).slice().sort(function(a,b){ return (a.date||'').localeCompare(b.date||''); }),
       courses: sp.courses || [],
       budget: sp.budget || [],

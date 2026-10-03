@@ -322,7 +322,7 @@ var SEMESTERS = [
     {n:"اساسيات الاتصالات", h:3, code:"0110408303"},
     {n:"انظمة مضمنة", h:3, code:"2304081362"},
     {n:"مختبر الأنظمة المضمنة", h:1, code:"2304081326", type:"lab"},
-    {n:"مختبر معالجات دقيقة", h:1, code:"2304081333", type:"lab"},
+    {n:"معالجات دقيقة", h:1, code:"2304081333"},
     {n:"تنظيم حاسوب", h:3, code:"2304081330"},
     {n:"مختبر الدوائر الالكترونية", h:1, code:"2104091352", type:"lab"},
     {n:"هندسة البرمجيات", h:3, code:"2304081415"}
@@ -414,12 +414,12 @@ var HU_LINKS = {
     {icon:'🎓', title:'مكتبة الرسائل الجامعية', desc:'رسائل الماجستير والدكتوراه', url:'https://library.hu.edu.jo/'}
   ],
   apps: [
-    {icon:'📱', title:'تطبيق MyHU (iPhone)', desc:'التطبيق الرسمي', url:'https://apps.apple.com/us/app/myhu/id1520645609'},
-    {icon:'🤖', title:'تطبيق MyHU (Android)', desc:'التطبيق الرسمي', url:'https://play.google.com/store/apps/details?id=com.hash.myhu'},
-    {icon:'📧', title:'Outlook الجامعي', desc:'البريد الإلكتروني', url:'https://outlook.office.com/mail/'},
-    {icon:'💬', title:'Microsoft Teams', desc:'المحاضرات والاجتماعات', url:'https://teams.microsoft.com/'},
-    {icon:'📖', title:'Moodle', desc:'منصة التعلم الإلكتروني', url:'https://elearning.hu.edu.jo/'},
-    {icon:'📹', title:'Zoom', desc:'الاجتماعات الافتراضية', url:'https://zoom.us/'}
+    {icon:'📱', title:'تطبيق MyHU (iPhone)',  desc:'التطبيق الرسمي',                url:'https://apps.apple.com/us/app/myhu/id1520645609'},
+    {icon:'🤖', title:'تطبيق MyHU (Android)', desc:'التطبيق الرسمي',                url:'https://play.google.com/store/apps/details?id=com.hash.myhu'},
+    {icon:'📧', title:'Outlook الجامعي',       desc:'البريد الإلكتروني',              url:'https://outlook.office.com/mail/'},
+    {icon:'💬', title:'Microsoft Teams',       desc:'المحاضرات والاجتماعات',          url:'https://teams.microsoft.com/'},
+    {icon:'📖', title:'LMS HU',                desc:'منصة التعلم الإلكتروني',         url:'https://lms.hu.edu.jo/my/'},
+    {icon:'📁', title:'OneDrive',              desc:'الملفات السحابية',               url:'https://onedrive.live.com/'}
   ],
   support: [
     {icon:'📞', title:'هاتف الجامعة', desc:'+962 5 3903333', url:'tel:+96253903333'},
