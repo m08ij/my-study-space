@@ -29,7 +29,7 @@
   function getCode(){ return ensureCode(); }
   function setCode(newCode){
     code = String(newCode || '').trim().toUpperCase();
-    try{ localStorage.setItem(codeKey, code); }catch(e){}
+    try{ localStorage.setItem(codeKey, code); localStorage.removeItem('ss_space_ts'); }catch(e){}  /* رمز جديد = سحابته هي المرجع */
     if(typeof window.__perfClearFileCache === 'function') window.__perfClearFileCache();
     return code;
   }
