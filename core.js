@@ -101,6 +101,7 @@
       try{
         if(!storageAvailable){ memoryStore[k] = v; return true; }
         localStorage.setItem(k, JSON.stringify(v));
+        if(k === 'space') localStorage.setItem('ss_space_ts', String(Date.now()));  /* وقت آخر تعديل محلي — لمقارنته بالسحابة */
         if(window.scheduleBackup) window.scheduleBackup();
         return true;
       }catch(e){ return false; }

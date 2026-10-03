@@ -673,11 +673,12 @@
       {key:'instructor', label:'الدكتور'},
       {key:'room', label:'القاعة'}
     ], {name:'', code:'', hours:3, instructor:'', room:''}, function(data){
-      if(!data.name){ toast('أدخل اسمًا', 'warn'); return false; }
-      if(!space().courses) window.space.courses = [];
-      window.space.courses.push(Object.assign({id: uid()}, data, {hours: parseInt(data.hours) || 3}));
-      saveSpace(); window.renderCourses(); window.renderDashboard();
-      return true;
+      var name = String(data.name || '').trim();
+      if(!name){ toast('أدخل اسمًا', 'warn'); return false; }
+      /* مصدر واحد: يفحص التكرار وينشئ الحضور والعلامات ويحدّث الواجهات */
+      var added = window.addCourseEverywhere(name, String(data.code || '').trim(), data.hours,
+        { instructor: data.instructor, room: data.room });
+      return added !== false;
     });
   };
 

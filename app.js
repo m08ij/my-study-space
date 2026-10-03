@@ -211,7 +211,7 @@
   };
 
   window.doServerSave = async function(){
-    if(!window.SB) return;
+    if(!window.SB || window.cloudSyncBlocked) return;
     if(window.serverSaveInFlight){ window.queueServerSave(); return; }
     try{
       window.serverSaveInFlight = true;
@@ -813,13 +813,26 @@
       try{ serverData = await window.SB.load(); }catch(e){}
     }
 
+    var pushLocalAfterBoot = false;
     if(serverData && serverData.data){
-      console.log('☁️ Loaded from Supabase');
-      window.serverOnline = true;
-      safeRun('Apply server data', function(){ window.applyServerData(serverData.data); });
+      var serverTs = Date.parse(serverData.updated_at) || 0;
+      var localTs = parseInt(window.S.get('ss_space_ts', 0), 10) || 0;
+      if(localTs && localTs > serverTs + 2000){
+        /* النسخة المحلية أحدث (تعديلات أوفلاين) — لا نكتب فوقها بالقديمة */
+        console.log('💾 Local is newer than cloud — keeping local, will push');
+        window.serverOnline = true;
+        pushLocalAfterBoot = true;
+      } else {
+        console.log('☁️ Loaded from Supabase');
+        window.serverOnline = true;
+        safeRun('Apply server data', function(){ window.applyServerData(serverData.data); });
+        if(serverTs) window.S.set('ss_space_ts', serverTs);
+      }
     } else {
       console.log('💾 Using localStorage');
       window.serverOnline = false;
+      /* فشل تحميل (مش "ما في صف"): امنع الرفع حتى لا نكتب فوق السحابة ببيانات محلية قد تكون فاضية */
+      if(window.SB && window.SB.lastLoadStatus === 'error') window.cloudSyncBlocked = true;
     }
 
     safeRun('Sync timer', function(){
@@ -893,7 +906,7 @@
     safeRun('Initial sync', function(){
       window.bootSyncing = false;
       window.setServerStatus(window.serverOnline ? 'ok' : 'off');
-      if(!serverData && window.SB) window.doServerSave();
+      if(pushLocalAfterBoot || (!serverData && window.SB && window.SB.lastLoadStatus === 'empty')) window.doServerSave();
     });
 
     setInterval(window.checkSmartReminders, 30 * 60 * 1000);

@@ -45,15 +45,18 @@
     return client;
   }
 
+  /* lastLoadStatus: 'ok' | 'empty' (ما في صف بالسحابة) | 'error' (فشل التحميل) */
   async function load(){
-    var c = init(); if(!c) return null;
+    var c = init();
+    if(!c){ api.lastLoadStatus = 'error'; return null; }
     var k = ensureCode();
     try{
       var res = await c.from('spaces').select('data, updated_at').eq('code', k).maybeSingle();
-      if(res.error){ console.warn('Supabase load error:', res.error); return null; }
-      if(!res.data) return null;
+      if(res.error){ console.warn('Supabase load error:', res.error); api.lastLoadStatus = 'error'; return null; }
+      if(!res.data){ api.lastLoadStatus = 'empty'; return null; }
+      api.lastLoadStatus = 'ok';
       return res.data;
-    }catch(e){ console.warn('Supabase load failed:', e); return null; }
+    }catch(e){ console.warn('Supabase load failed:', e); api.lastLoadStatus = 'error'; return null; }
   }
 
   async function save(snapshot){
@@ -204,7 +207,8 @@
     bd.onclick = function(e){ if(e.target === bd) bd.remove(); };
   }
 
-  window.SB = {
+  var api = window.SB = {
+    lastLoadStatus: null,
     init: init, load: load, save: save,
     getCode: getCode, setCode: setCode,
     listCourseFiles: listCourseFiles,
