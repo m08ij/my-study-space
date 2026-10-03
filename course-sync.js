@@ -437,7 +437,6 @@
         background:linear-gradient(135deg,#ef4444,#dc2626);
         color:#fff;
         box-shadow:0 3px 12px rgba(239,68,68,.45);
-        animation:unifiedPulse 2.2s ease-in-out infinite;
       }
       .unified-course-btn.added:hover{
         transform:scale(1.15);
@@ -804,6 +803,36 @@
   /* ============================================================
      OVERRIDE: renderExams — grouped by course
      ============================================================ */
+  /* القادمة أولاً بترتيب الموعد (التاريخ ثم الوقت)، ثم المنتهية (الأحدث أولاً) */
+  function sortExams(list){
+    var du = window.daysUntil || function(){ return 0; };
+    var up = list.filter(function(e){ var d = du(e.date); return d === null || d >= 0; });
+    var past = list.filter(function(e){ var d = du(e.date); return d !== null && d < 0; });
+    up.sort(function(a, b){ return ((a.date || '') + ' ' + (a.time || '')).localeCompare((b.date || '') + ' ' + (b.time || '')); });
+    past.sort(function(a, b){ return (b.date || '').localeCompare(a.date || ''); });
+    return up.concat(past);
+  }
+  function examCard(e, showCourse){
+    var r = window.examRemaining ? window.examRemaining(e) : { big: '', label: '', past: false, urgent: false };
+    return '<div class="exam-card' + (r.past ? ' past' : '') + '" style="margin-bottom:6px">' +
+      '<div class="exam-info">' +
+        '<div class="title">📝 ' + esc(e.name) + '</div>' +
+        '<div class="meta">' +
+          (showCourse && e.course ? '📚 ' + esc(e.course) + ' · ' : '') +
+          '📅 <bdi dir="ltr">' + esc(e.date) + '</bdi>' +
+          (e.time ? ' · ⏰ <bdi dir="ltr">' + esc(e.time) + '</bdi>' : '') +
+          (e.room ? ' · 📍 ' + esc(e.room) : '') +
+        '</div>' +
+      '</div>' +
+      '<div class="exam-countdown ' + (r.urgent ? 'urgent' : '') + '" role="status" aria-label="' + esc(r.past ? 'انتهى الامتحان' : 'المتبقي ' + r.label) + '">' +
+        esc(r.big) + '<div class="lbl">' + (r.past ? '' : (r.today ? 'اليوم' : 'متبقي')) + '</div>' +
+      '</div>' +
+      '<div style="display:flex;gap:4px">' +
+        '<button type="button" class="btn btn-sm btn-ghost" data-edit-exam="' + e.id + '" aria-label="تعديل الامتحان">✏️</button>' +
+        '<button type="button" class="btn btn-sm btn-danger" data-del-exam="' + e.id + '" aria-label="حذف الامتحان">🗑</button>' +
+      '</div>' +
+    '</div>';
+  }
   window.renderExams = function(){
     var c = document.getElementById('examsList'); if(!c) return;
     var sp = space();
@@ -816,14 +845,15 @@
       return;
     }
 
-    var todayStr = window.today ? window.today() : '';
     var html = '';
 
     /* Group exams by course */
     var examsByCourse = {};
     var orphanExams = [];
+    var courseNames = {}; courses.forEach(function(cc){ courseNames[cc.name] = true; });
     exams.forEach(function(e){
-      if(e.course){
+      /* امتحان مادته غير موجودة بقائمة موادي (محذوفة/معاد تسميتها) يظهر ضمن «بدون مادة» بدل أن يختفي */
+      if(e.course && courseNames[e.course]){
         if(!examsByCourse[e.course]) examsByCourse[e.course] = [];
         examsByCourse[e.course].push(e);
       } else {
@@ -834,7 +864,6 @@
     /* Show each course with its exams */
     courses.forEach(function(course){
       var courseExams = examsByCourse[course.name] || [];
-      var upcoming = courseExams.filter(function(e){ return e.date >= todayStr; });
       var total = courseExams.length;
 
       html += '<div class="card" style="margin-bottom:12px">' +
@@ -849,31 +878,7 @@
         '</div>';
 
       if(courseExams.length){
-        courseExams.sort(function(a,b){ return (a.date||'').localeCompare(b.date||''); });
-        courseExams.forEach(function(e){
-          var daysLeft = Math.ceil((new Date(e.date) - new Date(todayStr)) / 86400000);
-          var isUrgent = daysLeft >= 0 && daysLeft <= 7;
-          var isPast = daysLeft < 0;
-          html += '<div class="exam-card" style="margin-bottom:6px">' +
-            '<div class="exam-info">' +
-              '<div class="title">📝 ' + esc(e.name) + '</div>' +
-              '<div class="meta">' +
-                '📅 ' + e.date +
-                (e.time ? ' · ⏰ ' + esc(e.time) : '') +
-                (e.room ? ' · 📍 ' + esc(e.room) : '') +
-              '</div>' +
-            '</div>' +
-            '<div class="exam-countdown ' + (isUrgent ? 'urgent' : '') + '"' +
-              (isPast ? ' style="opacity:.5"' : '') + '>' +
-              (isPast ? 'انتهى' : daysLeft + ' يوم') +
-              '<div class="lbl">' + (isPast ? '' : 'متبقي') + '</div>' +
-            '</div>' +
-            '<div style="display:flex;gap:4px">' +
-              '<button class="btn btn-sm btn-ghost" data-edit-exam="' + e.id + '">✏️</button>' +
-              '<button class="btn btn-sm btn-danger" data-del-exam="' + e.id + '">🗑</button>' +
-            '</div>' +
-          '</div>';
-        });
+        sortExams(courseExams).forEach(function(e){ html += examCard(e); });
       } else {
         html += '<div style="text-align:center;padding:14px;font-size:.78rem;color:var(--muted2)">' +
           'ما في امتحانات — اضغط "+ امتحان" لإضافة</div>';
@@ -886,16 +891,7 @@
     if(orphanExams.length){
       html += '<div class="card" style="margin-bottom:12px">' +
         '<div style="font-weight:700;font-size:.95rem;margin-bottom:10px">📋 امتحانات بدون مادة</div>';
-      orphanExams.forEach(function(e){
-        html += '<div class="exam-card" style="margin-bottom:6px">' +
-          '<div class="exam-info"><div class="title">📝 ' + esc(e.name) + '</div>' +
-            '<div class="meta">📅 ' + e.date + (e.time ? ' · ⏰ ' + esc(e.time) : '') + '</div></div>' +
-          '<div style="display:flex;gap:4px">' +
-            '<button class="btn btn-sm btn-ghost" data-edit-exam="' + e.id + '">✏️</button>' +
-            '<button class="btn btn-sm btn-danger" data-del-exam="' + e.id + '">🗑</button>' +
-          '</div>' +
-        '</div>';
-      });
+      sortExams(orphanExams).forEach(function(e){ html += examCard(e, true); });
       html += '</div>';
     }
 

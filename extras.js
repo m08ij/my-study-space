@@ -152,6 +152,7 @@
      3️⃣  Enhanced Stats Dashboard
      ============================================================ */
   function buildEnhancedStats(){
+    window._enhStale = false;
     var container = document.getElementById('enhancedStatsSection');
     if(container) container.remove();
 
@@ -281,12 +282,23 @@
     }
   }
 
+  /* دمج الاستدعاءات المتتالية، وتأجيل البناء إذا اللوحة مخفية (يُبنى عند العودة لها) بدل إعادة بناء القسم كاملاً بكل تعديل */
+  var enhTimer = null;
+  function scheduleEnhanced(){
+    if(enhTimer) clearTimeout(enhTimer);
+    enhTimer = setTimeout(function(){
+      enhTimer = null;
+      var d = document.getElementById('dashboard');
+      if(d && d.classList.contains('active')) buildEnhancedStats(); else window._enhStale = true;
+    }, 120);
+  }
+
   /* Patch renderDashboard */
   if(typeof window.renderDashboard === 'function' && !window._enhStatsPatched){
     var origDash2 = window.renderDashboard;
     window.renderDashboard = function(){
       var r = origDash2.apply(this, arguments);
-      setTimeout(buildEnhancedStats, 50);
+      scheduleEnhanced();
       return r;
     };
     window._enhStatsPatched = true;
@@ -987,7 +999,7 @@
         setTimeout(function(){
           if(tab === 'dashboard'){
             patchDashboardTermProgress();
-            buildEnhancedStats();
+            if(window._enhStale || !document.getElementById('enhancedStatsSection')) buildEnhancedStats();
             injectMoodleWidget();
           }
         }, 150);

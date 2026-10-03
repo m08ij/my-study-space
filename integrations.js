@@ -1749,7 +1749,6 @@
     var section = document.createElement('div');
     section.id = 'insightsSection';
     section.className = 'card';
-    section.style.marginTop = '16px';
     section.innerHTML =
       '<div class="card-head"><h3>📈 تحليلات متقدمة</h3>' +
       '<span class="card-action" id="insightsRefresh">🔄 تحديث</span></div>' +
@@ -1767,15 +1766,8 @@
         '<div><div class="chart-title" style="margin-bottom:10px">توقع المعدل</div>' +
         '<div id="insightsGpa" style="background:var(--grad-soft);border-radius:12px;border:1px solid var(--glow)"></div></div>' +
       '</div>';
-    var lastCard = null;
-    for(var i = 0; i < dash.children.length; i++){
-      var ch = dash.children[i];
-      if(ch.classList && ch.classList.contains('card')) lastCard = ch;
-    }
-    try{
-      if(lastCard && lastCard.parentNode === dash) dash.insertBefore(section, lastCard);
-      else dash.appendChild(section);
-    }catch(e){ dash.appendChild(section); }
+    /* slot ثابت في index.html يضمن ترتيب الأقسام المتقدمة */
+    (document.getElementById('slotInsights') || dash).appendChild(section);
     var refresh = document.getElementById('insightsRefresh');
     if(refresh && !refresh._bound){
       refresh._bound = true;
@@ -2245,6 +2237,17 @@
   /* ============================================================
      Init
      ============================================================ */
+  /* renderDashboard يُستدعى بعد كل إضافة/تعديل/إكمال: ندمج الاستدعاءات المتتالية (120ms) ولا نرسم التحليلات والداشبورد مخفي؛ تُرسم عند العودة له */
+  var insTimer = null;
+  function scheduleInsights(){
+    if(insTimer) clearTimeout(insTimer);
+    insTimer = setTimeout(function(){
+      insTimer = null;
+      var d = document.getElementById('dashboard');
+      if(d && d.classList.contains('active')){ window._insStale = false; try{ renderInsights(); }catch(e){} }
+      else window._insStale = true;
+    }, 120);
+  }
   function init(){
     bindAll();
     injectSmartBtn();
@@ -2261,6 +2264,7 @@
         var r = origSwitch.apply(this, arguments);
         setTimeout(function(){
           if(tab === 'timetable'){ injectSmartBtn(); timetableUiRun(); }
+          if(tab === 'dashboard' && window._insStale){ window._insStale = false; try{ renderInsights(); }catch(e){} }
         }, 100);
         return r;
       };
@@ -2274,7 +2278,7 @@
       var orig = window.renderDashboard;
       window.renderDashboard = function(){
         var r = orig.apply(this, arguments);
-        try{ injectInsightsSection(); renderInsights(); }catch(e){}
+        try{ injectInsightsSection(); scheduleInsights(); }catch(e){}
         return r;
       };
       window._insightsWrapped = true;

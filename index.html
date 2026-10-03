@@ -188,7 +188,17 @@
       <button class="chip" data-tf="pending">قيد الانتظار</button>
       <button class="chip" data-tf="overdue">متأخرة</button>
       <button class="chip" data-tf="done">مكتملة</button>
+      <label class="task-sort"><span>الترتيب</span>
+        <select id="taskSort" aria-label="ترتيب المهام">
+          <option value="due">حسب الموعد</option>
+          <option value="priority">حسب الأولوية</option>
+          <option value="manual">يدوي</option>
+        </select></label>
     </div>
+    <form class="task-quick" id="taskQuickForm" autocomplete="off">
+      <input type="text" id="taskQuick" placeholder="أضف مهمة سريعة… مثال: واجب شبكات غدًا" aria-label="إضافة مهمة سريعة" maxlength="200">
+      <button type="submit" class="btn btn-sm">+ أضف</button>
+    </form>
     <div id="tasksList"></div>
   </section>
 
@@ -448,5 +458,36 @@
 <script src="pwa.js"></script>
 <script src="app.js"></script>
 <script src="tests.js"></script>
-</body>
+<script>
+/* حماية من خلط الإصدارات (HTML جديد + سكربتات قديمة من كاش الـ Service Worker): هذا السكربت داخل الـ HTML نفسه فيأتي دائماً بأحدث نسخة.
+   1) إن لم يطابق window.APP_BUILD رقم BUILD هنا → يمسح كاش التطبيق ويعيد التحميل مرة واحدة (حارس sessionStorage يمنع التكرار).
+   2) أقسام اللوحة المتقدمة (تحليلات/LMS/إحصائيات) تُنقل إلى خانتها الثابتة إذا أضافتها سكربتات قديمة بمكان آخر. */
+(function(){
+  var BUILD = '86';
+  var SLOTS = { insightsSection: 'slotInsights', lmsWidget: 'slotLms', enhancedStatsSection: 'slotEnhanced' };
+  function heal(){
+    var dash = document.getElementById('dashboard'); if(!dash) return;
+    for(var id in SLOTS){
+      var el = document.getElementById(id), slot = document.getElementById(SLOTS[id]);
+      if(el && slot && el.parentNode !== slot) slot.appendChild(el);
+    }
+  }
+  var dash = document.getElementById('dashboard');
+  if(dash && window.MutationObserver){
+    var mo = new MutationObserver(heal); mo.observe(dash, { childList: true });
+    setTimeout(function(){ mo.disconnect(); heal(); }, 20000);
+  }
+  window.addEventListener('load', function(){
+    heal();
+    if(window.APP_BUILD === BUILD) return;
+    try{
+      if(sessionStorage.getItem('ss_build_reload') === BUILD) return;
+      sessionStorage.setItem('ss_build_reload', BUILD);
+    }catch(e){ return; }
+    var go = function(){ location.reload(); };
+    if(window.caches && caches.keys) caches.keys().then(function(ks){ return Promise.all(ks.map(function(k){ return caches.delete(k); })); }).then(go, go);
+    else go();
+  });
+})();
+</script></body>
 </html>

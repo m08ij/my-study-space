@@ -1,7 +1,7 @@
 /* ============================================================
-   sw.js v62 — Cache Clean (بدون ملفات محذوفة)
+   sw.js — شبكة أولاً + كاش احتياطي (v86)
    ============================================================ */
-var CACHE_NAME = 'ss-cache-v85';
+var CACHE_NAME = 'ss-cache-v86';
 var URLS_TO_CACHE = [
   './', './index.html', './app.css',
   './core.js', './data.js', './supabase.js',
@@ -40,38 +40,24 @@ self.addEventListener('fetch', function(e){
   if(url.indexOf('aladhan.com') > -1) return;
   if(e.request.method !== 'GET') return;
 
-  var isHTML = e.request.mode === 'navigate' ||
-    (e.request.headers.get('accept') || '').indexOf('text/html') > -1;
-
-  if(isHTML){
-    e.respondWith(
-      fetch(e.request).then(function(res){
-        if(res && res.status === 200){
-          var clone = res.clone();
-          caches.open(CACHE_NAME).then(function(cache){ cache.put(e.request, clone).catch(function(){}); });
-        }
-        return res;
-      }).catch(function(){
-        return caches.match(e.request).then(function(cached){ return cached || caches.match('./index.html'); });
-      })
-    );
-    return;
-  }
-
+  /* الشبكة أولاً لكل ملفات الموقع (HTML/JS/CSS) مع revalidate صريح (يتجاوز كاش المتصفح لـ10 دقائق على GitHub Pages)،
+     والكاش احتياط عند انقطاع الإنترنت. هكذا لا يُخدَم سكربت قديم مع HTML جديد (خلط إصدارات). */
   e.respondWith(
-    caches.open(CACHE_NAME).then(function(cache){
-      return cache.match(e.request).then(function(cached){
-        var networkPromise = fetch(e.request).then(function(res){
-          if(res && res.status === 200) cache.put(e.request, res.clone()).catch(function(){});
-          return res;
-        }).catch(function(){ return cached || caches.match('./index.html'); });
-        if(cached){ networkPromise.catch(function(){}); return cached; }
-        return networkPromise;
+    fetch(e.request, { cache: 'no-cache' }).then(function(res){
+      if(res && res.status === 200 && url.indexOf(self.location.origin) === 0){
+        var clone = res.clone();
+        caches.open(CACHE_NAME).then(function(cache){ cache.put(e.request, clone).catch(function(){}); });
+      }
+      return res;
+    }).catch(function(){
+      return caches.match(e.request).then(function(cached){
+        if(cached) return cached;
+        var isHTML = e.request.mode === 'navigate' || (e.request.headers.get('accept') || '').indexOf('text/html') > -1;
+        return isHTML ? caches.match('./index.html') : Response.error();
       });
     })
   );
 });
-
 self.addEventListener('notificationclick', function(e){
   e.notification.close();
   var tab = (e.notification.data || {}).tab || 'dashboard';

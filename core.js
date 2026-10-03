@@ -5,6 +5,8 @@
   'use strict';
   if(window._coreLoaded) return;
   window._coreLoaded = true;
+  /* رقم الإصدار: يجب أن يطابق BUILD في سكربت الحماية داخل index.html وCACHE_NAME في sw.js (اتركه متزامناً عند كل إصدار) */
+  window.APP_BUILD = '86';
 
   /* ============ Global State ============ */
   window.space = null;

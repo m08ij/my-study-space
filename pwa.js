@@ -10,6 +10,18 @@
       console.warn('⚠️ Service Worker يحتاج HTTPS');
       return;
     }
+    /* عند استلام نسخة جديدة من الـ SW لجلسة كانت مفتوحة بنسخة قديمة: أعد التحميل مرة واحدة، إلا إذا كان المستخدم يكتب/نافذة مفتوحة فنكتفي بتنبيه */
+    var hadController = !!navigator.serviceWorker.controller;
+    navigator.serviceWorker.addEventListener('controllerchange', function(){
+      if(!hadController) return;
+      try{ if(sessionStorage.getItem('ss_sw_reloaded')) return; sessionStorage.setItem('ss_sw_reloaded', '1'); }catch(e){ return; }
+      var ae = document.activeElement, typing = ae && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName);
+      if(typing || document.querySelector('.modal-backdrop, .hub-sheet-backdrop')){
+        if(window.toast) window.toast('🔄 نسخة جديدة جاهزة — أعد تحميل الصفحة (Ctrl+Shift+R)', 'info', 6000);
+        return;
+      }
+      location.reload();
+    });
     navigator.serviceWorker.register('./sw.js', { scope: './' })
       .then(function(reg){ console.log('✅ SW registered:', reg.scope); })
       .catch(function(err){ console.warn('SW registration failed:', err); });

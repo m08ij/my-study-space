@@ -485,7 +485,7 @@ button.badge[data-goto-tab]{padding:6px 12px;min-height:32px}
 .ai-fab{position:fixed;bottom:92px;left:24px;z-index:400;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#a78bfa,#f472b6);border:none;color:#fff;font-size:1.5rem;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 32px rgba(167,139,250,.5);transition:transform .3s cubic-bezier(.22,1,.36,1)}
 .ai-fab:hover{transform:scale(1.1) rotate(-8deg)}
 .ai-fab.hidden{opacity:0;pointer-events:none;transform:scale(.5)}
-.ai-fab::after{content:'';position:absolute;inset:-4px;border-radius:50%;border:2px solid var(--purple);animation:pulseRing 2s infinite;pointer-events:none}
+.ai-fab::after{content:'';position:absolute;inset:-4px;border-radius:50%;border:2px solid var(--purple);animation:pulseRing 2s 3;pointer-events:none}
 @keyframes pulseRing{0%{transform:scale(1);opacity:.8}100%{transform:scale(1.3);opacity:0}}
 .ai-panel{position:fixed;bottom:160px;left:24px;z-index:399;width:380px;max-width:calc(100vw - 32px);height:520px;max-height:calc(100vh - 200px);background:var(--card);border:1px solid var(--border);border-radius:20px;box-shadow:var(--shadow-lg);display:flex;flex-direction:column;transform:scale(.9) translateY(20px);opacity:0;pointer-events:none;transition:.3s;overflow:hidden}
 .ai-panel.show{transform:scale(1) translateY(0);opacity:1;pointer-events:auto}
@@ -514,13 +514,13 @@ button.badge[data-goto-tab]{padding:6px 12px;min-height:32px}
 .ai-dots span:nth-child(3){animation-delay:.4s}
 @keyframes aiDot{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-3px)}}
 .ai-msg b{color:var(--cyan);font-weight:800}
-.ai-msg.user b{color:#fff;font-weight:800}
+.ai-msg.user b{color:var(--on-accent);font-weight:800}
 .ai-msg code{direction:ltr;display:inline-block}
 
 /* ============ Backup Badge ============ */
 .backup-badge{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:300;padding:6px 14px;border-radius:20px;background:var(--card);border:1px solid var(--border);font-size:.72rem;color:var(--muted);display:flex;align-items:center;gap:8px;box-shadow:var(--shadow);transition:.3s;opacity:0;pointer-events:none}
 .backup-badge.show{opacity:1}
-.backup-badge .dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+.backup-badge .dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s 3}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 
 /* ============ Debug Panel ============ */
@@ -762,7 +762,7 @@ button.badge[data-goto-tab]{padding:6px 12px;min-height:32px}
 .plan-add-btn:active{transform:scale(.94)}
 .plan-add-btn.added{
   background:linear-gradient(135deg,#10b981,#34d399) !important;
-  color:#fff !important;cursor:default !important;
+  color:#053b25 !important;cursor:default !important;
   box-shadow:0 4px 14px rgba(52,211,153,.4) !important;
   animation:planAddedPop .5s cubic-bezier(.34,1.56,.64,1);
 }
@@ -1288,4 +1288,4 @@ body .lw-expand-btn{width:20px;opacity:.55;font-size:.95rem;transition:width .2s
 body .lw-expand-btn:hover,body .lw-expand-btn:focus-visible{width:42px;opacity:1}
 @media (max-width:900px){body .lw-expand-btn{width:20px;height:54px;font-size:.95rem}body .lw-expand-btn:hover,body .lw-expand-btn:focus-visible{width:44px}}
 main{padding-left:max(24px,env(safe-area-inset-left))}
-@media (max-width:900px){main{padding-left:24px}}
+@media (max-width:900px){main{padding-left:20px}}
