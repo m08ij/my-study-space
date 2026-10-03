@@ -492,6 +492,8 @@
     var t = (space().tasks || []).find(function(x){ return x.id === id; });
     if(!t) return;
     t.done = !t.done;
+    /* تاريخ الإكمال (حقل إضافي متوافق مع القديم): يعتمد عليه "إنجاز اليوم" وعدّاد الاحتفال */
+    t.completedAt = t.done ? window.today() : null;
     saveSpace(); window.renderTasks(); window.renderDashboard();
     if(t.done) toast('✓ أحسنت!', 'success', 1200);
   };

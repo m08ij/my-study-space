@@ -33,6 +33,16 @@
       assert('window.' + fn + ' موجودة', typeof window[fn] === 'function');
     });
 
+    /* Hub: يومي الجامعي + مركز المواد + لوحة الأوامر */
+    assert('Schedule.status موجودة', !!window.Schedule && typeof window.Schedule.status === 'function');
+    assert('Hub.openCourse موجودة', !!window.Hub && typeof window.Hub.openCourse === 'function');
+    assert('لوحة الأوامر موجودة', typeof window.openCommandPalette === 'function' && !!window.HubUI);
+    assert('يومي الجامعي يُرسم', typeof window.renderMyDay === 'function' && !!document.getElementById('myDay'));
+    try{
+      var sst = window.Schedule.status(new Date(2026, 9, 3, 10, 30));
+      assert('Schedule.status يرجّع بنية سليمة', Array.isArray(sst.today) && typeof sst.nowMin === 'number');
+    }catch(e){ assert('Schedule.status يرجّع بنية سليمة', false, e.message); }
+
     /* AI */
     assert('aiRespond موجودة', typeof window.aiRespond === 'function');
     try{ var r = window.aiRespond('السلام عليكم'); assert('AI يرد على تحية', typeof r === 'string' && r.length > 5); }

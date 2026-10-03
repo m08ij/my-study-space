@@ -435,6 +435,7 @@
   }
 
   window.openExamCountdown = openExamCountdown;
+  window.closeExamCountdown = closeExamCountdown;   /* لإغلاقها بـ Esc من app.js */
 
   /* Patch renderExams — أضف زر العد التنازلي */
   if(typeof window.renderExams === 'function' && !window._ecsPatched){

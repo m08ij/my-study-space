@@ -1006,3 +1006,165 @@ body{transition:background-color .35s ease,color .35s ease}
 /* تعطيل موحّد (يشمل كل الثيمات لأنه سلوك وليس لون): خافت + مؤشر ممنوع + بدون حركة */
 .btn:disabled,.btn[disabled]{opacity:.5;cursor:not-allowed;transform:none!important;box-shadow:none!important}
 input:disabled,select:disabled,textarea:disabled{opacity:.55;cursor:not-allowed}
+/* نتيجة البحث المحددة بلوحة المفاتيح */
+.search-item.active{background:var(--grad-soft);box-shadow:inset 0 0 0 1px var(--glow)}
+
+/* ============================================================
+   🧭 Hub: يومي الجامعي + الجدول التفاعلي + مركز المواد + لوحة الأوامر
+   (ألوان من متغيرات الثيم فقط)
+   ============================================================ */
+
+/* ---- يومي الجامعي ---- */
+.myday{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;margin-bottom:16px}
+.myday-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.myday-head h3{font-size:1rem;margin:0}
+.myday-date{font-size:.78rem;color:var(--muted)}
+.myday-hero{border-radius:var(--radius);padding:14px 16px;margin-bottom:12px;border:1px solid var(--border);background:var(--bg2);cursor:pointer;transition:transform .2s cubic-bezier(.22,1,.36,1),border-color .2s ease,box-shadow .2s ease}
+.myday-hero:hover{border-color:var(--cyan);transform:translateY(-1px)}
+.myday-hero:focus-visible,.myday-tile:focus-visible,.hub-card:focus-visible,.class-block:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.myday-hero.now{background:var(--grad-soft);border-color:var(--cyan);box-shadow:0 0 0 1px var(--glow)}
+.myday-hero.empty{cursor:default}
+.myday-hero.empty:hover{transform:none;border-color:var(--border)}
+.myday-kicker{font-size:.78rem;color:var(--cyan);font-weight:700}
+.myday-title{font-size:1.25rem;font-weight:800;margin:2px 0;line-height:1.4}
+.myday-meta{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.8rem;color:var(--muted)}
+.myday-count{margin-top:6px;font-size:.95rem}
+.myday-count b{color:var(--cyan)}
+.myday-bar{height:6px;background:var(--card2);border-radius:99px;overflow:hidden;margin-top:8px}
+.myday-bar i{display:block;height:100%;background:var(--grad);border-radius:99px;transition:width .6s cubic-bezier(.22,1,.36,1)}
+.myday-bar.slim{height:4px;margin:2px 0 6px}
+.myday-sub{margin-top:8px;font-size:.8rem;color:var(--muted);line-height:1.7}
+.myday-sub b{color:var(--text)}
+.myday-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media(min-width:760px){.myday-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.myday-tile{text-align:right;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:var(--radius);padding:12px;display:flex;flex-direction:column;gap:2px;font-family:inherit;cursor:pointer;transition:transform .2s cubic-bezier(.22,1,.36,1),border-color .2s ease}
+.myday-tile:hover{border-color:var(--border2);transform:translateY(-1px)}
+.myday-tile:active{transform:scale(.98)}
+.myday-tile.wide{grid-column:1/-1}
+.myday-tile.hot{border-color:var(--amber)}
+.myday-tile.danger{border-color:var(--red)}
+.myday-tile-ic{font-size:1.1rem;line-height:1}
+.myday-num{font-size:1.8rem;font-weight:800;line-height:1.1}
+.myday-num.sm{font-size:1.15rem;line-height:1.5}
+.myday-tile.danger .myday-num{color:var(--red)}
+.myday-lbl{font-size:.8rem;color:var(--muted)}
+.myday-lbl.strong{font-weight:700;color:var(--text);font-size:.9rem}
+.myday-note{font-size:.72rem;color:var(--muted);line-height:1.5}
+.myday-lines{display:block}
+.myday-line{display:flex;justify-content:space-between;font-size:.82rem;margin-top:4px}
+
+/* ---- الجدول التفاعلي ---- */
+.tt-date{display:block;font-size:.66rem;font-weight:600;opacity:.85;line-height:1.2}
+.tt-exam{display:block;font-size:.62rem;margin-top:2px;font-weight:700}
+.class-block.tt-next{border-style:dashed;border-color:var(--cyan)}
+.class-block .tt-badge{align-self:flex-start;font-size:.6rem;padding:0 7px;border-radius:6px;margin-top:3px;font-weight:700;line-height:1.6}
+.tt-badge.now{background:var(--red);color:var(--on-accent)}
+.tt-badge.next{background:var(--grad-soft);color:var(--cyan)}
+.tt-weeknav{display:inline-flex;align-items:center;gap:4px;flex-shrink:0}
+.tt-step{border:1px solid var(--border);background:var(--card);color:var(--text);border-radius:10px;width:34px;height:34px;cursor:pointer;font-size:1.15rem;font-family:inherit;flex-shrink:0;transition:transform .18s ease,border-color .2s ease}
+.tt-step:hover{border-color:var(--cyan)}
+.tt-step:active{transform:scale(.92)}
+.tt-weeklabel{font-size:.74rem;color:var(--muted);white-space:nowrap;padding:0 6px}
+
+/* ---- النوافذ الجانبية (تفاصيل المحاضرة/صفحة المادة) — فوق المحتوى وتحت نوافذ التعديل ---- */
+.hub-sheet-backdrop{position:fixed;inset:0;z-index:450;background:rgba(10,12,20,.55);display:flex;align-items:flex-end;justify-content:center;animation:hubFade .2s ease}
+@media(min-width:700px){.hub-sheet-backdrop{align-items:center;padding:20px}}
+.hub-sheet{background:var(--card);border:1px solid var(--border);width:min(760px,100%);max-height:92vh;display:flex;flex-direction:column;border-radius:20px 20px 0 0;box-shadow:var(--shadow-lg);animation:hubSheetIn .28s cubic-bezier(.22,1,.36,1);outline:none}
+@media(min-width:700px){.hub-sheet{border-radius:20px;max-height:86vh}}
+.hub-sheet-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border)}
+.hub-sheet-title{font-size:1.1rem;margin:0;color:var(--cyan);line-height:1.5}
+.hub-x{width:36px;height:36px;border-radius:10px;border:1px solid var(--border);background:var(--bg2);color:var(--text);cursor:pointer;font-size:1rem;font-family:inherit}
+.hub-x:hover{border-color:var(--cyan)}
+.hub-sheet-body{overflow:auto;padding:14px 16px 24px;-webkit-overflow-scrolling:touch}
+@keyframes hubFade{from{opacity:0}to{opacity:1}}
+@keyframes hubSheetIn{from{opacity:0;transform:translateY(24px) scale(.98)}to{opacity:1;transform:none}}
+.hub-rows{display:flex;flex-direction:column;gap:2px;margin-bottom:12px}
+.hub-row{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--border);font-size:.88rem}
+.hub-row span{color:var(--muted)}
+.hub-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.hub-actions.inline{margin-top:8px}
+.hub-warn{background:var(--grad-soft);border:1px solid var(--red);color:var(--text);border-radius:12px;padding:10px 12px;font-size:.84rem;margin-bottom:8px}
+.hub-pill{display:inline-block;font-size:.72rem;font-weight:700;padding:2px 10px;border-radius:99px;border:1px solid var(--border);color:var(--muted);white-space:nowrap}
+.hub-pill.ok{color:var(--green);border-color:var(--green)}
+.hub-pill.danger{color:var(--red);border-color:var(--red)}
+.hub-pill.muted{color:var(--muted)}
+.hub-course-top{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;align-items:center;margin-bottom:10px}
+.hub-secnav{display:flex;gap:6px;overflow-x:auto;padding:6px 0 10px;position:sticky;top:-14px;background:var(--card);z-index:2;-webkit-overflow-scrolling:touch}
+.hub-sec{margin-bottom:20px}
+.hub-sec h4{font-size:.95rem;margin:0 0 8px;display:flex;align-items:center;gap:8px}
+.hub-sec h4 .muted{font-weight:600;font-size:.78rem;color:var(--muted)}
+.muted.ok{color:var(--green)}.muted.warn{color:var(--amber)}.muted.bad{color:var(--red)}
+.hub-list{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
+.hub-li{display:flex;align-items:center;gap:10px;justify-content:space-between;padding:9px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;font-family:inherit;font-size:.86rem;color:var(--text);text-align:right;width:100%}
+button.hub-li{cursor:pointer;transition:border-color .2s ease}
+button.hub-li:hover{border-color:var(--cyan)}
+.hub-li.done .hub-li-main{text-decoration:line-through;opacity:.6}
+.hub-li-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.hub-li-main small{font-size:.72rem;color:var(--muted)}
+.hub-li-main small.bad{color:var(--red)}
+.hub-check,.hub-mini{background:transparent;border:none;color:var(--text);cursor:pointer;font-size:1.1rem;padding:4px 6px;border-radius:8px;font-family:inherit;min-width:32px;min-height:32px}
+.hub-check:hover,.hub-mini:hover{background:var(--card2)}
+.hub-empty{padding:10px 12px;border:1px dashed var(--border2);border-radius:12px;color:var(--muted);font-size:.84rem;margin-bottom:8px}
+.hub-link{background:none;border:none;color:var(--cyan);cursor:pointer;font-family:inherit;font-size:inherit;text-decoration:underline;padding:0}
+.hub-empty-actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:12px}
+
+/* ---- مركز المواد ---- */
+.hub-bar{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
+.hub-search input{width:100%;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:12px;padding:11px 14px;font-family:inherit;font-size:.9rem;outline:none;transition:border-color .2s ease,box-shadow .2s ease}
+.hub-search input:focus{border-color:var(--cyan);box-shadow:0 0 0 3px var(--glow)}
+.hub-filters{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;-webkit-overflow-scrolling:touch}
+.hub-chip{flex-shrink:0;border:1px solid var(--border);background:var(--card);color:var(--muted);border-radius:99px;padding:6px 13px;font-family:inherit;font-size:.78rem;font-weight:700;cursor:pointer;transition:transform .18s ease,background .2s ease,color .2s ease,border-color .2s ease;white-space:nowrap}
+.hub-chip:hover{border-color:var(--cyan);color:var(--text)}
+.hub-chip:active{transform:scale(.95)}
+.hub-chip.active{background:var(--grad);color:var(--on-accent);border-color:transparent}
+.hub-sortrow{display:flex;align-items:center;gap:8px;font-size:.78rem;color:var(--muted)}
+.hub-sortrow select{background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:5px 8px;font-family:inherit;font-size:.78rem}
+.hub-count{margin-right:auto;font-weight:700}
+.hub-card{cursor:pointer;display:flex;flex-direction:column;gap:8px}
+.hub-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.hub-card-title{display:flex;flex-direction:column;min-width:0}
+.hub-card-title b{font-size:.98rem;line-height:1.4}
+.hub-card-title small{font-size:.7rem;color:var(--muted);font-family:monospace}
+.hub-card-actions{display:flex;gap:6px;align-items:center;flex-shrink:0}
+.hub-card-actions .btn{padding:6px 9px}
+.hub-chips{display:flex;flex-wrap:wrap;gap:6px}
+.hub-sched{font-size:.78rem;color:var(--muted);line-height:1.7}
+.hub-sched.none{opacity:.8}
+.hub-stats{display:flex;flex-wrap:wrap;gap:6px}
+.hub-stat{font-size:.74rem;font-weight:700;padding:3px 10px;border-radius:99px;background:var(--bg2);border:1px solid var(--border);color:var(--text)}
+.hub-stat.ok{color:var(--green);border-color:var(--green)}
+.hub-stat.warn{color:var(--amber);border-color:var(--amber)}
+.hub-stat.bad{color:var(--red);border-color:var(--red)}
+.hub-open{font-size:.78rem;color:var(--cyan);font-weight:700;margin-top:auto}
+
+/* ---- لوحة الأوامر ---- */
+.cmdk-backdrop{position:fixed;inset:0;z-index:700;background:rgba(10,12,20,.55);display:flex;justify-content:center;align-items:flex-start;padding:12vh 12px 12px;animation:hubFade .15s ease}
+.cmdk{width:min(640px,100%);max-height:70vh;display:flex;flex-direction:column;background:var(--card);border:1px solid var(--border2);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);overflow:hidden;animation:hubSheetIn .22s cubic-bezier(.22,1,.36,1)}
+.cmdk-input{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border)}
+.cmdk-input input{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-family:inherit;font-size:1rem;min-width:0}
+.cmdk-input input::placeholder{color:var(--muted)}
+.cmdk-list{overflow:auto;padding:6px}
+.cmdk-cat{font-size:.7rem;color:var(--muted);padding:8px 10px 4px;font-weight:700}
+.cmdk-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;cursor:pointer;font-size:.9rem}
+.cmdk-item.active{background:var(--grad-soft);box-shadow:inset 0 0 0 1px var(--glow)}
+.cmdk-ic{width:22px;text-align:center}
+.cmdk-lbl{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cmdk kbd,.cmdk-help kbd{font-family:monospace;font-size:.7rem;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:1px 7px;color:var(--muted);direction:ltr}
+.cmdk-empty{padding:22px;text-align:center;color:var(--muted);font-size:.88rem}
+.cmdk-foot{display:flex;gap:14px;justify-content:center;padding:8px;border-top:1px solid var(--border);font-size:.7rem;color:var(--muted)}
+.cmdk-help{padding:8px 10px}
+.cmdk-help-row{display:flex;gap:12px;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:.86rem}
+.cmdk-help-row kbd{min-width:84px;text-align:center}
+
+/* ---- الإضافة السريعة السياقية ---- */
+.fab-action.ctx{border-color:var(--cyan);background:var(--grad-soft)}
+.fab-action.ctx::after{content:'هنا';font-size:.62rem;font-weight:800;color:var(--cyan);margin-right:4px}
+@media(max-width:600px){
+  .hub-sheet{max-height:94vh}
+  .myday-title{font-size:1.1rem}
+}
+/* شريط الجدول: صفّان (تنقل + أيام) */
+.tt-daybar{flex-direction:column;overflow:visible;gap:6px}
+.tt-row{display:flex;align-items:center;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px}
+.tt-row .tt-weeklabel{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.tt-days{flex-wrap:nowrap}

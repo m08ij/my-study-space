@@ -72,7 +72,11 @@
       });
       var result;
       try{ result = onSubmit(data); }
-      catch(e){ console.error('showModal error:', e); return; }
+      catch(e){
+        console.error('showModal error:', e);
+        if(window.toast) window.toast('تعذّر الحفظ — حاول مرة ثانية', 'warn', 3000);   /* بدل الفشل الصامت */
+        return;
+      }
       if(result === false) return;
       close();
     };
@@ -107,6 +111,9 @@
     } else if(/^\s*(ملاحظة|note|مذكرة)\s*:?/i.test(t)){
       result.type = 'note';
       result.title = t.replace(/^\s*(ملاحظة|note|مذكرة)\s*:?\s*/i, '').trim();
+    } else if(/^\s*(مادة|course)\s+\S/i.test(t)){
+      result.type = 'course';
+      result.title = t.replace(/^\s*(مادة|course)\s+/i, '').trim();
     }
 
     if(result.type === 'expense' || result.type === 'income'){
@@ -173,7 +180,7 @@
     if(dateStr) result.due = dateStr;
 
     result.title = result.title
-      .replace(/^\s*(امتحان|اختبار|exam|فاينل|واجب|مهمة|task|assignment|homework|هومورك|مصروف|صرفت|دفعت|expense|صرف|دخل|راتب|income|وارد|ملاحظة|note|مذكرة)\s*:?\s*/i, '')
+      .replace(/^\s*(امتحان|اختبار|exam|فاينل|واجب|مهمة|task|assignment|homework|هومورك|مصروف|صرفت|دفعت|expense|صرف|دخل|راتب|income|وارد|ملاحظة|note|مذكرة|مادة|course)\s*:?\s*/i, '')
       .replace(/\d{1,2}\s*[\/\-]\s*\d{1,2}(?:\s*[\/\-]\s*\d{2,4})?/g, '')
       .replace(/(\d+(?:\.\d+)?)\s*(?:د(?:ينار)?|jd|دولار|\$|usd)(\s|$)/gi, ' ')
       .replace(/(^|\s)(اليوم|today)(\s|$)/gi, ' ')
@@ -246,7 +253,7 @@
       var p = window.parseQuickCapture(text);
       currentParsed = p;
       if(!p){ preview.classList.remove('show'); saveBtn.disabled = true; return; }
-      var typeLabel = { task:'📝 مهمة', exam:'⏳ امتحان', expense:'💰 مصروف', income:'📈 دخل', note:'📔 ملاحظة' }[p.type] || '—';
+      var typeLabel = { task:'📝 مهمة', exam:'⏳ امتحان', expense:'💰 مصروف', income:'📈 دخل', note:'📔 ملاحظة', course:'📚 مادة' }[p.type] || '—';
       var rows = '<div class="qc-preview-row"><span class="qc-preview-label">النوع</span><span class="qc-preview-val">' + typeLabel + '</span></div>';
       rows += '<div class="qc-preview-row"><span class="qc-preview-label">العنوان</span><span class="qc-preview-val">' + esc(p.title) + '</span></div>';
       if(p.due) rows += '<div class="qc-preview-row"><span class="qc-preview-label">التاريخ</span><span class="qc-preview-val">' + p.due + '</span></div>';
@@ -304,6 +311,15 @@
           if(window.renderNotes) window.renderNotes();
           if(window.renderDashboard) window.renderDashboard();
           toast('✓ أُضيفت ملاحظة', 'success', 2000);
+        } else if(p.type === 'course'){
+          /* مادة جديدة: نأخذ الكود/الساعات من قاعدة المواد إن طابق الاسم تماماً، وإلا مادة بسيطة */
+          var known = (window.COURSES_DB || {})[p.title];
+          var added = window.addCourseEverywhere ? window.addCourseEverywhere(p.title, known ? known.code : '', known ? known.h : 3, { silent: true }) : false;
+          if(added === false){ toast('المادة موجودة أصلاً', 'info', 2200); return; }
+          toast('✓ أُضيفت مادة: ' + p.title, 'success', 2000);
+        } else {
+          toast('تعذّر تحديد نوع الإضافة', 'warn', 2500);
+          return;   /* لا نغلق النافذة بدون حفظ صامت */
         }
         bd.remove();
       }catch(err){

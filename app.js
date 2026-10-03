@@ -481,21 +481,40 @@
     var res = document.getElementById('searchResults');
     if(!inp || !res) return;
     function buildIndex(){
-      var idx = [];
+      /* ترتيب الأولوية: عناصرك أنت أولاً (موادي، مهام، امتحانات)، ثم كتالوج الخطة (بدون ما أضفته أصلاً)، ثم الأوصاف */
+      var idx = [], mine = {};
+      (window.space.courses || []).forEach(function(c){ mine[c.name] = true; idx.push({name: c.name, type:'موادي', tab:'courses', courseId: c.id}); });
+      (window.space.tasks || []).forEach(function(t){ if(t.title) idx.push({name: t.title, type:'مهمة', tab:'tasks'}); });
+      (window.space.exams || []).forEach(function(e){ if(e.name) idx.push({name: e.name, type:'امتحان', tab:'exams'}); });
+      (window.notes || []).forEach(function(n){ var nm = n && (n.title || String(n.body || '').slice(0, 40)); if(nm) idx.push({name: nm, type:'ملاحظة', tab:'notes'}); });
       (window.SEMESTERS || []).forEach(function(s){
-        s.courses.forEach(function(c){ idx.push({name: c.n, type:'مادة', tab:'plan'}); });
+        s.courses.forEach(function(c){ if(!mine[c.n]) idx.push({name: c.n, type:'الخطة', tab:'plan'}); });
       });
-      (window.space.courses || []).forEach(function(c){ idx.push({name: c.name, type:'مادة', tab:'courses'}); });
-      (window.space.tasks || []).forEach(function(t){ idx.push({name: t.title, type:'مهمة', tab:'tasks'}); });
       var CD = window.COURSES_DESC || {};
       Object.keys(CD).forEach(function(k){ idx.push({name: k, type:'وصف', tab:'coursedescriptions'}); });
       return idx;
     }
+    var current = [], activeI = -1;
+    function openResult(x){
+      res.classList.remove('show');
+      inp.value = '';
+      inp.blur();
+      current = []; activeI = -1;
+      window.switchTab(x.tab);
+      /* مادتك: نفتح صفحة المادة مباشرة (ملفات/مهام/امتحانات/علامات/حضور) */
+      if(x.courseId && window.Hub && window.Hub.openCourse) window.Hub.openCourse(x.courseId);
+    }
+    function setActive(i){
+      activeI = i;
+      res.querySelectorAll('.search-item').forEach(function(el, k){ el.classList.toggle('active', k === i); });
+      var el = res.querySelectorAll('.search-item')[i]; if(el && el.scrollIntoView) el.scrollIntoView({ block: 'nearest' });
+    }
     inp.addEventListener('input', function(){
       var q = inp.value.trim().toLowerCase();
-      if(!q){ res.classList.remove('show'); return; }
+      if(!q){ res.classList.remove('show'); current = []; activeI = -1; return; }
       var idx = buildIndex();
-      var m = idx.filter(function(x){ return x.name.toLowerCase().indexOf(q) > -1; }).slice(0,10);
+      var m = idx.filter(function(x){ return String(x.name || '').toLowerCase().indexOf(q) > -1; }).slice(0,10);
+      current = m; activeI = -1;
       if(!m.length) res.innerHTML = '<div style="padding:16px;text-align:center;color:var(--muted);font-size:.85rem">لا نتائج</div>';
       else {
         var html = '';
@@ -504,15 +523,17 @@
         });
         res.innerHTML = html;
         res.querySelectorAll('[data-si]').forEach(function(el){
-          el.addEventListener('click', function(){
-            var x = m[parseInt(el.dataset.si)];
-            res.classList.remove('show');
-            inp.value = '';
-            window.switchTab(x.tab);
-          });
+          el.addEventListener('click', function(){ openResult(m[parseInt(el.dataset.si, 10)]); });
         });
       }
       res.classList.add('show');
+    });
+    /* لوحة المفاتيح داخل البحث: الأسهم للتنقل بين النتائج، Enter يفتح المحدد (أو الأول) */
+    inp.addEventListener('keydown', function(e){
+      if(!current.length) return;
+      if(e.key === 'ArrowDown'){ e.preventDefault(); setActive(Math.min(current.length - 1, activeI + 1)); }
+      else if(e.key === 'ArrowUp'){ e.preventDefault(); setActive(Math.max(0, activeI - 1)); }
+      else if(e.key === 'Enter'){ e.preventDefault(); openResult(current[activeI >= 0 ? activeI : 0]); }
     });
     document.addEventListener('click', function(e){ if(!e.target.closest('.search-wrap')) res.classList.remove('show'); });
   };
@@ -838,6 +859,8 @@
     var h = Math.floor(min / 60), m = min % 60;
     return m ? h + 'س ' + m + 'د' : h + ' س';
   }
+  /* مساعدات الجدول متاحة لـ hub.js (لوحة اليوم/تفاصيل المحاضرة) بدل تكرارها */
+  window.ttMin = ttMin; window.ttPad = ttPad; window.ttSplitKey = ttSplitKey; window.ttDur = ttDur;
   /* تداخل حقيقي فقط: يحتاج وقت نهاية معروف للمحاضرة الأبكر (المحاضرات القديمة بدون end لا تُعلَّم) */
   window.getTimetableConflicts = function(){
     var tt = (window.space && window.space.timetable) || {}, byDay = {}, bad = {}, list = [];
@@ -873,8 +896,9 @@
       { key: 'time', label: 'وقت البداية', type: 'time' },
       { key: 'end', label: 'وقت النهاية (اختياري)', type: 'time' },
       { key: 'room', label: 'القاعة' },
+      { key: 'building', label: 'المبنى (اختياري)' },
       { key: 'instructor', label: 'الدكتور' }
-    ], { name: cls.name || '', day: sk.day, time: ttPad(sk.time), end: ttPad(cls.end), room: cls.room || '', instructor: cls.instructor || '' }, function(data){
+    ], { name: cls.name || '', day: sk.day, time: ttPad(sk.time), end: ttPad(cls.end), room: cls.room || '', building: cls.building || '', instructor: cls.instructor || '' }, function(data){
       var name = String(data.name || '').trim();
       if(!name){ window.toast('أدخل اسم المادة', 'warn'); return false; }
       var start = ttPad(data.time), end = ttPad(data.end);
@@ -883,7 +907,7 @@
       var newKey = data.day + '-' + start, tt = window.space.timetable;
       if(newKey !== key && tt[newKey]){ window.toast('في محاضرة ثانية بنفس اليوم والوقت', 'warn', 2800); return false; }
       /* نحافظ على أي حقول إضافية في المحاضرة */
-      var merged = Object.assign({}, cls, { name: name, room: data.room || '', instructor: data.instructor || '', end: end });
+      var merged = Object.assign({}, cls, { name: name, room: data.room || '', building: data.building || '', instructor: data.instructor || '', end: end });
       if(newKey !== key) delete tt[key];
       tt[newKey] = merged;
       window.saveSpace();
@@ -911,6 +935,16 @@
     return (phone && allDays.indexOf(todayKey) > -1) ? todayKey : 'week';
   }
   function ttSetView(v){ try{ localStorage.setItem('tt_view', v); }catch(e){} window.renderTimetable(); }
+
+  /* تنقل بين الأسابيع: يغيّر التواريخ وشارات الامتحانات فقط (الجدول نفسه متكرر أسبوعياً) */
+  var ttWeekOffset = 0;
+  function ttDateOf(dayKey, DE){
+    var n = new Date(), d = new Date(n.getFullYear(), n.getMonth(), n.getDate());
+    d.setDate(d.getDate() - d.getDay() + ttWeekOffset * 7 + DE.indexOf(dayKey));
+    return d;
+  }
+  function ttYmd(d){ return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+  window.ttSetWeek = function(off){ ttWeekOffset = off; window.renderTimetable(); };
 
   var ttScrolledOnce = false;
   window.renderTimetable = function(){
@@ -969,9 +1003,19 @@
       });
     });
 
+    /* الأسبوع المعروض: الجدول متكرر أسبوعياً، فالتنقل بين الأسابيع يغيّر التواريخ وامتحانات ذلك الأسبوع فقط */
+    var isThisWeek = ttWeekOffset === 0;
+    var nextKey = null;
+    if(isThisWeek && window.Schedule){ var stt = window.Schedule.status(); if(stt.next) nextKey = stt.next.key; }
     var html = '<thead><tr><th></th>';
     days.forEach(function(d){
-      html += '<th' + (d === todayKey ? ' data-today="1" style="background:var(--grad);color:var(--on-accent)"' : '') + '>' + DA[DE.indexOf(d)] + '</th>';
+      var dt = ttDateOf(d, DE), ymd = ttYmd(dt);
+      var dayExams = ((window.space && window.space.exams) || []).filter(function(e){ return e.date === ymd; });
+      var isToday = d === todayKey && isThisWeek;
+      html += '<th' + (isToday ? ' data-today="1" style="background:var(--grad);color:var(--on-accent)"' : '') + '>' + DA[DE.indexOf(d)] +
+        '<small class="tt-date">' + dt.getDate() + '/' + (dt.getMonth() + 1) + '</small>' +
+        (dayExams.length ? '<span class="tt-exam" title="' + window.esc(dayExams.map(function(e){ return e.name + (e.time ? ' ' + e.time : ''); }).join(' • ')) + '">📝 ' + (dayExams.length > 1 ? dayExams.length + ' امتحانات' : 'امتحان') + '</span>' : '') +
+        '</th>';
     });
     html += '</tr></thead><tbody>';
 
@@ -982,21 +1026,24 @@
         return;
       }
       var time = item.time, rowMin = ttMin(time);
-      var isNowRow = days.indexOf(todayKey) > -1 && Math.abs(rowMin - nowMin) <= 15;
+      var isNowRow = isThisWeek && days.indexOf(todayKey) > -1 && Math.abs(rowMin - nowMin) <= 15;
       html += '<tr><td class="time-col"' + (isNowRow ? ' style="color:var(--red)"' : '') + '>' + time + '</td>';
       days.forEach(function(day){
-        var tdStyle = day === todayKey ? 'background:linear-gradient(180deg,rgba(34,211,238,.06),transparent)' : '';
+        var tdStyle = (day === todayKey && isThisWeek) ? 'background:linear-gradient(180deg,rgba(34,211,238,.06),transparent)' : '';
         var en = entryAt(day, time);
         if(en){
           var cls = en.cls, e = ttMin(cls.end), hasEnd = e !== null && e > rowMin;
-          var isNow = day === todayKey && nowMin >= rowMin && nowMin < (hasEnd ? e : rowMin + 60);
+          var isNow = isThisWeek && day === todayKey && nowMin >= rowMin && nowMin < (hasEnd ? e : rowMin + 60);
+          var isNext = !isNow && nextKey === en.key;
           var isBad = !!conf.keys[en.key];
-          var tip = cls.name + ' — ' + time + (hasEnd ? '–' + ttPad(cls.end) : '') + (cls.room ? ' — ' + cls.room : '') + (cls.instructor ? ' — ' + cls.instructor : '') + (isBad ? ' — ⚠️ تعارض' : '');
-          html += '<td style="' + tdStyle + '"><div class="class-block' + (isBad ? ' tt-conflict' : '') + (isNow ? ' tt-now' : '') + '" data-edit="' + window.esc(en.key) + '" title="' + window.esc(tip) + '">' +
+          var place = (cls.building ? cls.building + (cls.room ? ' · ' : '') : '') + (cls.room || '');
+          var tip = cls.name + ' — ' + time + (hasEnd ? '–' + ttPad(cls.end) + ' (' + ttDur(e - rowMin) + ')' : '') + (place ? ' — ' + place : '') + (cls.instructor ? ' — ' + cls.instructor : '') + (isBad ? ' — ⚠️ تعارض' : '');
+          html += '<td style="' + tdStyle + '"><div class="class-block' + (isBad ? ' tt-conflict' : '') + (isNow ? ' tt-now' : '') + (isNext ? ' tt-next' : '') + '" data-edit="' + window.esc(en.key) + '" tabindex="0" role="button" title="' + window.esc(tip) + '">' +
             '<span class="name">' + window.esc(cls.name) + '</span>' +
-            (hasEnd ? '<span class="tt-time"><bdi dir="ltr">' + time + '–' + ttPad(cls.end) + '</bdi></span>' : '') +
-            (cls.room ? '<span class="room">📍 ' + window.esc(cls.room) + '</span>' : '') +
+            (hasEnd ? '<span class="tt-time"><bdi dir="ltr">' + time + '–' + ttPad(cls.end) + '</bdi> · ' + ttDur(e - rowMin) + '</span>' : '') +
+            (place ? '<span class="room">📍 ' + window.esc(place) + '</span>' : '') +
             (cls.instructor ? '<span class="room">👤 ' + window.esc(cls.instructor) + '</span>' : '') +
+            (isNow ? '<span class="tt-badge now">الآن</span>' : (isNext ? '<span class="tt-badge next">التالية</span>' : '')) +
             '</div></td>';
         } else {
           html += '<td style="' + tdStyle + '"><div class="cell-empty" data-add="' + day + '-' + time + '">+</div></td>';
@@ -1007,7 +1054,12 @@
     html += '</tbody>';
     t.innerHTML = html;
 
-    t.querySelectorAll('[data-edit]').forEach(function(b){ b.addEventListener('click', function(){ window.editClassSlot(b.dataset.edit); }); });
+    /* الضغط على المحاضرة يفتح تفاصيلها (ومنها الوصول للمادة والتعديل)؛ Enter/مسافة بلوحة المفاتيح */
+    var openClass = function(k){ if(window.showClassDetails) window.showClassDetails(k); else window.editClassSlot(k); };
+    t.querySelectorAll('[data-edit]').forEach(function(b){
+      b.addEventListener('click', function(){ openClass(b.dataset.edit); });
+      b.addEventListener('keydown', function(e){ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openClass(b.dataset.edit); } });
+    });
     t.querySelectorAll('[data-add]').forEach(function(b){ b.addEventListener('click', function(){ window.addClassSlot(b.dataset.add); }); });
 
     t.className = 'timetable' + (view === 'week' ? '' : ' tt-day');
@@ -1022,15 +1074,39 @@
       wrap.parentNode.insertBefore(dbar, wrap);
     }
     if(dbar){
-      var chips = '<button type="button" class="tt-chip' + (view === 'week' ? ' active' : '') + '" data-view="week">الأسبوع</button>';
+      var wFirst = ttDateOf(allDays[0], DE), wLast = ttDateOf(allDays[allDays.length - 1], DE);
+      var wLabel = (isThisWeek ? 'هذا الأسبوع' : (ttWeekOffset > 0 ? 'بعد ' + ttWeekOffset + ' أسبوع' : 'قبل ' + (-ttWeekOffset) + ' أسبوع')) +
+        ' · ' + wFirst.getDate() + '/' + (wFirst.getMonth() + 1) + ' – ' + wLast.getDate() + '/' + (wLast.getMonth() + 1);
+      /* صفّان: (1) تنقل الأسبوع + اليوم + أسهم الأيام  (2) شرائح الأيام القابلة للتمرير */
+      var chips = '<div class="tt-row"><span class="tt-weeknav">' +
+        '<button type="button" class="tt-step" data-wk="-1" aria-label="الأسبوع السابق" title="الأسبوع السابق">›</button>' +
+        '<span class="tt-weeklabel">' + wLabel + '</span>' +
+        '<button type="button" class="tt-step" data-wk="1" aria-label="الأسبوع التالي" title="الأسبوع التالي">‹</button></span>' +
+        '<button type="button" class="tt-chip" data-view="today" title="العودة لليوم الحالي">اليوم</button>';
+      if(view !== 'week') chips += '<button type="button" class="tt-step" data-day-step="-1" aria-label="اليوم السابق" title="اليوم السابق">›</button><button type="button" class="tt-step" data-day-step="1" aria-label="اليوم التالي" title="اليوم التالي">‹</button>';
+      chips += '</div><div class="tt-row tt-days"><button type="button" class="tt-chip' + (view === 'week' ? ' active' : '') + '" data-view="week">الأسبوع</button>';
       allDays.forEach(function(d){
-        chips += '<button type="button" class="tt-chip' + (view === d ? ' active' : '') + '" data-view="' + d + '">' + DA[DE.indexOf(d)] + (d === todayKey ? ' •' : '') + '</button>';
+        chips += '<button type="button" class="tt-chip' + (view === d ? ' active' : '') + '" data-view="' + d + '">' + DA[DE.indexOf(d)] + (d === todayKey && isThisWeek ? ' •' : '') + '</button>';
       });
+      chips += '</div>';
       dbar.innerHTML = chips;
-      dbar.querySelectorAll('[data-view]').forEach(function(b){ b.addEventListener('click', function(){ ttSetView(b.dataset.view); }); });
+      dbar.querySelectorAll('[data-view]').forEach(function(b){
+        b.addEventListener('click', function(){
+          if(b.dataset.view === 'today'){ ttWeekOffset = 0; ttSetView(allDays.indexOf(todayKey) > -1 ? todayKey : 'week'); }
+          else ttSetView(b.dataset.view);
+        });
+      });
+      dbar.querySelectorAll('[data-wk]').forEach(function(b){ b.addEventListener('click', function(){ ttWeekOffset += parseInt(b.dataset.wk, 10); window.renderTimetable(); }); });
+      dbar.querySelectorAll('[data-day-step]').forEach(function(b){
+        b.addEventListener('click', function(){
+          var i = allDays.indexOf(view), step = parseInt(b.dataset.dayStep, 10);
+          if(i < 0) return;
+          ttSetView(allDays[(i + step + allDays.length) % allDays.length]);
+        });
+      });
       /* الشريحة النشطة قد تكون خارج الشاشة بالموبايل: نمرّر الشريط فقط (بدون تحريك الصفحة) */
-      var act = dbar.querySelector('.active');
-      if(act && dbar.scrollWidth > dbar.clientWidth) dbar.scrollLeft += act.getBoundingClientRect().left + act.offsetWidth / 2 - (dbar.getBoundingClientRect().left + dbar.clientWidth / 2);
+      var act = dbar.querySelector('.tt-days .active'), scroller = act && act.parentNode;
+      if(act && scroller.scrollWidth > scroller.clientWidth) scroller.scrollLeft += act.getBoundingClientRect().left + act.offsetWidth / 2 - (scroller.getBoundingClientRect().left + scroller.clientWidth / 2);
     }
 
     /* شريط تعارض واضح فوق الجدول (للعرض فقط — لا يمنع ولا يغيّر بيانات) */
@@ -1110,10 +1186,15 @@
     if(e.altKey && e.key.toLowerCase() === 'p'){ e.preventDefault(); window.switchTab('timer'); return; }
     if(e.altKey && e.key.toLowerCase() === 'q'){ e.preventDefault(); window.openQuickCapture(); return; }
     if(e.key === 'Escape'){
+      /* نوافذ التعديل (modal-backdrop) أعلى من لوحة الأوامر/نوافذ المادة، فتُغلق هي أولاً */
+      if(!document.querySelector('.modal-backdrop') && window.HubUI && window.HubUI.closeTop()) return;
       var sr = document.getElementById('searchResults'); if(sr) sr.classList.remove('show');
       window.closeSidebar();
       window.closeSettingsMenu();
       document.querySelectorAll('.modal-backdrop').forEach(function(m){ m.remove(); });
+      /* شاشة العد التنازلي للامتحان (ملء الشاشة + تثبيت التمرير) */
+      var ecs = document.getElementById('examCountdownScreen');
+      if(ecs && ecs.classList.contains('open') && window.closeExamCountdown) window.closeExamCountdown();
       var ap = document.getElementById('aiPanel'); if(ap) ap.classList.remove('show');
       var fm = document.getElementById('fabMenu'); if(fm) fm.classList.remove('show');
       var fmm = document.getElementById('fabMain'); if(fmm) fmm.classList.remove('active');

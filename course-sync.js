@@ -221,6 +221,11 @@
       });
     }
 
+    /* 7. ملاحظات المادة: تبقى (لا تُحذف) لكن تنفصل عن المادة حتى لا تلتصق بمادة جديدة بنفس الاسم */
+    var detached = false;
+    (window.notes || []).forEach(function(n){ if(n && n.course === name){ n.course = ''; detached = true; } });
+    if(detached && window.S) window.S.set('notes', window.notes);
+
     save();
     syncAllUI();
     toast('🗑 حُذفت "' + name + '"', 'success', 2200);
@@ -265,6 +270,10 @@
       }
       (sp.exams || []).forEach(function(e){ if(e.course === oldName) e.course = newName; });
       (sp.tasks || []).forEach(function(t){ if(t.course === oldName) t.course = newName; });
+      /* ملاحظات مرتبطة بالمادة (حقل اختياري تضيفه صفحة المادة) */
+      var movedNotes = false;
+      (window.notes || []).forEach(function(n){ if(n && n.course === oldName){ n.course = newName; movedNotes = true; } });
+      if(movedNotes && window.S) window.S.set('notes', window.notes);
       Object.keys(sp.timetable || {}).forEach(function(k){
         if(sp.timetable[k] && sp.timetable[k].name === oldName) sp.timetable[k].name = newName;
       });
