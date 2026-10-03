@@ -1053,8 +1053,10 @@
             stats.skipped.push({ row: idx + 1, day: dayKey, time: row.timeFrom, newName: finalName, conflictWith: sp.timetable[key].name });
             return;
           }
+          var prevCls = sp.timetable[key];  /* نفس المادة: نحافظ على الدكتور المحفوظ */
           sp.timetable[key] = {
-            name: finalName, room: row.room || '', instructor: ''
+            name: finalName, room: row.room || '', instructor: (prevCls && prevCls.instructor) || '',
+            end: row.timeTo || ''
           };
           stats.classes++;
         });

@@ -29,7 +29,7 @@
   function getCode(){ return ensureCode(); }
   function setCode(newCode){
     code = String(newCode || '').trim().toUpperCase();
-    try{ localStorage.setItem(codeKey, code); localStorage.removeItem('ss_space_ts'); }catch(e){}  /* رمز جديد = سحابته هي المرجع */
+    try{ localStorage.setItem(codeKey, code); ['ss_space_ts', 'ss_cloud_ver', 'ss_synced_hash'].forEach(function(x){ localStorage.removeItem(x); }); }catch(e){}  /* رمز جديد = سحابته هي المرجع */
     if(typeof window.__perfClearFileCache === 'function') window.__perfClearFileCache();
     return code;
   }
@@ -59,6 +59,17 @@
     }catch(e){ console.warn('Supabase load failed:', e); api.lastLoadStatus = 'error'; return null; }
   }
 
+  /* قراءة updated_at فقط (خفيفة) — لكشف التعديل من جهاز آخر قبل الحفظ */
+  async function peekUpdatedAt(){
+    var c = init(); if(!c) return { status: 'error' };
+    try{
+      var res = await c.from('spaces').select('updated_at').eq('code', ensureCode()).maybeSingle();
+      if(res.error) return { status: 'error' };
+      if(!res.data) return { status: 'empty' };
+      return { status: 'ok', updated_at: res.data.updated_at };
+    }catch(e){ return { status: 'error' }; }
+  }
+
   async function save(snapshot){
     var c = init(); if(!c) return false;
     var k = ensureCode();
@@ -76,12 +87,21 @@
   var FILES_TTL = 30000;
   var filesCache = {};
   window.__perfClearFileCache = function(){ filesCache = {}; };
+  /* عند refresh/إغلاق الصفحة المتصفح يلغي الطلبات الجارية (Firefox: NetworkError) — سلوك طبيعي */
+  var unloading = false;
+  window.addEventListener('pagehide', function(){ unloading = true; });
+  window.addEventListener('beforeunload', function(){ unloading = true; });
 
   /* يرجّع null عند الفشل (غير [] = ما في ملفات) */
   function listCourseFiles(courseId, force){
     var hit = filesCache[courseId];
     if(!force && hit && Date.now() - hit.ts < FILES_TTL) return hit.promise;
-    var p = fetchCourseFiles(courseId);
+    /* فشل مؤقت: محاولة ثانية واحدة فقط، وبدون محاولة إذا الصفحة عم تنغلق (refresh) */
+    var p = fetchCourseFiles(courseId).then(function(r){
+      if(r !== null || unloading) return r;
+      return new Promise(function(done){ setTimeout(done, 1200); })
+        .then(function(){ return unloading ? null : fetchCourseFiles(courseId); });
+    });
     filesCache[courseId] = { ts: Date.now(), promise: p };
     p.then(function(r){ if(r === null && filesCache[courseId] && filesCache[courseId].promise === p) delete filesCache[courseId]; });
     return p;
@@ -95,7 +115,7 @@
       var res = await c.storage.from(CFG.bucket).list(path, {
         limit: 100, sortBy: {column:'created_at', order:'desc'}
       });
-      if(res.error){ console.warn('list files error:', res.error); return null; }
+      if(res.error){ if(!unloading) console.warn('list files error:', res.error); return null; }
       return (res.data || []).map(function(f){
         var urlRes = c.storage.from(CFG.bucket).getPublicUrl(path + '/' + f.name);
         return {
@@ -107,7 +127,7 @@
           path: path + '/' + f.name
         };
       });
-    }catch(e){ console.warn('listCourseFiles failed:', e); return null; }
+    }catch(e){ if(!unloading) console.warn('listCourseFiles failed:', e); return null; }
   }
 
   async function uploadCourseFile(courseId, file){
@@ -226,7 +246,7 @@
 
   var api = window.SB = {
     lastLoadStatus: null,
-    init: init, load: load, save: save,
+    init: init, load: load, save: save, peekUpdatedAt: peekUpdatedAt,
     getCode: getCode, setCode: setCode,
     listCourseFiles: listCourseFiles,
     uploadCourseFile: uploadCourseFile,

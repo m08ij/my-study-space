@@ -210,17 +210,143 @@
     window.serverSaveTimer = setTimeout(window.doServerSave, 800);
   };
 
+  /* ===== بيانات المزامنة الوصفية (خارج الـ snapshot) =====
+     تُكتب مباشرة بدون S.set حتى لا تُطلق حلقة حفظ.
+     ss_cloud_ver    : updated_at (ms) لآخر نسخة سحابية اتزامنّا معها
+     ss_synced_hash  : بصمة محتوى space عند آخر مزامنة */
+  function metaGet(k){ try{ var v = localStorage.getItem(k); return v === null ? null : JSON.parse(v); }catch(e){ return null; } }
+  function metaSet(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); return true; }catch(e){ return false; } }
+  function metaDel(k){ try{ localStorage.removeItem(k); }catch(e){} }
+  function canon(o){
+    if(o === null || typeof o !== 'object') return JSON.stringify(o);
+    if(Array.isArray(o)) return '[' + o.map(canon).join(',') + ']';
+    return '{' + Object.keys(o).sort().map(function(k){ return JSON.stringify(k) + ':' + canon(o[k]); }).join(',') + '}';
+  }
+  function spaceHash(){
+    var s = canon(window.space), h = 5381;
+    for(var i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0;
+    return s.length + ':' + h;
+  }
+  function localDirty(){ var h = metaGet('ss_synced_hash'); return h === null ? true : h !== spaceHash(); }
+  function toMs(v){ var n = Date.parse(v); return isNaN(n) ? null : n; }
+  window.markSynced = function(updatedAt, hash){
+    var ms = toMs(updatedAt);
+    if(ms === null){ metaDel('ss_cloud_ver'); return; }
+    metaSet('ss_cloud_ver', ms);
+    metaSet('ss_synced_hash', hash || spaceHash());
+  };
+  window.getConflictBackup = function(){ return metaGet('ss_conflict_backup'); };
+
+  function scheduleSaveRetry(){
+    if((window._saveRetryN || 0) >= 3) return;
+    var delay = [5000, 15000, 45000][window._saveRetryN || 0];
+    window._saveRetryN = (window._saveRetryN || 0) + 1;
+    clearTimeout(window._saveRetryT);
+    window._saveRetryT = setTimeout(window.doServerSave, delay);
+  }
+
   window.doServerSave = async function(){
     if(!window.SB || window.cloudSyncBlocked) return;
     if(window.serverSaveInFlight){ window.queueServerSave(); return; }
     try{
       window.serverSaveInFlight = true;
+      /* منع الكتابة فوق تعديل أحدث من جهاز آخر */
+      var ver = metaGet('ss_cloud_ver');
+      if(ver !== null){
+        var peek = await window.SB.peekUpdatedAt();
+        if(peek.status === 'error'){ window.serverOnline = false; window.setServerStatus('off'); scheduleSaveRetry(); return; }
+        if(peek.status === 'ok' && toMs(peek.updated_at) !== ver){ window.handleSyncConflict(); return; }
+      }
+      var hash = spaceHash();
       var ok = await window.SB.save(window.gatherSnapshot());
-      if(ok){ window.serverOnline = true; window.setServerStatus('ok'); }
-      else { window.serverOnline = false; window.setServerStatus('off'); }
-    }catch(e){ window.serverOnline = false; window.setServerStatus('off'); }
+      if(ok){
+        window.serverOnline = true; window.setServerStatus('ok'); window._saveRetryN = 0;
+        /* نقرأ القيمة الفعلية بعد الحفظ (قد تختلف صيغتها/قيمتها عمّا أرسلناه) */
+        var after = await window.SB.peekUpdatedAt();
+        if(after.status === 'ok') window.markSynced(after.updated_at, hash);
+        else metaDel('ss_cloud_ver');
+      } else { window.serverOnline = false; window.setServerStatus('off'); scheduleSaveRetry(); }
+    }catch(e){ window.serverOnline = false; window.setServerStatus('off'); scheduleSaveRetry(); }
     finally { window.serverSaveInFlight = false; }
   };
+
+  /* قرار المزامنة عند توفر نسخة سحابية: 'apply' | 'keep-local' | 'conflict' */
+  function decideSync(sd){
+    var serverMs = toMs(sd.updated_at), ver = metaGet('ss_cloud_ver');
+    if(ver !== null && serverMs !== null){
+      if(serverMs === ver) return localDirty() ? 'keep-local' : 'apply';
+      return localDirty() ? 'conflict' : 'apply';
+    }
+    /* لا توجد بصمة مزامنة سابقة (بيانات قديمة): قاعدة التوقيت */
+    var lt = parseInt(window.S.get('ss_space_ts', 0), 10) || 0;
+    return (lt && serverMs !== null && lt > serverMs + 2000) ? 'keep-local' : 'apply';
+  }
+  window._decideSync = decideSync;
+
+  /* تعديل من جهازين: نحفظ النسختين احتياطياً ثم المستخدم يقرر — لا شيء يُستبدل تلقائياً */
+  window.handleSyncConflict = async function(){
+    if(window._conflictOpen) return;
+    window._conflictOpen = true; window.cloudSyncBlocked = true;
+    window.setServerStatus('off');
+    var row = null;
+    try{ row = await window.SB.load(); }catch(e){}
+    if(!row || !row.data){
+      window._conflictOpen = false;
+      window.toast('تعذّر قراءة النسخة السحابية — لم يُرفع شيء', 'warn', 3500);
+      return;
+    }
+    var saved = metaSet('ss_conflict_backup', { at: new Date().toISOString(), cloudAt: row.updated_at, local: window.gatherSnapshot(), cloud: row.data });
+    window.refreshRestorePrevBtn();
+    if(!saved){
+      window._conflictOpen = false;
+      window.toast('لا توجد مساحة لحفظ نسخة احتياطية — تم إيقاف الرفع لحماية بياناتك', 'warn', 5000);
+      return;
+    }
+    var bd = document.createElement('div');
+    bd.className = 'sync-conflict-backdrop';
+    bd.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;padding:16px';
+    bd.innerHTML = '<div class="modal" style="max-width:440px;text-align:center;position:relative">' +
+      '<div style="font-size:2.6rem;margin-bottom:8px">🔀</div>' +
+      '<h3 style="margin-bottom:12px">تعديلات من جهازين</h3>' +
+      '<p style="color:var(--muted);font-size:.88rem;line-height:1.8;margin-bottom:8px">تم تعديل بياناتك على السحابة من جهاز آخر، وعندك تعديلات غير مرفوعة على هذا الجهاز.</p>' +
+      '<p style="color:var(--muted2);font-size:.78rem;margin-bottom:18px">حفظنا نسخة من الطرفين على هذا الجهاز قبل أي قرار.</p>' +
+      '<div style="display:flex;flex-direction:column;gap:8px">' +
+        '<button class="btn btn-sm" id="scCloud">☁️ استخدام نسخة السحابة (تعديلات هذا الجهاز تبقى بالنسخة الاحتياطية)</button>' +
+        '<button class="btn btn-sm btn-ghost" id="scLocal">💾 الاحتفاظ بنسخة هذا الجهاز (نسخة السحابة تبقى بالنسخة الاحتياطية)</button>' +
+      '</div></div>';
+    document.body.appendChild(bd);
+    bd.querySelector('#scCloud').onclick = function(){
+      bd.remove();
+      window.applyServerData(row.data);
+      window.markSynced(row.updated_at);
+      window._conflictOpen = false;
+      location.reload();
+    };
+    bd.querySelector('#scLocal').onclick = function(){
+      bd.remove();
+      var ms = toMs(row.updated_at);
+      if(ms !== null) metaSet('ss_cloud_ver', ms);
+      window._conflictOpen = false; window.cloudSyncBlocked = false;
+      window.doServerSave();
+    };
+  };
+
+  /* رجوع الاتصال: إعادة محاولة الرفع، أو إعادة محاولة التحميل الذي فشل عند الإقلاع */
+  window.addEventListener('online', function(){
+    if(window.bootSyncing || window._conflictOpen) return;
+    if(window.cloudLoadFailed){
+      window.SB.load().then(function(sd){
+        if(window.SB.lastLoadStatus === 'error') return;
+        var decision = (sd && sd.data) ? decideSync(sd) : 'keep-local';
+        if(decision === 'apply'){ window.applyServerData(sd.data); window.markSynced(sd.updated_at); location.reload(); return; }
+        window.cloudLoadFailed = false; window.cloudSyncBlocked = false;
+        if(decision === 'conflict') window.handleSyncConflict();
+        else { if(sd && sd.data && metaGet('ss_cloud_ver') === null) window.markSynced(sd.updated_at, '__dirty__'); window.doServerSave(); }
+      });
+    } else if(!window.cloudSyncBlocked){
+      window._saveRetryN = 0; window.doServerSave();
+    }
+  });
 
   window.gatherSnapshot = function(){
     return {
@@ -403,7 +529,14 @@
       reader.onload = function(ev){
         try{
           var data = JSON.parse(ev.target.result);
-          if(!data || typeof data !== 'object'){ window.toast('ملف غير صالح', 'warn'); return; }
+          if(!data || typeof data !== 'object' || !data.space || typeof data.space !== 'object' || Array.isArray(data.space)){
+            window.toast('ملف غير صالح: لا يحتوي بيانات المساحة', 'warn', 3500); return;
+          }
+          var cn = Array.isArray(data.space.courses) ? data.space.courses.length : 0;
+          var tn = Array.isArray(data.space.tasks) ? data.space.tasks.length : 0;
+          if(!confirm('استعادة هذه النسخة؟ (' + cn + ' مادة، ' + tn + ' مهمة)\nسيتم استبدال بياناتك الحالية، وتُحفظ نسخة منها تلقائياً على هذا الجهاز ويمكن استرجاعها من القائمة.')) return;
+          if(!metaSet('ss_pre_restore_backup', { at: new Date().toISOString(), snapshot: window.gatherSnapshot() }) &&
+             !confirm('تعذّر حفظ نسخة من بياناتك الحالية (لا توجد مساحة). المتابعة بدون نسخة؟')) return;
           window.applyServerData(data);
           window.saveSpace();
           window.S.set('notes', window.notes);
@@ -416,6 +549,37 @@
       reader.readAsText(file);
     };
     input.click();
+  };
+
+  /* استرجاع نسخة سابقة محفوظة محلياً: نسخة التعارض (جهازي/سحابة) أو نسخة ما قبل الاستعادة */
+  function prevBackups(){
+    var list = [], c = metaGet('ss_conflict_backup'), p = metaGet('ss_pre_restore_backup');
+    function fmt(iso){ try{ return new Date(iso).toLocaleString('ar-JO'); }catch(e){ return iso; } }
+    function cnt(s){ return s && s.space && Array.isArray(s.space.courses) ? s.space.courses.length : 0; }
+    if(c && c.local) list.push({ v: 'cl', l: 'تعارض ' + fmt(c.at) + ' — نسخة هذا الجهاز (' + cnt(c.local) + ' مادة)', snap: c.local });
+    if(c && c.cloud) list.push({ v: 'cc', l: 'تعارض ' + fmt(c.at) + ' — نسخة السحابة (' + cnt(c.cloud) + ' مادة)', snap: c.cloud });
+    if(p && p.snapshot) list.push({ v: 'pr', l: 'قبل استعادة ملف ' + fmt(p.at) + ' (' + cnt(p.snapshot) + ' مادة)', snap: p.snapshot });
+    return list;
+  }
+  window.refreshRestorePrevBtn = function(){
+    var b = document.getElementById('restorePrevBtn'); if(b) b.style.display = prevBackups().length ? '' : 'none';
+  };
+  window.restorePreviousBackup = function(){
+    var list = prevBackups();
+    if(!list.length){ window.toast('لا توجد نسخ سابقة', 'info', 2000); return; }
+    window.showModal('استرجاع نسخة سابقة', [
+      { key: 'v', label: 'اختر النسخة (بياناتك الحالية تُحفظ تلقائياً قبل الاسترجاع)', type: 'select', options: list.map(function(x){ return { v: x.v, l: x.l }; }) }
+    ], { v: list[0].v }, function(data){
+      var pick = list.filter(function(x){ return x.v === data.v; })[0];
+      if(!pick) return false;
+      if(!metaSet('ss_pre_restore_backup', { at: new Date().toISOString(), snapshot: window.gatherSnapshot() }) &&
+         !confirm('تعذّر حفظ نسخة من بياناتك الحالية. المتابعة؟')) return false;
+      window.applyServerData(pick.snap);
+      window.saveSpace();
+      window.toast('✅ تم الاسترجاع', 'success', 2000);
+      setTimeout(function(){ location.reload(); }, 800);
+      return true;
+    });
   };
 
   /* ============================================================
@@ -507,6 +671,8 @@
     });
     var bb = document.getElementById('backupBtn'); if(bb) bb.addEventListener('click', function(){ window.closeSettingsMenu(); window.downloadBackup(false); });
     var rb = document.getElementById('restoreBtn'); if(rb) rb.addEventListener('click', function(){ window.closeSettingsMenu(); window.restoreFromFile(); });
+    var rp = document.getElementById('restorePrevBtn'); if(rp) rp.addEventListener('click', function(){ window.closeSettingsMenu(); window.restorePreviousBackup(); });
+    window.refreshRestorePrevBtn();
     var pdfBtn = document.getElementById('pdfBtn'); if(pdfBtn) pdfBtn.addEventListener('click', function(){ window.closeSettingsMenu(); window.exportPDF(); });
 
     document.querySelectorAll('[data-gc-tab]').forEach(function(btn){
@@ -637,22 +803,76 @@
     else if(window.openSmartTimetable) window.openSmartTimetable();
   };
 
+  /* ---- Timetable helpers: المفتاح 'Sun-08:00' = اليوم-وقت البداية، والقيمة {name, room, instructor, end?} ---- */
+  function ttMin(t){
+    var p = String(t || '').split(':'), h = parseInt(p[0], 10), m = parseInt(p[1], 10) || 0;
+    return isNaN(h) ? null : h * 60 + m;
+  }
+  function ttPad(t){
+    var m = ttMin(t); if(m === null) return '';
+    return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
+  }
+  function ttSplitKey(k){
+    var i = String(k).indexOf('-');
+    return i < 0 ? null : { day: k.slice(0, i), time: k.slice(i + 1) };
+  }
+  function ttDur(min){
+    if(min < 60) return min + ' د';
+    var h = Math.floor(min / 60), m = min % 60;
+    return m ? h + 'س ' + m + 'د' : h + ' س';
+  }
+  /* تداخل حقيقي فقط: يحتاج وقت نهاية معروف للمحاضرة الأبكر (المحاضرات القديمة بدون end لا تُعلَّم) */
+  window.getTimetableConflicts = function(){
+    var tt = (window.space && window.space.timetable) || {}, byDay = {}, bad = {}, list = [];
+    Object.keys(tt).forEach(function(k){
+      var p = ttSplitKey(k), s = p ? ttMin(p.time) : null; if(s === null || !tt[k]) return;
+      var e = ttMin(tt[k].end);
+      (byDay[p.day] = byDay[p.day] || []).push({ key: k, s: s, e: (e !== null && e > s) ? e : null });
+    });
+    Object.keys(byDay).forEach(function(d){
+      var a = byDay[d].sort(function(x, y){ return x.s - y.s; });
+      for(var i = 0; i < a.length; i++){
+        if(a[i].e === null) continue;
+        for(var j = i + 1; j < a.length && a[j].s < a[i].e; j++){
+          bad[a[i].key] = bad[a[j].key] = true;
+          list.push({ day: d, a: a[i].key, b: a[j].key });
+        }
+      }
+    });
+    return { keys: bad, list: list };
+  };
+
   window.editClassSlot = function(key){
     if(!window.space || !window.space.timetable) return;
     var cls = window.space.timetable[key];
     if(!cls) return;
     if(!window.showModal){ window.toast('لا يمكن فتح المحرر', 'warn'); return; }
+    var sk = ttSplitKey(key) || { day: 'Sun', time: '08:00' };
+    var DE = window.DAYS_EN || ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    var DA = window.DAYS_AR || ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
     window.showModal('تعديل محاضرة', [
       { key: 'name', label: 'اسم المادة' },
+      { key: 'day', label: 'اليوم', type: 'select', options: DE.map(function(d, i){ return { v: d, l: DA[i] }; }) },
+      { key: 'time', label: 'وقت البداية', type: 'time' },
+      { key: 'end', label: 'وقت النهاية (اختياري)', type: 'time' },
       { key: 'room', label: 'القاعة' },
       { key: 'instructor', label: 'الدكتور' }
-    ], { name: cls.name || '', room: cls.room || '', instructor: cls.instructor || '' }, function(data){
-      if(!data.name){ window.toast('أدخل اسم المادة', 'warn'); return false; }
-      window.space.timetable[key] = { name: data.name, room: data.room || '', instructor: data.instructor || '' };
+    ], { name: cls.name || '', day: sk.day, time: ttPad(sk.time), end: ttPad(cls.end), room: cls.room || '', instructor: cls.instructor || '' }, function(data){
+      var name = String(data.name || '').trim();
+      if(!name){ window.toast('أدخل اسم المادة', 'warn'); return false; }
+      var start = ttPad(data.time), end = ttPad(data.end);
+      if(!start){ window.toast('أدخل وقت البداية', 'warn'); return false; }
+      if(end && ttMin(end) <= ttMin(start)){ window.toast('وقت النهاية يجب أن يكون بعد البداية', 'warn', 2500); return false; }
+      var newKey = data.day + '-' + start, tt = window.space.timetable;
+      if(newKey !== key && tt[newKey]){ window.toast('في محاضرة ثانية بنفس اليوم والوقت', 'warn', 2800); return false; }
+      /* نحافظ على أي حقول إضافية في المحاضرة */
+      var merged = Object.assign({}, cls, { name: name, room: data.room || '', instructor: data.instructor || '', end: end });
+      if(newKey !== key) delete tt[key];
+      tt[newKey] = merged;
       window.saveSpace();
       if(window.renderTimetable) window.renderTimetable();
       if(window.renderDashboard) window.renderDashboard();
-      window.toast('✅ تم التعديل', 'success');
+      window.toast(window.getTimetableConflicts().keys[newKey] ? '⚠️ تم التعديل — لكن في تعارض مع محاضرة ثانية' : '✅ تم التعديل', window.getTimetableConflicts().keys[newKey] ? 'warn' : 'success', 2600);
       return true;
     }, function(){
       window.customConfirm('حذف هذه المحاضرة؟', function(){
@@ -664,60 +884,105 @@
     });
   };
 
+  /* تفضيل العرض محلي فقط (localStorage مباشرة — لا يدخل المزامنة) */
+  function ttView(allDays, todayKey){
+    var v = null;
+    try{ v = localStorage.getItem('tt_view'); }catch(e){}
+    if(v === 'week') return 'week';
+    if(v && allDays.indexOf(v) > -1) return v;
+    var phone = window.matchMedia && window.matchMedia('(max-width:600px)').matches;
+    return (phone && allDays.indexOf(todayKey) > -1) ? todayKey : 'week';
+  }
+  function ttSetView(v){ try{ localStorage.setItem('tt_view', v); }catch(e){} window.renderTimetable(); }
+
+  var ttScrolledOnce = false;
   window.renderTimetable = function(){
     var t = document.getElementById('timetableTable'); if(!t) return;
-    var now = new Date();
-    var todayIdx = now.getDay();
-    var nowTotalMin = now.getHours() * 60 + now.getMinutes();
-    var weekAr = window.WEEK_DAYS_AR || ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس'];
-    var weekEn = window.WEEK_DAYS_EN || ['Sun','Mon','Tue','Wed','Thu'];
+    var tt = (window.space && window.space.timetable) || {};
+    var now = new Date(), nowMin = now.getHours() * 60 + now.getMinutes();
+    var DE = window.DAYS_EN || ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    var DA = window.DAYS_AR || ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+    var todayKey = DE[now.getDay()];
 
-    var usedTimes = {};
-    Object.keys(window.space.timetable || {}).forEach(function(k){
-      var parts = k.split('-'); if(parts[1]) usedTimes[parts[1]] = true;
+    /* الأيام: الأحد–الخميس دائماً، والجمعة/السبت فقط إذا فيهم محاضرات (كانوا يُحفظون ولا يظهرون) */
+    var allDays = (window.WEEK_DAYS_EN || ['Sun','Mon','Tue','Wed','Thu']).slice();
+    var usedTimes = {}, anyKey = false;
+    Object.keys(tt).forEach(function(k){
+      var p = ttSplitKey(k); if(!p || ttMin(p.time) === null) return;
+      anyKey = true;
+      if(DE.indexOf(p.day) > -1 && allDays.indexOf(p.day) === -1) allDays.push(p.day);
     });
-    var times = Object.keys(usedTimes).sort();
-    var isEmpty = !times.length;
-    if(isEmpty) times = ['08:00','09:00','10:00','11:00','12:00'];
+    allDays.sort(function(a, b){ return DE.indexOf(a) - DE.indexOf(b); });
 
-    var rows = [];
-    times.forEach(function(time, i){
-      if(i > 0){
-        var prev = times[i-1];
-        var prevMin = parseInt(prev.split(':')[0],10)*60 + parseInt(prev.split(':')[1],10);
-        var curMin = parseInt(time.split(':')[0],10)*60 + parseInt(time.split(':')[1],10);
-        if(curMin - prevMin > 60) rows.push({type:'gap', from:prev, to:time, minutes:curMin-prevMin});
+    /* العرض: 'week' أو يوم واحد (افتراضياً على الموبايل: يوم اليوم) */
+    var view = ttView(allDays, todayKey);
+    var days = view === 'week' ? allDays : [view];
+    Object.keys(tt).forEach(function(k){
+      var p = ttSplitKey(k); if(!p || ttMin(p.time) === null || days.indexOf(p.day) === -1) return;
+      usedTimes[ttPad(p.time)] = true;
+    });
+
+    var times = Object.keys(usedTimes).sort(function(a, b){ return ttMin(a) - ttMin(b); });
+    if(!times.length) times = ['08:00','09:00','10:00','11:00','12:00'];
+    var conf = window.getTimetableConflicts();
+
+    function entryAt(day, time){
+      var k = day + '-' + time;
+      if(tt[k]) return { key: k, cls: tt[k] };
+      /* مفاتيح قديمة بدون صفر بادئ (مثل 8:00) */
+        var ks = Object.keys(tt);
+      for(var i = 0; i < ks.length; i++){
+        var p = ttSplitKey(ks[i]);
+        if(p && p.day === day && ttPad(p.time) === time) return { key: ks[i], cls: tt[ks[i]] };
       }
-      rows.push({type:'time', time:time});
+      return null;
+    }
+
+    /* الفجوات = الوقت الفاضي الفعلي بعد انتهاء آخر محاضرة (النهاية إن وُجدت، وإلا ساعة من البداية) */
+    var rows = [], runEnd = null;
+    times.forEach(function(time){
+      var cur = ttMin(time);
+      if(runEnd !== null && cur - runEnd >= 30) rows.push({ type: 'gap', from: runEnd, to: cur });
+      rows.push({ type: 'time', time: time });
+      days.forEach(function(d){
+        var en = entryAt(d, time); if(!en) return;
+        var e = ttMin(en.cls.end);
+        var endMin = (e !== null && e > cur) ? e : cur + 60;
+        if(runEnd === null || endMin > runEnd) runEnd = endMin;
+      });
     });
 
     var html = '<thead><tr><th></th>';
-    weekAr.forEach(function(d, i){
-      html += '<th' + (i === todayIdx ? ' style="background:var(--grad);color:#0b0f1a"' : '') + '>' + d + '</th>';
+    days.forEach(function(d){
+      html += '<th' + (d === todayKey ? ' data-today="1" style="background:var(--grad);color:#0b0f1a"' : '') + '>' + DA[DE.indexOf(d)] + '</th>';
     });
     html += '</tr></thead><tbody>';
 
     rows.forEach(function(item){
       if(item.type === 'gap'){
-        html += '<tr><td colspan="' + (weekEn.length + 1) + '" style="background:transparent;text-align:center;font-size:.72rem;color:var(--muted2);padding:6px">فجوة ' + Math.round(item.minutes/60*10)/10 + ' ساعة (' + item.from + ' → ' + item.to + ')</td></tr>';
+        var gm = item.to - item.from;
+        html += '<tr><td colspan="' + (days.length + 1) + '" style="background:transparent;text-align:center;font-size:.72rem;color:var(--muted2);padding:6px">فجوة ' + ttDur(gm) + '</td></tr>';
         return;
       }
-      var time = item.time;
-      var rowMin = parseInt(time.split(':')[0],10)*60 + parseInt(time.split(':')[1],10);
-      var isNowRow = (todayIdx < weekEn.length) && (Math.abs(rowMin - nowTotalMin) <= 15);
-      html += '<tr>';
-      html += '<td class="time-col"' + (isNowRow ? ' style="color:var(--red)"' : '') + '>' + time + '</td>';
-      weekEn.forEach(function(day, dayI){
-        var key = day + '-' + time;
-        var cls = window.space.timetable[key];
-        var tdStyle = dayI === todayIdx ? 'background:linear-gradient(180deg,rgba(34,211,238,.06),transparent)' : '';
-        if(cls){
-          html += '<td style="' + tdStyle + '"><div class="class-block" data-edit="' + key + '">' +
+      var time = item.time, rowMin = ttMin(time);
+      var isNowRow = days.indexOf(todayKey) > -1 && Math.abs(rowMin - nowMin) <= 15;
+      html += '<tr><td class="time-col"' + (isNowRow ? ' style="color:var(--red)"' : '') + '>' + time + '</td>';
+      days.forEach(function(day){
+        var tdStyle = day === todayKey ? 'background:linear-gradient(180deg,rgba(34,211,238,.06),transparent)' : '';
+        var en = entryAt(day, time);
+        if(en){
+          var cls = en.cls, e = ttMin(cls.end), hasEnd = e !== null && e > rowMin;
+          var isNow = day === todayKey && nowMin >= rowMin && nowMin < (hasEnd ? e : rowMin + 60);
+          var isBad = !!conf.keys[en.key];
+          var tip = cls.name + ' — ' + time + (hasEnd ? '–' + ttPad(cls.end) : '') + (cls.room ? ' — ' + cls.room : '') + (cls.instructor ? ' — ' + cls.instructor : '') + (isBad ? ' — ⚠️ تعارض' : '');
+          html += '<td style="' + tdStyle + '"><div class="class-block' + (isBad ? ' tt-conflict' : '') + (isNow ? ' tt-now' : '') + '" data-edit="' + window.esc(en.key) + '" title="' + window.esc(tip) + '">' +
             '<span class="name">' + window.esc(cls.name) + '</span>' +
+            (hasEnd ? '<span class="tt-time">' + time + '–' + ttPad(cls.end) + '</span>' : '') +
             (cls.room ? '<span class="room">📍 ' + window.esc(cls.room) + '</span>' : '') +
+            (cls.instructor ? '<span class="room">👤 ' + window.esc(cls.instructor) + '</span>' : '') +
             '</div></td>';
         } else {
-          html += '<td style="' + tdStyle + '"><div class="cell-empty" data-add="' + key + '">+</div></td>';
+          html += '<td style="' + tdStyle + '"><div class="cell-empty" data-add="' + day + '-' + time + '">+</div></td>';
         }
       });
       html += '</tr>';
@@ -727,6 +992,47 @@
 
     t.querySelectorAll('[data-edit]').forEach(function(b){ b.addEventListener('click', function(){ window.editClassSlot(b.dataset.edit); }); });
     t.querySelectorAll('[data-add]').forEach(function(b){ b.addEventListener('click', function(){ window.addClassSlot(b.dataset.add); }); });
+
+    t.className = 'timetable' + (view === 'week' ? '' : ' tt-day');
+
+    /* شريط التنقل بين الأيام */
+    var wrap = t.parentNode, dbar = document.getElementById('ttDayBar');
+    if(!dbar && wrap && wrap.parentNode){
+      dbar = document.createElement('div'); dbar.id = 'ttDayBar'; dbar.className = 'tt-daybar';
+      wrap.parentNode.insertBefore(dbar, wrap);
+    }
+    if(dbar){
+      var chips = '<button type="button" class="tt-chip' + (view === 'week' ? ' active' : '') + '" data-view="week">الأسبوع</button>';
+      allDays.forEach(function(d){
+        chips += '<button type="button" class="tt-chip' + (view === d ? ' active' : '') + '" data-view="' + d + '">' + DA[DE.indexOf(d)] + (d === todayKey ? ' •' : '') + '</button>';
+      });
+      dbar.innerHTML = chips;
+      dbar.querySelectorAll('[data-view]').forEach(function(b){ b.addEventListener('click', function(){ ttSetView(b.dataset.view); }); });
+    }
+
+    /* شريط تعارض واضح فوق الجدول (للعرض فقط — لا يمنع ولا يغيّر بيانات) */
+    var bar = document.getElementById('ttConflictBar');
+    if(!bar && wrap && wrap.parentNode){
+      bar = document.createElement('div'); bar.id = 'ttConflictBar'; bar.className = 'tt-conflict-bar';
+      wrap.parentNode.insertBefore(bar, wrap);
+    }
+    if(bar){
+      if(!conf.list.length){ bar.style.display = 'none'; bar.innerHTML = ''; }
+      else {
+        var nm = function(k){ var c = tt[k], p = ttSplitKey(k); return window.esc(c.name) + ' (' + ttPad(p.time) + (c.end ? '–' + ttPad(c.end) : '') + ')'; };
+        bar.style.display = '';
+        bar.innerHTML = '⚠️ <b>' + conf.list.length + ' تعارض في الجدول</b> — ' + conf.list.slice(0, 3).map(function(x){
+          return DA[DE.indexOf(x.day)] + ': ' + nm(x.a) + ' ↔ ' + nm(x.b);
+        }).join(' · ') + (conf.list.length > 3 ? ' …' : '');
+      }
+    }
+
+    /* موبايل: أول مرة يظهر فيها الجدول مع تمرير أفقي، نمرّر لعمود اليوم الحالي */
+    if(view === 'week' && !ttScrolledOnce && wrap && wrap.offsetParent !== null && wrap.scrollWidth > wrap.clientWidth + 4){
+      ttScrolledOnce = true;
+      var th = t.querySelector('th[data-today]');
+      if(th && th.scrollIntoView){ try{ th.scrollIntoView({ inline: 'center', block: 'nearest' }); }catch(e){} }
+    }
   };
 
   window.openTimerSettings = function(){
@@ -813,26 +1119,31 @@
       try{ serverData = await window.SB.load(); }catch(e){}
     }
 
-    var pushLocalAfterBoot = false;
+    var pushLocalAfterBoot = false, conflictAfterBoot = false;
     if(serverData && serverData.data){
-      var serverTs = Date.parse(serverData.updated_at) || 0;
-      var localTs = parseInt(window.S.get('ss_space_ts', 0), 10) || 0;
-      if(localTs && localTs > serverTs + 2000){
-        /* النسخة المحلية أحدث (تعديلات أوفلاين) — لا نكتب فوقها بالقديمة */
-        console.log('💾 Local is newer than cloud — keeping local, will push');
-        window.serverOnline = true;
+      var decision = decideSync(serverData);
+      window.serverOnline = true;
+      if(decision === 'apply'){
+        console.log('☁️ Loaded from Supabase');
+        safeRun('Apply server data', function(){ window.applyServerData(serverData.data); });
+        var serverMs = toMs(serverData.updated_at);
+        if(serverMs) window.S.set('ss_space_ts', serverMs);
+        window.markSynced(serverData.updated_at);
+      } else if(decision === 'keep-local'){
+        /* النسخة المحلية فيها تعديلات غير مرفوعة — لا نكتب فوقها */
+        console.log('💾 Local has unsynced edits — keeping local, will push');
+        if(metaGet('ss_cloud_ver') === null) window.markSynced(serverData.updated_at, '__dirty__');
         pushLocalAfterBoot = true;
       } else {
-        console.log('☁️ Loaded from Supabase');
-        window.serverOnline = true;
-        safeRun('Apply server data', function(){ window.applyServerData(serverData.data); });
-        if(serverTs) window.S.set('ss_space_ts', serverTs);
+        console.log('🔀 Edits on both sides — asking user');
+        window.cloudSyncBlocked = true;
+        conflictAfterBoot = true;
       }
     } else {
       console.log('💾 Using localStorage');
       window.serverOnline = false;
       /* فشل تحميل (مش "ما في صف"): امنع الرفع حتى لا نكتب فوق السحابة ببيانات محلية قد تكون فاضية */
-      if(window.SB && window.SB.lastLoadStatus === 'error') window.cloudSyncBlocked = true;
+      if(window.SB && window.SB.lastLoadStatus === 'error'){ window.cloudSyncBlocked = true; window.cloudLoadFailed = true; }
     }
 
     safeRun('Sync timer', function(){
@@ -906,10 +1217,22 @@
     safeRun('Initial sync', function(){
       window.bootSyncing = false;
       window.setServerStatus(window.serverOnline ? 'ok' : 'off');
-      if(pushLocalAfterBoot || (!serverData && window.SB && window.SB.lastLoadStatus === 'empty')) window.doServerSave();
+      if(conflictAfterBoot) setTimeout(function(){ window._conflictOpen = false; window.handleSyncConflict(); }, 600);
+      else if(pushLocalAfterBoot || (!serverData && window.SB && window.SB.lastLoadStatus === 'empty')) window.doServerSave();
+      else if(serverData && serverData.data && !window.cloudSyncBlocked && localDirty()) window.doServerSave();
     });
 
     setInterval(window.checkSmartReminders, 30 * 60 * 1000);
+
+    /* تحديث "المحاضرة الجارية/التالية" كل دقيقة، فقط للعناصر الظاهرة وبدون مودال مفتوح */
+    setInterval(function(){
+      try{
+        var tc = document.getElementById('todayClasses');
+        if(tc && tc.offsetParent !== null && window.renderTodayClasses) window.renderTodayClasses();
+        var tb = document.getElementById('timetableTable');
+        if(tb && tb.offsetParent !== null && !document.querySelector('.modal-backdrop') && window.renderTimetable) window.renderTimetable();
+      }catch(e){}
+    }, 60000);
 
     if(navigator.serviceWorker){
       navigator.serviceWorker.addEventListener('message', function(e){

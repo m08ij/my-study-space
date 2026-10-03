@@ -117,6 +117,95 @@
   };
 
   /* ============================================================
+     CORE: Update course (name/code/hours/instructor/room)
+     تغيير الاسم يُرحَّل لكل الأماكن المرتبطة بدون فقد بيانات.
+     ملفات المادة مربوطة بالـ id فتبقى كما هي.
+     ============================================================ */
+  window.updateCourseEverywhere = function(id, f){
+    var sp = space();
+    var c = (sp.courses || []).filter(function(x){ return x.id === id; })[0];
+    if(!c) return false;
+    f = f || {};
+    var newName = String(f.name == null ? c.name : f.name).trim();
+    if(!newName){ toast('أدخل اسم المادة', 'warn'); return false; }
+    var oldName = c.name;
+    var newCode = f.code == null ? c.code : String(f.code).trim();
+    var normCode = String(newCode || '').replace(/^0+/, '');
+
+    var clash = sp.courses.some(function(x){
+      if(x === c) return false;
+      if(x.name === newName) return true;
+      return !!(normCode && x.code && String(x.code).replace(/^0+/, '') === normCode);
+    });
+    if(clash){ toast('في مادة ثانية بنفس الاسم أو الكود', 'warn', 2600); return false; }
+
+    if(newName !== oldName){
+      if(sp.attendance && sp.attendance[oldName]){
+        sp.attendance[newName] = sp.attendance[oldName];
+        delete sp.attendance[oldName];
+      }
+      if(Array.isArray(sp.grades)){
+        var mine = sp.grades.filter(function(g){ return g.name === oldName; })[0];
+        if(mine){
+          /* إدخال يتيم بالاسم الجديد (فاضي غالباً) يُستبدل ببيانات المادة */
+          sp.grades = sp.grades.filter(function(g){ return g === mine || g.name !== newName; });
+          mine.name = newName;
+        }
+      }
+      (sp.exams || []).forEach(function(e){ if(e.course === oldName) e.course = newName; });
+      (sp.tasks || []).forEach(function(t){ if(t.course === oldName) t.course = newName; });
+      Object.keys(sp.timetable || {}).forEach(function(k){
+        if(sp.timetable[k] && sp.timetable[k].name === oldName) sp.timetable[k].name = newName;
+      });
+      if(Array.isArray(sp.completedCourses)){
+        sp.completedCourses = sp.completedCourses.map(function(n){ return n === oldName ? newName : n; });
+      }
+    }
+
+    c.name = newName;
+    c.code = newCode;
+    c.hours = parseInt(f.hours, 10) || c.hours || 3;
+    if(f.instructor != null) c.instructor = String(f.instructor).trim();
+    if(f.room != null) c.room = String(f.room).trim();
+
+    save();
+    syncAllUI();
+    toast('✅ تم تعديل "' + newName + '"', 'success', 1800);
+    return true;
+  };
+
+  /* تأكيد حذف يوضّح البيانات المرتبطة اللي رح تنحذف معها */
+  window.confirmRemoveCourse = function(name){
+    var sp = space(), parts = [];
+    var a = sp.attendance && sp.attendance[name];
+    if(a && (a.present || a.absent)) parts.push('الحضور (' + (a.present || 0) + ' حاضر / ' + (a.absent || 0) + ' غائب)');
+    var g = (sp.grades || []).filter(function(x){ return x.name === name; })[0];
+    if(g && g.items && g.items.length) parts.push(g.items.length + ' علامة');
+    var ex = (sp.exams || []).filter(function(e){ return e.course === name; }).length;
+    if(ex) parts.push(ex + ' امتحان');
+    var tl = Object.keys(sp.timetable || {}).filter(function(k){ return sp.timetable[k] && sp.timetable[k].name === name; }).length;
+    if(tl) parts.push(tl + ' محاضرة من الجدول');
+    var msg = 'حذف "' + name + '" من كل الأماكن؟' + (parts.length ? ' سيُحذف معها: ' + parts.join('، ') + '.' : '');
+    var run = function(){ window.removeCourseEverywhere(name); };
+    if(window.customConfirm) window.customConfirm(msg, run);
+    else if(confirm(msg)) run();
+  };
+
+  window.editCourseDialog = function(id){
+    var c = (space().courses || []).filter(function(x){ return x.id === id; })[0];
+    if(!c || !window.showModal) return;
+    window.showModal('تعديل مادة', [
+      { key: 'name', label: 'اسم المادة' },
+      { key: 'code', label: 'رقم المادة' },
+      { key: 'hours', label: 'الساعات', type: 'number' },
+      { key: 'instructor', label: 'الدكتور' },
+      { key: 'room', label: 'القاعة' }
+    ], { name: c.name || '', code: c.code || '', hours: c.hours || 3, instructor: c.instructor || '', room: c.room || '' }, function(data){
+      return window.updateCourseEverywhere(id, data);
+    });
+  };
+
+  /* ============================================================
      UI Sync — call every render function
      ============================================================ */
   function syncAllUI(){
@@ -149,13 +238,7 @@
       e.stopPropagation();
       e.preventDefault();
       if(isCourseAdded(name)){
-        if(window.customConfirm){
-          window.customConfirm('حذف "' + name + '" من كل الأماكن؟', function(){
-            window.removeCourseEverywhere(name);
-          });
-        } else if(confirm('حذف "' + name + '"؟')){
-          window.removeCourseEverywhere(name);
-        }
+        window.confirmRemoveCourse(name);
       } else {
         window.addCourseEverywhere(name, code, hours);
       }
@@ -328,11 +411,7 @@
       btn.addEventListener('click', function(e){
         e.stopPropagation();
         var name = btn.dataset.courseName;
-        if(window.customConfirm){
-          window.customConfirm('حذف "' + name + '" من كل الأماكن؟', function(){
-            window.removeCourseEverywhere(name);
-          });
-        }
+        window.confirmRemoveCourse(name);
       });
     });
 
@@ -427,11 +506,7 @@
       btn.addEventListener('click', function(e){
         e.stopPropagation();
         var name = btn.dataset.courseName;
-        if(window.customConfirm){
-          window.customConfirm('حذف "' + name + '" من كل الأماكن؟', function(){
-            window.removeCourseEverywhere(name);
-          });
-        }
+        window.confirmRemoveCourse(name);
       });
     });
 
@@ -493,11 +568,15 @@
             '<div style="font-weight:700;font-size:.98rem">' + esc(c.name) + '</div>' +
             (c.code ? '<div style="font-size:.7rem;color:var(--muted2);font-family:monospace">' + esc(c.code) + '</div>' : '') +
           '</div>' +
-          '<button class="unified-course-btn added" data-course-name="' + esc(c.name) + '">🗑</button>' +
+          '<div style="display:flex;gap:6px;align-items:center;flex-shrink:0">' +
+            '<button type="button" class="btn btn-sm btn-ghost" data-edit-course="' + esc(c.id) + '" title="تعديل المادة" style="padding:6px 9px">✏️</button>' +
+            '<button class="unified-course-btn added" data-course-name="' + esc(c.name) + '">🗑</button>' +
+          '</div>' +
         '</div>' +
         '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">' +
           '<span class="badge">' + (c.hours || 3) + ' ساعات</span>' +
           (c.room ? '<span class="badge">📍 ' + esc(c.room) + '</span>' : '') +
+          (c.instructor ? '<span class="badge">👤 ' + esc(c.instructor) + '</span>' : '') +
         '</div>' +
         '<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">' +
           '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">' +
@@ -519,12 +598,12 @@
       btn.addEventListener('click', function(e){
         e.stopPropagation();
         var name = btn.dataset.courseName;
-        if(window.customConfirm){
-          window.customConfirm('حذف "' + name + '" من كل الأماكن؟', function(){
-            window.removeCourseEverywhere(name);
-          });
-        }
+        window.confirmRemoveCourse(name);
       });
+    });
+
+    g.querySelectorAll('[data-edit-course]').forEach(function(b){
+      b.addEventListener('click', function(e){ e.stopPropagation(); window.editCourseDialog(b.dataset.editCourse); });
     });
 
     g.querySelectorAll('[data-upload-course]').forEach(function(b){
@@ -776,13 +855,7 @@
           var code  = btn.dataset.code;
           var hours = parseInt(btn.dataset.hours, 10) || 3;
           if(isCourseAdded(name)){
-            if(window.customConfirm){
-              window.customConfirm('حذف "' + name + '" من كل الأماكن؟', function(){
-                window.removeCourseEverywhere(name);
-              });
-            } else if(confirm('حذف "' + name + '"؟')){
-              window.removeCourseEverywhere(name);
-            }
+            window.confirmRemoveCourse(name);
           } else {
             window.addCourseEverywhere(name, code, hours);
           }

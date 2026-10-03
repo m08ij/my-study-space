@@ -115,6 +115,49 @@
   /* ============================================================
      DASHBOARD
      ============================================================ */
+  /* محاضرات اليوم: ترتيب رقمي، وقت من–إلى، الجارية/المنتهية/التالية، وعلامة تعارض */
+  window.renderTodayClasses = function(){
+    var tc = document.getElementById('todayClasses'); if(!tc) return;
+    var tt = (space().timetable) || {};
+    var DAYS_EN = window.DAYS_EN || ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    var now = new Date(), nowMin = now.getHours() * 60 + now.getMinutes();
+    var todayKey = DAYS_EN[now.getDay()] || 'Sun';
+    function mins(t){ var p = String(t || '').split(':'), h = parseInt(p[0], 10); return isNaN(h) ? null : h * 60 + (parseInt(p[1], 10) || 0); }
+    function pad(m){ return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); }
+    var conf = window.getTimetableConflicts ? window.getTimetableConflicts().keys : {};
+    var items = [];
+    Object.keys(tt).forEach(function(k){
+      var i = k.indexOf('-'); if(i < 0 || k.slice(0, i) !== todayKey || !tt[k]) return;
+      var s = mins(k.slice(i + 1)); if(s === null) return;
+      var e = mins(tt[k].end);
+      items.push({ key: k, s: s, e: (e !== null && e > s) ? e : null, cls: tt[k] });
+    });
+    if(!items.length){
+      tc.innerHTML = '<div style="text-align:center;padding:24px;color:var(--muted);font-size:.85rem">🌴 لا توجد محاضرات اليوم</div>';
+      return;
+    }
+    items.sort(function(a, b){ return a.s - b.s; });
+    var nextIdx = -1;
+    items.forEach(function(it, i){
+      var end = it.e !== null ? it.e : it.s + 60;
+      it.state = nowMin >= end ? 'done' : (nowMin >= it.s ? 'now' : 'up');
+      if(it.state === 'up' && nextIdx < 0) nextIdx = i;
+    });
+    var h = '';
+    items.forEach(function(it, i){
+      var c = it.cls;
+      var badge = it.state === 'now' ? '<span style="font-size:.64rem;padding:1px 7px;border-radius:6px;background:rgba(239,68,68,.15);color:var(--red);font-weight:700;margin-right:6px">🔴 جارية</span>' :
+                  i === nextIdx ? '<span style="font-size:.64rem;padding:1px 7px;border-radius:6px;background:var(--grad-soft);color:var(--cyan);font-weight:700;margin-right:6px">التالية</span>' : '';
+      h += '<div style="display:flex;gap:12px;padding:9px 0;border-bottom:1px solid var(--border)' + (it.state === 'done' ? ';opacity:.5' : '') + '">' +
+        '<div style="font-weight:700;color:var(--cyan);font-size:.84rem;min-width:48px;font-variant-numeric:tabular-nums">' + pad(it.s) +
+          (it.e !== null ? '<div style="font-size:.66rem;color:var(--muted);font-weight:600">' + pad(it.e) + '</div>' : '') + '</div>' +
+        '<div style="min-width:0"><div style="font-size:.86rem;font-weight:600">' + esc(c.name) + badge + (conf[it.key] ? ' <span title="تعارض مع محاضرة أخرى">⚠️</span>' : '') + '</div>' +
+        ((c.room || c.instructor) ? '<div style="font-size:.72rem;color:var(--muted)">' + (c.room ? '📍 ' + esc(c.room) : '') + (c.room && c.instructor ? ' · ' : '') + (c.instructor ? '👤 ' + esc(c.instructor) : '') + '</div>' : '') +
+        '</div></div>';
+    });
+    tc.innerHTML = h;
+  };
+
   window.renderDashboard = function(){
     if(typeof window.renderDailyQuote === 'function') window.renderDailyQuote();
 
@@ -176,28 +219,7 @@
         (sp.grades ? sp.grades.length : 0) + '</div><div class="l">مادة في علاماتي</div></div></div>';
 
     /* Today classes */
-    var tc = document.getElementById('todayClasses');
-    if(tc){
-      var tt = sp.timetable || {};
-      var todays = Object.keys(tt)
-        .filter(function(k){ return k.indexOf(todayKey) === 0; })
-        .sort();
-      if(!todays.length){
-        tc.innerHTML = '<div style="text-align:center;padding:24px;color:var(--muted);font-size:.85rem">🌴 لا توجد محاضرات اليوم</div>';
-      } else {
-        var h = '';
-        todays.forEach(function(k){
-          var time = k.split('-')[1];
-          var cls = tt[k];
-          h += '<div style="display:flex;gap:12px;padding:9px 0;border-bottom:1px solid var(--border)">' +
-            '<div style="font-weight:700;color:var(--cyan);font-size:.84rem;min-width:48px">' + time + '</div>' +
-            '<div><div style="font-size:.86rem;font-weight:600">' + esc(cls.name) + '</div>' +
-            (cls.room ? '<div style="font-size:.72rem;color:var(--muted)">📍 ' + esc(cls.room) + '</div>' : '') +
-            '</div></div>';
-        });
-        tc.innerHTML = h;
-      }
-    }
+    window.renderTodayClasses();
 
     /* Upcoming tasks */
     var ut = document.getElementById('upcomingTasks');
