@@ -63,7 +63,7 @@
 
     var closed = false;
     function close(){
-      if(closed) return; closed = true; bd.remove();
+      if(closed) return; closed = true; if(window.dismissOverlay) window.dismissOverlay(bd); else bd.remove();
       if(opener && opener.focus && document.contains(opener)){ try{ opener.focus(); }catch(e){} }   /* رجوع التركيز لما فتح النافذة */
     }
     bd.querySelector('#mCancel').onclick = close;
@@ -1471,12 +1471,14 @@
       .replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,')
       .replace(/\n/g, '\\n').replace(/\r/g, '');
   }
+  /* طيّ السطر بحد 75 بايت (RFC 5545) بدون قطع حرف متعدد البايتات (العربية/الإيموجي) */
+  function byteLen(ch){ var c = ch.codePointAt(0); return c < 0x80 ? 1 : c < 0x800 ? 2 : c < 0x10000 ? 3 : 4; }
   function foldLine(line){
-    var seg = 73;
-    if(line.length <= seg) return line;
-    var out = '';
-    for(var j = 0; j < line.length; j += seg){
-      out += (j === 0 ? '' : '\r\n ') + line.substr(j, seg);
+    var out = '', cur = 0, limit = 75;
+    for(var ch of line){
+      var n = byteLen(ch);
+      if(cur + n > limit){ out += '\r\n '; cur = 1; limit = 75; }
+      out += ch; cur += n;
     }
     return out;
   }
@@ -1506,7 +1508,9 @@
     for(var i = 0; i < s.length; i++){ h = ((h << 5) - h) + s.charCodeAt(i); h |= 0; }
     return h;
   }
-  function buildICS(){
+  function buildICS(opts){
+    opts = opts || {};
+    var inc = { lectures: opts.lectures !== false, exams: opts.exams !== false, tasks: opts.tasks !== false };
     var sp = space();
     var name = (sp.profile && sp.profile.name) || 'طالب';
     var nowUtc = icsDateUTC(new Date());
@@ -1520,7 +1524,7 @@
       'TZNAME:+03','END:STANDARD','END:VTIMEZONE'
     ];
 
-    Object.keys(sp.timetable || {}).forEach(function(key){
+    (inc.lectures ? Object.keys(sp.timetable || {}) : []).forEach(function(key){
       var parts = key.split('-');
       var dayEn = parts[0], time = parts[1];
       var dayIdx = DAYS_EN.indexOf(dayEn);
@@ -1530,7 +1534,11 @@
       var tp = time.split(':');
       var hh = parseInt(tp[0], 10), mm = parseInt(tp[1], 10) || 0;
       var start = getNextDayOfWeek(dayIdx, hh, mm);
-      var dtEnd = new Date(start); dtEnd.setHours(dtEnd.getHours() + 1);
+      /* مدة المحاضرة الفعلية من حقل end إن كان صالحاً وبعد البداية، وإلا ساعة */
+      var dtEnd = new Date(start), endM = /^(\d{1,2}):(\d{2})/.exec(String(cls.end || ''));
+      var endMin = endM ? (+endM[1]) * 60 + (+endM[2]) : null;
+      if(endMin !== null && endMin > hh * 60 + mm && endMin - (hh * 60 + mm) <= 6 * 60) dtEnd.setHours(Math.floor(endMin / 60), endMin % 60, 0, 0);
+      else dtEnd.setHours(dtEnd.getHours() + 1);
       var uidBase = 'tt-' + dayEn + '-' + pad2(hh) + pad2(mm) + '-' + Math.abs(hashString(cls.name)).toString(36);
       lines.push('BEGIN:VEVENT');
       lines.push('UID:' + uidBase + '@studyspace');
@@ -1538,12 +1546,14 @@
       lines.push('DTSTART;TZID=Asia/Amman:' + icsDateLocal(start.getFullYear(), start.getMonth()+1, start.getDate(), hh, mm));
       lines.push('DTEND;TZID=Asia/Amman:' + icsDateLocal(dtEnd.getFullYear(), dtEnd.getMonth()+1, dtEnd.getDate(), dtEnd.getHours(), dtEnd.getMinutes()));
       lines.push('SUMMARY:' + icsEscape('📚 ' + cls.name));
-      if(cls.room) lines.push('LOCATION:' + icsEscape(cls.room));
+      var loc = [cls.room, cls.building].filter(Boolean).join(' — ');
+      if(loc) lines.push('LOCATION:' + icsEscape(loc));
+      if(cls.instructor) lines.push('DESCRIPTION:' + icsEscape('الدكتور: ' + cls.instructor));
       lines.push('RRULE:FREQ=WEEKLY;COUNT=16;BYDAY=' + DAYS_ICAL[dayIdx]);
       lines.push('END:VEVENT');
     });
 
-    (sp.exams || []).forEach(function(e){
+    (inc.exams ? (sp.exams || []) : []).forEach(function(e){
       if(!e.date) return;
       var p = e.date.split('-'); if(p.length !== 3) return;
       var y = parseInt(p[0],10), m = parseInt(p[1],10), d = parseInt(p[2],10);
@@ -1565,7 +1575,7 @@
       lines.push('END:VEVENT');
     });
 
-    (sp.tasks || []).forEach(function(t){
+    (inc.tasks ? (sp.tasks || []) : []).forEach(function(t){
       if(t.done || !t.due) return;
       var p = t.due.split('-'); if(p.length !== 3) return;
       var y = parseInt(p[0],10), m = parseInt(p[1],10), d = parseInt(p[2],10);
@@ -1582,9 +1592,9 @@
     lines.push('END:VCALENDAR');
     return lines.map(foldLine).join('\r\n');
   }
-  window.downloadICS = function(){
+  window.downloadICS = function(opts){
     try{
-      var ics = buildICS();
+      var ics = buildICS(opts);
       var blob = new Blob([ics], {type: 'text/calendar;charset=utf-8'});
       var url = URL.createObjectURL(blob);
       var a = document.createElement('a');
@@ -1601,6 +1611,18 @@
     }
   };
   window.buildICS = buildICS;
+  /* نافذة اختيار ما يُصدَّر قبل التنزيل (يفتح بتطبيق التقويم بهاتفك/جوجل كالندر) */
+  window.exportCalendar = function(){
+    var sp = space(), nL = Object.keys(sp.timetable || {}).length, nE = (sp.exams || []).filter(function(e){ return e.date; }).length, nT = (sp.tasks || []).filter(function(t){ return !t.done && t.due; }).length;
+    if(!nL && !nE && !nT){ toast('ما في محاضرات أو امتحانات أو مهام بمواعيد لتصديرها', 'info', 3500); return; }
+    window.showModal('تصدير التقويم (.ics)', [
+      { key: 'what', label: 'ماذا تصدّر؟ (محاضرات ' + nL + ' · امتحانات ' + nE + ' · مهام بموعد ' + nT + ')', type: 'select', options: [
+        { v: 'all', l: 'الكل' }, { v: 'lectures', l: 'المحاضرات فقط (تتكرر أسبوعياً 16 أسبوعاً)' }, { v: 'dated', l: 'الامتحانات والمهام فقط' } ] }
+    ], { what: 'all' }, function(data){
+      window.downloadICS({ lectures: data.what !== 'dated', exams: data.what !== 'lectures', tasks: data.what !== 'lectures' });
+      return true;
+    });
+  };
 
   function injectCalSyncBtn(){
     var menu = document.getElementById('settingsMenu');
@@ -1611,7 +1633,7 @@
     btn.innerHTML = '<span>📅</span> مزامنة التقويم (.ics)';
     btn.addEventListener('click', function(){
       if(window.closeSettingsMenu) window.closeSettingsMenu();
-      window.downloadICS();
+      window.exportCalendar();
     });
     var pdfBtn = menu.querySelector('#pdfBtn');
     if(pdfBtn) menu.insertBefore(btn, pdfBtn);

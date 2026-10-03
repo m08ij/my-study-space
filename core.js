@@ -5,8 +5,26 @@
   'use strict';
   if(window._coreLoaded) return;
   window._coreLoaded = true;
+  /* خروج ناعم للنوافذ المنبثقة: تُزال النافذة الحقيقية فوراً (DOM والتركيز والاختبارات سليمة) وتُترك نسخة شبحية
+     بأسماء أصناف مختلفة (modal-ghost / mg-box) تتلاشى ~140ms ثم تُحذف. تُتخطى مع prefers-reduced-motion. */
+  window.dismissOverlay = function(bd){
+    try{
+      var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      var box = bd && bd.querySelector && bd.querySelector('.modal');
+      if(!reduce && box && document.body.contains(bd)){
+        var g = document.createElement('div'); g.className = 'modal-ghost'; g.setAttribute('aria-hidden', 'true');
+        var c = box.cloneNode(true); c.className = 'mg-box';
+        c.querySelectorAll('[id]').forEach(function(n){ n.removeAttribute('id'); });
+        c.removeAttribute('id'); c.removeAttribute('role'); c.removeAttribute('aria-modal');
+        c.querySelectorAll('input,textarea,select,button').forEach(function(n){ n.tabIndex = -1; n.disabled = true; });
+        g.appendChild(c); document.body.appendChild(g);
+        setTimeout(function(){ if(g.parentNode) g.parentNode.removeChild(g); }, 170);
+      }
+    }catch(e){}
+    if(bd && bd.remove) bd.remove();
+  };
   /* رقم الإصدار: يجب أن يطابق BUILD في سكربت الحماية داخل index.html وCACHE_NAME في sw.js (اتركه متزامناً عند كل إصدار) */
-  window.APP_BUILD = '87';
+  window.APP_BUILD = '88';
 
   /* ============ Global State ============ */
   window.space = null;

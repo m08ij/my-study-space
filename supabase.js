@@ -45,12 +45,33 @@
     return client;
   }
 
+  /* ---------- وضع RPC (جاهز لكنه مُعطّل افتراضياً: CFG.useRpc=false) ----------
+     عند تشغيل ملفات supabase/*.sql (الدوال get_space/put_space/peek_space) يُفعَّل هذا الوضع لتتوقف القراءة/الكتابة المباشرة
+     على جدول spaces. إن كانت الدالة غير موجودة بالخادم نرجع للجدول المباشر ونتذكر ذلك طوال الجلسة (طلب واحد فاشل فقط). */
+  CFG.useRpc = false;
+  var rpcMissing = false;
+  function rpcAvailable(c){ return CFG.useRpc && !rpcMissing && c && typeof c.rpc === 'function'; }
+  function isMissingFn(err){
+    var m = String((err && (err.message || err.details || '')) || '');
+    return !!err && (err.code === 'PGRST202' || err.code === '42883' || err.status === 404 || /Could not find the function|does not exist/i.test(m));
+  }
+
   /* lastLoadStatus: 'ok' | 'empty' (ما في صف بالسحابة) | 'error' (فشل التحميل) */
   async function load(){
     var c = init();
     if(!c){ api.lastLoadStatus = 'error'; return null; }
     var k = ensureCode();
     try{
+      if(rpcAvailable(c)){
+        var rr = await c.rpc('get_space', { p_code: k });
+        if(!rr.error){
+          if(!rr.data){ api.lastLoadStatus = 'empty'; return null; }
+          api.lastLoadStatus = 'ok';
+          return { data: rr.data.data, updated_at: rr.data.updated_at };
+        }
+        if(isMissingFn(rr.error)) rpcMissing = true;
+        else { console.warn('Supabase rpc load error:', rr.error); api.lastLoadStatus = 'error'; return null; }
+      }
       var res = await c.from('spaces').select('data, updated_at').eq('code', k).maybeSingle();
       if(res.error){ console.warn('Supabase load error:', res.error); api.lastLoadStatus = 'error'; return null; }
       if(!res.data){ api.lastLoadStatus = 'empty'; return null; }
@@ -63,6 +84,11 @@
   async function peekUpdatedAt(){
     var c = init(); if(!c) return { status: 'error' };
     try{
+      if(rpcAvailable(c)){
+        var rr = await c.rpc('peek_space', { p_code: ensureCode() });
+        if(!rr.error) return rr.data ? { status: 'ok', updated_at: rr.data } : { status: 'empty' };
+        if(isMissingFn(rr.error)) rpcMissing = true; else return { status: 'error' };
+      }
       var res = await c.from('spaces').select('updated_at').eq('code', ensureCode()).maybeSingle();
       if(res.error) return { status: 'error' };
       if(!res.data) return { status: 'empty' };
@@ -74,6 +100,12 @@
     var c = init(); if(!c) return false;
     var k = ensureCode();
     try{
+      if(rpcAvailable(c)){
+        var rr = await c.rpc('put_space', { p_code: k, p_data: snapshot, p_updated_at: new Date().toISOString() });
+        if(!rr.error) return true;
+        if(isMissingFn(rr.error)) rpcMissing = true;
+        else { console.warn('Supabase rpc save error:', rr.error); return false; }
+      }
       var res = await c.from('spaces').upsert(
         { code: k, data: snapshot, updated_at: new Date().toISOString() },
         { onConflict: 'code' }
@@ -282,6 +314,8 @@
   }
 
   var api = window.SB = {
+    setUseRpc: function(v){ CFG.useRpc = !!v; rpcMissing = false; },   /* يُفعَّل بعد تشغيل supabase/02a-create-rpc.sql */
+    rpcMode: function(){ return CFG.useRpc ? (rpcMissing ? 'fallback' : 'rpc') : 'table'; },
     lastLoadStatus: null,
     init: init, load: load, save: save, peekUpdatedAt: peekUpdatedAt,
     getCode: getCode, setCode: setCode,

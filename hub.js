@@ -317,6 +317,33 @@
         '<button type="button" class="btn btn-ghost" data-ca="edit">✏️ تعديل المحاضرة</button>' +
         '<button type="button" class="btn btn-danger" data-ca="del">🗑 حذف المحاضرة</button>' +
       '</div>';
+    /* ملاحظات المحاضرة: تُحفظ في قائمة الملاحظات العامة (notes) بحقول إضافية lecture/course/date — تظهر أيضاً بصفحة الملاحظات */
+    var ln = document.createElement('div'); ln.className = 'hub-sec'; ln.id = 'lecNotes'; s.body.appendChild(ln);
+    function drawLecNotes(){
+      var list = (window.notes || []).filter(function(n){ return n && n.lecture === key; }).sort(function(a, b){ return (b.ts || 0) - (a.ts || 0); });
+      ln.innerHTML = '<h4>📔 ملاحظات المحاضرة <span class="muted">' + (list.length ? list.length : '') + '</span></h4>' +
+        (list.length ? '<div class="hub-list">' + list.slice(0, 5).map(function(n){
+          return '<div class="hub-li"><span class="hub-li-main">' + esc(n.title || 'بدون عنوان') + '<small>' + esc(n.date || '') + (n.body ? ' · ' + esc(String(n.body).slice(0, 70)) : '') + '</small></span></div>';
+        }).join('') + '</div>' : '<div class="hub-empty">ما في ملاحظات لهذه المحاضرة بعد</div>') +
+        '<div class="hub-actions inline"><button type="button" class="btn btn-sm" data-ln="add">➕ ملاحظة</button>' +
+        (list.length ? '<button type="button" class="btn btn-sm btn-ghost" data-ln="all">كل الملاحظات ←</button>' : '') + '</div>';
+    }
+    drawLecNotes();
+    ln.addEventListener('click', function(ev){
+      var b = ev.target.closest ? ev.target.closest('[data-ln]') : null; if(!b) return;
+      if(b.getAttribute('data-ln') === 'all'){ s.close(); window.switchTab('notes'); return; }
+      window.showModal('ملاحظة — ' + e.name, [ { key: 'title', label: 'العنوان' }, { key: 'body', label: 'الملاحظة', type: 'textarea' } ],
+        { title: e.name + ' — ' + todayStr(), body: '' }, function(data){
+          if(!data.title && !data.body){ toast('اكتب عنواناً أو نصاً', 'warn', 2000); return false; }
+          window.notes = window.notes || [];
+          window.notes.unshift({ title: (data.title || data.body).slice(0, 60), body: data.body || '', ts: Date.now(), course: e.name, lecture: key, date: todayStr() });
+          window.S.set('notes', window.notes);
+          if(window.renderNotes) window.renderNotes();
+          drawLecNotes();
+          toast('✓ حُفظت الملاحظة', 'success', 1500);
+          return true;
+        });
+    });
     s.body.querySelector('[data-ca="edit"]').addEventListener('click', function(){ s.close(); if(window.editClassSlot) window.editClassSlot(key); });
     s.body.querySelector('[data-ca="del"]').addEventListener('click', function(){
       var run = function(){
@@ -767,6 +794,8 @@
       ['📥', 'استيراد نسخة احتياطية', 'restore import', '', function(){ window.restoreFromFile(); }],
       ['☁️', 'المزامنة السحابية', 'sync cloud مزامنة', '', function(){ if(window.SB) window.SB.showSyncPanel(); }],
       ['🖨️', 'طباعة / تصدير PDF', 'print pdf طباعة', '', function(){ window.exportPDF(); }],
+      ['🧠', 'خطة مراجعة للامتحانات', 'exam plan revision خطة مراجعة امتحان', '', function(){ if(window.openExamPlan) window.openExamPlan(); }],
+      ['📅', 'تصدير التقويم (.ics)', 'calendar ics export تقويم تصدير', '', function(){ if(window.exportCalendar) window.exportCalendar(); }],
       ['🧩', 'تخصيص لوحة التحكم', 'customize dashboard تخصيص لوحة', '', function(){ window.switchTab('dashboard'); dsOpenEditor(); }],
       ['↺', 'استعادة ترتيب لوحة التحكم الافتراضي', 'reset dashboard layout استعادة ترتيب', '', function(){ window.switchTab('dashboard'); dsConfirmReset(); }],
       ['⌨️', 'عرض الاختصارات', 'help shortcuts مساعدة اختصارات', '؟', function(){ openPalette('help'); }]
@@ -871,7 +900,7 @@
   window.openCommandPalette = openPalette;
 
   /* Esc يغلق أعلى طبقة تابعة للـ hub (اللوحة ثم النوافذ الجانبية) */
-  window.HubUI = { closeTop: function(){
+  window.HubUI = { openSheet: openSheet, closeTop: function(){
     if(closePalette()) return true;
     var s = sheets[sheets.length - 1];
     if(s){ s.close(); return true; }
@@ -901,6 +930,7 @@
     { id: 'term', name: 'تقدم الترم', icon: '🎓' },
     { id: 'stats', name: 'الأرقام الرئيسية', icon: '🔢' },
     { id: 'myday', name: 'يومي الجامعي', icon: '🧭' },
+    { id: 'weekly', name: 'ملخصك الأسبوعي', icon: '📈' },
     { id: 'timer', name: 'مؤقت التركيز', icon: '⏱️' },
     { id: 'budget', name: 'نظرة الميزانية', icon: '💰' },
     { id: 'quote', name: 'الاقتباس اليومي', icon: '💬' },

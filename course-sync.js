@@ -20,6 +20,10 @@
      ============================================================ */
   window.addCourseEverywhere = function(name, code, hours, options){
     options = options || {};
+    /* اسم غير صالح (فارغ/undefined/null): لا تُنشأ مادة ولا حضور ولا علامات بأسماء مثل "undefined" */
+    if(name === undefined || name === null || typeof name === 'object') return false;
+    name = String(name).trim();
+    if(!name || name === 'undefined' || name === 'null') return false;
     var sp = space();
     if(!sp.courses) sp.courses = [];
     if(!sp.attendance) sp.attendance = {};

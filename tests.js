@@ -38,9 +38,9 @@
     assert('Hub.openCourse موجودة', !!window.Hub && typeof window.Hub.openCourse === 'function');
     assert('لوحة الأوامر موجودة', typeof window.openCommandPalette === 'function' && !!window.HubUI);
     assert('يومي الجامعي يُرسم', typeof window.renderMyDay === 'function' && !!document.getElementById('myDay'));
-    assert('DashLayout موجود', !!window.DashLayout && window.DashLayout.sections.length === 9);
+    assert('DashLayout موجود', !!window.DashLayout && window.DashLayout.sections.length === 10);
     (function(){ var ks = Array.prototype.slice.call(document.querySelectorAll('#dashboard > [data-dsec]')).filter(function(e){ return !e.classList.contains('dash-hidden'); }); var last = ks[ks.length - 1]; var saved = null; try{ saved = localStorage.getItem('dash_layout'); }catch(e){} assert('اللوحة: آخر قسم هو التحليلات (ما لم يخصّص المستخدم)', !!saved || (last && last.getAttribute('data-dsec') === 'insights')); })();
-    assert('لوحة التحكم: كل قسم له data-dsec', document.querySelectorAll('#dashboard > [data-dsec]').length === 9);
+    assert('لوحة التحكم: كل قسم له data-dsec', document.querySelectorAll('#dashboard > [data-dsec]').length === 10);
     try{
       var sst = window.Schedule.status(new Date(2026, 9, 3, 10, 30));
       assert('Schedule.status يرجّع بنية سليمة', Array.isArray(sst.today) && typeof sst.nowMin === 'number');

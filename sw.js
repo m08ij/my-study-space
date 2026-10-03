@@ -1,13 +1,13 @@
 /* ============================================================
-   sw.js — شبكة أولاً + كاش احتياطي (v87)
+   sw.js — شبكة أولاً + كاش احتياطي (v88)
    ============================================================ */
-var CACHE_NAME = 'ss-cache-v87';
+var CACHE_NAME = 'ss-cache-v88';
 var URLS_TO_CACHE = [
   './', './index.html', './app.css',
   './core.js', './data.js', './supabase.js',
   './features.js', './widgets.js', './ai.js', './integrations.js',
   './course-sync.js',    
-  './extras.js', './hub.js',
+  './extras.js', './hub.js', './study.js',
   './pwa.js', './app.js', './tests.js',
   './manifest.json'
 ];

@@ -134,6 +134,9 @@
     window.historyInitialized = true;
     var currentTab = 'dashboard';
     try{ var v = localStorage.getItem('activeTab'); if(v) currentTab = JSON.parse(v); }catch(e){}
+    /* رابط مباشر (#exams) أو نقر إشعار: له الأولوية على آخر تبويب محفوظ (كان يُستبدل فيضيع الرابط) */
+    var hashTab = location.hash ? location.hash.slice(1) : '';
+    if(hashTab && document.getElementById(hashTab) && document.getElementById(hashTab).classList.contains('section')) currentTab = hashTab;
     try{ history.replaceState({tab: currentTab, appInit: true}, '', '#' + currentTab); }catch(e){}
     window.addEventListener('popstate', function(e){
       var tab = (e.state && e.state.tab) || (location.hash ? location.hash.slice(1) : 'dashboard');
@@ -1142,6 +1145,49 @@
     t.querySelectorAll('[data-add]').forEach(function(b){ b.addEventListener('click', function(){ window.addClassSlot(b.dataset.add); }); });
 
     t.className = 'timetable' + (view === 'week' ? '' : ' tt-day');
+
+    /* موبايل + عرض الأسبوع: قائمة أجندة عمودية بدل الشبكة العريضة (بدون تمرير أفقي ولا خلايا ضيقة).
+       تُرسم دائماً وتُعرض بـ CSS فقط على الشاشات الصغيرة، فتعمل مع تدوير الشاشة دون إعادة رسم. */
+    var ttSec0 = document.getElementById('timetable');
+    if(ttSec0) ttSec0.classList.toggle('tt-view-week', view === 'week');
+    var wrap0 = t.parentNode, agenda = document.getElementById('ttAgenda');
+    if(!agenda && wrap0 && wrap0.parentNode){
+      agenda = document.createElement('div'); agenda.id = 'ttAgenda'; agenda.className = 'tt-agenda';
+      wrap0.parentNode.insertBefore(agenda, wrap0.nextSibling);
+    }
+    if(agenda){
+      var ah = '';
+      allDays.forEach(function(d){
+        var dt = ttDateOf(d, DE), ymd = ttYmd(dt), isTodayCol = d === todayKey && isThisWeek;
+        var dayExams = ((window.space && window.space.exams) || []).filter(function(e){ return e.date === ymd; });
+        var list = [];
+        Object.keys(tt).forEach(function(k){
+          var p = ttSplitKey(k); if(!p || p.day !== d || ttMin(p.time) === null) return;
+          list.push({ key: k, time: ttPad(p.time), start: ttMin(p.time), cls: tt[k] });
+        });
+        list.sort(function(a, b){ return a.start - b.start; });
+        ah += '<section class="tt-ag-day' + (isTodayCol ? ' today' : '') + '" aria-label="' + DA[DE.indexOf(d)] + '"><header><b>' + DA[DE.indexOf(d)] + '</b><span class="tt-ag-date"><bdi dir="ltr">' + dt.getDate() + '/' + (dt.getMonth() + 1) + '</bdi></span>' +
+          (dayExams.length ? '<span class="tt-exam">📝 ' + (dayExams.length > 1 ? dayExams.length + ' امتحانات' : window.esc(dayExams[0].name)) + '</span>' : '') +
+          '<button type="button" class="tt-ag-add" data-add="' + d + '-08:00" aria-label="إضافة محاضرة يوم ' + DA[DE.indexOf(d)] + '">＋</button></header>';
+        if(!list.length) ah += '<div class="tt-ag-empty">لا محاضرات</div>';
+        list.forEach(function(it){
+          var e2 = ttMin(it.cls.end), hasEnd2 = e2 !== null && e2 > it.start;
+          var isNow2 = isTodayCol && nowMin >= it.start && nowMin < (hasEnd2 ? e2 : it.start + 60), isNext2 = !isNow2 && nextKey === it.key, bad2 = !!conf.keys[it.key];
+          var place2 = (it.cls.building ? it.cls.building + (it.cls.room ? ' · ' : '') : '') + (it.cls.room || '');
+          ah += '<div class="tt-ag-item' + (isNow2 ? ' now' : isNext2 ? ' next' : '') + (bad2 ? ' bad' : '') + '" data-edit="' + window.esc(it.key) + '" tabindex="0" role="button">' +
+            '<div class="tt-ag-time"><bdi dir="ltr">' + it.time + '</bdi>' + (hasEnd2 ? '<small><bdi dir="ltr">' + ttPad(it.cls.end) + '</bdi></small>' : '') + '</div>' +
+            '<div class="tt-ag-body"><div class="tt-ag-name">' + window.esc(it.cls.name) + (isNow2 ? ' <span class="tt-badge now">الآن</span>' : isNext2 ? ' <span class="tt-badge next">التالية</span>' : '') + (bad2 ? ' <span title="تعارض">⚠️</span>' : '') + '</div>' +
+            '<div class="tt-ag-meta">' + (hasEnd2 ? ttDur(e2 - it.start) : '') + (place2 ? (hasEnd2 ? ' · ' : '') + '📍 ' + window.esc(place2) : '') + (it.cls.instructor ? ' · 👤 ' + window.esc(it.cls.instructor) : '') + '</div></div></div>';
+        });
+        ah += '</section>';
+      });
+      agenda.innerHTML = ah;
+      agenda.querySelectorAll('[data-edit]').forEach(function(b){
+        b.addEventListener('click', function(){ openClass(b.dataset.edit); });
+        b.addEventListener('keydown', function(e){ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openClass(b.dataset.edit); } });
+      });
+      agenda.querySelectorAll('[data-add]').forEach(function(b){ b.addEventListener('click', function(){ window.addClassSlot(b.dataset.add); }); });
+    }
     /* إذا في محاضرات: الجدول أولاً وكروت الإعداد (إضافة/أدوات) تنزل تحته */
     var ttSec = document.getElementById('timetable');
     if(ttSec) ttSec.classList.toggle('tt-has-data', anyKey);

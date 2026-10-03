@@ -38,7 +38,7 @@
         '<button class="btn btn-sm' + (danger ? ' btn-danger' : '') + '" id="cConfirm">' + esc(opts.okLabel || '🗑 نعم، احذف') + '</button>' +
       '</div></div>';
     document.body.appendChild(bd);
-    var close = function(){ bd.remove(); };
+    var close = function(){ if(window.dismissOverlay) window.dismissOverlay(bd); else bd.remove(); };
     bd.querySelector('#cCancel').onclick = close;
     bd.onclick = function(e){ if(e.target === bd) close(); };
     bd.querySelector('#cConfirm').onclick = function(){ close(); onConfirm(); };
