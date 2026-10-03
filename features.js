@@ -154,52 +154,6 @@
   /* ============================================================
      DASHBOARD
      ============================================================ */
-  /* محاضرات اليوم: ترتيب رقمي، وقت من–إلى، الجارية/المنتهية/التالية، وعلامة تعارض */
-  window.renderTodayClasses = function(){
-    var tc = document.getElementById('todayClasses'); if(!tc) return;
-    var tt = (space().timetable) || {};
-    var DAYS_EN = window.DAYS_EN || ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-    var now = new Date(), nowMin = now.getHours() * 60 + now.getMinutes();
-    var todayKey = DAYS_EN[now.getDay()] || 'Sun';
-    function mins(t){ var p = String(t || '').split(':'), h = parseInt(p[0], 10); return isNaN(h) ? null : h * 60 + (parseInt(p[1], 10) || 0); }
-    function pad(m){ return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); }
-    var conf = window.getTimetableConflicts ? window.getTimetableConflicts().keys : {};
-    var items = [];
-    Object.keys(tt).forEach(function(k){
-      var i = k.indexOf('-'); if(i < 0 || k.slice(0, i) !== todayKey || !tt[k]) return;
-      var s = mins(k.slice(i + 1)); if(s === null) return;
-      var e = mins(tt[k].end);
-      items.push({ key: k, s: s, e: (e !== null && e > s) ? e : null, cls: tt[k] });
-    });
-    if(!items.length){
-      tc.innerHTML = '<div style="text-align:center;padding:24px;color:var(--muted);font-size:.85rem">🌴 لا توجد محاضرات اليوم</div>';
-      return;
-    }
-    items.sort(function(a, b){ return a.s - b.s; });
-    var nextIdx = -1;
-    items.forEach(function(it, i){
-      var end = it.e !== null ? it.e : it.s + 60;
-      it.state = nowMin >= end ? 'done' : (nowMin >= it.s ? 'now' : 'up');
-      if(it.state === 'up' && nextIdx < 0) nextIdx = i;
-    });
-    var h = '';
-    function dur(m){ m = Math.max(1, Math.round(m)); if(m < 60) return m + ' د'; var hh = Math.floor(m / 60), mm = m % 60; return mm ? hh + 'س ' + mm + 'د' : hh + ' س'; }
-    items.forEach(function(it, i){
-      var c = it.cls;
-      /* الوقت المتبقي: للجارية إن عُرف وقت النهاية، وللتالية المدة حتى البداية */
-      var left = (it.state === 'now' && it.e !== null) ? ' · باقي ' + dur(it.e - nowMin) : (it.state === 'now' ? ' · بدأت منذ ' + dur(nowMin - it.s) : '');
-      var badge = it.state === 'now' ? '<span style="font-size:.64rem;padding:1px 7px;border-radius:6px;background:rgba(239,68,68,.15);color:var(--red);font-weight:700;margin-right:6px">🔴 جارية' + left + '</span>' :
-                  i === nextIdx ? '<span style="font-size:.64rem;padding:1px 7px;border-radius:6px;background:var(--grad-soft);color:var(--cyan);font-weight:700;margin-right:6px">التالية · بعد ' + dur(it.s - nowMin) + '</span>' : '';
-      h += '<div style="display:flex;gap:12px;padding:9px 0;border-bottom:1px solid var(--border)' + (it.state === 'done' ? ';opacity:.5' : '') + '">' +
-        '<div style="font-weight:700;color:var(--cyan);font-size:.84rem;min-width:48px;font-variant-numeric:tabular-nums">' + pad(it.s) +
-          (it.e !== null ? '<div style="font-size:.66rem;color:var(--muted);font-weight:600">' + pad(it.e) + '</div>' : '') + '</div>' +
-        '<div style="min-width:0"><div style="font-size:.86rem;font-weight:600">' + esc(c.name) + badge + (conf[it.key] ? ' <span title="تعارض مع محاضرة أخرى">⚠️</span>' : '') + '</div>' +
-        ((c.room || c.instructor) ? '<div style="font-size:.72rem;color:var(--muted)">' + (c.room ? '📍 ' + esc(c.room) : '') + (c.room && c.instructor ? ' · ' : '') + (c.instructor ? '👤 ' + esc(c.instructor) : '') + '</div>' : '') +
-        '</div></div>';
-    });
-    tc.innerHTML = h;
-  };
-
   window.renderDashboard = function(){
     if(typeof window.renderDailyQuote === 'function') window.renderDailyQuote();
 
@@ -260,39 +214,6 @@
       '<div class="stat"><div class="ic">📊</div><div><div class="v">' +
         (sp.grades ? sp.grades.length : 0) + '</div><div class="l">مادة في علاماتي</div></div></div>';
 
-    /* Today classes */
-    window.renderTodayClasses();
-
-    /* Upcoming tasks */
-    var ut = document.getElementById('upcomingTasks');
-    if(ut){
-      var wl = new Date(); wl.setDate(wl.getDate() + 7);
-      var wlStr = wl.getFullYear() + '-' +
-        String(wl.getMonth()+1).padStart(2,'0') + '-' +
-        String(wl.getDate()).padStart(2,'0');
-      var up = (sp.tasks || [])
-        .filter(function(t){
-          return !t.done && t.due && t.due >= todayStr && t.due <= wlStr;
-        })
-        .sort(function(a,b){ return a.due.localeCompare(b.due); })
-        .slice(0, 5);
-
-      if(!up.length){
-        ut.innerHTML = '<div style="text-align:center;padding:24px;color:var(--muted);font-size:.85rem">✨ لا مهام قريبة</div>';
-      } else {
-        var h2 = '';
-        up.forEach(function(t){
-          var days = Math.ceil((new Date(t.due) - new Date(todayStr)) / 86400000);
-          var col = days <= 2 ? 'var(--red)' : days <= 5 ? 'var(--amber)' : 'var(--muted)';
-          h2 += '<div style="display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);align-items:center">' +
-            '<div style="font-size:.73rem;color:' + col + ';min-width:58px;font-weight:700">' +
-            (days === 0 ? 'اليوم' : days === 1 ? 'غدًا' : 'بعد ' + days + ' أيام') + '</div>' +
-            '<div style="flex:1;font-size:.84rem">' + esc(t.title) + '</div></div>';
-        });
-        ut.innerHTML = h2;
-      }
-    }
-
     /* Budget */
     var db = document.getElementById('dashBudget');
     if(db){
@@ -306,77 +227,7 @@
         '<span style="font-weight:700">💼 الرصيد</span><span style="color:' + col2 + ';font-weight:800">' + balance.toFixed(0) + ' د</span></div>';
     }
 
-    /* Notes */
-    var dn = document.getElementById('dashNotes');
-    if(dn){
-      var recent = notes.slice(0, 3);
-      if(!recent.length){
-        dn.innerHTML = '<div style="text-align:center;padding:24px;color:var(--muted);font-size:.85rem">📔 لا توجد ملاحظات</div>';
-      } else {
-        var hn = '';
-        recent.forEach(function(n){
-          hn += '<div style="padding:7px 0;border-bottom:1px solid var(--border);font-size:.84rem">' +
-            '<div style="font-weight:600">' + esc(n.title || 'بدون عنوان') + '</div>' +
-            '<div style="font-size:.73rem;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' +
-            esc((n.body || '').slice(0, 50)) + '</div></div>';
-        });
-        dn.innerHTML = hn;
-      }
-    }
-
-    try{ if(typeof window.renderStats === 'function') window.renderStats(); }catch(e){}
     try{ if(typeof window.updateTimerUI === 'function') window.updateTimerUI(); }catch(e){}
-  };
-
-  /* ============================================================
-     STATS
-     ============================================================ */
-  window.renderStats = function(){
-    var chart = document.getElementById('studyChart');
-    var cards = document.getElementById('statsCards');
-    if(!chart || !cards) return;
-
-    var log = getS().get('studyLog', {});
-    if(!log || typeof log !== 'object' || Array.isArray(log)) log = {};
-
-    var DAYS_AR = window.DAYS_AR || ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
-    var days = [];
-    for(var i = 6; i >= 0; i--){
-      var d = new Date();
-      d.setHours(0,0,0,0);
-      d.setDate(d.getDate() - i);
-      var ds = d.getFullYear() + '-' +
-        String(d.getMonth()+1).padStart(2,'0') + '-' +
-        String(d.getDate()).padStart(2,'0');
-      days.push({date: ds, name: DAYS_AR[d.getDay()].slice(0,3), minutes: log[ds] || 0});
-    }
-
-    var max = Math.max.apply(null, days.map(function(d){ return d.minutes; }).concat([60]));
-    var chartHtml = '';
-    days.forEach(function(d){
-      var h = Math.max(4, (d.minutes / max) * 100);
-      chartHtml += '<div class="bar" style="height:' + h + '%">' +
-        '<span class="bar-value">' + (d.minutes > 0 ? d.minutes + 'د' : '') + '</span>' +
-        '<span class="bar-label">' + d.name + '</span></div>';
-    });
-    chart.innerHTML = chartHtml;
-
-    var totalMin = days.reduce(function(a,d){ return a + d.minutes; }, 0);
-    var totalHrs = (totalMin / 60).toFixed(1);
-    var avg = (totalMin / 7).toFixed(0);
-    var sessions = getS().get('pomoSessions', 0) || 0;
-    var tasksDone = ((space().tasks) || []).filter(function(t){ return t.done; }).length;
-    var totalTasks = ((space().tasks) || []).length;
-    var completion = totalTasks ? Math.round(tasksDone / totalTasks * 100) : 0;
-    var totalCards = ((space().decks) || []).reduce(function(a,d){ return a + ((d.cards && d.cards.length) || 0); }, 0);
-
-    cards.innerHTML =
-      '<div class="stat"><div class="ic">⏱️</div><div><div class="v">' + totalHrs + ' س</div><div class="l">إجمالي الساعات</div></div></div>' +
-      '<div class="stat"><div class="ic">📊</div><div><div class="v">' + avg + ' د</div><div class="l">متوسط يومي</div></div></div>' +
-      '<div class="stat"><div class="ic">🎯</div><div><div class="v">' + sessions + '</div><div class="l">جلسات</div></div></div>' +
-      '<div class="stat"><div class="ic">✅</div><div><div class="v">' + completion + '%</div><div class="l">إنجاز</div></div></div>' +
-      '<div class="stat"><div class="ic">📚</div><div><div class="v">' + (space().courses || []).length + '</div><div class="l">المواد</div></div></div>' +
-      '<div class="stat"><div class="ic">🃏</div><div><div class="v">' + totalCards + '</div><div class="l">البطاقات</div></div></div>';
   };
 
   /* ============================================================

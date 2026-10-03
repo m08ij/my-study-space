@@ -360,10 +360,6 @@ button.badge[data-goto-tab]{padding:6px 12px;min-height:32px}
 /* ============ Charts ============ */
 .chart-container{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px}
 .chart-title{font-size:.95rem;font-weight:700;margin-bottom:14px}
-.bar-chart{display:flex;align-items:flex-end;gap:8px;height:120px;padding:0 4px}
-.bar{flex:1;background:var(--grad);border-radius:6px 6px 0 0;min-height:4px;position:relative;transition:height .5s;display:flex;flex-direction:column;justify-content:flex-end}
-.bar .bar-label{position:absolute;bottom:-22px;left:50%;transform:translateX(-50%);font-size:.65rem;color:var(--muted);white-space:nowrap}
-.bar .bar-value{position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:.68rem;color:var(--cyan);font-weight:700;white-space:nowrap}
 
 /* ============ Modals ============ */
 .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:500;display:none;align-items:center;justify-content:center;padding:20px}

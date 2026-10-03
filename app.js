@@ -1368,8 +1368,6 @@
     /* تحديث "المحاضرة الجارية/التالية" كل دقيقة، فقط للعناصر الظاهرة وبدون مودال مفتوح */
     setInterval(function(){
       try{
-        var tc = document.getElementById('todayClasses');
-        if(tc && tc.offsetParent !== null && window.renderTodayClasses) window.renderTodayClasses();
         var tb = document.getElementById('timetableTable');
         if(tb && tb.offsetParent !== null && !document.querySelector('.modal-backdrop') && window.renderTimetable) window.renderTimetable();
       }catch(e){}

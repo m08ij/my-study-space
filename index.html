@@ -90,19 +90,6 @@
     </div>
     <!-- يومي الجامعي: حالة المحاضرة الحالية/القادمة + مهام وامتحانات وإنجاز اليوم (يُبنى من hub.js) -->
     <section class="myday" id="myDay" aria-label="يومي الجامعي"></section>
-    <!-- الأهم يومياً أولاً: محاضرات اليوم والمهام القريبة (على الموبايل تظهر بالشاشة الأولى) -->
-    <div class="grid grid-2" style="margin-bottom:16px">
-      <div class="card">
-        <div class="card-head"><h3>📅 محاضرات اليوم</h3>
-          <span class="card-action" data-goto="timetable">الجدول ←</span></div>
-        <div id="todayClasses"></div>
-      </div>
-      <div class="card">
-        <div class="card-head"><h3>⏰ مهام قادمة</h3>
-          <span class="card-action" data-goto="tasks">الكل ←</span></div>
-        <div id="upcomingTasks"></div>
-      </div>
-    </div>
     <div class="daily-quote">
       <div class="quote-text" id="dailyQuoteText">—</div>
       <div class="quote-author" id="dailyQuoteAuthor">—</div>
@@ -139,17 +126,6 @@
           <span class="card-action" data-goto="budget">التفاصيل ←</span></div>
         <div id="dashBudget"></div>
       </div>
-    </div>
-    <div class="card" style="margin-bottom:16px">
-      <div class="card-head"><h3>📔 آخر الملاحظات</h3>
-        <span class="card-action" data-goto="notes">الكل ←</span></div>
-      <div id="dashNotes"></div>
-    </div>
-    <div class="card" style="margin-bottom:16px">
-      <div class="card-head"><h3>📈 إحصائيات الدراسة</h3></div>
-      <div class="chart-title">⏱️ ساعات الدراسة (آخر 7 أيام)</div>
-      <div class="bar-chart" id="studyChart"></div>
-      <div class="grid grid-3" id="statsCards" style="margin-top:24px"></div>
     </div>
   </section>
 
