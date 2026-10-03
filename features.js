@@ -46,21 +46,42 @@
      ============================================================ */
   var THEMES = [
     {id:'dark', name:'داكن', colors:['#0b0f1a','#22d3ee','#a78bfa']},
-    {id:'dracula', name:'دراكولا', colors:['#191a21','#bd93f9','#ff79c6']},
-    {id:'sakura', name:'ساكورا', colors:['#1a0e14','#ff8fb8','#c084fc']},
-    {id:'nord', name:'نورد', colors:['#2e3440','#88c0d0','#b48ead']},
-    {id:'ocean', name:'محيط', colors:['#071a2e','#38bdf8','#3b82f6']},
+    {id:'ivory', name:'عاج', light:true, colors:['#f6f1e9','#0f766e','#c2410c']},
+    {id:'emerald', name:'زمرد', colors:['#07120e','#34d399','#e5c07b']},
+    {id:'ember', name:'جمر', colors:['#120e0c','#fb923c','#fb7185']},
+    {id:'graphite', name:'جرافيت', colors:['#0d0f12','#a3e635','#2dd4bf']},
     {id:'royal', name:'ملكي', colors:['#0f0524','#a78bfa','#fbbf24']},
     {id:'cyberpunk', name:'سايبربانك', colors:['#0a0014','#22d3ee','#ec4899']},
     {id:'midnight', name:'منتصف الليل', colors:['#050914','#0ea5e9','#8b5cf6']},
-    {id:'aurora', name:'شفق', colors:['#04101a','#14e0c8','#a78bfa']}
+    {id:'sky', name:'سماء', light:true, colors:['#eef3fb','#4338ca','#0369a1']}
   ];
   window.THEMES = THEMES;
 
-  window.applyTheme = function(t){
-    var validIds = ['dark','dracula','sakura','nord','ocean','royal','cyberpunk','midnight','aurora'];
-    if(validIds.indexOf(t) === -1) t = 'dark';
+  /* ترحيل الثيمات المستبدلة: من اختار ثيماً قديماً (محلياً أو من السحابة) ينتقل لأقرب بديل داكن */
+  var LEGACY_THEMES = { dracula: 'graphite', sakura: 'ember', nord: 'graphite', ocean: 'midnight', aurora: 'emerald' };
+  function resolveTheme(t){
+    if(LEGACY_THEMES[t]) t = LEGACY_THEMES[t];
+    return THEMES.some(function(x){ return x.id === t; }) ? t : 'dark';
+  }
+  function setThemeAttr(t){
     document.documentElement.setAttribute('data-theme', t);
+    var meta = document.querySelector('meta[name="theme-color"]');
+    var th = THEMES.filter(function(x){ return x.id === t; })[0];
+    if(meta && th) meta.setAttribute('content', th.colors[0]);
+  }
+  /* انتقال ناعم للألوان أثناء التبديل (يُفعَّل فقط لحظة التبديل، وليس عند التحميل) */
+  var themeFadeTimer = null;
+  function themeFade(){
+    var root = document.documentElement;
+    root.classList.add('theme-fading');
+    clearTimeout(themeFadeTimer);
+    themeFadeTimer = setTimeout(function(){ root.classList.remove('theme-fading'); }, 450);
+  }
+
+  window.applyTheme = function(t, animate){
+    t = resolveTheme(t);
+    if(animate) themeFade();
+    setThemeAttr(t);
     S().set('theme', t);
     document.querySelectorAll('.theme-swatch').forEach(function(sw){
       sw.classList.toggle('active', sw.dataset.theme === t);
@@ -71,19 +92,37 @@
     var grid = document.getElementById('themeGrid'); if(!grid) return;
     var html = '';
     THEMES.forEach(function(t){
-      html += '<div class="theme-swatch" data-theme="' + t.id + '" style="background:linear-gradient(135deg, ' +
+      html += '<div class="theme-swatch" role="button" tabindex="0" title="' + t.name + (t.light ? ' (فاتح)' : '') + '" data-theme="' + t.id + '" style="background:linear-gradient(135deg, ' +
         t.colors[0] + ' 0%, ' + t.colors[0] + ' 40%, ' + t.colors[1] + ' 40%, ' + t.colors[1] + ' 70%, ' +
         t.colors[2] + ' 70%, ' + t.colors[2] + ' 100%)">' +
         '<div class="sw-check">✓</div><div class="sw-label">' + t.name + '</div></div>';
     });
     grid.innerHTML = html;
+    var pick = function(sw){
+      window.applyTheme(sw.dataset.theme, true);
+      var name = (THEMES.find(function(t){ return t.id === sw.dataset.theme; }) || {}).name || '';
+      toast('🎨 تم تفعيل ثيم "' + name + '"', 'success', 1800);
+    };
     grid.querySelectorAll('.theme-swatch').forEach(function(sw){
-      sw.addEventListener('click', function(){
-        window.applyTheme(sw.dataset.theme);
-        var name = (THEMES.find(function(t){ return t.id === sw.dataset.theme; }) || {}).name || '';
-        toast('🎨 تم تفعيل ثيم "' + name + '"', 'success', 1800);
-      });
+      sw.addEventListener('click', function(){ pick(sw); });
+      sw.addEventListener('keydown', function(e){ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); pick(sw); } });
     });
+    /* معاينة حية بالتحويم (بالماوس فقط) — بدون حفظ، وتعود للثيم المحفوظ عند الخروج */
+    if(!grid._previewBound){
+      grid._previewBound = true;
+      var saved = function(){ return resolveTheme(S().get('theme', 'dark')); };
+      grid.addEventListener('pointerover', function(e){
+        if(e.pointerType !== 'mouse') return;
+        var sw = e.target.closest ? e.target.closest('.theme-swatch') : null;
+        if(!sw || sw.dataset.theme === document.documentElement.getAttribute('data-theme')) return;
+        themeFade(); setThemeAttr(sw.dataset.theme);
+      });
+      grid.addEventListener('pointerleave', function(e){
+        if(e.pointerType !== 'mouse') return;
+        var cur = saved();
+        if(cur !== document.documentElement.getAttribute('data-theme')){ themeFade(); setThemeAttr(cur); }
+      });
+    }
   };
 
   window.toggleThemePanel = function(){
@@ -144,10 +183,13 @@
       if(it.state === 'up' && nextIdx < 0) nextIdx = i;
     });
     var h = '';
+    function dur(m){ m = Math.max(1, Math.round(m)); if(m < 60) return m + ' د'; var hh = Math.floor(m / 60), mm = m % 60; return mm ? hh + 'س ' + mm + 'د' : hh + ' س'; }
     items.forEach(function(it, i){
       var c = it.cls;
-      var badge = it.state === 'now' ? '<span style="font-size:.64rem;padding:1px 7px;border-radius:6px;background:rgba(239,68,68,.15);color:var(--red);font-weight:700;margin-right:6px">🔴 جارية</span>' :
-                  i === nextIdx ? '<span style="font-size:.64rem;padding:1px 7px;border-radius:6px;background:var(--grad-soft);color:var(--cyan);font-weight:700;margin-right:6px">التالية</span>' : '';
+      /* الوقت المتبقي: للجارية إن عُرف وقت النهاية، وللتالية المدة حتى البداية */
+      var left = (it.state === 'now' && it.e !== null) ? ' · باقي ' + dur(it.e - nowMin) : (it.state === 'now' ? ' · بدأت منذ ' + dur(nowMin - it.s) : '');
+      var badge = it.state === 'now' ? '<span style="font-size:.64rem;padding:1px 7px;border-radius:6px;background:rgba(239,68,68,.15);color:var(--red);font-weight:700;margin-right:6px">🔴 جارية' + left + '</span>' :
+                  i === nextIdx ? '<span style="font-size:.64rem;padding:1px 7px;border-radius:6px;background:var(--grad-soft);color:var(--cyan);font-weight:700;margin-right:6px">التالية · بعد ' + dur(it.s - nowMin) + '</span>' : '';
       h += '<div style="display:flex;gap:12px;padding:9px 0;border-bottom:1px solid var(--border)' + (it.state === 'done' ? ';opacity:.5' : '') + '">' +
         '<div style="font-weight:700;color:var(--cyan);font-size:.84rem;min-width:48px;font-variant-numeric:tabular-nums">' + pad(it.s) +
           (it.e !== null ? '<div style="font-size:.66rem;color:var(--muted);font-weight:600">' + pad(it.e) + '</div>' : '') + '</div>' +
@@ -621,7 +663,10 @@
     }
 
     try{
-      var files = await window.SB.listCourseFiles(courseId);
+      /* مجلد المادة نفسها + أي مجلدات قديمة ربطها المستخدم بها صراحةً (filesFrom) — بدون تغيير id المادة */
+      var course = (space().courses || []).filter(function(x){ return x.id === courseId; })[0];
+      var folders = [courseId].concat((course && course.filesFrom) || []);
+      var files = await window.SB.listCourseFilesMulti(folders);
       if(files === null){
         list.innerHTML = '<div style="text-align:center;padding:10px;font-size:.75rem;color:var(--muted2)">تعذّر تحميل الملفات (تحقق من الاتصال) ' +
           '<a href="#" data-retry-files="' + esc(courseId) + '" style="color:var(--cyan)">إعادة المحاولة</a></div>';
@@ -629,7 +674,7 @@
         var rb = list.querySelector('[data-retry-files]');
         if(rb) rb.addEventListener('click', function(ev){
           ev.preventDefault();
-          window.SB.listCourseFiles(courseId, true).then(function(){ window.loadCourseFilesForCard(courseId); });
+          window.SB.listCourseFilesMulti(folders, true).then(function(){ window.loadCourseFilesForCard(courseId); });
         });
         return;
       }
@@ -754,16 +799,20 @@
     ], {sem:0}, function(data){
       var s = SEMESTERS[parseInt(data.sem)];
       if(!s) return false;
-      var count = 0;
+      var count = 0, added = [];
       s.courses.forEach(function(c){
         if(!(space().courses || []).find(function(mc){ return mc.name === c.n; })){
           if(!window.space.courses) window.space.courses = [];
-          window.space.courses.push({id: uid(), name: c.n, code: c.code || '', hours: c.h, instructor:'', room:''});
+          var nc = {id: uid(), name: c.n, code: c.code || '', hours: c.h, instructor:'', room:''};
+          window.space.courses.push(nc);
+          added.push(nc);
           count++;
         }
       });
       saveSpace(); window.renderCourses(); window.renderDashboard();
       toast('تم استيراد ' + count + ' مادة', 'success', 2500);
+      /* مواد لها ملفات قديمة محذوفة بنفس الكود: نسأل (بدون ربط تلقائي) */
+      added.forEach(function(nc){ if(window.offerArchivedFiles) window.offerArchivedFiles(nc); });
       return true;
     });
   };
@@ -1431,7 +1480,7 @@
       el.innerHTML =
         '<div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer" class="sem-head">' +
           '<div style="display:flex;align-items:center;gap:12px">' +
-            '<span style="background:var(--grad);color:#0b0f1a;padding:3px 10px;border-radius:20px;font-size:.7rem;font-weight:800">سنة ' + s.year + '</span>' +
+            '<span style="background:var(--grad);color:var(--on-accent);padding:3px 10px;border-radius:20px;font-size:.7rem;font-weight:800">سنة ' + s.year + '</span>' +
             '<h3 style="margin:0">' + esc(s.name) + '</h3></div>' +
           '<div style="display:flex;gap:10px;align-items:center;font-size:.78rem;color:var(--muted)">' +
             '<span style="background:var(--bg2);padding:3px 10px;border-radius:8px;color:var(--cyan)">' + total + ' ساعة</span>' +

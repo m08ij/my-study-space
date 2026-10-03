@@ -107,6 +107,19 @@
     return p;
   }
 
+  /* قائمة ملفات عدة مجلدات (id المادة + مجلدات مرتبطة بها عبر filesFrom).
+     يرجّع null إذا فشل أي مجلد — حتى لا يظهر "لا ملفات" بسبب فشل جزئي. */
+  function listCourseFilesMulti(ids, force){
+    var uniq = [];
+    (ids || []).forEach(function(i){ if(i && uniq.indexOf(i) === -1) uniq.push(i); });
+    return Promise.all(uniq.map(function(i){ return listCourseFiles(i, force); })).then(function(parts){
+      var all = [];
+      for(var k = 0; k < parts.length; k++){ if(parts[k] === null) return null; all = all.concat(parts[k]); }
+      all.sort(function(a, b){ return String(b.createdAt || '').localeCompare(String(a.createdAt || '')); });
+      return all;
+    });
+  }
+
   async function fetchCourseFiles(courseId){
     var c = init(); if(!c) return null;
     var k = ensureCode();
@@ -249,6 +262,7 @@
     init: init, load: load, save: save, peekUpdatedAt: peekUpdatedAt,
     getCode: getCode, setCode: setCode,
     listCourseFiles: listCourseFiles,
+    listCourseFilesMulti: listCourseFilesMulti,
     uploadCourseFile: uploadCourseFile,
     deleteCourseFile: deleteCourseFile,
     formatFileSize: formatFileSize,

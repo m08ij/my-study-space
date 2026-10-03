@@ -128,10 +128,22 @@
       completedCourses: [], currentSemester: 1
     };
   };
+  /* حفظ محلي فاشل (المساحة ممتلئة) أو التخزين غير متاح (وضع خاص): ننبّه المستخدم بدل الفشل الصامت.
+     التنبيه محدود (مرة كل 15 ثانية) حتى لا يتكرر مع كل حفظ. */
+  var lastSaveWarn = 0;
   window.saveSpace = function(){
     if(window.S && typeof window.S.set === 'function'){
-      window.S.set('space', window.space);
+      var ok = window.S.set('space', window.space);
+      var now = Date.now();
+      if((ok === false || !storageAvailable) && now - lastSaveWarn > 15000){
+        lastSaveWarn = now;
+        window.toast(storageAvailable
+          ? '⚠️ تعذّر الحفظ على هذا الجهاز (المساحة ممتلئة؟) — صدّر نسخة من القائمة ⚙️ لحماية بياناتك'
+          : '⚠️ التخزين المحلي غير متاح (وضع خاص؟) — بياناتك لن تبقى بعد إغلاق الصفحة', 'warn', 6000);
+      }
+      return ok;
     }
+    return false;
   };
 
   console.log('🧰 core.js loaded');

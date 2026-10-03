@@ -34,7 +34,7 @@
     <div class="brand-name">مساحتي الدراسية</div>
   </div>
   <div class="search-wrap">
-    <input type="search" id="searchInput" placeholder="ابحث..." autocomplete="off">
+    <input type="search" id="searchInput" placeholder="ابحث...  ( / )" autocomplete="off">
     <div class="search-results" id="searchResults"></div>
   </div>
   <div class="topbar-actions">
@@ -88,16 +88,7 @@
       <h2 class="page-title">📊 لوحة التحكم</h2>
       <p class="page-sub" id="greetLine">—</p>
     </div>
-    <div class="daily-quote">
-      <div class="quote-text" id="dailyQuoteText">—</div>
-      <div class="quote-author" id="dailyQuoteAuthor">—</div>
-    </div>
-    <div class="card" style="margin-bottom:16px">
-      <div class="card-head"><h3>🎓 تقدم الترم</h3>
-        <span class="card-action" data-goto="gradecalc">علاماتي ←</span></div>
-      <div id="dashTermProgress"></div>
-    </div>
-    <div class="grid grid-4" style="margin-bottom:20px" id="dashStats"></div>
+    <!-- الأهم يومياً أولاً: محاضرات اليوم والمهام القريبة (على الموبايل تظهر بالشاشة الأولى) -->
     <div class="grid grid-2" style="margin-bottom:16px">
       <div class="card">
         <div class="card-head"><h3>📅 محاضرات اليوم</h3>
@@ -110,6 +101,16 @@
         <div id="upcomingTasks"></div>
       </div>
     </div>
+    <div class="daily-quote">
+      <div class="quote-text" id="dailyQuoteText">—</div>
+      <div class="quote-author" id="dailyQuoteAuthor">—</div>
+    </div>
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-head"><h3>🎓 تقدم الترم</h3>
+        <span class="card-action" data-goto="gradecalc">علاماتي ←</span></div>
+      <div id="dashTermProgress"></div>
+    </div>
+    <div class="grid grid-4" style="margin-bottom:20px" id="dashStats"></div>
     <div class="grid grid-2" style="margin-bottom:16px">
       <div class="mini-timer">
         <div class="ring">

@@ -227,13 +227,30 @@
     for(var i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0;
     return s.length + ':' + h;
   }
-  function localDirty(){ var h = metaGet('ss_synced_hash'); return h === null ? true : h !== spaceHash(); }
+  /* بصمة كل البيانات المتزامنة (space + ملاحظات + حاسبة المعدل + مؤقت + سجل الدراسة + ثيم …)
+     بدون حالة الواجهة (activeTab/openSems) حتى لا تُحسب تعديلاً. البصمة القديمة كانت للـ space فقط، فتعديل
+     ثيم/ملاحظة أوفلاين كان يُستبدل بنسخة السحابة عند التشغيل التالي. */
+  function stateHash(){
+    var s = window.gatherSnapshot();
+    var core = { space: s.space, notes: s.notes, gpaRows: s.gpaRows, timerSettings: s.timerSettings,
+      pomoSessions: s.pomoSessions, pomoFocus: s.pomoFocus, studyLog: s.studyLog, theme: s.theme, welcomeDone: s.welcomeDone };
+    var str = canon(core), h = 5381;
+    for(var i = 0; i < str.length; i++) h = ((h << 5) + h + str.charCodeAt(i)) | 0;
+    return 'v2:' + str.length + ':' + h;
+  }
+  function localDirty(){
+    var h = metaGet('ss_synced_hash');
+    if(h === null) return true;
+    /* بصمة قديمة (قبل v2): نقارنها بالطريقة القديمة (space فقط) ولا نعتبر الباقي تعديلاً */
+    if(String(h).indexOf('v2:') !== 0) return h !== spaceHash();
+    return h !== stateHash();
+  }
   function toMs(v){ var n = Date.parse(v); return isNaN(n) ? null : n; }
   window.markSynced = function(updatedAt, hash){
     var ms = toMs(updatedAt);
     if(ms === null){ metaDel('ss_cloud_ver'); return; }
     metaSet('ss_cloud_ver', ms);
-    metaSet('ss_synced_hash', hash || spaceHash());
+    metaSet('ss_synced_hash', hash || stateHash());
   };
   window.getConflictBackup = function(){ return metaGet('ss_conflict_backup'); };
 
@@ -257,7 +274,7 @@
         if(peek.status === 'error'){ window.serverOnline = false; window.setServerStatus('off'); scheduleSaveRetry(); return; }
         if(peek.status === 'ok' && toMs(peek.updated_at) !== ver){ window.handleSyncConflict(); return; }
       }
-      var hash = spaceHash();
+      var hash = stateHash();
       var ok = await window.SB.save(window.gatherSnapshot());
       if(ok){
         window.serverOnline = true; window.setServerStatus('ok'); window._saveRetryN = 0;
@@ -954,7 +971,7 @@
 
     var html = '<thead><tr><th></th>';
     days.forEach(function(d){
-      html += '<th' + (d === todayKey ? ' data-today="1" style="background:var(--grad);color:#0b0f1a"' : '') + '>' + DA[DE.indexOf(d)] + '</th>';
+      html += '<th' + (d === todayKey ? ' data-today="1" style="background:var(--grad);color:var(--on-accent)"' : '') + '>' + DA[DE.indexOf(d)] + '</th>';
     });
     html += '</tr></thead><tbody>';
 
@@ -977,7 +994,7 @@
           var tip = cls.name + ' — ' + time + (hasEnd ? '–' + ttPad(cls.end) : '') + (cls.room ? ' — ' + cls.room : '') + (cls.instructor ? ' — ' + cls.instructor : '') + (isBad ? ' — ⚠️ تعارض' : '');
           html += '<td style="' + tdStyle + '"><div class="class-block' + (isBad ? ' tt-conflict' : '') + (isNow ? ' tt-now' : '') + '" data-edit="' + window.esc(en.key) + '" title="' + window.esc(tip) + '">' +
             '<span class="name">' + window.esc(cls.name) + '</span>' +
-            (hasEnd ? '<span class="tt-time">' + time + '–' + ttPad(cls.end) + '</span>' : '') +
+            (hasEnd ? '<span class="tt-time"><bdi dir="ltr">' + time + '–' + ttPad(cls.end) + '</bdi></span>' : '') +
             (cls.room ? '<span class="room">📍 ' + window.esc(cls.room) + '</span>' : '') +
             (cls.instructor ? '<span class="room">👤 ' + window.esc(cls.instructor) + '</span>' : '') +
             '</div></td>';
@@ -994,6 +1011,9 @@
     t.querySelectorAll('[data-add]').forEach(function(b){ b.addEventListener('click', function(){ window.addClassSlot(b.dataset.add); }); });
 
     t.className = 'timetable' + (view === 'week' ? '' : ' tt-day');
+    /* إذا في محاضرات: الجدول أولاً وكروت الإعداد (إضافة/أدوات) تنزل تحته */
+    var ttSec = document.getElementById('timetable');
+    if(ttSec) ttSec.classList.toggle('tt-has-data', anyKey);
 
     /* شريط التنقل بين الأيام */
     var wrap = t.parentNode, dbar = document.getElementById('ttDayBar');
@@ -1008,6 +1028,9 @@
       });
       dbar.innerHTML = chips;
       dbar.querySelectorAll('[data-view]').forEach(function(b){ b.addEventListener('click', function(){ ttSetView(b.dataset.view); }); });
+      /* الشريحة النشطة قد تكون خارج الشاشة بالموبايل: نمرّر الشريط فقط (بدون تحريك الصفحة) */
+      var act = dbar.querySelector('.active');
+      if(act && dbar.scrollWidth > dbar.clientWidth) dbar.scrollLeft += act.getBoundingClientRect().left + act.offsetWidth / 2 - (dbar.getBoundingClientRect().left + dbar.clientWidth / 2);
     }
 
     /* شريط تعارض واضح فوق الجدول (للعرض فقط — لا يمنع ولا يغيّر بيانات) */
@@ -1019,7 +1042,7 @@
     if(bar){
       if(!conf.list.length){ bar.style.display = 'none'; bar.innerHTML = ''; }
       else {
-        var nm = function(k){ var c = tt[k], p = ttSplitKey(k); return window.esc(c.name) + ' (' + ttPad(p.time) + (c.end ? '–' + ttPad(c.end) : '') + ')'; };
+        var nm = function(k){ var c = tt[k], p = ttSplitKey(k); return window.esc(c.name) + ' (<bdi dir="ltr">' + ttPad(p.time) + (c.end ? '–' + ttPad(c.end) : '') + '</bdi>)'; };
         bar.style.display = '';
         bar.innerHTML = '⚠️ <b>' + conf.list.length + ' تعارض في الجدول</b> — ' + conf.list.slice(0, 3).map(function(x){
           return DA[DE.indexOf(x.day)] + ': ' + nm(x.a) + ' ↔ ' + nm(x.b);
@@ -1076,6 +1099,12 @@
     if(isTyping && e.key !== 'Escape') return;
 
     if(e.key === '/' && !isTyping){ e.preventDefault(); var si = document.getElementById('searchInput'); if(si) si.focus(); return; }
+    /* Alt+1..6: نفس ترتيب الشريط السفلي (الرئيسية، الجدول، موادي، المهام، الحضور، علاماتي) */
+    if(e.altKey && !e.ctrlKey && !e.metaKey && /^[1-6]$/.test(e.key)){
+      e.preventDefault();
+      window.switchTab(['dashboard','timetable','courses','tasks','attendance','gradecalc'][parseInt(e.key, 10) - 1]);
+      return;
+    }
     if(e.altKey && e.key.toLowerCase() === 't'){ e.preventDefault(); window.switchTab('tasks'); setTimeout(window.addTask, 200); return; }
     if(e.altKey && e.key.toLowerCase() === 'n'){ e.preventDefault(); window.switchTab('notes'); setTimeout(window.addNote, 200); return; }
     if(e.altKey && e.key.toLowerCase() === 'p'){ e.preventDefault(); window.switchTab('timer'); return; }
@@ -1108,6 +1137,36 @@
   function safeRun(label, fn){
     try{ fn(); }
     catch(err){ console.error('❌ Failed: ' + label, err); window.debugLog('❌ ' + label + ': ' + (err.message || err)); }
+  }
+
+  /* أقسام اللوحة الطويلة قابلة للطي: افتراضياً مطوية على الموبايل، مفتوحة على الكمبيوتر.
+     الأقسام تُبنى لاحقاً وبعضها يُعاد بناؤه عند كل رسم، فنستخدم observer + delegation. */
+  var DASH_COLLAPSIBLE = ['insightsSection', 'enhancedStatsSection', 'lmsWidget'];
+  function dashPrefs(){ try{ var v = JSON.parse(localStorage.getItem('dash_collapsed') || '{}'); return (v && typeof v === 'object') ? v : {}; }catch(e){ return {}; } }
+  function dashIsCollapsed(id){
+    var p = dashPrefs();
+    if(p[id] !== undefined) return !!p[id];
+    return !!(window.matchMedia && window.matchMedia('(max-width:600px)').matches);
+  }
+  function dashApply(){
+    DASH_COLLAPSIBLE.forEach(function(id){
+      var el = document.getElementById(id); if(!el) return;
+      if(!el._dcInit){ el._dcInit = true; el.classList.add('dash-collapsible'); el.classList.toggle('dash-collapsed', dashIsCollapsed(id)); }
+    });
+  }
+  function initDashCollapse(){
+    var dash = document.getElementById('dashboard'); if(!dash || dash._dcBound) return;
+    dash._dcBound = true;
+    dash.addEventListener('click', function(e){
+      var head = e.target.closest ? e.target.closest('.dash-collapsible > .card-head') : null;
+      if(!head || e.target.closest('.card-action')) return;
+      var card = head.parentNode, collapsed = !card.classList.contains('dash-collapsed');
+      card.classList.toggle('dash-collapsed', collapsed);
+      var p = dashPrefs(); p[card.id] = collapsed;
+      try{ localStorage.setItem('dash_collapsed', JSON.stringify(p)); }catch(err){}
+    });
+    if(window.MutationObserver) new MutationObserver(dashApply).observe(dash, { childList: true });
+    dashApply();
   }
 
   window.boot = async function(){
@@ -1186,6 +1245,7 @@
     safeRun('Search', window.initSearch);
     safeRun('Quote', window.renderDailyQuote);
     safeRun('Dashboard', window.renderDashboard);
+    safeRun('Dash collapse', initDashCollapse);
     safeRun('GradeCalc', window.renderGradeCalc);
     safeRun('CourseDesc', window.renderCourseDescriptions);
     safeRun('AI bindings', function(){ if(window.bindAIEvents) window.bindAIEvents(); });

@@ -425,7 +425,7 @@
       .stt-row{display:grid;grid-template-columns:36px 130px minmax(160px,1fr) 240px 220px 130px 70px;gap:8px;align-items:center;padding:10px;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;transition:.25s}
       .stt-row.matched{border-color:rgba(52,211,153,.4);background:linear-gradient(135deg,rgba(52,211,153,.04),transparent)}
       .stt-row.ready{border-color:rgba(52,211,153,.5)}
-      .stt-num{width:28px;height:28px;border-radius:8px;background:var(--grad);color:#0b0f1a;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.8rem;justify-self:center}
+      .stt-num{width:28px;height:28px;border-radius:8px;background:var(--grad);color:var(--on-accent);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.8rem;justify-self:center}
       .stt-row.matched .stt-num{background:linear-gradient(135deg,#34d399,#10b981)}
       .stt-input{width:100%;background:var(--card);border:1.5px solid var(--border);color:var(--text);padding:8px 10px;border-radius:9px;font-family:inherit;font-size:.85rem;outline:none;height:38px;transition:.2s;min-width:0}
       .stt-input:focus{border-color:var(--cyan);box-shadow:0 0 0 3px var(--glow)}
@@ -438,7 +438,7 @@
       .stt-days{display:flex;gap:3px;padding:4px;background:var(--card);border:1.5px solid var(--border);border-radius:9px;height:38px;align-items:center;justify-content:center}
       .stt-day{flex:1;height:26px;border-radius:6px;background:transparent;border:none;color:var(--muted);cursor:pointer;font-family:inherit;font-size:.62rem;font-weight:800;display:flex;align-items:center;justify-content:center;transition:.2s;padding:0;letter-spacing:.2px;text-transform:uppercase}
       .stt-day:hover{color:var(--text);background:var(--card2)}
-      .stt-day.active{background:var(--grad);color:#0b0f1a;box-shadow:0 2px 6px var(--glow)}
+      .stt-day.active{background:var(--grad);color:var(--on-accent);box-shadow:0 2px 6px var(--glow)}
       .stt-time{display:flex;align-items:center;gap:4px;position:relative}
       .stt-time input[type="time"]{flex:1;background:var(--card);border:1.5px solid var(--border);color:var(--text);padding:0 6px;border-radius:9px;font-family:ui-monospace,monospace;font-size:.82rem;outline:none;height:38px;direction:ltr;text-align:center;font-weight:700;min-width:0;color-scheme:dark}
       .stt-time input[type="time"]::-webkit-calendar-picker-indicator{filter:invert(.7);cursor:pointer}
@@ -454,12 +454,12 @@
       .stt-footer{display:flex;justify-content:space-between;align-items:center;padding:14px 22px;border-top:1px solid var(--border);background:var(--card2);gap:10px;flex-wrap:wrap;flex-shrink:0}
       .stt-footer-hint{font-size:.78rem;color:var(--muted);text-align:center;flex:1;min-width:150px}
       .stt-btn{padding:10px 18px;border-radius:11px;font-family:inherit;font-size:.86rem;font-weight:800;cursor:pointer;border:none;display:inline-flex;align-items:center;gap:6px;transition:.2s}
-      .stt-btn-primary{background:var(--grad);color:#0b0f1a;box-shadow:0 6px 20px var(--glow)}
+      .stt-btn-primary{background:var(--grad);color:var(--on-accent);box-shadow:0 6px 20px var(--glow)}
       .stt-btn-primary:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 8px 24px var(--glow)}
       .stt-btn-primary:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
       .stt-btn-ghost{background:transparent;color:var(--text);border:1.5px solid var(--border)}
       .stt-btn-ghost:hover{background:var(--card);border-color:var(--cyan);color:var(--cyan)}
-      .stt-btn-warn{background:linear-gradient(135deg,#f59e0b,#fbbf24);color:#0b0f1a}
+      .stt-btn-warn{background:linear-gradient(135deg,#f59e0b,#fbbf24);color:var(--on-accent)}
       .stt-preview{position:absolute;inset:0;background:var(--card);z-index:100;display:none;flex-direction:column;overflow:hidden;border-radius:22px}
       .stt-preview.show{display:flex}
       .stt-preview-header{padding:16px 22px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,rgba(34,211,238,.08),rgba(167,139,250,.08))}
@@ -1018,6 +1018,7 @@
       if(!sp.attendance) sp.attendance = {};
 
       var stats = { courses: 0, classes: 0, skipped: [], incomplete: [], unknownCodes: [] };
+      var newCourses = [];
 
       state.rows.forEach(function(row, idx){
         if(!isRowComplete(row)){
@@ -1041,10 +1042,12 @@
           return c.name === finalName || (finalCode && c.code && String(c.code) === String(finalCode));
         });
         if(!exists){
-          sp.courses.push({
+          var addedCourse = {
             id: uid(), name: finalName, code: finalCode, hours: hours,
             instructor: '', room: row.room || ''
-          });
+          };
+          sp.courses.push(addedCourse);
+          newCourses.push(addedCourse);
           stats.courses++;
         }
         row.days.forEach(function(dayKey){
@@ -1071,6 +1074,8 @@
       try{ window.renderDashboard && window.renderDashboard(); }catch(e){}
       try{ window.renderAttendance && window.renderAttendance(); }catch(e){}
       try{ window.renderGradeCalc && window.renderGradeCalc(); }catch(e){}
+      /* مواد جديدة لها ملفات قديمة محذوفة بنفس الكود: نسأل المستخدم (بدون ربط تلقائي) */
+      newCourses.forEach(function(c){ try{ if(window.offerArchivedFiles) window.offerArchivedFiles(c); }catch(e){} });
 
       var issues = stats.skipped.length + stats.incomplete.length + stats.unknownCodes.length;
       if(issues === 0){
@@ -1183,7 +1188,7 @@
     btn.id = 'btnSmartAddClass';
     btn.type = 'button';
     btn.innerHTML = '✨ إضافة دفعة';
-    btn.style.cssText = 'background:var(--grad);color:#0b0f1a;font-weight:800';
+    btn.style.cssText = 'background:var(--grad);color:var(--on-accent);font-weight:800';
     btn.onclick = function(){ openSmartModal(); };
     existing.parentNode.insertBefore(btn, existing.nextSibling);
   }
@@ -1207,7 +1212,7 @@
           'اكتب رقم المادة — نعبّي الاسم والساعات تلقائياً.<br>اختر الأيام والوقت بضغطة واحدة.' +
         '</div>' +
         '<button class="btn" id="btnOpenSmartTimetable" ' +
-          'style="background:var(--grad);color:#0b0f1a;font-weight:800;padding:12px 32px;' +
+          'style="background:var(--grad);color:var(--on-accent);font-weight:800;padding:12px 32px;' +
           'font-size:.95rem;border-radius:12px;width:100%;max-width:420px;' +
           'box-shadow:0 6px 20px var(--glow);justify-content:center">' +
           '➕ إضافة جدول' +
@@ -1231,11 +1236,12 @@
      Bottom Nav
      ============================================================ */
   var BN_TABS = [
-    { id: 'dashboard', icon: '📊', label: 'الرئيسية' },
-    { id: 'tasks',     icon: '📝', label: 'المهام' },
-    { id: 'timetable', icon: '📅', label: 'الجدول' },
-    { id: 'gradecalc', icon: '📈', label: 'علاماتي' },
-    { id: 'budget',    icon: '💰', label: 'الميزانية' }
+    { id: 'dashboard',  icon: '📊', label: 'الرئيسية' },
+    { id: 'timetable',  icon: '📅', label: 'الجدول' },
+    { id: 'courses',    icon: '📚', label: 'موادي' },
+    { id: 'tasks',      icon: '📝', label: 'المهام' },
+    { id: 'attendance', icon: '✅', label: 'الحضور' },
+    { id: 'gradecalc',  icon: '📈', label: 'علاماتي' }
   ];
 
   function bnInject(){
@@ -1248,7 +1254,7 @@
         .bn-bar{ display: flex; }
         .fab-main{ bottom: 90px !important; }
         .fab-menu{ bottom: 158px !important; }
-        .ai-fab{ bottom: 90px !important; }
+        .ai-fab{ bottom: 90px !important; left: auto !important; right: 16px !important; }
         .ai-panel{ bottom: 158px !important; max-height: calc(100vh - 240px) !important; }
         main{ padding-bottom: 100px !important; }
       }
@@ -1257,6 +1263,7 @@
       .bn-item.active::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:24px;height:3px;border-radius:3px;background:var(--grad)}
       .bn-item .bn-ic{ font-size: 1.3rem; }
       .bn-item .bn-lbl{ font-size: .62rem; white-space: nowrap; }
+      @media (max-width: 400px){ .bn-item{ padding: 8px 2px; } .bn-item .bn-lbl{ font-size: .58rem; } }
     `;
     document.head.appendChild(s);
   }

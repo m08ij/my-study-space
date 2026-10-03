@@ -35,7 +35,7 @@
       return false;
     }
 
-    sp.courses.push({
+    var newCourse = {
       id: window.uid ? window.uid() : Date.now().toString(36),
       name: name,
       code: code || '',
@@ -43,7 +43,8 @@
       instructor: options.instructor || '',
       room: options.room || '',
       completed: false
-    });
+    };
+    sp.courses.push(newCourse);
 
     /* Auto-create attendance entry */
     if(!sp.attendance[name]) sp.attendance[name] = { present: 0, absent: 0 };
@@ -56,19 +57,129 @@
     save();
     syncAllUI();
     if(!options.silent) toast('✅ أُضيفت "' + name + '"', 'success', 2000);
+    if(!options.noPrompt) setTimeout(function(){ window.offerArchivedFiles(newCourse); }, 300);
     return true;
   };
 
   /* ============================================================
-     CORE: Remove course from EVERYWHERE
+     ملفات المواد (Storage): مربوطة بـ id المادة، ولا تُحذف عند حذف المادة.
+     عند حذف مادة لها ملفات نحفظ سجل أرشيف صغير (space.archivedCourses)،
+     وعند إعادة إضافة مادة بنفس الكود نسأل المستخدم صراحةً هل يربط الملفات القديمة.
+     لا ربط تلقائي أبداً (قد تكون مادة مختلفة بنفس الاسم)، ولا حذف لأي ملف.
      ============================================================ */
-  window.removeCourseEverywhere = function(name){
+  var ARCHIVE_MAX = 50;
+  function normCodeOf(c){ return String(c || '').replace(/^0+/, ''); }
+
+  /* مجلدات الملفات الخاصة بمادة: id المادة نفسها + أي مجلدات قديمة ربطها المستخدم بها (filesFrom) */
+  function foldersOf(c){
+    var out = [c.id];
+    (c.filesFrom || []).forEach(function(f){ if(f && out.indexOf(f) === -1) out.push(f); });
+    return out;
+  }
+  function archFolders(a){ return (a.folders && a.folders.length) ? a.folders : [a.id]; }
+
+  function archiveCourse(sp, c, files){
+    if(!Array.isArray(sp.archivedCourses)) sp.archivedCourses = [];
+    sp.archivedCourses = sp.archivedCourses.filter(function(a){ return a.id !== c.id; });   /* لا أرشفة مكررة لنفس المادة */
+    sp.archivedCourses.unshift({
+      id: c.id, folders: foldersOf(c), name: c.name, code: c.code || '', hours: c.hours || 3,
+      deletedAt: new Date().toISOString(), files: files
+    });
+    if(sp.archivedCourses.length > ARCHIVE_MAX) sp.archivedCourses.length = ARCHIVE_MAX;
+  }
+
+  /* تطابق آمن: إن كان للطرفين كود فالكود هو المعيار، وإلا الاسم الكامل */
+  function sameCourse(a, c){
+    var ac = normCodeOf(a.code), cc = normCodeOf(c.code);
+    if(ac && cc) return ac === cc;
+    return a.name === c.name;
+  }
+
+  var linkQueue = [], linkBusy = false;
+  function nextLinkPrompt(){
+    if(linkBusy || !linkQueue.length) return;
+    linkBusy = true;
+    var job = linkQueue.shift();
+    var bd = document.createElement('div');
+    bd.className = 'sync-conflict-backdrop';
+    bd.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:16px';
+    var names = job.files.slice(0, 3).map(function(f){ return esc(String(f.name || '').replace(/^\d+_/, '')); }).join('، ');
+    var when = ''; try{ when = new Date(job.arch.deletedAt).toLocaleDateString('ar-JO'); }catch(e){}
+    bd.innerHTML = '<div class="modal" style="max-width:440px;text-align:center;position:relative">' +
+      '<div style="font-size:2.4rem;margin-bottom:8px">📎</div>' +
+      '<h3 style="margin-bottom:10px">ملفات قديمة لهذه المادة</h3>' +
+      '<p style="color:var(--muted);font-size:.88rem;line-height:1.8;margin-bottom:6px">لقيت <b>' + job.files.length + '</b> ملف محفوظ من مادة محذوفة سابقاً: <b>' + esc(job.arch.name) + '</b>' +
+      (when ? ' (' + when + ')' : '') + '.</p>' +
+      (names ? '<p style="color:var(--muted2);font-size:.78rem;margin-bottom:12px">' + names + (job.files.length > 3 ? ' …' : '') + '</p>' : '') +
+      '<p style="color:var(--muted2);font-size:.78rem;margin-bottom:16px">اربطها فقط إذا كانت نفس المادة. بدون ربط تبقى محفوظة ولا يُحذف شي.</p>' +
+      '<div style="display:flex;flex-direction:column;gap:8px">' +
+        '<button class="btn btn-sm btn-ghost" id="lfNo">لا، مادة جديدة بدون الملفات القديمة</button>' +
+        '<button class="btn btn-sm" id="lfYes">📎 ربط الملفات القديمة بـ "' + esc(job.course.name) + '"</button>' +
+      '</div></div>';
+    document.body.appendChild(bd);
+    function done(){ bd.remove(); linkBusy = false; nextLinkPrompt(); }
+    bd.querySelector('#lfNo').onclick = done;
+    bd.querySelector('#lfYes').onclick = function(){
+      var sp = space();
+      var wanted = archFolders(job.arch);
+      /* لا ربط إذا كانت هذه المجلدات مرتبطة أصلاً بمادة ثانية حيّة */
+      var taken = (sp.courses || []).some(function(x){
+        if(x === job.course) return false;
+        return foldersOf(x).some(function(f){ return wanted.indexOf(f) > -1; });
+      });
+      if(taken){ toast('هذه الملفات مرتبطة بمادة ثانية حالياً', 'warn', 2800); done(); return; }
+      /* id المادة الجديدة لا يتغيّر ولا يُعاد استخدام أي id قديم: نضيف مرجعاً للمجلد القديم فقط */
+      var refs = (job.course.filesFrom || []).slice();
+      wanted.forEach(function(f){ if(f !== job.course.id && refs.indexOf(f) === -1) refs.push(f); });
+      job.course.filesFrom = refs;
+      sp.archivedCourses = (sp.archivedCourses || []).filter(function(a){ return a.id !== job.arch.id; });
+      save();
+      if(window.__perfClearFileCache) window.__perfClearFileCache();
+      syncAllUI();
+      toast('✅ تم ربط ' + job.files.length + ' ملف', 'success', 2200);
+      done();
+    };
+  }
+
+  window.offerArchivedFiles = function(course){
+    var sp = space();
+    if(!course || !Array.isArray(sp.archivedCourses) || !sp.archivedCourses.length) return;
+    if(!window.SB || !window.SB.listCourseFiles) return;
+    var mine = foldersOf(course);
+    var arch = sp.archivedCourses.filter(function(a){
+      /* نتجاهل الأرشيف المرتبط أصلاً بهذه المادة (لا سؤال ثانٍ ولا استرجاع مرتين) */
+      if(archFolders(a).every(function(f){ return mine.indexOf(f) > -1; })) return false;
+      return sameCourse(a, course);
+    })[0];
+    if(!arch) return;
+    if(!window.SB.listCourseFilesMulti) return;
+    window.SB.listCourseFilesMulti(archFolders(arch), true).then(function(files){
+      if(files === null) return;                       /* تعذّر التحقق: نترك الأرشيف لمحاولة لاحقة */
+      if(!files.length){                               /* ما في ملفات فعلية: السجل بلا فائدة */
+        sp.archivedCourses = sp.archivedCourses.filter(function(a){ return a.id !== arch.id; });
+        save();
+        return;
+      }
+      linkQueue.push({ course: course, arch: arch, files: files });
+      nextLinkPrompt();
+    }, function(){});
+  };
+
+  /* ============================================================
+     CORE: Remove course from EVERYWHERE
+     opts.archive: احفظ سجل أرشيف (ملفات المادة تبقى على السحابة) — opts.files: عددها أو null إن تعذّر التحقق
+     ============================================================ */
+  window.removeCourseEverywhere = function(name, opts){
     var sp = space();
     var count = 0;
+    opts = opts || {};
 
     /* 1. From courses */
     if(Array.isArray(sp.courses)){
       var before = sp.courses.length;
+      if(opts.archive){
+        sp.courses.forEach(function(c){ if(c.name === name) archiveCourse(sp, c, opts.files == null ? null : opts.files); });
+      }
       sp.courses = sp.courses.filter(function(c){ return c.name !== name; });
       count += before - sp.courses.length;
     }
@@ -185,11 +296,32 @@
     if(ex) parts.push(ex + ' امتحان');
     var tl = Object.keys(sp.timetable || {}).filter(function(k){ return sp.timetable[k] && sp.timetable[k].name === name; }).length;
     if(tl) parts.push(tl + ' محاضرة من الجدول');
-    var msg = 'حذف "' + name + '" من كل الأماكن؟' + (parts.length ? ' سيُحذف معها: ' + parts.join('، ') + '.' : '');
-    var run = function(){ window.removeCourseEverywhere(name); };
-    if(window.customConfirm) window.customConfirm(msg, run);
-    else if(confirm(msg)) run();
+    var course = (sp.courses || []).filter(function(x){ return x.name === name; })[0];
+
+    /* ملفات المادة على السحابة: نفحصها قبل التأكيد (بمهلة قصيرة) لنوضح للمستخدم أنها تبقى محفوظة */
+    function ask(files){
+      var msg = 'حذف "' + name + '" من كل الأماكن؟' + (parts.length ? ' سيُحذف معها: ' + parts.join('، ') + '.' : '');
+      if(files > 0) msg += ' الملفات المرفوعة (' + files + ') تبقى محفوظة على السحابة، ولو أضفت المادة من جديد بنسألك إذا بدك تربطها.';
+      else if(files === null) msg += ' (تعذّر التحقق من ملفاتها — إن كان لها ملفات فتبقى محفوظة ويمكن ربطها لاحقاً.)';
+      var run = function(){ window.removeCourseEverywhere(name, { archive: files === null || files > 0, files: files }); };
+      if(window.customConfirm) window.customConfirm(msg, run);
+      else if(confirm(msg)) run();
+    }
+    if(!course || !window.SB || !window.SB.listCourseFilesMulti){ ask(0); return; }
+    /* ضغطة مزدوجة على الحذف: نتجاهل الطلب الثاني أثناء فحص/تأكيد الأول */
+    if(pendingRemove[name]) return;
+    pendingRemove[name] = true;
+    var answered = false;
+    var release = function(){ setTimeout(function(){ delete pendingRemove[name]; }, 400); };
+    var timer = setTimeout(function(){ if(!answered){ answered = true; ask(null); release(); } }, 2500);
+    window.SB.listCourseFilesMulti(foldersOf(course), true).then(function(r){
+      if(answered) return; answered = true; clearTimeout(timer);
+      ask(r === null ? null : r.length); release();
+    }, function(){
+      if(answered) return; answered = true; clearTimeout(timer); ask(null); release();
+    });
   };
+  var pendingRemove = {};
 
   window.editCourseDialog = function(id){
     var c = (space().courses || []).filter(function(x){ return x.id === id; })[0];
@@ -285,7 +417,7 @@
         padding:0;position:relative;
       }
       .unified-course-btn.not-added{
-        background:var(--grad);color:#0b0f1a;
+        background:var(--grad);color:var(--on-accent);
         box-shadow:0 3px 10px var(--glow);
       }
       .unified-course-btn.not-added:hover{
@@ -560,6 +692,25 @@
         '<p class="sub">أضف من تبويب "الخطة" بضغطة واحدة</p></div>';
       return;
     }
+    /* ملخص سريع لكل مادة (حضور/علامة/مهام) — كل شريحة تفتح التاب المناسب */
+    function courseQuickChips(sp, c){
+      var a = (sp.attendance || {})[c.name], tot = a ? (a.present || 0) + (a.absent || 0) : 0;
+      var ap = tot ? Math.round((a.present || 0) / tot * 100) : null;
+      var ac = ap === null ? 'var(--muted)' : ap >= 85 ? 'var(--green)' : ap >= 75 ? 'var(--amber)' : 'var(--red)';
+      var g = (sp.grades || []).filter(function(x){ return x.name === c.name; })[0], gt = 0, ge = 0;
+      ((g && g.items) || []).forEach(function(it){ gt += parseFloat(it.weight) || 0; ge += parseFloat(it.score) || 0; });
+      var gp = gt > 0 ? Math.round(ge / gt * 100) : null;
+      var pend = (sp.tasks || []).filter(function(t){ return t.course === c.name && !t.done; }).length;
+      function chip(tab, text, color, title){
+        return '<button type="button" class="badge" data-goto-tab="' + tab + '" title="' + title + '" style="cursor:pointer;border:none;font-family:inherit;color:' + color + '">' + text + '</button>';
+      }
+      return '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">' +
+        chip('attendance', '✅ ' + (ap === null ? '—' : ap + '%'), ac, 'الحضور') +
+        chip('gradecalc', '📊 ' + (gp === null ? '—' : gp + '%'), 'var(--cyan)', 'العلامات') +
+        chip('tasks', '📝 ' + pend, pend ? 'var(--amber)' : 'var(--muted)', 'المهام المتبقية') +
+        '</div>';
+    }
+
     var html = '';
     sp.courses.forEach(function(c){
       html += '<div class="card" data-course-card="' + c.id + '">' +
@@ -578,6 +729,7 @@
           (c.room ? '<span class="badge">📍 ' + esc(c.room) + '</span>' : '') +
           (c.instructor ? '<span class="badge">👤 ' + esc(c.instructor) + '</span>' : '') +
         '</div>' +
+        courseQuickChips(sp, c) +
         '<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">' +
           '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">' +
             '<span style="font-size:.78rem;font-weight:700;color:var(--muted)">📎 ملفات المادة</span>' +
@@ -602,6 +754,9 @@
       });
     });
 
+    g.querySelectorAll('[data-goto-tab]').forEach(function(b){
+      b.addEventListener('click', function(e){ e.stopPropagation(); if(window.switchTab) window.switchTab(b.dataset.gotoTab); });
+    });
     g.querySelectorAll('[data-edit-course]').forEach(function(b){
       b.addEventListener('click', function(e){ e.stopPropagation(); window.editCourseDialog(b.dataset.editCourse); });
     });
@@ -620,7 +775,21 @@
       });
     });
 
-    sp.courses.forEach(function(c){ if(window.loadCourseFilesForCard) window.loadCourseFilesForCard(c.id); });
+    /* ملفات المادة تُحمَّل عند ظهور الكرت فقط (بدل طلب لكل المواد دفعة واحدة وهي مخفية) */
+    var loadFiles = function(id){ if(window.loadCourseFilesForCard) window.loadCourseFilesForCard(id); };
+    if(window._cfObserver){ window._cfObserver.disconnect(); window._cfObserver = null; }
+    if(window.IntersectionObserver){
+      window._cfObserver = new IntersectionObserver(function(entries, obs){
+        entries.forEach(function(en){
+          if(!en.isIntersecting) return;
+          obs.unobserve(en.target);
+          loadFiles(en.target.getAttribute('data-course-card'));
+        });
+      }, { rootMargin: '200px' });
+      g.querySelectorAll('[data-course-card]').forEach(function(card){ window._cfObserver.observe(card); });
+    } else {
+      sp.courses.forEach(function(c){ loadFiles(c.id); });
+    }
   };
 
   /* ============================================================
@@ -814,7 +983,7 @@
       el.innerHTML =
         '<div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer" class="sem-head">' +
           '<div style="display:flex;align-items:center;gap:12px">' +
-            '<span style="background:var(--grad);color:#0b0f1a;padding:3px 10px;border-radius:20px;font-size:.7rem;font-weight:800">سنة ' + s.year + '</span>' +
+            '<span style="background:var(--grad);color:var(--on-accent);padding:3px 10px;border-radius:20px;font-size:.7rem;font-weight:800">سنة ' + s.year + '</span>' +
             '<h3 style="margin:0">' + esc(s.name) + '</h3>' +
           '</div>' +
           '<div style="display:flex;gap:10px;align-items:center;font-size:.78rem;color:var(--muted)">' +
@@ -877,9 +1046,10 @@
       var orig = window.switchTab;
       window.switchTab = function(tab){
         var r = orig.apply(this, arguments);
+        /* switchTab يرسم التاب الحالي بنفسه — لا حاجة لإعادة رسم كل الأقسام (7 renders)؛ نكتفي بتحديث أزرار +/🗑 */
         setTimeout(function(){
           if(tab === 'courses' || tab === 'attendance' || tab === 'gradecalc' || tab === 'exams' || tab === 'plan'){
-            syncAllUI();
+            refreshAllUnifiedButtons();
           }
         }, 150);
         return r;
