@@ -22,25 +22,28 @@
   /* ============================================================
      CUSTOM CONFIRM
      ============================================================ */
-  window.customConfirm = function(message, onConfirm){
+  /* opts اختيارية: {title, okLabel, icon, danger:false} — الافتراضي نافذة حذف كما كانت */
+  window.customConfirm = function(message, onConfirm, opts){
+    opts = opts || {};
+    var danger = opts.danger !== false;
     document.querySelectorAll('.modal-backdrop').forEach(function(m){ m.remove(); });
     var bd = document.createElement('div');
     bd.className = 'modal-backdrop show';
-    bd.innerHTML = '<div class="modal" style="max-width:400px;text-align:center">' +
-      '<div style="font-size:3rem;margin-bottom:12px">⚠️</div>' +
-      '<h3 style="margin-bottom:18px">تأكيد الحذف</h3>' +
-      '<p style="color:var(--muted);margin-bottom:22px;font-size:.9rem">' + esc(message) + '</p>' +
+    bd.innerHTML = '<div class="modal" role="alertdialog" aria-modal="true" style="max-width:400px;text-align:center">' +
+      '<div style="font-size:3rem;margin-bottom:12px">' + (opts.icon || '⚠️') + '</div>' +
+      '<h3 style="margin-bottom:18px">' + esc(opts.title || 'تأكيد الحذف') + '</h3>' +
+      '<p style="color:var(--muted);margin-bottom:22px;font-size:.9rem;white-space:pre-line">' + esc(message) + '</p>' +
       '<div class="modal-actions" style="justify-content:center">' +
         '<button class="btn btn-sm btn-ghost" id="cCancel">إلغاء</button>' +
-        '<button class="btn btn-sm btn-danger" id="cConfirm">🗑 نعم، احذف</button>' +
+        '<button class="btn btn-sm' + (danger ? ' btn-danger' : '') + '" id="cConfirm">' + esc(opts.okLabel || '🗑 نعم، احذف') + '</button>' +
       '</div></div>';
     document.body.appendChild(bd);
     var close = function(){ bd.remove(); };
     bd.querySelector('#cCancel').onclick = close;
     bd.onclick = function(e){ if(e.target === bd) close(); };
     bd.querySelector('#cConfirm').onclick = function(){ close(); onConfirm(); };
+    var f = bd.querySelector('#cCancel'); if(f && f.focus) f.focus();
   };
-
   /* ============================================================
      THEMES
      ============================================================ */
@@ -233,50 +236,153 @@
   /* ============================================================
      TASKS
      ============================================================ */
+  /* ============================================================
+     أدوات مواعيد (بتوقيت الجهاز المحلي — لا UTC): تُستخدم في المهام والامتحانات والتنبيهات
+     ============================================================ */
+  function parseDay(s){
+    var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(s || ''));
+    return m ? new Date(+m[1], +m[2] - 1, +m[3]) : null;
+  }
+  /* عدد الأيام من اليوم (محلياً) حتى التاريخ: 0 اليوم، 1 غداً، سالب = مضى. null لتاريخ غير صالح */
+  window.daysUntil = function(s){
+    var d = parseDay(s); if(!d) return null;
+    var n = new Date(), t = new Date(n.getFullYear(), n.getMonth(), n.getDate());
+    return Math.round((d - t) / 86400000);
+  };
+  function dueLabel(days){
+    if(days === null) return '';
+    if(days === 0) return 'اليوم';
+    if(days === 1) return 'غدًا';
+    if(days === 2) return 'بعد يومين';
+    if(days > 2 && days <= 10) return 'بعد ' + days + ' أيام';
+    if(days > 10) return 'بعد ' + days + ' يوم';
+    if(days === -1) return 'متأخرة يوم';
+    if(days === -2) return 'متأخرة يومين';
+    return 'متأخرة ' + Math.abs(days) + ' يوم';
+  }
+  window.dueLabel = dueLabel;
+  /* المتبقي للامتحان: أيام + (إن كان اليوم ووقته معروف) ساعات */
+  window.examRemaining = function(e, now){
+    var days = window.daysUntil(e && e.date);
+    if(days === null) return { days: null, label: '—', big: '—', past: false, urgent: false };
+    now = now || new Date();
+    if(days < 0) return { days: days, label: 'انتهى', big: 'انتهى', past: true, urgent: false };
+    if(days === 0){
+      var tm = /(\d{1,2})[:.](\d{2})/.exec(String((e && e.time) || ''));
+      if(tm){
+        var mins = (+tm[1]) * 60 + (+tm[2]) - (now.getHours() * 60 + now.getMinutes());
+        if(mins > 0) return { days: 0, label: 'بعد ' + (mins >= 60 ? Math.floor(mins / 60) + 'س ' : '') + (mins % 60) + 'د', big: mins >= 60 ? Math.floor(mins / 60) + ' س' : mins + ' د', past: false, urgent: true, today: true };
+      }
+      return { days: 0, label: 'اليوم', big: 'اليوم', past: false, urgent: true, today: true };
+    }
+    return { days: days, label: dueLabel(days), big: days === 1 ? 'غدًا' : days + ' يوم', past: false, urgent: days <= 7 };
+  };
+
+  /* ============================================================
+     TASKS — مادة + موعد + أولوية + حالة، فرز (موعد/أولوية/يدوي) وتجميع حسب الاستعجال
+     الحقول الإضافية (priority/doing/order) اختيارية؛ المهام القديمة تعمل كما هي.
+     ============================================================ */
+  var PRIO = { high: { l: 'عالية', r: 0, ic: '🔺' }, normal: { l: 'عادية', r: 1, ic: '' }, low: { l: 'منخفضة', r: 2, ic: '🔻' } };
+  function prioOf(t){ return PRIO[t && t.priority] ? t.priority : 'normal'; }
+  function taskSortMode(){ try{ var v = localStorage.getItem('tasks_sort'); return (v === 'priority' || v === 'manual') ? v : 'due'; }catch(e){ return 'due'; } }
+  function nextOrder(){ var m = -1; (space().tasks || []).forEach(function(t){ if(typeof t.order === 'number' && t.order > m) m = t.order; }); return m + 1; }
+  function cmpDue(a, b){
+    if(!!a.due !== !!b.due) return a.due ? -1 : 1;
+    if(a.due !== b.due) return a.due < b.due ? -1 : 1;
+    return PRIO[prioOf(a)].r - PRIO[prioOf(b)].r;
+  }
+  function cmpPrio(a, b){
+    var d = PRIO[prioOf(a)].r - PRIO[prioOf(b)].r; if(d) return d;
+    return cmpDue(a, b);
+  }
+  /* يُسند ترتيباً لمن لا ترتيب له (يأتون بعد المرتّبين، بحسب الموعد) — في الذاكرة حتى أول تحريك */
+  function ensureOrder(){
+    var all = space().tasks || [], max = nextOrder();
+    all.filter(function(t){ return typeof t.order !== 'number'; }).sort(cmpDue).forEach(function(t){ t.order = max++; });
+  }
+  function manualList(){ ensureOrder(); return (space().tasks || []).filter(function(t){ return !t.done; }).sort(function(a, b){ return a.order - b.order; }); }
+  function moveTask(id, dir){
+    var list = manualList(), i = -1;
+    list.forEach(function(t, k){ if(t.id === id) i = k; });
+    var j = i + dir; if(i < 0 || j < 0 || j >= list.length) return;
+    var t = list[i], o = list[j], tmp = t.order; t.order = o.order; o.order = tmp;
+    saveSpace(); window.renderTasks();
+    var b = document.querySelector('[data-move-task="' + id + '"][data-dir="' + dir + '"]'); if(b && !b.disabled) b.focus();
+  }
+
+  var TASK_TYPES = { exam: 'امتحان', assignment: 'واجب', quiz: 'كويز', project: 'مشروع', task: 'مهمة' };
+  function taskRow(t, manual, idx, count){
+    var days = window.daysUntil(t.due), isOver = !t.done && days !== null && days < 0, isUrgent = !t.done && days !== null && days >= 0 && days <= 3;
+    var p = prioOf(t), when = days === null ? '' : dueLabel(days);
+    var dueCls = t.done ? '' : isOver ? ' over' : isUrgent ? ' soon' : '';
+    return '<div class="task ' + (t.done ? 'done' : '') + ' ' + (isOver ? 'overdue' : isUrgent ? 'urgent' : '') + (p === 'high' && !t.done ? ' prio-high' : '') + '" data-task-id="' + t.id + '">' +
+      '<div class="task-check" role="checkbox" tabindex="0" aria-checked="' + (t.done ? 'true' : 'false') + '" aria-label="إكمال: ' + esc(t.title) + '" data-toggle-task="' + t.id + '"></div>' +
+      '<div class="task-body"><div class="task-title">' + esc(t.title) + '</div>' +
+      '<div class="task-meta"><span class="badge ' + (t.type || 'task') + '">' + (TASK_TYPES[t.type] || 'مهمة') + '</span>' +
+      (p !== 'normal' ? '<span class="prio-chip ' + p + '" title="الأولوية: ' + PRIO[p].l + '">' + PRIO[p].ic + ' ' + PRIO[p].l + '</span>' : '') +
+      (t.doing && !t.done ? '<span class="status-chip">⏳ جارية</span>' : '') +
+      (t.course ? '<span>📚 ' + esc(t.course) + '</span>' : '') +
+      (t.due ? '<span class="due-chip' + dueCls + '">📅 <bdi dir="ltr">' + esc(t.due) + '</bdi>' + (when && !t.done ? ' · ' + when : '') + '</span>' : '') + '</div></div>' +
+      '<div class="task-actions">' +
+      (manual && !t.done ? '<button type="button" class="task-handle" data-task-handle="' + t.id + '" aria-label="اسحب لإعادة ترتيب: ' + esc(t.title) + '" title="اسحب لإعادة الترتيب">⠿</button>' +
+        '<button type="button" class="btn btn-sm btn-ghost" data-move-task="' + t.id + '" data-dir="-1" aria-label="تقديم المهمة"' + (idx === 0 ? ' disabled' : '') + '>▲</button>' +
+        '<button type="button" class="btn btn-sm btn-ghost" data-move-task="' + t.id + '" data-dir="1" aria-label="تأخير المهمة"' + (idx === count - 1 ? ' disabled' : '') + '>▼</button>' : '') +
+      '<button type="button" class="btn btn-sm btn-ghost" data-edit-task="' + t.id + '" aria-label="تعديل">✏️</button>' +
+      '<button type="button" class="btn btn-sm btn-danger" data-del-task="' + t.id + '" aria-label="حذف">🗑</button></div></div>';
+  }
+
   window.renderTasks = function(){
     var c = document.getElementById('tasksList'); if(!c) return;
-    var sp = space();
-    var todayStr = today();
-    var filter = window.currentTaskFilter || 'all';
-
-    var tasks = (sp.tasks || []).slice().sort(function(a,b){
-      if(a.done !== b.done) return a.done ? 1 : -1;
-      if(!a.due) return 1; if(!b.due) return -1;
-      return a.due.localeCompare(b.due);
+    var sp = space(), filter = window.currentTaskFilter || 'all', mode = taskSortMode();
+    var sel = document.getElementById('taskSort'); if(sel && sel.value !== mode) sel.value = mode;
+    var all = (sp.tasks || []).slice();
+    var pend = all.filter(function(t){ return !t.done; }), done = all.filter(function(t){ return t.done; });
+    var over = pend.filter(function(t){ var d = window.daysUntil(t.due); return d !== null && d < 0; });
+    /* عدّادات الأزرار */
+    var counts = { all: all.length, pending: pend.length, overdue: over.length, done: done.length };
+    document.querySelectorAll('#tasks .chip[data-tf]').forEach(function(b){   /* chips فقط — بطاقات يومي الجامعي تستخدم data-tf أيضاً */
+      var n = counts[b.dataset.tf]; if(n === undefined) return;
+      var base = b.getAttribute('data-label') || b.textContent.replace(/\s*\(\d+\)\s*$/, '').trim();
+      b.setAttribute('data-label', base); b.textContent = base + ' (' + n + ')';
     });
 
-    if(filter === 'pending') tasks = tasks.filter(function(t){ return !t.done; });
-    if(filter === 'done')    tasks = tasks.filter(function(t){ return t.done; });
-    if(filter === 'overdue') tasks = tasks.filter(function(t){ return !t.done && t.due && t.due < todayStr; });
-
-    if(!tasks.length){
-      c.innerHTML = '<div class="empty"><div class="ic">📝</div><p>لا توجد مهام</p></div>';
+    var list = filter === 'pending' ? pend : filter === 'done' ? done : filter === 'overdue' ? over : all;
+    if(!list.length){
+      c.innerHTML = '<div class="empty"><div class="ic">' + (filter === 'done' ? '☑' : '📝') + '</div><p>' +
+        (filter === 'overdue' ? 'ما في مهام متأخرة 👏' : filter === 'done' ? 'ما أكملت مهام بعد' : filter === 'pending' ? 'ما في مهام قيد الانتظار' : 'لا توجد مهام') +
+        '</p>' + (filter === 'all' ? '<p class="sub">اكتب مهمة بالحقل بالأعلى واضغط Enter</p>' : '') + '</div>';
       return;
     }
 
-    var typeMap = {exam:'امتحان', assignment:'واجب', quiz:'كويز', project:'مشروع', task:'مهمة'};
     var html = '';
-    tasks.forEach(function(t){
-      var isOverdue = !t.done && t.due && t.due < todayStr;
-      var daysLeft = t.due ? Math.ceil((new Date(t.due) - new Date(todayStr)) / 86400000) : null;
-      var isUrgent = !t.done && daysLeft !== null && daysLeft >= 0 && daysLeft <= 3;
-      html += '<div class="task ' + (t.done ? 'done' : '') + ' ' +
-        (isOverdue ? 'overdue' : isUrgent ? 'urgent' : '') + '">' +
-        '<div class="task-check" data-toggle-task="' + t.id + '"></div>' +
-        '<div class="task-body"><div class="task-title">' + esc(t.title) + '</div>' +
-        '<div class="task-meta"><span class="badge ' + (t.type || 'task') + '">' +
-        (typeMap[t.type] || 'مهمة') + '</span>' +
-        (t.course ? '<span>📚 ' + esc(t.course) + '</span>' : '') +
-        (t.due ? '<span>📅 ' + t.due +
-          (daysLeft !== null ? ' (' + (daysLeft >= 0 ? 'بعد ' + daysLeft + ' يوم' : 'متأخر ' + Math.abs(daysLeft)) + ')' : '') +
-          '</span>' : '') + '</div></div>' +
-        '<div class="task-actions"><button class="btn btn-sm btn-ghost" data-edit-task="' + t.id + '">✏️</button>' +
-        '<button class="btn btn-sm btn-danger" data-del-task="' + t.id + '">🗑</button></div></div>';
-    });
+    function section(title, items, cls){
+      if(!items.length) return '';
+      return '<div class="task-group ' + (cls || '') + '"><span>' + title + '</span><b>' + items.length + '</b></div>' + items.map(function(t){ return taskRow(t, false); }).join('');
+    }
+    if(mode === 'manual' && filter !== 'done'){
+      var pl = manualList().filter(function(t){ return list.indexOf(t) > -1; });
+      html += pl.map(function(t, i){ return taskRow(t, true, i, pl.length); }).join('');
+      if(filter === 'all') html += section('✅ مكتملة', done.sort(function(a, b){ return String(b.completedAt || '').localeCompare(String(a.completedAt || '')); }), 'done');
+    } else if(filter === 'done'){
+      html += done.sort(function(a, b){ return String(b.completedAt || '').localeCompare(String(a.completedAt || '')); }).map(function(t){ return taskRow(t, false); }).join('');
+    } else if(mode === 'priority'){
+      var P = pend.filter(function(t){ return list.indexOf(t) > -1; }).sort(cmpPrio);
+      ['high', 'normal', 'low'].forEach(function(k){ html += section((PRIO[k].ic ? PRIO[k].ic + ' ' : '') + 'أولوية ' + PRIO[k].l, P.filter(function(t){ return prioOf(t) === k; }), k === 'high' ? 'over' : ''); });
+      if(filter === 'all') html += section('✅ مكتملة', done, 'done');
+    } else {
+      var D = pend.filter(function(t){ return list.indexOf(t) > -1; }).sort(cmpDue), g = { over: [], today: [], week: [], later: [], none: [] };
+      D.forEach(function(t){
+        var d = window.daysUntil(t.due);
+        (d === null ? g.none : d < 0 ? g.over : d === 0 ? g.today : d <= 7 ? g.week : g.later).push(t);
+      });
+      html += section('⚠️ متأخرة', g.over, 'over') + section('📌 اليوم', g.today, 'today') + section('📅 خلال 7 أيام', g.week) + section('🗓 لاحقًا', g.later) + section('بدون موعد', g.none);
+      if(filter === 'all') html += section('✅ مكتملة', done.sort(function(a, b){ return String(b.completedAt || '').localeCompare(String(a.completedAt || '')); }), 'done');
+    }
     c.innerHTML = html;
 
     c.querySelectorAll('[data-toggle-task]').forEach(function(b){
       b.addEventListener('click', function(){ window.toggleTask(b.dataset.toggleTask); });
+      b.addEventListener('keydown', function(e){ if(e.key === ' ' || e.key === 'Enter'){ e.preventDefault(); window.toggleTask(b.dataset.toggleTask); } });
     });
     c.querySelectorAll('[data-edit-task]').forEach(function(b){
       b.addEventListener('click', function(){ window.editTask(b.dataset.editTask); });
@@ -284,6 +390,54 @@
     c.querySelectorAll('[data-del-task]').forEach(function(b){
       b.addEventListener('click', function(){ window.deleteTask(b.dataset.delTask); });
     });
+    c.querySelectorAll('[data-move-task]').forEach(function(b){
+      b.addEventListener('click', function(){ moveTask(b.dataset.moveTask, parseInt(b.dataset.dir, 10)); });
+    });
+    bindTaskDrag(c);
+  };
+
+  /* سحب وإفلات للوضع اليدوي (Pointer Events: ماوس/لمس/قلم). مستمع واحد على الحاوية، وبديله ▲▼ */
+  function bindTaskDrag(c){
+    if(c._dragBound) return; c._dragBound = true;
+    var drag = null;
+    function marks(){ c.querySelectorAll('.drop-before,.drop-after,.dragging').forEach(function(r){ r.classList.remove('drop-before', 'drop-after', 'dragging'); }); }
+    c.addEventListener('pointerdown', function(e){
+      var h = e.target.closest ? e.target.closest('[data-task-handle]') : null; if(!h || (e.button !== undefined && e.button > 0)) return;
+      e.preventDefault();
+      drag = { id: h.getAttribute('data-task-handle'), target: null, before: true, pid: e.pointerId, h: h };
+      try{ h.setPointerCapture(e.pointerId); }catch(err){}
+      h.closest('.task').classList.add('dragging');
+    });
+    c.addEventListener('pointermove', function(e){
+      if(!drag || e.pointerId !== drag.pid) return;
+      var under = document.elementFromPoint(e.clientX, e.clientY), r = under && under.closest ? under.closest('.task[data-task-id]') : null;
+      c.querySelectorAll('.drop-before,.drop-after').forEach(function(x){ x.classList.remove('drop-before', 'drop-after'); });
+      if(!r || r.getAttribute('data-task-id') === drag.id || !r.querySelector('[data-task-handle]')){ drag.target = null; return; }
+      var b = r.getBoundingClientRect(); drag.before = e.clientY < b.top + b.height / 2; drag.target = r.getAttribute('data-task-id');
+      r.classList.add(drag.before ? 'drop-before' : 'drop-after');
+    });
+    function end(e, apply){
+      if(!drag || (e && e.pointerId !== drag.pid)) return;
+      var d = drag; drag = null; marks();
+      try{ d.h.releasePointerCapture(d.pid); }catch(err){}
+      if(apply && d.target) window.reorderTask(d.id, d.target, d.before);
+    }
+    c.addEventListener('pointerup', function(e){ end(e, true); });
+    c.addEventListener('pointercancel', function(e){ end(e, false); });
+  }
+  /* ينقل مهمة قبل/بعد مهمة أخرى (ضمن غير المكتملة) ويعيد ترقيم الكل بالتسلسل */
+  window.reorderTask = function(id, targetId, before){
+    if(id === targetId) return false;
+    var list = manualList(), from = -1;
+    list.forEach(function(t, k){ if(t.id === id) from = k; });
+    if(from < 0 || !list.some(function(t){ return t.id === targetId; })) return false;
+    var item = list.splice(from, 1)[0], at = -1;
+    list.forEach(function(t, k){ if(t.id === targetId) at = k; });
+    list.splice(before ? at : at + 1, 0, item);
+    list.forEach(function(t, k){ t.order = k; });
+    saveSpace(); window.renderTasks();
+    var hb = document.querySelector('[data-task-handle="' + id + '"]'); if(hb) hb.focus();
+    return true;
   };
 
   window.filterTasks = function(f){
@@ -292,49 +446,77 @@
     window.renderTasks();
   };
 
-  window.addTask = function(){
+  window.setTaskSort = function(mode){
+    if(mode !== 'priority' && mode !== 'manual') mode = 'due';
+    try{ localStorage.setItem('tasks_sort', mode); }catch(e){}
+    if(mode === 'manual') ensureOrder();
+    window.renderTasks();
+  };
+
+  /* حقول نافذة المهمة (إضافة/تعديل) */
+  function taskFields(){
     var opts = [{v:'', l:'— بدون مادة —'}];
     (space().courses || []).forEach(function(c){ opts.push({v: c.name, l: c.name}); });
-    window.showModal('إضافة مهمة', [
+    return [
       {key:'title', label:'العنوان'},
       {key:'type', label:'النوع', type:'select', options: [
         {v:'task', l:'مهمة'}, {v:'assignment', l:'واجب'}, {v:'exam', l:'امتحان'},
         {v:'quiz', l:'كويز'}, {v:'project', l:'مشروع'}]},
       {key:'course', label:'المادة', type:'select', options: opts},
-      {key:'due', label:'تاريخ التسليم', type:'date'}
-    ], {title:'', type:'task', course:'', due:''}, function(data){
-      if(!data.title){ toast('أدخل عنوانًا', 'warn'); return false; }
+      {key:'due', label:'تاريخ التسليم', type:'date'},
+      {key:'priority', label:'الأولوية', type:'select', options: [{v:'high', l:'🔺 عالية'}, {v:'normal', l:'عادية'}, {v:'low', l:'🔻 منخفضة'}]},
+      {key:'status', label:'الحالة', type:'select', options: [{v:'todo', l:'قيد الانتظار'}, {v:'doing', l:'⏳ جارية'}, {v:'done', l:'✅ مكتملة'}]}
+    ];
+  }
+  function applyStatus(t, status){
+    var wasDone = !!t.done;
+    t.done = status === 'done'; t.doing = status === 'doing';
+    if(t.done && !wasDone) t.completedAt = window.today();
+    if(!t.done) t.completedAt = null;
+  }
+  function refreshTasks(){ saveSpace(); window.renderTasks(); window.renderDashboard(); }
+
+  window.addTask = function(){
+    window.showModal('إضافة مهمة', taskFields(), {title:'', type:'task', course:'', due:'', priority:'normal', status:'todo'}, function(data){
+      if(!String(data.title || '').trim()){ toast('أدخل عنوانًا', 'warn'); return false; }
       if(!space().tasks) window.space.tasks = [];
-      window.space.tasks.push({
-        id: uid(), title: data.title, type: data.type,
-        course: data.course, due: data.due, done: false
-      });
-      saveSpace(); window.renderTasks(); window.renderDashboard();
+      var t = { id: uid(), title: String(data.title).trim(), type: data.type, course: data.course, due: data.due, done: false,
+        priority: data.priority || 'normal', order: nextOrder() };
+      applyStatus(t, data.status || 'todo');
+      window.space.tasks.push(t);
+      refreshTasks();
       return true;
     });
+  };
+
+  /* إضافة سريعة من حقل القائمة: يفهم "واجب شبكات غدًا" ويربط المادة إن ذُكر اسمها */
+  window.quickAddTask = function(text){
+    var raw = String(text || '').trim(); if(!raw) return false;
+    var p = window.parseQuickCapture ? window.parseQuickCapture(raw) : null;
+    var title = (p && p.type === 'task' && p.title) ? p.title : raw, due = (p && p.type === 'task') ? (p.due || '') : '';
+    var course = '';
+    (space().courses || []).forEach(function(c){ if(!course && c.name && raw.indexOf(c.name) > -1) course = c.name; });
+    if(!space().tasks) window.space.tasks = [];
+    window.space.tasks.push({ id: uid(), title: title, type: 'task', course: course, due: due, done: false, priority: 'normal', order: nextOrder() });
+    refreshTasks();
+    toast('✓ أُضيفت: ' + title, 'success', 1500);
+    return true;
   };
 
   window.editTask = function(id){
     var t = (space().tasks || []).find(function(x){ return x.id === id; });
     if(!t) return;
-    var opts = [{v:'', l:'— بدون مادة —'}];
-    (space().courses || []).forEach(function(c){ opts.push({v: c.name, l: c.name}); });
-    window.showModal('تعديل مهمة', [
-      {key:'title', label:'العنوان'},
-      {key:'type', label:'النوع', type:'select', options: [
-        {v:'task', l:'مهمة'}, {v:'assignment', l:'واجب'}, {v:'exam', l:'امتحان'},
-        {v:'quiz', l:'كويز'}, {v:'project', l:'مشروع'}]},
-      {key:'course', label:'المادة', type:'select', options: opts},
-      {key:'due', label:'التاريخ', type:'date'}
-    ], t, function(data){
-      if(!data.title){ toast('أدخل عنوانًا', 'warn'); return false; }
-      t.title = data.title; t.type = data.type; t.course = data.course; t.due = data.due;
-      saveSpace(); window.renderTasks(); window.renderDashboard();
+    var init = { title: t.title, type: t.type || 'task', course: t.course || '', due: t.due || '', priority: prioOf(t), status: t.done ? 'done' : t.doing ? 'doing' : 'todo' };
+    window.showModal('تعديل مهمة', taskFields(), init, function(data){
+      if(!String(data.title || '').trim()){ toast('أدخل عنوانًا', 'warn'); return false; }
+      t.title = String(data.title).trim(); t.type = data.type; t.course = data.course; t.due = data.due; t.priority = data.priority || 'normal';
+      applyStatus(t, data.status || 'todo');
+      refreshTasks();
       return true;
     }, function(){
       window.customConfirm('حذف "' + t.title + '"؟', function(){
         window.space.tasks = window.space.tasks.filter(function(x){ return x.id !== id; });
-        saveSpace(); window.renderTasks(); window.renderDashboard();
+        refreshTasks();
       });
     });
   };
@@ -342,7 +524,7 @@
   window.toggleTask = function(id){
     var t = (space().tasks || []).find(function(x){ return x.id === id; });
     if(!t) return;
-    t.done = !t.done;
+    t.done = !t.done; if(t.done) t.doing = false;
     /* تاريخ الإكمال (حقل إضافي متوافق مع القديم): يعتمد عليه "إنجاز اليوم" وعدّاد الاحتفال */
     t.completedAt = t.done ? window.today() : null;
     saveSpace(); window.renderTasks(); window.renderDashboard();
@@ -505,6 +687,72 @@
     sp.courses.forEach(function(c){ window.loadCourseFilesForCard(c.id); });
   };
 
+  /* ============================================================
+     ملفات المادة: بحث + فرز + تنزيل + حذف بتأكيد + منع التكرار
+     (حالة البحث/الفرز لكل مادة تبقى بعد إعادة التحميل؛ قائمة الملفات مرتبطة بـ id المادة + filesFrom كما كانت)
+     ============================================================ */
+  var cfUI = {};          /* courseId → {q, sort} */
+  var cfUploading = {};   /* مفاتيح ملفات قيد الرفع (تمنع تكرار الرفع عند الضغط المتكرر/إعادة المحاولة) */
+  window.__cfFiles = {};  /* آخر قائمة محمّلة لكل مادة (للتحقق من التكرار) */
+  function cfClean(name){ return window.SB && window.SB.displayFileName ? window.SB.displayFileName(name) : String(name || '').replace(/^\d+_/, ''); }
+  function cfExt(name){ var m = /\.([A-Za-z0-9]+)$/.exec(cfClean(name)); return m ? m[1].toLowerCase() : ''; }
+  var CF_SORTS = [['new', 'الأحدث'], ['old', 'الأقدم'], ['name', 'الاسم'], ['type', 'النوع'], ['size', 'الأكبر حجماً']];
+  function cfSort(files, mode){
+    var a = files.slice();
+    var by = {
+      new: function(x, y){ return String(y.createdAt || '').localeCompare(String(x.createdAt || '')); },
+      old: function(x, y){ return String(x.createdAt || '').localeCompare(String(y.createdAt || '')); },
+      name: function(x, y){ return cfClean(x.name).localeCompare(cfClean(y.name), 'ar'); },
+      type: function(x, y){ return cfExt(x.name).localeCompare(cfExt(y.name)) || cfClean(x.name).localeCompare(cfClean(y.name), 'ar'); },
+      size: function(x, y){ return (y.size || 0) - (x.size || 0); }
+    };
+    return a.sort(by[mode] || by.new);
+  }
+  function cfDate(iso){ try{ var d = new Date(iso); return isNaN(d) ? '' : d.toLocaleDateString('ar-JO'); }catch(e){ return ''; } }
+  function cfItems(files, courseId){
+    return files.map(function(f){
+      var nm = cfClean(f.name);
+      return '<div class="course-file-item">' +
+        '<div class="cf-icon">' + window.SB.getFileIcon(f.name) + '</div>' +
+        '<div class="cf-info"><div class="cf-name" title="' + esc(nm) + '">' + esc(nm) + '</div>' +
+        '<div class="cf-meta">' + window.SB.formatFileSize(f.size) + (f.createdAt ? ' · ' + esc(cfDate(f.createdAt)) : '') + '</div></div>' +
+        '<div class="cf-actions">' +
+          '<a class="btn btn-sm btn-ghost" href="' + esc(f.url) + '" target="_blank" rel="noopener" title="فتح" aria-label="فتح ' + esc(nm) + '">👁️</a>' +
+          '<a class="btn btn-sm btn-ghost" href="' + esc(f.url) + '" download="' + esc(nm) + '" rel="noopener" title="تنزيل" aria-label="تنزيل ' + esc(nm) + '">⬇️</a>' +
+          '<button type="button" class="btn btn-sm btn-danger" data-del-file="' + esc(f.path) + '" data-course="' + esc(courseId) + '" data-fname="' + esc(nm) + '" title="حذف" aria-label="حذف ' + esc(nm) + '">🗑</button>' +
+        '</div></div>';
+    }).join('');
+  }
+  function cfRender(list, courseId, files){
+    var ui = cfUI[courseId] || (cfUI[courseId] = { q: '', sort: 'new' });
+    var tools = files.length > 1 ?
+      '<div class="cf-tools"><input type="search" data-cf-q placeholder="🔍 بحث في الملفات" aria-label="بحث في الملفات" value="' + esc(ui.q) + '">' +
+      '<select data-cf-sort aria-label="ترتيب الملفات">' + CF_SORTS.map(function(s){ return '<option value="' + s[0] + '"' + (ui.sort === s[0] ? ' selected' : '') + '>' + s[1] + '</option>'; }).join('') + '</select></div>' : '';
+    list.innerHTML = tools + '<div class="cf-items"></div>';
+    var box = list.querySelector('.cf-items');
+    function paint(){
+      var q = ui.q.trim().toLowerCase();
+      var shown = cfSort(files.filter(function(f){ return !q || cfClean(f.name).toLowerCase().indexOf(q) > -1; }), ui.sort);
+      box.innerHTML = shown.length ? cfItems(shown, courseId) : '<div style="text-align:center;padding:10px;font-size:.75rem;color:var(--muted2)">ما في ملفات تطابق البحث</div>';
+      var count = document.querySelector('[data-files-count="' + courseId + '"]');
+      if(count) count.textContent = (q ? shown.length + ' من ' : '') + files.length + ' ملف';
+    }
+    paint();
+    var qi = list.querySelector('[data-cf-q]'), ss = list.querySelector('[data-cf-sort]');
+    if(qi) qi.addEventListener('input', function(){ ui.q = qi.value; paint(); });
+    if(ss) ss.addEventListener('change', function(){ ui.sort = ss.value; paint(); });
+    box.addEventListener('click', function(e){
+      var b = e.target.closest ? e.target.closest('[data-del-file]') : null; if(!b || b.disabled) return;
+      window.customConfirm('حذف الملف "' + b.dataset.fname + '"؟ لا يمكن التراجع.', async function(){
+        b.disabled = true; b.textContent = '…';
+        var ok = false;
+        try{ ok = await window.SB.deleteCourseFile(b.dataset.delFile); }catch(err){ ok = false; }
+        if(ok){ toast('🗑 حُذف', 'success', 1500); window.loadCourseFilesForCard(b.dataset.course); }
+        else { b.disabled = false; b.textContent = '🗑'; toast('فشل الحذف — تحقق من الاتصال وحاول مرة ثانية', 'warn', 2500); }
+      });
+    });
+  }
+
   window.loadCourseFilesForCard = async function(courseId){
     var list = document.querySelector('[data-files-list="' + courseId + '"]');
     var count = document.querySelector('[data-files-count="' + courseId + '"]');
@@ -527,72 +775,66 @@
         var rb = list.querySelector('[data-retry-files]');
         if(rb) rb.addEventListener('click', function(ev){
           ev.preventDefault();
+          list.innerHTML = '<div style="text-align:center;padding:10px;font-size:.75rem;color:var(--muted2)">جاري التحميل…</div>';
           window.SB.listCourseFilesMulti(folders, true).then(function(){ window.loadCourseFilesForCard(courseId); });
         });
         return;
       }
+      window.__cfFiles[courseId] = files;
       if(!files.length){
         list.innerHTML = '<div style="text-align:center;padding:10px;font-size:.75rem;color:var(--muted2)">ما في ملفات بعد</div>';
         if(count) count.textContent = '0 ملف';
         return;
       }
-      if(count) count.textContent = files.length + ' ملف';
-
-      var html = '';
-      files.forEach(function(f){
-        var icon = window.SB.getFileIcon(f.name);
-        var size = window.SB.formatFileSize(f.size);
-        html += '<div class="course-file-item">' +
-          '<div class="cf-icon">' + icon + '</div>' +
-          '<div class="cf-info">' +
-            '<div class="cf-name" title="' + esc(f.name) + '">' + esc(f.name.replace(/^\d+_/, '')) + '</div>' +
-            '<div class="cf-meta">' + size + '</div>' +
-          '</div>' +
-          '<div class="cf-actions">' +
-            '<a class="btn btn-sm btn-ghost" href="' + esc(f.url) + '" target="_blank" rel="noopener" title="فتح">👁️</a>' +
-            '<button class="btn btn-sm btn-danger" data-del-file="' + esc(f.path) + '" data-course="' + courseId + '" title="حذف">🗑</button>' +
-          '</div>' +
-        '</div>';
-      });
-      list.innerHTML = html;
-
-      list.querySelectorAll('[data-del-file]').forEach(function(b){
-        b.addEventListener('click', function(){
-          window.customConfirm('حذف الملف؟', async function(){
-            var ok = await window.SB.deleteCourseFile(b.dataset.delFile);
-            if(ok){ toast('🗑 حُذف', 'success', 1500); window.loadCourseFilesForCard(b.dataset.course); }
-            else toast('فشل الحذف', 'warn', 2000);
-          });
-        });
-      });
+      cfRender(list, courseId, files);
     }catch(e){
       list.innerHTML = '<div style="text-align:center;padding:10px;font-size:.75rem;color:var(--red)">فشل التحميل</div>';
     }
   };
 
+  function cfUploadBusy(courseId, busy){
+    document.querySelectorAll('[data-upload-course="' + courseId + '"]').forEach(function(b){
+      if(busy){ b.setAttribute('data-label', b.textContent); b.textContent = '⏳ جاري الرفع…'; b.disabled = true; }
+      else { b.textContent = b.getAttribute('data-label') || '📤 رفع ملف'; b.disabled = false; }
+    });
+  }
   window.handleCourseFileUpload = async function(courseId, file){
     if(!window.SB || !window.SB.uploadCourseFile){
       toast('خدمة الرفع غير متوفرة', 'warn', 2500); return;
     }
+    if(!file || !file.size){ toast('الملف فارغ', 'warn', 2500); return; }
     if(file.size > 25 * 1024 * 1024){
       toast('⚠️ الملف كبير — الحد 25 MB', 'warn', 3500); return;
     }
+    var key = [courseId, file.name, file.size, file.lastModified].join('|');
+    if(cfUploading[key]){ toast('هذا الملف قيد الرفع حالياً', 'info', 2000); return; }
+    /* نفس الاسم والحجم موجود؟ اسأل قبل رفع نسخة ثانية (يمنع تكرار الملفات عند إعادة المحاولة) */
+    var dupe = (window.__cfFiles[courseId] || []).some(function(f){ return cfClean(f.name) === file.name && f.size === file.size; });
+    if(dupe){
+      window.customConfirm('يوجد ملف بنفس الاسم والحجم بهذه المادة. تريد رفع نسخة ثانية؟', function(){ doUpload(); },
+        { title: 'ملف مكرر؟', icon: '📎', okLabel: 'ارفع نسخة ثانية', danger: false });
+      return;
+    }
+    return doUpload();
 
-    var progress = document.querySelector('[data-upload-progress="' + courseId + '"]');
-    if(progress){ progress.style.display = 'block'; progress.querySelector('.inner').style.width = '30%'; }
-    toast('📤 جاري الرفع...', 'info', 2000);
-
-    try{
-      var res = await window.SB.uploadCourseFile(courseId, file);
-      if(progress) progress.querySelector('.inner').style.width = '100%';
-      setTimeout(function(){ if(progress) progress.style.display = 'none'; }, 800);
-
-      if(res.error){ toast('❌ ' + res.error, 'warn', 3500); return; }
-      toast('✅ تم الرفع!', 'success', 2000);
-      window.loadCourseFilesForCard(courseId);
-    }catch(e){
-      if(progress) progress.style.display = 'none';
-      toast('فشل الرفع', 'warn', 2500);
+    async function doUpload(){
+      cfUploading[key] = true; cfUploadBusy(courseId, true);
+      var progress = document.querySelector('[data-upload-progress="' + courseId + '"]');
+      if(progress){ progress.style.display = 'block'; progress.querySelector('.inner').style.width = '30%'; }
+      toast('📤 جاري الرفع...', 'info', 2000);
+      try{
+        var res = await window.SB.uploadCourseFile(courseId, file);
+        if(progress) progress.querySelector('.inner').style.width = '100%';
+        setTimeout(function(){ if(progress) progress.style.display = 'none'; }, 800);
+        if(res.error){ toast('❌ فشل الرفع: ' + res.error + ' — يمكنك المحاولة مرة ثانية', 'warn', 4000); return; }
+        toast('✅ تم الرفع!', 'success', 2000);
+        window.loadCourseFilesForCard(courseId);
+      }catch(e){
+        if(progress) progress.style.display = 'none';
+        toast('فشل الرفع — تحقق من الاتصال وحاول مرة ثانية', 'warn', 3000);
+      }finally{
+        delete cfUploading[key]; cfUploadBusy(courseId, false);
+      }
     }
   };
 

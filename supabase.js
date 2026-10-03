@@ -125,11 +125,18 @@
     var k = ensureCode();
     var path = k + '/courses/' + courseId;
     try{
-      var res = await c.storage.from(CFG.bucket).list(path, {
-        limit: 100, sortBy: {column:'created_at', order:'desc'}
-      });
-      if(res.error){ if(!unloading) console.warn('list files error:', res.error); return null; }
-      return (res.data || []).map(function(f){
+      /* صفحات من 100 (حتى 1000 ملف): فشل أي صفحة = null حتى لا تظهر قائمة ناقصة كأنها كاملة */
+      var rows = [];
+      for(var page = 0; page < 10; page++){
+        var res = await c.storage.from(CFG.bucket).list(path, {
+          limit: 100, offset: page * 100, sortBy: {column:'created_at', order:'desc'}
+        });
+        if(res.error){ if(!unloading) console.warn('list files error:', res.error); return null; }
+        var got = res.data || [];
+        rows = rows.concat(got);
+        if(got.length < 100) break;
+      }
+      return rows.map(function(f){
         var urlRes = c.storage.from(CFG.bucket).getPublicUrl(path + '/' + f.name);
         return {
           name: f.name,
@@ -143,10 +150,27 @@
     }catch(e){ if(!unloading) console.warn('listCourseFiles failed:', e); return null; }
   }
 
+  /* اسم التخزين: ASCII آمن للمفتاح + (إن اختلف عن الأصل) الاسم الأصلي بالـ hex بعد __x ليظهر بالعربي. الملفات القديمة تبقى كما هي. */
+  function toHex(s){ var b = unescape(encodeURIComponent(s)), o = ''; for(var i = 0; i < b.length; i++) o += ('0' + b.charCodeAt(i).toString(16)).slice(-2); return o; }
+  function fromHex(h){ try{ var b = ''; for(var i = 0; i < h.length; i += 2) b += String.fromCharCode(parseInt(h.substr(i, 2), 16)); return decodeURIComponent(escape(b)); }catch(e){ return null; } }
+  function storedFileName(orig){
+    orig = String(orig || 'file');
+    var m = /(\.[A-Za-z0-9]{1,10})$/.exec(orig), ext = m ? m[1] : '', base = ext ? orig.slice(0, -ext.length) : orig;
+    var ascii = base.replace(/[^\w\-]/g, '_').replace(/_+/g, '_').slice(0, 40) || 'file';
+    var plain = base.replace(/[^\w.\-]/g, '_');
+    if(plain === base && base.length <= 80) return Date.now() + '_' + base + ext;   /* اسم ASCII بسيط: كما كان */
+    var keep = base; while(toHex(keep + ext).length > 200 && keep.length > 1) keep = keep.slice(0, -1);
+    return Date.now() + '_' + ascii + '__x' + toHex(keep + ext) + ext;
+  }
+  function displayFileName(stored){
+    var s = String(stored || ''), m = /^\d+_.*__x([0-9a-f]+)(?:\.[A-Za-z0-9]{1,10})?$/.exec(s);
+    if(m){ var d = fromHex(m[1]); if(d) return d; }
+    return s.replace(/^\d+_/, '');
+  }
   async function uploadCourseFile(courseId, file){
     var c = init(); if(!c) return {error: 'no client'};
     var k = ensureCode();
-    var safeName = Date.now() + '_' + String(file.name || 'file').replace(/[^\w.\-]/g, '_');
+    var safeName = storedFileName(file.name);
     var path = k + '/courses/' + courseId + '/' + safeName;
     try{
       var res = await c.storage.from(CFG.bucket).upload(path, file, {
@@ -264,6 +288,8 @@
     listCourseFiles: listCourseFiles,
     listCourseFilesMulti: listCourseFilesMulti,
     uploadCourseFile: uploadCourseFile,
+    displayFileName: displayFileName,
+    storedFileName: storedFileName,
     deleteCourseFile: deleteCourseFile,
     formatFileSize: formatFileSize,
     getFileIcon: getFileIcon,

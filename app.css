@@ -1245,3 +1245,47 @@ body::before,body::after{animation:none}
 .dl-foot .grp{display:flex;gap:8px;flex-wrap:wrap}
 .dl-empty{text-align:center;color:var(--muted);font-size:.84rem;padding:18px;border:1px dashed var(--border);border-radius:12px}
 .dash-allhidden{grid-column:1/-1;text-align:center;color:var(--muted);padding:34px 16px;border:1px dashed var(--border);border-radius:14px;font-size:.9rem}
+/* ============ المهام: مجموعات، أولوية، حالة، فرز، إضافة سريعة ============ */
+.task-sort{display:inline-flex;align-items:center;gap:6px;margin-inline-start:auto;font-size:.78rem;color:var(--muted)}
+.task-sort select{background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:6px 10px;font-family:inherit;font-size:.82rem;min-height:34px}
+.task-quick{display:flex;gap:8px;margin:0 0 14px}
+.task-quick input{flex:1;min-width:0;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:11px;padding:10px 14px;font-family:inherit;font-size:.9rem;transition:border-color .18s,box-shadow .18s}
+.task-quick input:focus{outline:none;border-color:var(--cyan);box-shadow:var(--ring)}
+.task-group{display:flex;align-items:center;gap:8px;margin:16px 2px 8px;font-size:.78rem;font-weight:700;color:var(--muted)}
+.task-group:first-child{margin-top:4px}
+.task-group b{background:var(--card2);border:1px solid var(--border);border-radius:999px;padding:0 8px;font-size:.72rem;color:var(--text)}
+.task-group.over{color:var(--red)}
+.task-group.today{color:var(--amber)}
+.task-group.done{color:var(--green)}
+.task .task-check{cursor:pointer}
+.task .task-check:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.task.prio-high{border-inline-start:3px solid var(--red)}
+.prio-chip,.status-chip,.due-chip{display:inline-flex;align-items:center;gap:3px;font-size:.72rem;font-weight:600}
+.prio-chip.high{color:var(--red)}
+.prio-chip.low{color:var(--muted)}
+.status-chip{color:var(--cyan)}
+.due-chip.over{color:var(--red);font-weight:700}
+.due-chip.soon{color:var(--amber);font-weight:700}
+.task-actions{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.exam-card.past{opacity:.6}
+/* ============ ملفات المادة: أدوات البحث والفرز ============ */
+.cf-tools{display:flex;gap:6px;margin-bottom:8px}
+.cf-tools input{flex:1;min-width:0;background:var(--card2);color:var(--text);border:1px solid var(--border);border-radius:9px;padding:7px 10px;font-family:inherit;font-size:.8rem}
+.cf-tools select{background:var(--card2);color:var(--text);border:1px solid var(--border);border-radius:9px;padding:6px 8px;font-family:inherit;font-size:.78rem}
+.cf-tools input:focus,.cf-tools select:focus{outline:none;border-color:var(--cyan);box-shadow:var(--ring)}
+.upload-course-btn:disabled{opacity:.6;cursor:progress}
+/* تباين شارات الأنواع بالثيمات الفاتحة */
+[data-theme="ivory"] .badge.assignment,[data-theme="sky"] .badge.assignment{background:rgba(120,120,120,.10)}
+
+/* ============ مقبض سحب المهام + زر الأدوات الجانبية أقل تطفلاً ============ */
+.task-handle{cursor:grab;touch-action:none;background:transparent;border:0;color:var(--muted);font-size:1.1rem;padding:4px 8px;border-radius:7px;font-family:inherit;min-height:34px}
+.task-handle:hover,.task-handle:focus-visible{color:var(--text);background:var(--card2)}
+.task.dragging{opacity:.55;border-color:var(--cyan)}
+.task.drop-before{box-shadow:0 -3px 0 var(--cyan)}
+.task.drop-after{box-shadow:0 3px 0 var(--cyan)}
+/* زر 🎯 على الحافة اليسرى كان يغطي أزرار البطاقات: صار شريطاً نحيفاً شبه شفاف يتوسّع عند التحويم/التركيز، والمحتوى يترك له مساحة */
+body .lw-expand-btn{width:20px;opacity:.55;font-size:.95rem;transition:width .2s ease,opacity .2s ease,background .2s}
+body .lw-expand-btn:hover,body .lw-expand-btn:focus-visible{width:42px;opacity:1}
+@media (max-width:900px){body .lw-expand-btn{width:20px;height:54px;font-size:.95rem}body .lw-expand-btn:hover,body .lw-expand-btn:focus-visible{width:44px}}
+main{padding-left:max(24px,env(safe-area-inset-left))}
+@media (max-width:900px){main{padding-left:24px}}
