@@ -88,20 +88,16 @@
       <h2 class="page-title">📊 لوحة التحكم</h2>
       <p class="page-sub" id="greetLine">—</p>
     </div>
-    <!-- يومي الجامعي: حالة المحاضرة الحالية/القادمة + مهام وامتحانات وإنجاز اليوم (يُبنى من hub.js) -->
-    <section class="myday" id="myDay" aria-label="يومي الجامعي"></section>
-    <div class="daily-quote">
-      <div class="quote-text" id="dailyQuoteText">—</div>
-      <div class="quote-author" id="dailyQuoteAuthor">—</div>
-    </div>
-    <div class="card" style="margin-bottom:16px">
+    <!-- الترتيب الافتراضي الحقيقي (DOM): تقدم الترم ← الأرقام ← يومي الجامعي ← المؤقت والميزانية ← الاقتباس ← LMS ← الإحصائيات المتقدمة ← التحليلات المتقدمة. كل قسم له data-dsec، وتخصيص المستخدم يُدار من hub.js (DashLayout) ويُحفظ محلياً في dash_layout -->
+    <div class="card dash-term" data-dsec="term">
       <div class="card-head"><h3>🎓 تقدم الترم</h3>
         <span class="card-action" data-goto="gradecalc">علاماتي ←</span></div>
       <div id="dashTermProgress"></div>
     </div>
-    <div class="grid grid-4" style="margin-bottom:20px" id="dashStats"></div>
-    <div class="grid grid-2" style="margin-bottom:16px">
-      <div class="mini-timer">
+    <div class="grid grid-4" id="dashStats" data-dsec="stats"></div>
+    <!-- يومي الجامعي: حالة المحاضرة الحالية/القادمة + مهام وامتحانات وإنجاز اليوم (يُبنى من hub.js) -->
+    <section class="myday" id="myDay" data-dsec="myday" aria-label="يومي الجامعي"></section>
+    <div class="mini-timer" data-dsec="timer" data-half>
         <div class="ring">
           <svg viewBox="0 0 56 56">
             <defs><linearGradient id="miniGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -117,18 +113,23 @@
           <div class="time" id="miniTime">25:00</div>
         </div>
         <div style="display:flex;gap:6px">
-          <button class="btn btn-sm" id="miniStartBtn">▶</button>
-          <button class="btn btn-sm btn-ghost" id="miniResetBtn">↺</button>
+          <button class="btn btn-sm" id="miniStartBtn" aria-label="ابدأ المؤقت">▶</button>
+          <button class="btn btn-sm btn-ghost" id="miniResetBtn" aria-label="إعادة ضبط المؤقت">↺</button>
         </div>
-      </div>
-      <div class="card">
-        <div class="card-head"><h3>💰 نظرة الميزانية</h3>
-          <span class="card-action" data-goto="budget">التفاصيل ←</span></div>
-        <div id="dashBudget"></div>
-      </div>
     </div>
+    <div class="card" data-dsec="budget" data-half>
+      <div class="card-head"><h3>💰 نظرة الميزانية</h3>
+        <span class="card-action" data-goto="budget">التفاصيل ←</span></div>
+      <div id="dashBudget"></div>
+    </div>
+    <div class="daily-quote" data-dsec="quote">
+      <div class="quote-text" id="dailyQuoteText">—</div>
+      <div class="quote-author" id="dailyQuoteAuthor">—</div>
+    </div>
+    <div class="dash-slot" id="slotLms" data-dsec="lms"></div>
+    <div class="dash-slot" id="slotEnhanced" data-dsec="enhanced"></div>
+    <div class="dash-slot" id="slotInsights" data-dsec="insights"></div>
   </section>
-
   <section id="timetable" class="section">
     <div class="page-head"><h2 class="page-title">📅 الجدول الأسبوعي</h2>
       <p class="page-sub">أضف يدويًا، أو ارفع صورة جدولك</p></div>

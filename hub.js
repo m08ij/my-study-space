@@ -767,6 +767,8 @@
       ['📥', 'استيراد نسخة احتياطية', 'restore import', '', function(){ window.restoreFromFile(); }],
       ['☁️', 'المزامنة السحابية', 'sync cloud مزامنة', '', function(){ if(window.SB) window.SB.showSyncPanel(); }],
       ['🖨️', 'طباعة / تصدير PDF', 'print pdf طباعة', '', function(){ window.exportPDF(); }],
+      ['🧩', 'تخصيص لوحة التحكم', 'customize dashboard تخصيص لوحة', '', function(){ window.switchTab('dashboard'); dsOpenEditor(); }],
+      ['↺', 'استعادة ترتيب لوحة التحكم الافتراضي', 'reset dashboard layout استعادة ترتيب', '', function(){ window.switchTab('dashboard'); dsConfirmReset(); }],
       ['⌨️', 'عرض الاختصارات', 'help shortcuts مساعدة اختصارات', '؟', function(){ openPalette('help'); }]
     ];
     act.forEach(function(a){ out.push({ cat: 'أوامر', icon: a[0], label: a[1], kw: a[2], hint: a[3], run: a[4] }); });
@@ -889,6 +891,212 @@
   });
 
   /* ============================================================
+     3) تخصيص لوحة التحكم (DashLayout)
+     - الترتيب الافتراضي الحقيقي هو ترتيب DOM في index.html (عناصر data-dsec).
+     - التخصيص يُحفظ محلياً فقط في localStorage['dash_layout'] = {v, order, hidden}؛ لا يدخل في المزامنة ولا يمس أي بيانات.
+     - order يشمل كل الأقسام (المخفية أيضاً) فتعود لمكانها عند إظهارها. أقسام جديدة بإصدار لاحق تُدرج بعد سابقها الافتراضي.
+     ============================================================ */
+  var DASH_KEY = 'dash_layout';
+  var DASH_SECTIONS = [
+    { id: 'term', name: 'تقدم الترم', icon: '🎓' },
+    { id: 'stats', name: 'الأرقام الرئيسية', icon: '🔢' },
+    { id: 'myday', name: 'يومي الجامعي', icon: '🧭' },
+    { id: 'timer', name: 'مؤقت التركيز', icon: '⏱️' },
+    { id: 'budget', name: 'نظرة الميزانية', icon: '💰' },
+    { id: 'quote', name: 'الاقتباس اليومي', icon: '💬' },
+    { id: 'lms', name: 'روابط LMS HU السريعة', icon: '🔗' },
+    { id: 'enhanced', name: 'الإحصائيات المتقدمة', icon: '📊' },
+    { id: 'insights', name: 'التحليلات المتقدمة', icon: '📈' }
+  ];
+  var dsById = {}; DASH_SECTIONS.forEach(function(s){ dsById[s.id] = s; });
+  var dsState = null;
+
+  function dsDefault(){ return { order: DASH_SECTIONS.map(function(s){ return s.id; }), hidden: [] }; }
+  function dsClone(st){ return { order: st.order.slice(), hidden: st.hidden.slice() }; }
+  function dsEqual(a, b){ return a.order.join() === b.order.join() && a.hidden.slice().sort().join() === b.hidden.slice().sort().join(); }
+  /* تنظيف أي تخصيص محفوظ: يتجاهل المجهول والمكرر، ويضيف الأقسام الجديدة بأماكنها الافتراضية */
+  function dsNormalize(raw){
+    var order = [], seen = {};
+    if(raw && Array.isArray(raw.order)) raw.order.forEach(function(id){ if(dsById[id] && !seen[id]){ seen[id] = true; order.push(id); } });
+    DASH_SECTIONS.forEach(function(s, i){
+      if(seen[s.id]) return;
+      seen[s.id] = true;
+      var at = 0;
+      if(i > 0){ var p = order.indexOf(DASH_SECTIONS[i - 1].id); at = p > -1 ? p + 1 : order.length; }
+      order.splice(at, 0, s.id);
+    });
+    var hidden = [], hs = {};
+    if(raw && Array.isArray(raw.hidden)) raw.hidden.forEach(function(id){ if(dsById[id] && !hs[id]){ hs[id] = true; hidden.push(id); } });
+    return { order: order, hidden: hidden };
+  }
+  function dsLoad(){
+    try{ var v = localStorage.getItem(DASH_KEY); if(v) return dsNormalize(JSON.parse(v)); }catch(e){}
+    return dsDefault();
+  }
+  function dsSave(st){
+    try{
+      if(dsEqual(st, dsDefault())) localStorage.removeItem(DASH_KEY);
+      else localStorage.setItem(DASH_KEY, JSON.stringify({ v: 1, order: st.order, hidden: st.hidden }));
+      return true;
+    }catch(e){ return false; }
+  }
+  function dsEl(id){ return document.querySelector('#dashboard [data-dsec="' + id + '"]'); }
+  /* تطبيق الحالة على الـ DOM: إعادة ترتيب العقد نفسها (بدون إعادة بناء) + إخفاء العرض فقط */
+  function dsApply(st){
+    var dash = document.getElementById('dashboard'); if(!dash) return;
+    dsState = st;
+    var vis = [];
+    st.order.forEach(function(id){
+      var el = dsEl(id); if(!el) return;
+      dash.appendChild(el);
+      var off = st.hidden.indexOf(id) > -1;
+      el.classList.toggle('dash-hidden', off);
+      el.classList.remove('dash-solo');
+      if(!off) vis.push(el);
+    });
+    /* النصفية (المؤقت/الميزانية) تتجاور بعمودين؛ المنفردة تأخذ العرض كاملاً */
+    for(var i = 0; i < vis.length; i++){
+      if(!vis[i].hasAttribute('data-half')) continue;
+      if(vis[i + 1] && vis[i + 1].hasAttribute('data-half')){ i++; continue; }
+      vis[i].classList.add('dash-solo');
+    }
+    var note = document.getElementById('dashAllHidden');
+    if(!vis.length){
+      if(!note){
+        note = document.createElement('div'); note.id = 'dashAllHidden'; note.className = 'dash-allhidden';
+        note.innerHTML = 'كل أقسام لوحة التحكم مخفية. افتح القائمة <b>⋯</b> أعلى الصفحة ← «تخصيص لوحة التحكم» لإظهارها.';
+      }
+      dash.appendChild(note);
+    } else if(note) note.remove();
+  }
+  function dsReset(){ try{ localStorage.removeItem(DASH_KEY); }catch(e){} dsApply(dsDefault()); }
+
+  function dsConfirmReset(done){
+    var run = function(){ dsReset(); if(window.toast) window.toast('تمت استعادة الترتيب الافتراضي', 'success'); if(done) done(); };
+    if(window.customConfirm) window.customConfirm('استعادة الترتيب الافتراضي وإظهار كل الأقسام التي أخفيتها؟', run); else if(confirm('استعادة الترتيب الافتراضي؟')) run();
+  }
+
+  /* --- نافذة التخصيص --- */
+  function dsOpenEditor(){
+    if(document.querySelector('.dl-editor')) return;
+    var snapshot = dsClone(dsState || dsLoad()), work = dsClone(snapshot), saved = false, drag = null;
+    var sheet = openSheet({ title: 'تخصيص لوحة التحكم', onClose: function(){ if(!saved) dsApply(snapshot); } });
+    sheet.body.classList.add('dl-editor');
+    function visIds(){ return work.order.filter(function(id){ return work.hidden.indexOf(id) < 0; }); }
+    function hidIds(){ return work.order.filter(function(id){ return work.hidden.indexOf(id) > -1; }); }
+    function commit(focus){ dsApply(work); render(focus); }
+    function move(id, dir){
+      var v = visIds(), i = v.indexOf(id), t = v[i + dir]; if(i < 0 || !t) return;
+      var a = work.order.indexOf(id), b = work.order.indexOf(t); work.order[a] = t; work.order[b] = id;
+      commit('h:' + id);
+    }
+    function moveTo(id, targetId, before){
+      if(id === targetId) return;
+      work.order.splice(work.order.indexOf(id), 1);
+      var t = work.order.indexOf(targetId); work.order.splice(before ? t : t + 1, 0, id);
+      commit('h:' + id);
+    }
+    function row(id, off){
+      var s = dsById[id], v = visIds(), i = v.indexOf(id);
+      if(off) return '<li class="dl-row off" data-id="' + id + '"><span class="dl-name">' + s.icon + ' ' + esc(s.name) + '</span>' +
+        '<button type="button" class="dl-btn" data-act="show" data-id="' + id + '" data-f="s:' + id + '" aria-label="إضافة ' + esc(s.name) + ' للوحة">＋ إضافة</button></li>';
+      return '<li class="dl-row" data-id="' + id + '"><button type="button" class="dl-handle" data-handle="' + id + '" data-f="h:' + id + '" aria-label="نقل ' + esc(s.name) + ' (اسحب، أو استخدم أسهم لوحة المفاتيح)" title="اسحب لإعادة الترتيب">⠿</button>' +
+        '<span class="dl-name">' + s.icon + ' ' + esc(s.name) + '</span>' +
+        '<button type="button" class="dl-btn" data-act="up" data-id="' + id + '" data-f="u:' + id + '" aria-label="تحريك ' + esc(s.name) + ' للأعلى"' + (i === 0 ? ' disabled' : '') + '>▲</button>' +
+        '<button type="button" class="dl-btn" data-act="down" data-id="' + id + '" data-f="d:' + id + '" aria-label="تحريك ' + esc(s.name) + ' للأسفل"' + (i === v.length - 1 ? ' disabled' : '') + '>▼</button>' +
+        '<button type="button" class="dl-btn" data-act="hide" data-id="' + id + '" data-f="x:' + id + '" aria-label="إخفاء ' + esc(s.name) + '">🙈 إخفاء</button></li>';
+    }
+    function render(focus){
+      var v = visIds(), h = hidIds(), dirty = !dsEqual(work, snapshot);
+      sheet.body.innerHTML =
+        '<p class="dl-note">اسحب المقبض ⠿ (أو اضغط عليه واستخدم الأسهم ↑ ↓) لترتيب الأقسام. الإخفاء يخفي العرض فقط ولا يحذف أي بيانات.</p>' +
+        '<div class="dl-group">الأقسام الظاهرة (' + v.length + ')</div>' +
+        (v.length ? '<ul class="dl-list" id="dlVisible">' + v.map(function(id){ return row(id, false); }).join('') + '</ul>' : '<div class="dl-empty">لا توجد أقسام ظاهرة — أضف قسماً من القائمة بالأسفل.</div>') +
+        '<div class="dl-group">الأقسام المخفية (' + h.length + ')</div>' +
+        (h.length ? '<ul class="dl-list">' + h.map(function(id){ return row(id, true); }).join('') + '</ul>' : '<div class="dl-empty">لا توجد أقسام مخفية.</div>') +
+        '<div class="dl-foot"><div class="grp"><button type="button" class="btn" data-act="save">✓ حفظ التغييرات</button>' +
+        '<button type="button" class="btn btn-ghost" data-act="cancel">إلغاء' + (dirty ? ' التعديلات' : '') + '</button></div>' +
+        '<button type="button" class="btn btn-ghost" data-act="reset">↺ استعادة الترتيب الافتراضي</button></div>';
+      if(focus){ var f = sheet.body.querySelector('[data-f="' + focus + '"]'); if(f && !f.disabled) f.focus(); else { var a = sheet.body.querySelector('[data-f="' + focus.replace(/^[udhx]:/, 'h:') + '"]'); if(a) a.focus(); } }
+    }
+    sheet.body.addEventListener('click', function(e){
+      var b = e.target.closest ? e.target.closest('[data-act]') : null; if(!b) return;
+      var act = b.getAttribute('data-act'), id = b.getAttribute('data-id');
+      if(act === 'up') move(id, -1);
+      else if(act === 'down') move(id, 1);
+      else if(act === 'hide'){ var v = visIds(), nx = v[v.indexOf(id) + 1] || v[v.indexOf(id) - 1]; if(work.hidden.indexOf(id) < 0) work.hidden.push(id); commit(nx ? 'h:' + nx : null); }
+      else if(act === 'show'){ work.hidden = work.hidden.filter(function(x){ return x !== id; }); commit('h:' + id); }
+      else if(act === 'save'){
+        if(!dsSave(work)){ if(window.toast) window.toast('تعذر حفظ التخصيص (التخزين المحلي غير متاح)', 'error'); return; }
+        saved = true; dsApply(work); sheet.close(); if(window.toast) window.toast('تم حفظ تخصيص اللوحة', 'success');
+      }
+      else if(act === 'cancel') sheet.close();
+      else if(act === 'reset'){
+        dsConfirmReset(function(){ snapshot = dsDefault(); work = dsClone(snapshot); saved = false; render('h:' + work.order[0]); });
+      }
+    });
+    /* بديل لوحة المفاتيح للسحب: ↑ ↓ على المقبض */
+    sheet.body.addEventListener('keydown', function(e){
+      var h = e.target.closest ? e.target.closest('[data-handle]') : null; if(!h || e.altKey || e.ctrlKey || e.metaKey) return;
+      if(e.key === 'ArrowUp' || e.key === 'ArrowDown'){ e.preventDefault(); move(h.getAttribute('data-handle'), e.key === 'ArrowUp' ? -1 : 1); }
+    });
+    /* السحب بالمؤشر (ماوس/لمس/قلم) عبر Pointer Events */
+    function clearMarks(){ sheet.body.querySelectorAll('.drop-before,.drop-after,.dragging').forEach(function(r){ r.classList.remove('drop-before', 'drop-after', 'dragging'); }); }
+    sheet.body.addEventListener('pointerdown', function(e){
+      var h = e.target.closest ? e.target.closest('[data-handle]') : null; if(!h || (e.button !== undefined && e.button > 0)) return;
+      e.preventDefault();
+      drag = { id: h.getAttribute('data-handle'), target: null, before: true, pid: e.pointerId, h: h };
+      try{ h.setPointerCapture(e.pointerId); }catch(err){}
+      h.closest('.dl-row').classList.add('dragging');
+    });
+    sheet.body.addEventListener('pointermove', function(e){
+      if(!drag || e.pointerId !== drag.pid) return;
+      var under = document.elementFromPoint(e.clientX, e.clientY), r = under && under.closest ? under.closest('#dlVisible .dl-row') : null;
+      sheet.body.querySelectorAll('.drop-before,.drop-after').forEach(function(x){ x.classList.remove('drop-before', 'drop-after'); });
+      if(!r || r.getAttribute('data-id') === drag.id){ drag.target = null; return; }
+      var b = r.getBoundingClientRect(); drag.before = e.clientY < b.top + b.height / 2; drag.target = r.getAttribute('data-id');
+      r.classList.add(drag.before ? 'drop-before' : 'drop-after');
+    });
+    function endDrag(e, apply){
+      if(!drag || (e && e.pointerId !== drag.pid)) return;
+      var d = drag; drag = null; clearMarks();
+      try{ d.h.releasePointerCapture(d.pid); }catch(err){}
+      if(apply && d.target) moveTo(d.id, d.target, d.before);
+    }
+    sheet.body.addEventListener('pointerup', function(e){ endDrag(e, true); });
+    sheet.body.addEventListener('pointercancel', function(e){ endDrag(e, false); });
+    render('h:' + (visIds()[0] || ''));
+  }
+
+  /* --- قائمة ⋯ الصغيرة في عنوان لوحة التحكم --- */
+  function dsBuildMenu(){
+    var head = document.querySelector('#dashboard > .page-head'); if(!head || document.getElementById('dashMore')) return;
+    var wrap = document.createElement('div'); wrap.className = 'dash-more'; wrap.id = 'dashMore';
+    wrap.innerHTML = '<button type="button" class="dash-more-btn" id="dashMoreBtn" aria-haspopup="menu" aria-expanded="false" aria-controls="dashMoreMenu" aria-label="خيارات لوحة التحكم" title="خيارات لوحة التحكم">⋯</button>' +
+      '<div class="dash-more-menu" id="dashMoreMenu" role="menu" hidden>' +
+      '<button type="button" role="menuitem" data-m="edit">✏️ تخصيص لوحة التحكم</button>' +
+      '<button type="button" role="menuitem" data-m="reset">↺ استعادة الترتيب الافتراضي</button></div>';
+    head.appendChild(wrap);
+    var btn = wrap.querySelector('#dashMoreBtn'), menu = wrap.querySelector('#dashMoreMenu');
+    function close(focusBtn){ menu.hidden = true; btn.setAttribute('aria-expanded', 'false'); if(focusBtn) btn.focus(); }
+    function open(){ menu.hidden = false; btn.setAttribute('aria-expanded', 'true'); var f = menu.querySelector('button'); if(f) f.focus(); }
+    btn.addEventListener('click', function(){ if(menu.hidden) open(); else close(); });
+    menu.addEventListener('click', function(e){
+      var b = e.target.closest ? e.target.closest('[data-m]') : null; if(!b) return;
+      var m = b.getAttribute('data-m'); close(false);
+      if(m === 'edit') dsOpenEditor(); else dsConfirmReset();
+    });
+    wrap.addEventListener('keydown', function(e){
+      if(e.key === 'Escape' && !menu.hidden){ e.stopPropagation(); close(true); return; }
+      if(menu.hidden) return;
+      var items = Array.prototype.slice.call(menu.querySelectorAll('button')), i = items.indexOf(document.activeElement);
+      if(e.key === 'ArrowDown'){ e.preventDefault(); items[(i + 1) % items.length].focus(); }
+      else if(e.key === 'ArrowUp'){ e.preventDefault(); items[(i - 1 + items.length) % items.length].focus(); }
+    });
+    document.addEventListener('click', function(e){ if(!menu.hidden && !wrap.contains(e.target)) close(false); });
+  }
+  window.DashLayout = { sections: DASH_SECTIONS, load: dsLoad, apply: dsApply, reset: dsReset, edit: dsOpenEditor, state: function(){ return dsState ? dsClone(dsState) : null; } };
+  /* ============================================================
      ربط مع التطبيق: تحديث لوحة اليوم مع renderDashboard، وزر لوحة الأوامر بالإعدادات
      ============================================================ */
   if(typeof window.renderDashboard === 'function' && !window._hubDashWrapped){
@@ -925,6 +1133,8 @@
     }
     wrapSwitchTab();
     markFab();
+    dsBuildMenu();
+    dsApply(dsLoad());
   }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initUI); else initUI();
 
