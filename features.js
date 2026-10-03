@@ -600,6 +600,17 @@
 
     try{
       var files = await window.SB.listCourseFiles(courseId);
+      if(files === null){
+        list.innerHTML = '<div style="text-align:center;padding:10px;font-size:.75rem;color:var(--muted2)">تعذّر تحميل الملفات (تحقق من الاتصال) ' +
+          '<a href="#" data-retry-files="' + esc(courseId) + '" style="color:var(--cyan)">إعادة المحاولة</a></div>';
+        if(count) count.textContent = '—';
+        var rb = list.querySelector('[data-retry-files]');
+        if(rb) rb.addEventListener('click', function(ev){
+          ev.preventDefault();
+          window.SB.listCourseFiles(courseId, true).then(function(){ window.loadCourseFilesForCard(courseId); });
+        });
+        return;
+      }
       if(!files.length){
         list.innerHTML = '<div style="text-align:center;padding:10px;font-size:.75rem;color:var(--muted2)">ما في ملفات بعد</div>';
         if(count) count.textContent = '0 ملف';

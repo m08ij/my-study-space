@@ -1,7 +1,7 @@
 /* ============================================================
    sw.js v62 — Cache Clean (بدون ملفات محذوفة)
    ============================================================ */
-var CACHE_NAME = 'ss-cache-v66';
+var CACHE_NAME = 'ss-cache-v67';
 var URLS_TO_CACHE = [
   './', './index.html', './app.css',
   './core.js', './data.js', './supabase.js',

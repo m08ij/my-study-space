@@ -72,15 +72,30 @@
     }catch(e){ console.warn('Supabase save failed:', e); return false; }
   }
 
-  async function listCourseFiles(courseId){
-    var c = init(); if(!c) return [];
+  /* كاش قصير + دمج الطلبات المتزامنة: renderCourses بتنادي لكل مادة أكثر من مرة */
+  var FILES_TTL = 30000;
+  var filesCache = {};
+  window.__perfClearFileCache = function(){ filesCache = {}; };
+
+  /* يرجّع null عند الفشل (غير [] = ما في ملفات) */
+  function listCourseFiles(courseId, force){
+    var hit = filesCache[courseId];
+    if(!force && hit && Date.now() - hit.ts < FILES_TTL) return hit.promise;
+    var p = fetchCourseFiles(courseId);
+    filesCache[courseId] = { ts: Date.now(), promise: p };
+    p.then(function(r){ if(r === null && filesCache[courseId] && filesCache[courseId].promise === p) delete filesCache[courseId]; });
+    return p;
+  }
+
+  async function fetchCourseFiles(courseId){
+    var c = init(); if(!c) return null;
     var k = ensureCode();
     var path = k + '/courses/' + courseId;
     try{
       var res = await c.storage.from(CFG.bucket).list(path, {
         limit: 100, sortBy: {column:'created_at', order:'desc'}
       });
-      if(res.error){ console.warn('list files error:', res.error); return []; }
+      if(res.error){ console.warn('list files error:', res.error); return null; }
       return (res.data || []).map(function(f){
         var urlRes = c.storage.from(CFG.bucket).getPublicUrl(path + '/' + f.name);
         return {
@@ -92,7 +107,7 @@
           path: path + '/' + f.name
         };
       });
-    }catch(e){ console.warn('listCourseFiles failed:', e); return []; }
+    }catch(e){ console.warn('listCourseFiles failed:', e); return null; }
   }
 
   async function uploadCourseFile(courseId, file){
@@ -107,6 +122,7 @@
         cacheControl: '3600'
       });
       if(res.error) return {error: res.error.message || 'فشل الرفع'};
+      delete filesCache[courseId];
       var urlRes = c.storage.from(CFG.bucket).getPublicUrl(path);
       return {url: urlRes.data.publicUrl, path: path, name: safeName};
     }catch(e){ return {error: e.message || 'خطأ غير متوقع'}; }
@@ -116,6 +132,7 @@
     var c = init(); if(!c) return false;
     try{
       var res = await c.storage.from(CFG.bucket).remove([path]);
+      if(!res.error) filesCache = {};
       return !res.error;
     }catch(e){ return false; }
   }
