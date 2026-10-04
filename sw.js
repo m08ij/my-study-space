@@ -1,7 +1,7 @@
 /* ============================================================
    sw.js — شبكة أولاً + كاش احتياطي (v90)
    ============================================================ */
-var CACHE_NAME = 'ss-cache-v104';
+var CACHE_NAME = 'ss-cache-v105';
 var URLS_TO_CACHE = [
   './', './index.html', './app.css', './css/01-base.css', './css/02-motion-themes.css', './css/03-hub-dashboard-welcome.css', './css/04-responsive-components-phases.css',
   './core.js', './data.js', './supabase.js',
@@ -9,7 +9,7 @@ var URLS_TO_CACHE = [
   './course-sync.js',    
   './extras.js', './hub.js', './study.js', './budget-plan.js', './progress.js', './ux.js', './ics-import.js', './ai-context.js',
   './pwa.js', './app.js', './tests.js',
-  './manifest.json'
+  './manifest.json', './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png', './icons/apple-touch-icon.png'
 ];
 self.addEventListener('install', function(e){
   e.waitUntil(

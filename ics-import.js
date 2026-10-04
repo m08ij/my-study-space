@@ -84,7 +84,7 @@
     var tzBad = {}, rruleUnsupported = 0, skippedNoDate = 0;
 
     raws.forEach(function(r){
-      if(!r.SUMMARY || !r.DTSTART){ skippedNoDate++; return; }
+      if(!r.SUMMARY || !r.DTSTART || !unescapeText(r.SUMMARY.value)){ skippedNoDate++; return; }
       var st = parseDt(r.DTSTART.value, r.DTSTART.params); if(!st){ skippedNoDate++; return; }
       if(st.tzUnknown) tzBad[st.tzUnknown] = 1;
       var en = r.DTEND ? parseDt(r.DTEND.value, r.DTEND.params) : null, span = 1;

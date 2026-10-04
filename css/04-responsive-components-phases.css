@@ -684,3 +684,9 @@
 .ics-slot.off{opacity:.65;cursor:default}
 .ics-slot input{width:18px;height:18px;margin-top:2px}
 .ics-slot-main{display:flex;flex-direction:column;gap:2px;min-width:0;font-size:var(--fs-sm)}
+
+/* شاشات قصيرة: نافذة المعاينة تتمرّر كلها وزر الاستيراد ثابت أسفلها (كان يخرج خارج الشاشة) */
+.ics-modal.wide{display:block;overflow-y:auto;overscroll-behavior:contain}
+.ics-modal.wide .ics-list{flex:none;max-height:min(42vh,420px)}
+.ics-modal.wide .ics-actions{position:sticky;bottom:-22px;margin:var(--sp-3) -22px -22px;padding:var(--sp-3) 22px;background:var(--card);border-top:1px solid var(--border);z-index:2}
+@media (max-height:700px){.ics-modal.wide .ics-list{max-height:34vh}}
