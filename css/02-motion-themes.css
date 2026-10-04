@@ -1,0 +1,352 @@
+/* ============================================================
+   ✨ الحركة والتفاعل (Motion) — كانت طبقة v3 المتراكمة؛ دُمجت بلا !important
+   ============================================================ */
+
+.section.tab-play > *{
+  animation: uiChildIn .28s cubic-bezier(.2,0,0,1) backwards;
+}
+@keyframes uiChildIn{
+  from{opacity:0;transform:translateY(6px) scale(.98)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+
+.page-title{
+  animation: uiTitleIn .4s var(--ease);
+}
+@keyframes uiTitleIn{
+  from{opacity:0;transform:translateX(14px) scale(.96)}
+  to{opacity:1;transform:translateX(0) scale(1)}
+}
+
+.btn{
+  transition: transform var(--dur-2) cubic-bezier(.34,1.56,.64,1),
+              box-shadow var(--dur-2) ease,
+              background var(--dur-2) ease;
+}
+.btn:hover{
+  transform: translateY(-2px);
+}
+.btn:active{
+  transform: translateY(0) scale(.96);
+  transition-duration: .08s;
+}
+
+.chip{
+  transition: transform var(--dur-2) ease, background var(--dur-2) ease, border-color var(--dur-2) ease;
+}
+.chip:hover{
+  transform: translateY(-1px);
+}
+.chip.active{
+  transform: scale(1.03);
+}
+
+.nav-item{
+  transition: background var(--dur-2) ease, color var(--dur-2) ease, transform var(--dur-2) cubic-bezier(.34,1.56,.64,1);
+}
+.nav-item:hover{
+  transform: translateX(-4px);
+}
+.nav-item.active{
+  transform: translateX(-2px);
+}
+
+.modal-backdrop.show .modal{
+  animation: uiModalIn .3s var(--ease);
+}
+@keyframes uiModalIn{
+  from{opacity:0;transform:translateY(20px) scale(.94)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+
+.toast{
+  animation: uiToastIn .4s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes uiToastIn{
+  from{opacity:0;transform:translateY(30px) scale(.9)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+
+.fab-main{
+  animation: uiFabPulse 4s ease-in-out infinite;
+}
+@keyframes uiFabPulse{
+  0%,100%{box-shadow:var(--sh-glow)}
+  50%{box-shadow:0 8px 40px var(--glow)}
+}
+
+.sc-progress-fill,
+.att-fill{
+  position: relative;
+  overflow: hidden;
+}
+.sc-progress-fill::after,
+.att-fill::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.25),transparent);
+  transform:translateX(-100%);
+}
+.search-results.show{
+  animation: uiSearchIn .25s var(--ease);
+}
+@keyframes uiSearchIn{
+  from{opacity:0;transform:translateY(-8px) scale(.98)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+
+/* ============ Plan Add Button (fix) ============ */
+.plan-add-btn{
+  width:32px;height:32px;border-radius:var(--r-md);
+  background:var(--grad);color:var(--on-accent);
+  border:none;cursor:pointer;font-family:inherit;
+  font-size:var(--fs-lg);font-weight:900;line-height:1;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;transition:all var(--dur-2) cubic-bezier(.34,1.56,.64,1);
+  padding:0;
+}
+.plan-add-btn:hover{transform:scale(1.12);box-shadow:var(--sh-glow-sm)}
+.plan-add-btn:active{transform:scale(.94)}
+.plan-add-btn.added{
+  background:linear-gradient(135deg,#10b981,#34d399) !important;
+  color:#053b25 !important;cursor:default !important;
+  box-shadow:0 4px 14px rgba(52,211,153,.4) !important;
+  animation:planAddedPop .5s cubic-bezier(.34,1.56,.64,1);
+}
+.plan-add-btn.added:hover{transform:none}
+.plan-add-btn:disabled{opacity:1}
+@keyframes planAddedPop{
+  0%{transform:scale(.6);opacity:.5}
+  60%{transform:scale(1.2);opacity:1}
+  100%{transform:scale(1);opacity:1}
+}
+
+/* ============ Enhanced Stats ============ */
+.stats-hero{
+  background:linear-gradient(135deg,rgba(34,211,238,.1),rgba(167,139,250,.1));
+  border:1px solid var(--glow);border-radius:var(--r-xl);
+  padding:24px;margin-bottom:16px;position:relative;overflow:hidden;
+}
+.stats-hero::before{
+  content:'';position:absolute;top:0;right:0;left:0;height:3px;
+  background:var(--grad);
+}
+.stats-hero .big-num{
+  font-size:3rem;font-weight:900;line-height:1;
+  background:var(--grad);-webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;background-clip:text;
+}
+.stats-hero .big-lbl{font-size:var(--fs-sm);color:var(--muted);margin-top:6px}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-top:16px}
+.stats-tile{
+  background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-lg);
+  padding:14px;text-align:center;transition:var(--dur-2);
+}
+.stats-tile:hover{border-color:var(--accent);transform:translateY(-2px)}
+.stats-tile .v{font-size:var(--fs-2xl);font-weight:800;color:var(--accent);line-height:1.1}
+.stats-tile .l{font-size:var(--fs-2xs);color:var(--muted);margin-top:4px}
+.donut-wrap{display:flex;align-items:center;gap:20px;flex-wrap:wrap;justify-content:center;padding:16px 0}
+.donut{width:160px;height:160px;position:relative}
+.donut svg{width:100%;height:100%;transform:rotate(-90deg)}
+.donut .donut-bg{fill:none;stroke:var(--bg2);stroke-width:16}
+.donut .donut-seg{fill:none;stroke-width:16;stroke-linecap:butt;transition:stroke-dasharray .8s}
+.donut-center{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+}
+.donut-center .n{font-size:var(--fs-2xl);font-weight:900;color:var(--accent)}
+.donut-center .t{font-size:var(--fs-2xs);color:var(--muted)}
+.donut-legend{display:flex;flex-direction:column;gap:6px;flex:1;min-width:180px}
+.donut-legend-item{display:flex;align-items:center;gap:10px;font-size:var(--fs-sm)}
+.donut-legend-item .dot{width:12px;height:12px;border-radius:var(--r-sm);flex-shrink:0}
+.donut-legend-item .lbl{flex:1;color:var(--muted)}
+.donut-legend-item .val{font-weight:800;color:var(--text);font-family:ui-monospace,monospace}
+
+/* ============ Exam Countdown ============ */
+.exam-countdown-screen{
+  position:fixed;inset:0;z-index:950;
+  background:var(--bg);
+  display:none;flex-direction:column;overflow:hidden;
+}
+.exam-countdown-screen.open{display:flex}
+.ecs-header{
+  padding:18px 24px;display:flex;align-items:center;
+  justify-content:space-between;border-bottom:1px solid var(--border);
+}
+.ecs-header h2{
+  margin:0;font-size:var(--fs-lg);font-weight:800;
+  background:var(--grad);-webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;background-clip:text;
+}
+.ecs-body{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;padding:24px;gap:24px;overflow-y:auto;
+}
+.ecs-ring{position:relative;width:280px;height:280px;max-width:70vw}
+.ecs-ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ecs-ring .bg{fill:none;stroke:var(--border);stroke-width:12}
+.ecs-ring .fg{fill:none;stroke:url(#ecsGrad);stroke-width:12;stroke-linecap:round;transition:stroke-dashoffset .5s}
+.ecs-ring-inner{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;
+}
+.ecs-ring-inner .d{
+  font-size:5rem;font-weight:900;line-height:1;
+  background:var(--grad);-webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;background-clip:text;
+}
+.ecs-ring-inner .u{font-size:var(--fs-base);color:var(--muted);margin-top:6px}
+.ecs-title{font-size:var(--fs-xl);font-weight:800;text-align:center}
+.ecs-meta{color:var(--muted);font-size:var(--fs-md);text-align:center;line-height:1.7}
+.ecs-checklist{
+  width:100%;max-width:520px;background:var(--card);
+  border:1px solid var(--border);border-radius:var(--r-lg);padding:18px;
+}
+.ecs-checklist h4{margin:0 0 12px;font-size:var(--fs-md);font-weight:800;display:flex;align-items:center;gap:8px}
+.ecs-check-item{
+  display:flex;align-items:center;gap:10px;padding:10px 0;
+  border-bottom:1px solid var(--border);font-size:var(--fs-sm);cursor:pointer;
+}
+.ecs-check-item:last-child{border-bottom:none}
+.ecs-check-item input{width:18px;height:18px;accent-color:var(--accent);cursor:pointer}
+.ecs-check-item.done span{text-decoration:line-through;opacity:.55}
+
+/* ============ Onboarding ============ */
+.onb-overlay{
+  position:fixed;inset:0;z-index:2500;
+  background:rgba(0,0,0,.85);backdrop-filter:blur(8px);
+  display:none;align-items:center;justify-content:center;padding:20px;
+}
+.onb-overlay.show{display:flex}
+.onb-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r-xl);padding:36px 32px;max-width:480px;width:100%;
+  text-align:center;box-shadow:var(--shadow-lg);
+  position:relative;overflow:hidden;
+  animation:onbIn .5s var(--ease);
+}
+@keyframes onbIn{from{opacity:0;transform:scale(.9) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.onb-card::before{
+  content:'';position:absolute;top:0;right:0;left:0;height:4px;background:var(--grad);
+}
+.onb-icon{font-size:4rem;margin-bottom:14px;display:inline-block;animation:onbFloat 2.5s ease-in-out 2}
+@keyframes onbFloat{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-10px) rotate(3deg)}}
+.onb-card h3{font-size:var(--fs-xl);font-weight:800;margin-bottom:10px;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.onb-card p{color:var(--muted);font-size:var(--fs-md);line-height:1.8;margin-bottom:22px;min-height:60px}
+.onb-dots{display:flex;gap:6px;justify-content:center;margin-bottom:20px}
+.onb-dots .dot{width:8px;height:8px;border-radius:50%;background:var(--border);transition:var(--dur-2)}
+.onb-dots .dot.active{background:var(--accent);width:24px;border-radius:var(--r-sm)}
+.onb-actions{display:flex;gap:8px;justify-content:space-between}
+.onb-skip{background:transparent;border:none;color:var(--muted);cursor:pointer;font-family:inherit;font-size:var(--fs-sm);padding:10px}
+.onb-skip:hover{color:var(--red)}
+.onb-next{
+  background:var(--grad);color:var(--on-accent);border:none;
+  padding:11px 26px;border-radius:var(--r-lg);font-family:inherit;
+  font-weight:800;font-size:var(--fs-md);cursor:pointer;
+  box-shadow:var(--sh-glow);
+}
+
+/* ============ Confetti ============ */
+.confetti-piece{
+  position:fixed;width:10px;height:10px;z-index:9999;
+  pointer-events:none;animation:cfFall 2.8s var(--ease) forwards;
+}
+@keyframes cfFall{
+  0%{transform:translateY(-20px) rotate(0);opacity:1}
+  100%{transform:translateY(100vh) rotate(900deg);opacity:0}
+}
+
+/* ============ Moodle Integration ============ */
+.moodle-widget{
+  background:linear-gradient(135deg,rgba(255,152,0,.1),rgba(255,87,34,.1));
+  border:1px solid rgba(255,152,0,.3);
+}
+.moodle-link{
+  display:flex;align-items:center;gap:12px;padding:12px;
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--r-lg);margin-bottom:8px;
+  text-decoration:none;color:var(--text);transition:var(--dur-2);
+}
+.moodle-link:hover{border-color:#ff9800;transform:translateX(-3px)}
+.moodle-icon{
+  width:42px;height:42px;border-radius:var(--r-md);
+  background:linear-gradient(135deg,#ff9800,#ff5722);
+  display:flex;align-items:center;justify-content:center;
+  font-size:var(--fs-xl);flex-shrink:0;
+}
+.moodle-info{flex:1;min-width:0}
+.moodle-title{font-weight:700;font-size:var(--fs-md)}
+.moodle-desc{font-size:var(--fs-xs);color:var(--muted);margin-top:2px}
+
+/* موبايل: ارفع التنبيهات فوق الشريط السفلي (يجب أن تأتي بعد القواعد الأساسية) */
+@media(max-width:900px){.toast-container{bottom:84px}.backup-badge{bottom:84px}}
+
+/* الجدول: عند وجود محاضرات يظهر أولاً، وكروت الإعداد تحته */
+#timetable.active.tt-has-data{display:flex;flex-direction:column}
+#timetable.tt-has-data > .grid.grid-2{order:10;margin-top:16px}
+.timetable td[colspan]{height:auto}
+
+/* أقسام اللوحة القابلة للطي */
+.dash-collapsible > .card-head{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.dash-collapsible > .card-head h3::after{content:' ▾';color:var(--muted2);font-size:.8em}
+.dash-collapsed > :not(.card-head){display:none!important}
+.dash-collapsed > .card-head{margin-bottom:0}
+.dash-collapsed > .card-head h3::after{content:' ◂'}
+
+/* ============================================================
+   🎨 Themes & Motion v4
+   ============================================================ */
+
+/* انتقال ناعم للألوان لحظة تبديل الثيم فقط (الصنف يُضاف ثم يُزال من JS) */
+html.theme-fading *,html.theme-fading *::before,html.theme-fading *::after{
+  transition:background-color var(--dur-3) ease,border-color var(--dur-3) ease,color var(--dur-3) ease,box-shadow var(--dur-3) ease,fill var(--dur-3) ease,stroke var(--dur-3) ease!important;
+}
+body{transition:background-color var(--dur-3) ease,color var(--dur-3) ease}
+
+/* خروج التنبيه كان مُلغى بسبب !important على أنيميشن الدخول */
+.toast.out{animation:toastOut .3s ease forwards!important}
+
+/* نبض الزر العائم: 3 مرات فقط بدل حلقة لا نهائية (تقليل إعادة الرسم واستهلاك البطارية) */
+.fab-main{animation:uiFabPulse 4s ease-in-out 3}
+
+/* بقع الخلفية الضبابية: ثابتة على الشاشات الصغيرة (blur كبير + حركة مستمرة ثقيلة على الموبايل) */
+/* حالات الضغط والتركيز المتناسقة */
+.bn-item,.tt-chip,button.badge[data-goto-tab],.settings-item,.theme-swatch,.fab-action,.card-action{transition:transform var(--dur-1) var(--ease),background var(--dur-2) ease,color var(--dur-2) ease,border-color var(--dur-2) ease,box-shadow var(--dur-2) ease}
+.bn-item:active,.tt-chip:active,button.badge[data-goto-tab]:active,.fab-action:active,.card-action:active{transform:scale(.94)}
+.settings-item:active{transform:scale(.98)}
+.theme-swatch:active{transform:scale(.97)}
+.theme-swatch:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.theme-swatch.active{transform:scale(1.04)}
+.theme-swatch.active .sw-check{animation:swPop .3s cubic-bezier(.34,1.56,.64,1)}
+@keyframes swPop{from{transform:scale(0)}to{transform:scale(1)}}
+.theme-panel.show .theme-swatch{animation:uiChildIn .3s cubic-bezier(.2,0,0,1) backwards}
+.theme-panel.show .theme-swatch:nth-child(2n){animation-delay:.03s}
+.theme-panel.show .theme-swatch:nth-child(3n){animation-delay:.06s}
+
+/* الثيمات الفاتحة (عاج / سماء): ظلال وخلفية نوافذ أخف */
+[data-theme="ivory"] .modal-backdrop,[data-theme="sky"] .modal-backdrop{background:rgba(35,28,20,.42)}
+[data-theme="sky"] .modal-backdrop{background:rgba(20,30,60,.42)}
+[data-theme="ivory"] .card:hover,[data-theme="sky"] .card:hover{box-shadow:var(--shadow-lg)}
+[data-theme="ivory"] .icon-btn:hover,[data-theme="sky"] .icon-btn:hover{box-shadow:var(--shadow)}
+[data-theme="ivory"] .toast,[data-theme="sky"] .toast{box-shadow:var(--shadow)}
+
+@media (prefers-reduced-motion: reduce){
+  html.theme-fading *,html.theme-fading *::before,html.theme-fading *::after{transition:none!important}
+  .theme-panel.show .theme-swatch{animation:none}
+}
+
+/* ============================================================
+   🎛️ توحيد حالات الحقول والأزرار — للثيمات الخمسة الجديدة فقط (ivory/emerald/ember/graphite/sky)
+   ============================================================ */
+[data-theme="emerald"],[data-theme="ember"],[data-theme="graphite"]{color-scheme:dark}
+[data-theme="ivory"],[data-theme="sky"]{color-scheme:light}
+[data-theme="ivory"] ::placeholder,[data-theme="emerald"] ::placeholder,[data-theme="ember"] ::placeholder,
+[data-theme="graphite"] ::placeholder,[data-theme="sky"] ::placeholder{color:var(--muted2);opacity:1}
+[data-theme="ivory"] option,[data-theme="emerald"] option,[data-theme="ember"] option,
+[data-theme="graphite"] option,[data-theme="sky"] option{background:var(--card);color:var(--text)}
+/* تعطيل موحّد (يشمل كل الثيمات لأنه سلوك وليس لون): خافت + مؤشر ممنوع + بدون حركة */
+.btn:disabled,.btn[disabled]{opacity:.5;cursor:not-allowed;transform:none!important;box-shadow:none!important}
+input:disabled,select:disabled,textarea:disabled{opacity:.55;cursor:not-allowed}
+/* نتيجة البحث المحددة بلوحة المفاتيح */
+.search-item.active{background:var(--grad-soft);box-shadow:inset 0 0 0 1px var(--glow)}

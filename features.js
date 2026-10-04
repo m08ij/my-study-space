@@ -543,39 +543,7 @@
   /* ============================================================
      EXAMS
      ============================================================ */
-  window.renderExams = function(){
-    var c = document.getElementById('examsList'); if(!c) return;
-    var sp = space();
-    if(!(sp.exams || []).length){
-      c.innerHTML = '<div class="empty"><div class="ic">⏳</div><p>لا توجد امتحانات</p></div>';
-      return;
-    }
-    var todayStr = today();
-    var sorted = sp.exams.slice().sort(function(a,b){ return a.date.localeCompare(b.date); });
-    var html = '';
-    sorted.forEach(function(e){
-      var daysLeft = Math.ceil((new Date(e.date) - new Date(todayStr)) / 86400000);
-      var isUrgent = daysLeft >= 0 && daysLeft <= 7;
-      html += '<div class="exam-card"><div class="exam-info"><div class="title">📝 ' + esc(e.name) + '</div>' +
-        '<div class="meta">' + (e.course ? '📚 ' + esc(e.course) + ' · ' : '') +
-        '📅 ' + e.date + (e.time ? ' · ⏰ ' + esc(e.time) : '') +
-        (e.room ? ' · 📍 ' + esc(e.room) : '') + '</div></div>' +
-        '<div class="exam-countdown ' + (isUrgent ? 'urgent' : '') + '">' +
-        (daysLeft >= 0 ? daysLeft + ' يوم' : 'انتهى') +
-        '<div class="lbl">' + (daysLeft >= 0 ? 'متبقي' : 'منتهي') + '</div></div>' +
-        '<div style="display:flex;gap:4px">' +
-        '<button class="btn btn-sm btn-ghost" data-edit-exam="' + e.id + '">✏️</button>' +
-        '<button class="btn btn-sm btn-danger" data-del-exam="' + e.id + '">🗑</button>' +
-        '</div></div>';
-    });
-    c.innerHTML = html;
-    c.querySelectorAll('[data-edit-exam]').forEach(function(b){
-      b.addEventListener('click', function(){ window.editExam(b.dataset.editExam); });
-    });
-    c.querySelectorAll('[data-del-exam]').forEach(function(b){
-      b.addEventListener('click', function(){ window.deleteExam(b.dataset.delExam); });
-    });
-  };
+  /* renderExams: النسخة الفعلية في course-sync.js (حُذفت النسخة المكرّرة من هنا) */
 
   window.addExam = function(){
     var opts = [{v:'', l:'— بدون مادة —'}];
@@ -631,61 +599,7 @@
   /* ============================================================
      COURSES
      ============================================================ */
-  window.renderCourses = function(){
-    var g = document.getElementById('myCoursesGrid'); if(!g) return;
-    var sp = space();
-    if(!(sp.courses || []).length){
-      g.innerHTML = '<div class="empty" style="grid-column:1/-1"><div class="ic">📚</div><p>لا توجد مواد</p></div>';
-      return;
-    }
-    var html = '';
-    sp.courses.forEach(function(c){
-      html += '<div class="card" data-course-card="' + c.id + '">' +
-        '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;gap:10px">' +
-          '<div><div style="font-weight:700;font-size:var(--fs-base)">' + esc(c.name) + '</div>' +
-          (c.code ? '<div class="u-mono">' + esc(c.code) + '</div>' : '') + '</div>' +
-          '<span class="badge">' + (c.hours || 3) + ' ساعات</span></div>' +
-        '<div style="display:flex;gap:6px;margin-top:12px">' +
-          '<button class="btn btn-sm btn-ghost" data-edit-course="' + c.id + '">✏️</button>' +
-          '<button class="btn btn-sm btn-danger" data-del-course="' + c.id + '">🗑</button></div>' +
-        '<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">' +
-          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">' +
-            '<span style="font-size:var(--fs-xs);font-weight:700;color:var(--muted)">📎 ملفات المادة</span>' +
-            '<span style="font-size:var(--fs-2xs);color:var(--muted2)" data-files-count="' + c.id + '">—</span>' +
-          '</div>' +
-          '<div class="course-files-list" data-files-list="' + c.id + '">' +
-            '<div class="u-empty is-loading">جاري التحميل...</div>' +
-          '</div>' +
-          '<button class="upload-course-btn" data-upload-course="' + c.id + '">📤 رفع ملف</button>' +
-          '<input type="file" style="display:none" data-file-input="' + c.id + '">' +
-          '<div class="upload-progress-bar" data-upload-progress="' + c.id + '"><div class="inner"></div></div>' +
-        '</div>' +
-      '</div>';
-    });
-    g.innerHTML = html;
-
-    g.querySelectorAll('[data-edit-course]').forEach(function(b){
-      b.addEventListener('click', function(){ window.editMyCourse(b.dataset.editCourse); });
-    });
-    g.querySelectorAll('[data-del-course]').forEach(function(b){
-      b.addEventListener('click', function(){ window.deleteMyCourse(b.dataset.delCourse); });
-    });
-    g.querySelectorAll('[data-upload-course]').forEach(function(b){
-      b.addEventListener('click', function(){
-        var inp = g.querySelector('[data-file-input="' + b.dataset.uploadCourse + '"]');
-        if(inp) inp.click();
-      });
-    });
-    g.querySelectorAll('[data-file-input]').forEach(function(inp){
-      inp.addEventListener('change', function(e){
-        var f = e.target.files[0]; if(!f) return;
-        window.handleCourseFileUpload(inp.dataset.fileInput, f);
-        inp.value = '';
-      });
-    });
-
-    sp.courses.forEach(function(c){ window.loadCourseFilesForCard(c.id); });
-  };
+  /* renderCourses: النسخة الفعلية في course-sync.js (حُذفت النسخة المكرّرة من هنا) */
 
   /* ============================================================
      ملفات المادة: بحث + فرز + تنزيل + حذف بتأكيد + منع التكرار
@@ -877,14 +791,7 @@
     });
   };
 
-  window.deleteMyCourse = function(id){
-    var c = (space().courses || []).find(function(x){ return x.id === id; });
-    if(!c) return;
-    window.customConfirm('حذف "' + c.name + '"؟', function(){
-      window.space.courses = window.space.courses.filter(function(x){ return x.id !== id; });
-      saveSpace(); window.renderCourses(); window.renderDashboard();
-    });
-  };
+  /* deleteMyCourse: النسخة الفعلية في course-sync.js (حُذفت النسخة المكرّرة من هنا) */
 
   window.importFromPlan = function(){
     var SEMESTERS = window.SEMESTERS || [];
@@ -915,41 +822,7 @@
   /* ============================================================
      ATTENDANCE
      ============================================================ */
-  window.renderAttendance = function(){
-    var c = document.getElementById('attendanceList'); if(!c) return;
-    var entries = Object.entries(space().attendance || {});
-    if(!entries.length){
-      c.innerHTML = '<div class="empty"><div class="ic">✅</div><p>لا توجد مواد</p></div>';
-      return;
-    }
-    /* sort by name */
-    entries.sort(function(a,b){ return a[0].localeCompare(b[0], 'ar'); });
-    var html = '';
-    entries.forEach(function(kv){
-      var name = kv[0], a = kv[1];
-      var total = a.present + a.absent;
-      var hasData = total > 0;
-      var pct = hasData ? Math.round(a.present / total * 100) : 0;
-      var lvl = !hasData ? 'neutral' : (pct >= 85 ? 'good' : pct >= 75 ? 'warn' : 'danger');
-      html += '<div class="att-card"><div class="att-head"><div class="att-name">📚 ' + esc(name) + '</div>' +
-        '<div class="att-pct ' + lvl + '">' + (hasData ? pct + '%' : '—') + '</div></div>' +
-        '<div class="att-bar"><div class="att-fill ' + lvl + '" style="width:' + (hasData ? pct : 0) + '%"></div></div>' +
-        '<div class="att-actions"><span style="margin-right:auto">✅ <b>' + a.present + '</b> · ❌ <b>' + a.absent + '</b></span>' +
-        '<button class="btn btn-sm" data-mark-p="' + esc(name) + '">+ حاضر</button>' +
-        '<button class="btn btn-sm btn-ghost" data-mark-a="' + esc(name) + '">+ غائب</button>' +
-        '<button class="btn btn-sm btn-danger" data-del-att="' + esc(name) + '">🗑</button></div></div>';
-    });
-    c.innerHTML = html;
-    c.querySelectorAll('[data-mark-p]').forEach(function(b){
-      b.addEventListener('click', function(){ window.markAttendance(b.dataset.markP, 'present'); });
-    });
-    c.querySelectorAll('[data-mark-a]').forEach(function(b){
-      b.addEventListener('click', function(){ window.markAttendance(b.dataset.markA, 'absent'); });
-    });
-    c.querySelectorAll('[data-del-att]').forEach(function(b){
-      b.addEventListener('click', function(){ window.removeAttendance(b.dataset.delAtt); });
-    });
-  };
+  /* renderAttendance: النسخة الفعلية في course-sync.js (حُذفت النسخة المكرّرة من هنا) */
 
   window.addAttendanceCourse = function(){
     var opts = [{v:'', l:'— اختر مادة —'}];
@@ -1249,7 +1122,7 @@
 
   window.clearBudget = function(){
     if(!space().budget || !space().budget.length){ toast('لا يوجد عناصر', 'info'); return; }
-    window.customConfirm('مسح كل العناصر؟', function(){
+    window.customConfirm('مسح كل العناصر (' + space().budget.length + ' معاملة)؟ لا يمكن التراجع، ويُفضّل أخذ نسخة احتياطية أولاً.', function(){
       window.space.budget = [];
       saveSpace(); window.renderBudget(); window.renderDashboard();
     });
@@ -1370,7 +1243,7 @@
   };
 
   window.clearGpa = function(){
-    window.customConfirm('مسح كل المواد؟', function(){
+    window.customConfirm('مسح كل المواد من حاسبة المعدل (' + (window.gpaRows || []).filter(function(r){ return r.name || r.hrs; }).length + ' مادة)؟', function(){
       window.gpaRows = [{name:'', hrs:0, grade:'A (90-100)'}];
       getS().set('gpaRows', window.gpaRows);
       window.renderGpa();
@@ -1462,66 +1335,7 @@
     res.innerHTML = '<div style="font-size:var(--fs-lg);font-weight:800;color:' + color + '">' + msg + '</div>';
   };
 
-  window.renderGradeCalc = function(){
-    if(!window.space) return;
-    if(!Array.isArray(window.space.grades)) window.space.grades = [];
-    var c = document.getElementById('gradeTrackerList');
-    if(!c) return;
-    if(!window.space.grades.length){
-      c.innerHTML = '<div class="empty"><div class="ic">📊</div><p>لا توجد مواد</p><p class="sub">اضغط "+ مادة" للبدء</p></div>';
-      return;
-    }
-    var html = '';
-    window.space.grades.forEach(function(g, idx){
-      var total = 0, earned = 0;
-      (g.items || []).forEach(function(it){
-        total  += parseFloat(it.weight) || 0;
-        earned += parseFloat(it.score)  || 0;
-      });
-      var pct = total > 0 ? (earned / total * 100) : 0;
-      var color = pct >= 85 ? 'var(--green)' : pct >= 70 ? 'var(--accent)' :
-                  pct >= 50 ? 'var(--amber)' : 'var(--red)';
-      var itemsHtml = '';
-      (g.items || []).forEach(function(it, i){
-        itemsHtml += '<div class="gt-item-row"><span style="flex:1">' + esc(it.name) + '</span>' +
-          '<span style="color:var(--muted)">' + it.score + '/' + it.weight + '</span>' +
-          '<button class="btn btn-sm btn-danger" data-gt-del="' + idx + '-' + i +
-          '" style="padding:2px 6px;font-size:var(--fs-2xs)">✕</button></div>';
-      });
-      html += '<div class="card" style="margin-bottom:12px">' +
-        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">' +
-        '<div><div style="font-weight:700;font-size:var(--fs-base)">' + esc(g.name) + '</div>' +
-        '<div style="font-size:var(--fs-xs);color:var(--muted)">مجموع: ' + total + '%</div></div>' +
-        '<div style="text-align:center"><div style="font-size:var(--fs-xl);font-weight:800;color:' + color + '">' +
-        pct.toFixed(1) + '%</div>' +
-        '<div class="u-note">حتى الآن</div></div></div>' +
-        itemsHtml +
-        '<div style="display:flex;gap:6px;margin-top:10px">' +
-        '<button class="btn btn-sm" data-gt-add="' + idx + '">+ علامة</button>' +
-        '<button class="btn btn-sm btn-danger" data-gt-remove="' + idx + '">🗑 المادة</button></div></div>';
-    });
-    c.innerHTML = html;
-
-    c.querySelectorAll('[data-gt-add]').forEach(function(b){
-      b.addEventListener('click', function(){ window.addGradeItem(parseInt(b.dataset.gtAdd,10)); });
-    });
-    c.querySelectorAll('[data-gt-del]').forEach(function(b){
-      b.addEventListener('click', function(){
-        var parts = b.dataset.gtDel.split('-');
-        window.space.grades[parseInt(parts[0],10)].items.splice(parseInt(parts[1],10), 1);
-        saveSpace(); window.renderGradeCalc();
-      });
-    });
-    c.querySelectorAll('[data-gt-remove]').forEach(function(b){
-      b.addEventListener('click', function(){
-        var idx = parseInt(b.dataset.gtRemove, 10);
-        window.customConfirm('حذف "' + window.space.grades[idx].name + '"؟', function(){
-          window.space.grades.splice(idx, 1);
-          saveSpace(); window.renderGradeCalc();
-        });
-      });
-    });
-  };
+  /* renderGradeCalc: النسخة الفعلية في course-sync.js (حُذفت النسخة المكرّرة من هنا) */
 
   window.addGradeCourse = function(){
     window.showModal('مادة جديدة', [{key:'name', label:'اسم المادة'}], {name:''}, function(data){
@@ -1554,53 +1368,7 @@
   /* ============================================================
      PLAN
      ============================================================ */
-  window.renderPlan = function(){
-    var c = document.getElementById('semesters'); if(!c) return;
-    var openSems = getS().get('openSems', [0]);
-    if(!Array.isArray(openSems)) openSems = [0];
-    var SEMESTERS = window.SEMESTERS || [];
-    c.innerHTML = '';
-    SEMESTERS.forEach(function(s, i){
-      var el = document.createElement('div');
-      el.className = 'card'; el.dataset.year = s.year; el.style.marginBottom = '12px';
-      var total = s.courses.reduce(function(a,x){ return a + x.h; }, 0);
-      var coursesHtml = '';
-      s.courses.forEach(function(x){
-        coursesHtml += '<div style="display:flex;justify-content:space-between;padding:10px 0;border-top:1px solid var(--border);font-size:var(--fs-sm)">' +
-          '<div>' + esc(x.n) +
-          (x.code && x.code !== '—' ? ' <span class="u-mono">' + esc(x.code) + '</span>' : '') +
-          (x.type === 'lab' ? ' <span style="font-size:var(--fs-2xs);padding:1px 7px;border-radius:var(--r-sm);background:rgba(52,211,153,.15);color:var(--green);margin-right:6px">مختبر</span>' : '') +
-          '</div><span style="color:var(--accent);font-weight:700;font-size:var(--fs-sm)">' + x.h + ' س</span></div>';
-      });
-      el.innerHTML =
-        '<div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer" class="sem-head">' +
-          '<div style="display:flex;align-items:center;gap:12px">' +
-            '<span style="background:var(--grad);color:var(--on-accent);padding:3px 10px;border-radius:var(--r-xl);font-size:var(--fs-2xs);font-weight:800">سنة ' + s.year + '</span>' +
-            '<h3 style="margin:0">' + esc(s.name) + '</h3></div>' +
-          '<div style="display:flex;gap:10px;align-items:center;font-size:var(--fs-xs);color:var(--muted)">' +
-            '<span style="background:var(--bg2);padding:3px 10px;border-radius:var(--r-md);color:var(--accent)">' + total + ' ساعة</span>' +
-            '<span class="arrow">▼</span></div></div>' +
-        '<div class="sem-body" style="max-height:0;overflow:hidden;transition:.4s">' + coursesHtml + '</div>';
-      var head = el.querySelector('.sem-head');
-      var body = el.querySelector('.sem-body');
-      var arrow = el.querySelector('.arrow');
-      if(openSems.indexOf(i) > -1){
-        body.style.maxHeight = '2000px';
-        arrow.style.transform = 'rotate(180deg)';
-      }
-      head.addEventListener('click', function(){
-        var isOpen = body.style.maxHeight && body.style.maxHeight !== '0px';
-        body.style.maxHeight = isOpen ? '0px' : '2000px';
-        arrow.style.transform = isOpen ? '' : 'rotate(180deg)';
-        var arr = getS().get('openSems', []);
-        if(!Array.isArray(arr)) arr = [];
-        if(!isOpen){ if(arr.indexOf(i) === -1) arr.push(i); }
-        else{ var p = arr.indexOf(i); if(p > -1) arr.splice(p, 1); }
-        getS().set('openSems', arr);
-      });
-      c.appendChild(el);
-    });
-  };
+  /* renderPlan: النسخة الفعلية في course-sync.js (حُذفت النسخة المكرّرة من هنا) */
 
   window.filterSem = function(el, year){
     document.querySelectorAll('.chip[data-filter]').forEach(function(c){ c.classList.remove('active'); });

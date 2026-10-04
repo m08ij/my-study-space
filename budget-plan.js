@@ -41,7 +41,7 @@
 
   /* ---------- الإعدادات ---------- */
   function defaults(){
-    return { openingBalance: 0, balanceDate: '', monthlyBudget: 0, limits: {}, recurring: [], scenarios: [], horizon: 6 };
+    return { openingBalance: 0, balanceDate: '', monthlyBudget: 0, limits: {}, recurring: [], scenarios: [], goals: [], horizon: 6 };
   }
   function load(){
     var p = (window.S && window.S.get(KEY, null)) || null;
@@ -54,6 +54,7 @@
       if(p.limits && typeof p.limits === 'object') Object.keys(p.limits).forEach(function(k){ if(pos(p.limits[k]) > 0) d.limits[k] = pos(p.limits[k]); });
       d.recurring = (Array.isArray(p.recurring) ? p.recurring : []).filter(function(r){ return r && pos(r.amount) > 0; });
       d.scenarios = Array.isArray(p.scenarios) ? p.scenarios : [];
+      d.goals = (Array.isArray(p.goals) ? p.goals : []).filter(function(g){ return g && pos(g.target) > 0; }).map(function(g){ return { id: g.id || uid(), name: String(g.name || 'هدف').slice(0, 40), target: pos(g.target), saved: pos(g.saved), date: parseDate(g.date) ? g.date : '' }; });
       d.horizon = Math.min(60, Math.max(1, Math.round(num(p.horizon)) || 6));
     }
     return d;
@@ -206,6 +207,21 @@
     return r1(m) + ' شهر (≈ ' + fc.runwayDays + ' يوم)';
   }
 
+  /* هدف ادخار: المتبقي، الأشهر حتى الموعد، المطلوب شهرياً، وهل يكفيك الصافي الشهري المتوقع */
+  function goalStatus(g, netMonthly, now){
+    var remaining = Math.max(0, pos(g.target) - pos(g.saved)), d = parseDate(g.date), n = parseDate(now) || new Date();
+    var out = { remaining: remaining, done: remaining === 0, months: null, required: null, overdue: false, feasible: null, eta: null, pct: pos(g.target) ? Math.min(100, pos(g.saved) / pos(g.target) * 100) : 0 };
+    if(out.done) return out;
+    if(d){
+      var days = dayDiff(n, d);
+      if(days <= 0){ out.overdue = true; out.months = 0; out.required = remaining; }
+      else { out.months = days / DAYS_PER_MONTH; out.required = remaining / out.months; }
+      out.feasible = out.required <= Math.max(0, netMonthly) + 1e-9;
+    }
+    if(netMonthly > 0) out.eta = remaining / netMonthly;
+    return out;
+  }
+
   /* ---------- واجهة ---------- */
   var ui = { tab: 'month', draft: { expensePct: 0, incomePct: 0, extraIncome: 0, extraExpense: 0, catCuts: {} }, name: '' };
 
@@ -267,6 +283,22 @@
     return h;
   }
 
+  function viewGoals(c){
+    var net = c.base.income - c.base.expense, h = '';
+    h += '<p class="bp-note">حدّد هدفاً (مبلغ وتاريخ) وبحسب لك كم لازم توفّر شهرياً، ومقارنته بصافي دخلك المتوقع (' + money(net) + '/شهر حسب افتراضات تبويب التوقعات). المبلغ المدّخر تدخله أنت يدوياً؛ ما بيتسجّل كمعاملة.</p>';
+    h += '<div class="bp-rec-add"><input id="bpGName" placeholder="اسم الهدف (مثلاً: لابتوب)"><input type="number" id="bpGTarget" inputmode="decimal" min="0" step="any" placeholder="المبلغ المطلوب"><input type="number" id="bpGSaved" inputmode="decimal" min="0" step="any" placeholder="المدّخر حالياً"><input type="date" id="bpGDate" aria-label="الموعد المستهدف"><button class="btn btn-sm" id="bpGAdd">+ هدف</button></div>';
+    if(!c.plan.goals.length) return h + '<div class="u-empty">ما في أهداف ادخار بعد</div>';
+    h += '<div class="bp-goals">' + c.plan.goals.map(function(g){
+      var s = goalStatus(g, net, c.now), cls = s.done ? 'pos' : (s.feasible === false ? 'neg' : '');
+      var line = s.done ? '🎉 تحقق الهدف!' : (s.months === null ? 'بدون موعد' + (s.eta ? ' · بهذا الصافي تحققه خلال ≈ ' + r1(s.eta) + ' شهر' : (net <= 0 ? ' · صافيك الشهري صفر أو سالب فما في ادخار متوقع' : '')) :
+        (s.overdue ? 'الموعد مرّ — متبقي ' + money(s.remaining) : 'المطلوب شهرياً ≈ <b class="' + cls + '">' + money(s.required) + '</b> خلال ' + r1(s.months) + ' شهر · ' + (s.feasible ? 'ممكن بصافيك الحالي ✅' : 'أعلى من صافيك المتوقع ⚠️' + (s.eta ? ' (بصافيك الحالي ≈ ' + r1(s.eta) + ' شهر)' : ''))));
+      return '<div class="bp-goal"><div class="bp-cat-top"><b>🎯 ' + esc(g.name) + '</b><span>' + money(g.saved) + ' / ' + money(g.target) + '</span></div>' + bar(s.pct) +
+        '<div class="bp-cat-sub"><span>' + line + '</span><span>' + (g.date ? esc(g.date) : '') + '</span></div>' +
+        '<div class="bp-goal-act"><input type="number" inputmode="decimal" min="0" step="any" class="bp-limit" data-goal-add="' + esc(g.id) + '" placeholder="+ مبلغ"><button class="btn btn-sm btn-ghost" data-goal-plus="' + esc(g.id) + '">أضف للمدّخر</button><button class="btn btn-sm btn-danger" data-goal-del="' + esc(g.id) + '" aria-label="حذف الهدف">🗑</button></div></div>';
+    }).join('') + '</div>';
+    return h;
+  }
+
   function scenarioFlow(c, sc){ return applyScenario(c.base, sc); }
 
   function viewForecast(c){
@@ -312,11 +344,11 @@
     var el = document.getElementById('budgetPlan'); if(!el) return;
     var c = context();
     var al = c.alerts.map(function(a){ return '<div class="bp-alert ' + a.k + '">' + (a.k === 'danger' ? '🚨' : '⚠️') + ' ' + esc(a.t) + '</div>'; }).join('');
-    var tabs = [['month', 'الشهر والحدود'], ['forecast', 'التوقعات والسيناريوهات'], ['recurring', 'المتكرر']];
+    var tabs = [['month', 'الشهر والحدود'], ['forecast', 'التوقعات والسيناريوهات'], ['goals', 'أهداف الادخار'], ['recurring', 'المتكرر']];
     var focus = document.activeElement && el.contains(document.activeElement) ? document.activeElement.id || null : null;
     el.innerHTML = '<div class="bp-tabs" role="tablist">' + tabs.map(function(t){ return '<button class="chip' + (ui.tab === t[0] ? ' active' : '') + '" data-bp-tab="' + t[0] + '" role="tab">' + t[1] + '</button>'; }).join('') + '</div>' +
       (al ? '<div class="bp-alerts">' + al + '</div>' : '') +
-      (ui.tab === 'forecast' ? viewForecast(c) : ui.tab === 'recurring' ? viewRecurring(c) : viewMonth(c));
+      (ui.tab === 'forecast' ? viewForecast(c) : ui.tab === 'recurring' ? viewRecurring(c) : ui.tab === 'goals' ? viewGoals(c) : viewMonth(c));
     bind(el);
     if(focus){ var f = document.getElementById(focus); if(f){ f.focus(); try{ var v = f.value; f.setSelectionRange && f.type === 'text' && f.setSelectionRange(v.length, v.length); }catch(e){} } }
   }
@@ -359,6 +391,19 @@
       var apply = function(){ update(function(p){ keys.forEach(function(k){ var avg = c.base.byCat[k] || 0; var lim = Math.round(avg * (1 - Math.min(100, num(sc.catCuts[k])) / 100)); if(lim > 0) p.limits[k] = lim; }); }); ui.tab = 'month'; render(); window.toast && window.toast('تم ضبط الحدود الشهرية', 'success'); };
       if(window.customConfirm) window.customConfirm('تحويل تقليلات «' + sc.name + '» إلى حدود شهرية للفئات؟ (المعاملات لا تتغيّر)', apply); else apply();
     }; });
+    if(q('bpGAdd')) q('bpGAdd').onclick = function(){
+      var target = pos(q('bpGTarget').value), name = (q('bpGName').value || '').trim().slice(0, 40), date = q('bpGDate').value;
+      if(!name || !target){ window.toast && window.toast('اكتب اسم الهدف ومبلغاً صحيحاً', 'warn'); return; }
+      update(function(p){ p.goals.push({ id: uid(), name: name, target: target, saved: pos(q('bpGSaved').value), date: parseDate(date) ? date : '' }); });
+    };
+    el.querySelectorAll('[data-goal-plus]').forEach(function(b){ b.onclick = function(){
+      var inp = el.querySelector('[data-goal-add="' + b.dataset.goalPlus + '"]'), v = pos(inp && inp.value); if(!v){ window.toast && window.toast('أدخل مبلغاً', 'warn'); return; }
+      update(function(p){ p.goals.forEach(function(g){ if(g.id === b.dataset.goalPlus) g.saved = pos(g.saved) + v; }); });
+    }; });
+    el.querySelectorAll('[data-goal-del]').forEach(function(b){ b.onclick = function(){
+      var run = function(){ update(function(p){ p.goals = p.goals.filter(function(g){ return g.id !== b.dataset.goalDel; }); }); };
+      if(window.customConfirm) window.customConfirm('حذف الهدف؟ (المعاملات ما بتتأثر)', run); else run();
+    }; });
     if(q('bpRAdd')) q('bpRAdd').onclick = function(){
       var amt = pos(q('bpRAmt').value); if(!amt){ window.toast && window.toast('أدخل مبلغاً صحيحاً', 'warn'); return; }
       var type = q('bpRType').value, cat = q('bpRCat').value;
@@ -379,7 +424,7 @@
       render();
     },
     _calc: { num: num, parseDate: parseDate, cleanTx: cleanTx, currentBalance: currentBalance, monthStats: monthStats, averages: averages, baseline: baseline,
-      applyScenario: applyScenario, forecast: forecast, monthStatus: monthStatus, recurringMonthly: recurringMonthly, buildAlerts: buildAlerts, fmtRunway: fmtRunway }
+      applyScenario: applyScenario, goalStatus: goalStatus, forecast: forecast, monthStatus: monthStatus, recurringMonthly: recurringMonthly, buildAlerts: buildAlerts, fmtRunway: fmtRunway }
   };
 
   var orig = window.renderBudget;

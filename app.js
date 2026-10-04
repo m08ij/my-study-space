@@ -94,6 +94,7 @@
       window.S.set('pomoSessions', window.ts.sessions);
       window.S.set('pomoFocus', window.ts.focusMin);
       window.logStudySession(window.timerSettings.focus);
+      try{ document.dispatchEvent(new CustomEvent('ss:focus-complete', { detail: { minutes: window.timerSettings.focus } })); }catch(e){}
       window.toast('🎉 أكملت جلسة تركيز!', 'success', 4000);
       window.showNotif('🎉 أكملت جلسة تركيز!', 'خذ راحة ' + window.timerSettings.short + ' دقائق.', {tag:'pomo-done'});
     } else {

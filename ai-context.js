@@ -144,7 +144,20 @@
       });
     });
   }
+  /* Esc يغلق نافذة المساعد + زر مسح المحادثة */
+  document.addEventListener('keydown', function(e){
+    var p = document.getElementById('aiPanel');
+    if(e.key === 'Escape' && p && p.classList.contains('show') && !document.querySelector('.modal-backdrop,.hub-sheet-backdrop,.cmdk-backdrop')){ p.classList.remove('show'); var f = document.getElementById('aiFab'); if(f) f.focus(); }
+  });
+  function addClearBtn(){
+    var head = document.querySelector('#aiPanel .ai-header'), close = document.getElementById('aiClose');
+    if(!head || !close || document.getElementById('aiClear')) return;
+    var b = document.createElement('button'); b.type = 'button'; b.id = 'aiClear'; b.className = 'ai-close'; b.title = 'مسح المحادثة'; b.setAttribute('aria-label', 'مسح المحادثة'); b.textContent = '🗑';
+    b.addEventListener('click', function(){ var m = document.getElementById('aiMessages'); if(m){ m.innerHTML = ''; var d = document.createElement('div'); d.className = 'ai-msg bot'; d.textContent = 'تم مسح المحادثة. كيف بقدر أساعدك؟'; m.appendChild(d); } pendingActions = []; });
+    head.insertBefore(b, close);
+  }
   function init(){
+    addClearBtn();
     var fab = document.getElementById('aiFab');
     if(fab && !fab._aiCtx){ fab._aiCtx = true; fab.addEventListener('click', function(){ setTimeout(refreshSuggestions, 200); }); }
   }
