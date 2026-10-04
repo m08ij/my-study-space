@@ -78,23 +78,23 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
 
 <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 <aside class="sidebar" id="sidebar">
-  <div class="nav-item active" data-tab="dashboard"><span class="ic">📊</span><span class="label">لوحة التحكم</span></div>
+  <div class="nav-item active" data-tab="dashboard"><span class="ic"><svg class="ico" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg></span><span class="label">لوحة التحكم</span></div>
   <div class="nav-section">الدراسة</div>
-  <div class="nav-item" data-tab="timetable"><span class="ic">📅</span><span class="label">الجدول الأسبوعي</span></div>
-  <div class="nav-item" data-tab="courses"><span class="ic">📚</span><span class="label">موادي</span></div>
-  <div class="nav-item" data-tab="tasks"><span class="ic">📝</span><span class="label">المهام</span></div>
-  <div class="nav-item" data-tab="exams"><span class="ic">⏳</span><span class="label">الامتحانات</span></div>
-  <div class="nav-item" data-tab="attendance"><span class="ic">✅</span><span class="label">الحضور</span></div>
+  <div class="nav-item" data-tab="timetable"><span class="ic"><svg class="ico" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4.5" width="18" height="16.5" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg></span><span class="label">الجدول الأسبوعي</span></div>
+  <div class="nav-item" data-tab="courses"><span class="ic"><svg class="ico" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5v-15zM4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/></svg></span><span class="label">موادي</span></div>
+  <div class="nav-item" data-tab="tasks"><span class="ic"><svg class="ico" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M3.5 6l1.2 1.2L7 4.8M3.5 12l1.2 1.2L7 10.8M3.5 18l1.2 1.2L7 16.8"/></svg></span><span class="label">المهام</span></div>
+  <div class="nav-item" data-tab="exams"><span class="ic"><svg class="ico" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12M6 21h12M7 3v3.5c0 1.6 1 2.6 2.2 3.5L12 12l-2.8 2c-1.2.9-2.2 1.9-2.2 3.5V21M17 3v3.5c0 1.6-1 2.6-2.2 3.5L12 12l2.8 2c1.2.9 2.2 1.9 2.2 3.5V21"/></svg></span><span class="label">الامتحانات</span></div>
+  <div class="nav-item" data-tab="attendance"><span class="ic"><svg class="ico" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12.3l2.8 2.8L16.3 9.5"/></svg></span><span class="label">الحضور</span></div>
   <div class="nav-section">المذاكرة</div>
-  <div class="nav-item" data-tab="timer"><span class="ic">⏱️</span><span class="label">بومودورو</span></div>
-  <div class="nav-item" data-tab="flashcards"><span class="ic">🃏</span><span class="label">بطاقات تعليمية</span></div>
+  <div class="nav-item" data-tab="timer"><span class="ic"><svg class="ico" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13.5" r="8"/><path d="M12 9v4.5l3 1.8M9.5 2.5h5"/></svg></span><span class="label">بومودورو</span></div>
+  <div class="nav-item" data-tab="flashcards"><span class="ic"><svg class="ico" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="7" width="15" height="13" rx="2.5"/><path d="M3 15V6a2.5 2.5 0 0 1 2.5-2.5H16"/></svg></span><span class="label">بطاقات تعليمية</span></div>
   <div class="nav-section">الأدوات</div>
-  <div class="nav-item" data-tab="gradecalc"><span class="ic">📊</span><span class="label">علاماتي</span></div>
-  <div class="nav-item" data-tab="budget"><span class="ic">💰</span><span class="label">الميزانية</span></div>
-  <div class="nav-item" data-tab="notes"><span class="ic">📔</span><span class="label">ملاحظاتي</span></div>
-  <div class="nav-item" data-tab="plan"><span class="ic">📖</span><span class="label">الخطة والمواد</span></div>
+  <div class="nav-item" data-tab="gradecalc"><span class="ic"><svg class="ico" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span><span class="label">علاماتي</span></div>
+  <div class="nav-item" data-tab="budget"><span class="ic"><svg class="ico" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5H19v14H5.5A2.5 2.5 0 0 1 3 16.5v-9z"/><path d="M16 12h5v4h-5a2 2 0 0 1 0-4z"/></svg></span><span class="label">الميزانية</span></div>
+  <div class="nav-item" data-tab="notes"><span class="ic"><svg class="ico" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg></span><span class="label">ملاحظاتي</span></div>
+  <div class="nav-item" data-tab="plan"><span class="ic"><svg class="ico" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14"/></svg></span><span class="label">الخطة والمواد</span></div>
   <div class="nav-section">الجامعة</div>
-  <div class="nav-item" data-tab="hulinks"><span class="ic">🎓</span><span class="label">روابط الجامعة</span></div>
+  <div class="nav-item" data-tab="hulinks"><span class="ic"><svg class="ico" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 9l10-5 10 5-10 5-10-5z"/><path d="M6 11.5V16c0 1.4 2.7 3 6 3s6-1.6 6-3v-4.5M22 9v6"/></svg></span><span class="label">روابط الجامعة</span></div>
 </aside>
 
 <main>
@@ -480,7 +480,7 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
    1) إن لم يطابق window.APP_BUILD رقم BUILD هنا → يمسح كاش التطبيق ويعيد التحميل مرة واحدة (حارس sessionStorage يمنع التكرار).
    2) أقسام اللوحة المتقدمة (تحليلات/LMS/إحصائيات) تُنقل إلى خانتها الثابتة إذا أضافتها سكربتات قديمة بمكان آخر. */
 (function(){
-  var BUILD = '91';
+  var BUILD = '92';
   var SLOTS = { insightsSection: 'slotInsights', lmsWidget: 'slotLms', enhancedStatsSection: 'slotEnhanced' };
   function heal(){
     var dash = document.getElementById('dashboard'); if(!dash) return;

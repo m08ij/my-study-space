@@ -1164,7 +1164,7 @@
     var html = '';
     BN_TABS.forEach(function(t){
       html += '<button class="bn-item" data-bn-tab="' + t.id + '" type="button">' +
-        '<span class="bn-ic">' + t.icon + '</span><span class="bn-lbl">' + t.label + '</span></button>';
+        '<span class="bn-ic">' + ((window.NAV_SVG && window.NAV_SVG[t.id]) || t.icon) + '</span><span class="bn-lbl">' + t.label + '</span></button>';
     });
     bar.innerHTML = html;
     document.body.appendChild(bar);

@@ -654,7 +654,7 @@
             '<span style="font-size:var(--fs-2xs);color:var(--muted2)" data-files-count="' + c.id + '">—</span>' +
           '</div>' +
           '<div class="course-files-list" data-files-list="' + c.id + '">' +
-            '<div class="u-empty">جاري التحميل...</div>' +
+            '<div class="u-empty is-loading">جاري التحميل...</div>' +
           '</div>' +
           '<button class="upload-course-btn" data-upload-course="' + c.id + '">📤 رفع ملف</button>' +
           '<input type="file" style="display:none" data-file-input="' + c.id + '">' +
@@ -769,13 +769,13 @@
       var folders = [courseId].concat((course && course.filesFrom) || []);
       var files = await window.SB.listCourseFilesMulti(folders);
       if(files === null){
-        list.innerHTML = '<div class="u-empty">تعذّر تحميل الملفات (تحقق من الاتصال) ' +
+        list.innerHTML = '<div class="u-empty is-error">تعذّر تحميل الملفات (تحقق من الاتصال) ' +
           '<a href="#" data-retry-files="' + esc(courseId) + '" style="color:var(--accent)">إعادة المحاولة</a></div>';
         if(count) count.textContent = '—';
         var rb = list.querySelector('[data-retry-files]');
         if(rb) rb.addEventListener('click', function(ev){
           ev.preventDefault();
-          list.innerHTML = '<div class="u-empty">جاري التحميل…</div>';
+          list.innerHTML = '<div class="u-empty is-loading">جاري التحميل…</div>';
           window.SB.listCourseFilesMulti(folders, true).then(function(){ window.loadCourseFilesForCard(courseId); });
         });
         return;

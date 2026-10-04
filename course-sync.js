@@ -531,7 +531,7 @@
 
       var itemsHtml = '';
       if(!g.items || !g.items.length){
-        itemsHtml = '<div style="text-align:center;padding:14px;font-size:var(--fs-xs);color:var(--muted2)">' +
+        itemsHtml = '<div class="u-empty">' +
           'ما في علامات — اضغط "+ علامة" للبدء</div>';
       } else {
         (g.items || []).forEach(function(it, i){
@@ -671,7 +671,7 @@
             '<span style="font-size:var(--fs-2xs);color:var(--muted2)" data-files-count="' + c.id + '">—</span>' +
           '</div>' +
           '<div class="course-files-list" data-files-list="' + c.id + '">' +
-            '<div class="u-empty">جاري التحميل...</div>' +
+            '<div class="u-empty is-loading">جاري التحميل...</div>' +
           '</div>' +
           '<button class="upload-course-btn" data-upload-course="' + c.id + '">📤 رفع ملف</button>' +
           '<input type="file" style="display:none" data-file-input="' + c.id + '">' +
@@ -807,7 +807,7 @@
       if(courseExams.length){
         sortExams(courseExams).forEach(function(e){ html += examCard(e); });
       } else {
-        html += '<div style="text-align:center;padding:14px;font-size:var(--fs-xs);color:var(--muted2)">' +
+        html += '<div class="u-empty">' +
           'ما في امتحانات — اضغط "+ امتحان" لإضافة</div>';
       }
 

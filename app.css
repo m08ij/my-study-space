@@ -1756,3 +1756,18 @@ main{padding-left:max(24px,env(safe-area-inset-left))}
 .u-note{font-size:var(--fs-2xs);color:var(--muted)}
 .u-empty{text-align:center;padding:10px;font-size:var(--fs-xs);color:var(--muted2)}
 .u-mono{font-size:var(--fs-2xs);color:var(--muted2);font-family:monospace}
+
+/* أيقونات SVG للتنقل (بدل الإيموجي) */
+.ico{display:block;flex:none}
+.nav-item .ic{display:inline-flex;align-items:center;justify-content:center}
+.nav-item .ic .ico{width:20px;height:20px}
+.bn-item .bn-ic{display:flex;height:24px;align-items:center;justify-content:center}
+.bn-item .bn-ic .ico{width:22px;height:22px}
+.bn-item.active .bn-ic .ico,.nav-item.active .ic .ico{stroke-width:2.2}
+
+/* حالات موحّدة: فراغ / تحميل / خطأ */
+.u-empty.is-loading::before{content:'';display:inline-block;width:12px;height:12px;margin-inline-end:8px;vertical-align:-2px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+.u-empty.is-error{color:var(--red)}
+.u-empty a{color:var(--accent)}
+@media (prefers-reduced-motion:reduce){.u-empty.is-loading::before{animation:none}}
+@keyframes spin{to{transform:rotate(360deg)}}
