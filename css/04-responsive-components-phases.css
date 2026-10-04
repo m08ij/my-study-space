@@ -570,3 +570,72 @@
 .bp-goals{display:flex;flex-direction:column;gap:10px}
 .bp-goal{background:var(--card2);border:1px solid var(--border);border-radius:var(--r-lg);padding:12px}
 .bp-goal-act{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:8px}
+
+
+/* ============================================================
+   قائمة الإعدادات + نافذة رمز المزامنة + استيراد التقويم (.ics)
+   ============================================================ */
+.settings-menu{padding:8px;border-radius:var(--r-lg);min-width:240px}
+.settings-item{display:flex;align-items:center;gap:10px;width:100%;padding:9px 10px;border-radius:var(--r-md);font-size:var(--fs-sm);font-weight:600;color:var(--text);text-align:start;transition:background var(--dur-1) ease,color var(--dur-1) ease}
+.settings-item > span:first-child{width:30px;height:30px;flex:none;display:inline-grid;place-items:center;border-radius:var(--r-md);background:var(--card2);border:1px solid var(--border);font-size:var(--fs-md);transition:background var(--dur-1) ease,border-color var(--dur-1) ease}
+.settings-item:hover{background:var(--card2)}
+.settings-item:hover > span:first-child{background:var(--grad-soft);border-color:var(--accent)}
+.settings-item:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.settings-divider{height:1px;margin:6px 4px;background:var(--border)}
+
+.sync-modal{max-width:440px;padding:22px}
+.sync-head{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.sync-head h3{margin:0}
+.sync-ic{width:44px;height:44px;flex:none;display:grid;place-items:center;border-radius:var(--r-lg);background:var(--grad);font-size:1.3rem}
+.sync-sub{margin:2px 0 0;font-size:var(--fs-xs);color:var(--muted)}
+.sync-x{margin-inline-start:auto;width:34px;height:34px;flex:none;border-radius:var(--r-md);border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:inherit}
+.sync-x:hover{color:var(--text);background:var(--card2)}
+.sync-code-box label{display:block;font-size:var(--fs-xs);color:var(--muted);margin-bottom:6px}
+.sync-code{width:100%;text-align:center;font-family:ui-monospace,monospace;font-size:clamp(1.1rem,6vw,1.6rem);font-weight:800;letter-spacing:.2em;padding:14px 10px;background:var(--bg2);color:var(--text);border:1px dashed var(--accent);border-radius:var(--r-lg)}
+.sync-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+.sync-steps{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border-radius:var(--r-md);background:var(--card2);font-size:var(--fs-xs);color:var(--muted);line-height:1.7}
+.sync-steps b{color:var(--text)}
+.sync-warn{margin-top:10px;padding:10px 12px;border-radius:var(--r-md);border:1px solid var(--amber);font-size:var(--fs-xs);color:var(--text);line-height:1.7}
+.sync-qr-box{margin-top:12px;font-size:var(--fs-xs);color:var(--muted)}
+.sync-qr-box summary{cursor:pointer;color:var(--accent)}
+.sync-qr-box p{margin:8px 0;line-height:1.7}
+.sync-qr{text-align:center;margin-top:10px}
+.sync-qr-img{border-radius:var(--r-md);background:#fff;padding:8px;max-width:100%}
+.sync-footer{display:flex;gap:8px;justify-content:space-between;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)}
+
+.ics-modal{max-width:520px;padding:22px}
+.ics-modal.wide{max-width:780px;width:100%;max-height:92vh;display:flex;flex-direction:column;overflow:hidden}
+.ics-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.ics-head h3{margin:0}
+.ics-choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(210px,100%),1fr));gap:10px;margin-bottom:12px}
+.ics-choice{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:14px;text-align:start;font-family:inherit;color:var(--text);background:var(--card2);border:1px solid var(--border);border-radius:var(--r-lg);cursor:pointer;transition:border-color var(--dur-1) ease,transform var(--dur-1) ease}
+.ics-choice:hover,.ics-choice:focus-visible{border-color:var(--accent);transform:translateY(-1px);outline:none}
+.ics-choice .ic{font-size:1.5rem}
+.ics-choice small{color:var(--muted);font-size:var(--fs-xs);line-height:1.6}
+.ics-note{font-size:var(--fs-xs);color:var(--muted);line-height:1.8;margin:10px 0}
+.ics-file{font-size:var(--fs-sm);color:var(--muted);margin-bottom:8px;overflow-wrap:anywhere}
+.ics-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.ics-chip{display:inline-block;padding:2px 9px;border-radius:var(--r-pill);font-size:var(--fs-2xs);font-weight:700;border:1px solid var(--border);background:var(--card2);color:var(--muted);white-space:nowrap}
+.ics-chip.ok{color:var(--green);border-color:var(--green)}
+.ics-chip.warn{color:var(--amber);border-color:var(--amber)}
+.ics-warns{padding:8px 10px;margin-bottom:8px;border-radius:var(--r-md);background:var(--card2);font-size:var(--fs-xs);line-height:1.7}
+.ics-toolbar{display:flex;gap:8px;margin-bottom:8px}
+.ics-list{overflow:auto;flex:1 1 auto;min-height:120px;border:1px solid var(--border);border-radius:var(--r-lg);background:var(--bg2)}
+.ics-row{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:start;padding:10px 12px;border-bottom:1px solid var(--border)}
+.ics-row:last-child{border-bottom:0}
+.ics-row.past .ics-title{color:var(--muted)}
+.ics-row.off{opacity:.65}
+.ics-chk{display:flex;padding-top:2px}
+.ics-chk input{width:18px;height:18px}
+.ics-main{min-width:0}
+.ics-title{font-size:var(--fs-sm);font-weight:700;overflow-wrap:anywhere}
+.ics-meta{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:var(--fs-xs);color:var(--muted);margin-top:2px}
+.ics-old{font-size:var(--fs-2xs);color:var(--muted);margin-top:3px;line-height:1.6}
+.ics-side{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.ics-side select{min-height:30px;padding:2px 6px;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:var(--r-sm);font-family:inherit;font-size:var(--fs-xs)}
+.ics-actions{display:flex;align-items:center;gap:8px;justify-content:flex-end;margin-top:8px}
+.ics-count{margin-inline-end:auto;font-size:var(--fs-xs);color:var(--muted)}
+@media (max-width:520px){.ics-row{grid-template-columns:auto 1fr}.ics-side{grid-column:2;flex-direction:row;align-items:center;flex-wrap:wrap}}
+.settings-menu{min-width:272px;max-width:calc(100vw - 20px)}
+.settings-item{white-space:nowrap}
+.settings-item > span:not(:first-child){overflow:hidden;text-overflow:ellipsis}

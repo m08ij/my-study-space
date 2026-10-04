@@ -812,11 +812,8 @@
       if(p && p.classList.contains('show') && !e.target.closest('#themePanel') && !e.target.closest('#themeBtn')) p.classList.remove('show');
       if(!e.target.closest('.settings-wrap')) window.closeSettingsMenu();
     });
-    var bb = document.getElementById('backupBtn'); if(bb) bb.addEventListener('click', function(){ window.closeSettingsMenu(); window.downloadBackup(false); });
-    var rb = document.getElementById('restoreBtn'); if(rb) rb.addEventListener('click', function(){ window.closeSettingsMenu(); window.restoreFromFile(); });
     var rp = document.getElementById('restorePrevBtn'); if(rp) rp.addEventListener('click', function(){ window.closeSettingsMenu(); window.restorePreviousBackup(); });
     window.refreshRestorePrevBtn();
-    var pdfBtn = document.getElementById('pdfBtn'); if(pdfBtn) pdfBtn.addEventListener('click', function(){ window.closeSettingsMenu(); window.exportPDF(); });
 
     document.querySelectorAll('[data-gc-tab]').forEach(function(btn){
       btn.addEventListener('click', function(){ window.switchSubTab('gradecalc', btn.dataset.gcTab); });

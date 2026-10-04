@@ -649,7 +649,6 @@
         '📥 <b>استيراد تقويم LMS:</b> نزّل ملف <code>.ics</code> من LMS → استورده هنا لدمج الواجبات مع جدولك.' +
       '</div>' +
       '<button class="btn btn-sm" id="moodleImportBtn">📅 استيراد تقويم (.ics)</button>' +
-      '<input type="file" id="moodleIcsFile" accept=".ics,text/calendar" style="display:none">' +
     '</div>';
 
     sec.innerHTML = html;
@@ -658,77 +657,7 @@
     (document.getElementById('slotLms') || dash).appendChild(sec);
 
     var importBtn = document.getElementById('moodleImportBtn');
-    var fileInput = document.getElementById('moodleIcsFile');
-    if(importBtn && fileInput){
-      importBtn.addEventListener('click', function(){ fileInput.click(); });
-      fileInput.addEventListener('change', function(e){
-        var f = e.target.files[0];
-        if(f) parseMoodleIcs(f);
-        fileInput.value = '';
-      });
-    }
-  }
-
-  /* Simple .ics parser for Moodle */
-  function parseMoodleIcs(file){
-    var reader = new FileReader();
-    reader.onload = function(e){
-      try{
-        var text = String(e.target.result || '');
-        /* Unfold lines */
-        text = text.replace(/\r\n[ \t]/g, '').replace(/\n[ \t]/g, '');
-        var events = text.split('BEGIN:VEVENT').slice(1);
-        var imported = 0;
-        var sp = space();
-        if(!sp.tasks) sp.tasks = [];
-        if(!sp.exams) sp.exams = [];
-
-        events.forEach(function(block){
-          var get = function(key){
-            var m = block.match(new RegExp(key + '[^:]*:([^\\r\\n]+)'));
-            return m ? m[1].trim() : '';
-          };
-          var summary = get('SUMMARY').replace(/\\,/g,',').replace(/\\;/g,';').replace(/\\n/g,' ');
-          var dtstart = get('DTSTART');
-          if(!summary || !dtstart) return;
-          /* Parse YYYYMMDD or YYYYMMDDTHHMMSS */
-          var m = dtstart.match(/(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2}))?/);
-          if(!m) return;
-          var date = m[1] + '-' + m[2] + '-' + m[3];
-          var time = m[4] ? m[4] + ':' + m[5] : '';
-
-          var isExam = /exam|امتحان|اختبار|midterm|final/i.test(summary);
-          if(isExam){
-            sp.exams.push({
-              id: (window.uid ? window.uid() : Date.now() + Math.random()),
-              name: summary, course: '', date: date, time: time, room: ''
-            });
-          } else {
-            sp.tasks.push({
-              id: (window.uid ? window.uid() : Date.now() + Math.random()),
-              title: summary, type: 'assignment', course: '',
-              due: date, done: false, source: 'moodle'
-            });
-          }
-          imported++;
-        });
-
-        if(imported > 0){
-          saveSpace();
-          if(window.renderTasks) window.renderTasks();
-          if(window.renderExams) window.renderExams();
-          if(window.renderDashboard) window.renderDashboard();
-          window.celebrate(2);
-          toast('✅ استوردت ' + imported + ' عنصر من Moodle', 'success', 4000);
-        } else {
-          toast('⚠️ ما لقيت أحداث في الملف', 'warn', 3000);
-        }
-      }catch(err){
-        console.error(err);
-        toast('فشل تحليل الملف', 'warn', 3000);
-      }
-    };
-    reader.readAsText(file);
+    if(importBtn) importBtn.addEventListener('click', function(){ if(window.IcsImport) window.IcsImport.pick(); });
   }
 
   /* ============================================================

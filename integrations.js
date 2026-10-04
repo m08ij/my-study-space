@@ -1487,22 +1487,6 @@
     });
   };
 
-  function injectCalSyncBtn(){
-    var menu = document.getElementById('settingsMenu');
-    if(!menu || menu.querySelector('#calSyncBtn')) return;
-    var btn = document.createElement('button');
-    btn.className = 'settings-item';
-    btn.id = 'calSyncBtn';
-    btn.innerHTML = '<span>📅</span> مزامنة التقويم (.ics)';
-    btn.addEventListener('click', function(){
-      if(window.closeSettingsMenu) window.closeSettingsMenu();
-      window.exportCalendar();
-    });
-    var pdfBtn = menu.querySelector('#pdfBtn');
-    if(pdfBtn) menu.insertBefore(btn, pdfBtn);
-    else menu.appendChild(btn);
-  }
-
   /* ============================================================
      Insights
      ============================================================ */
@@ -1994,103 +1978,6 @@
   }
 
   /* ============================================================
-     Mindmap
-     ============================================================ */
-  function parseTextToTree(text){
-    if(!text) return null;
-    var lines = String(text).split(/\r?\n/).map(function(l){ return l.replace(/\t/g, '  '); }).filter(function(l){ return l.trim().length > 0; });
-    var root = { label: 'الموضوع', children: [] };
-    var stack = [{ node: root, indent: -1 }];
-    lines.forEach(function(line){
-      var indentMatch = line.match(/^(\s*)/);
-      var indent = indentMatch ? indentMatch[1].length : 0;
-      var content = line.trim().replace(/^[-*•]\s*/, '').replace(/^\d+[.)]\s*/, '');
-      while(stack.length > 1 && stack[stack.length - 1].indent >= indent) stack.pop();
-      var node = { label: content, children: [] };
-      stack[stack.length - 1].node.children.push(node);
-      stack.push({ node: node, indent: indent });
-    });
-    if(root.children.length === 1 && root.children[0].children.length > 0) return root.children[0];
-    return root;
-  }
-  function renderMindmapSVG(layout){
-    var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + layout.width + ' ' + layout.height + '" style="width:100%;height:auto;max-height:75vh;background:var(--bg2);border-radius:var(--r-lg)">';
-    layout.links.forEach(function(l){
-      var x1 = l.from.x, y1 = l.from.y, x2 = l.to.x, y2 = l.to.y;
-      var cx1 = (x1 + x2) / 2, cx2 = (x1 + x2) / 2;
-      svg += '<path d="M ' + x1 + ' ' + y1 + ' C ' + cx1 + ' ' + y1 + ', ' + cx2 + ' ' + y2 + ', ' + x2 + ' ' + y2 + '" stroke="' + l.to.color + '" stroke-width="2" fill="none" opacity="0.5"/>';
-    });
-    layout.nodes.forEach(function(n){
-      var fontSize = n.depth === 0 ? 14 : (n.depth === 1 ? 12 : 10);
-      var approxWidth = Math.max(70, n.label.length * (fontSize * 0.55) + 24);
-      var boxH = fontSize * 1.8;
-      svg += '<g>';
-      svg += '<rect x="' + (n.x - 4) + '" y="' + (n.y - boxH/2) + '" width="' + approxWidth + '" height="' + boxH + '" rx="10" fill="var(--card)" stroke="' + n.color + '" stroke-width="2"/>';
-      svg += '<text x="' + (n.x + approxWidth/2 - 4) + '" y="' + (n.y + fontSize * 0.35) + '" text-anchor="middle" font-family="Tahoma" font-size="' + fontSize + '" fill="var(--text)" style="direction:rtl">' + esc(n.label.slice(0, 40)) + '</text>';
-      svg += '</g>';
-    });
-    svg += '</svg>';
-    return svg;
-  }
-  window.openMindmapManual = function(){
-    document.querySelectorAll('.modal-backdrop').forEach(function(m){ m.remove(); });
-    var bd = document.createElement('div');
-    bd.className = 'modal-backdrop show';
-    bd.innerHTML = '<div class="modal" style="max-width:620px">' +
-      '<h3>🧠 خريطة ذهنية</h3>' +
-      '<div class="form-group"><label>العنوان</label><input id="mmTitle" placeholder="ملخص الفصل 3"></div>' +
-      '<div class="form-group"><label>المحتوى</label><textarea id="mmText" rows="12" style="font-family:monospace;direction:rtl;min-height:200px" placeholder="المفاهيم\n  - التعريف\n  - مثال"></textarea></div>' +
-      '<div class="modal-actions"><button class="btn btn-sm btn-ghost" id="mmCancel">إلغاء</button>' +
-      '<button class="btn btn-sm" id="mmGo">🎨 توليد</button></div></div>';
-    document.body.appendChild(bd);
-    setTimeout(function(){ var t = document.getElementById('mmText'); if(t) t.focus(); }, 150);
-    bd.querySelector('#mmCancel').onclick = function(){ bd.remove(); };
-    bd.onclick = function(e){ if(e.target === bd) bd.remove(); };
-    bd.querySelector('#mmGo').onclick = function(){
-      var title = (document.getElementById('mmTitle').value || '').trim();
-      var text = (document.getElementById('mmText').value || '').trim();
-      if(!text){ toast('اكتب محتوى', 'warn'); return; }
-      bd.remove();
-      var tree = parseTextToTree(text);
-      if(title && tree) tree.label = title;
-      var nodes = [{ id:'n0', x:60, y:200, label: tree.label, depth:0, color:'#22d3ee' }];
-      var links = [];
-      var colors = ['#22d3ee','#a78bfa','#34d399','#fbbf24','#f472b6','#f87171'];
-      (tree.children || []).forEach(function(child, i){
-        var childNode = { id:'c'+i, x:260, y:80 + i*80, label: child.label, depth:1, color: colors[i % colors.length] };
-        nodes.push(childNode);
-        links.push({ from: nodes[0], to: childNode });
-      });
-      var width = 800, height = Math.max(400, 80 * ((tree.children || []).length) + 100);
-      var svg = renderMindmapSVG({ nodes: nodes, links: links, width: width, height: height });
-      var bd2 = document.createElement('div');
-      bd2.className = 'modal-backdrop show';
-      bd2.innerHTML = '<div class="modal" style="max-width:96vw;width:1000px;padding:22px">' +
-        '<div style="display:flex;justify-content:space-between;margin-bottom:14px"><h3 style="margin:0">🧠 ' + esc(title || 'خريطة') + '</h3>' +
-        '<button class="btn btn-sm btn-ghost" id="mmClose2">✕</button></div>' +
-        '<div style="overflow:auto;background:var(--bg2);border-radius:var(--r-lg);padding:8px">' + svg + '</div></div>';
-      document.body.appendChild(bd2);
-      bd2.querySelector('#mmClose2').onclick = function(){ bd2.remove(); };
-      bd2.onclick = function(e){ if(e.target === bd2) bd2.remove(); };
-    };
-  };
-  function injectMindmapBtn(){
-    var menu = document.getElementById('settingsMenu');
-    if(!menu || menu.querySelector('#mmBtn')) return;
-    var btn = document.createElement('button');
-    btn.className = 'settings-item';
-    btn.id = 'mmBtn';
-    btn.innerHTML = '<span>🧠</span> خريطة ذهنية';
-    btn.addEventListener('click', function(){
-      if(window.closeSettingsMenu) window.closeSettingsMenu();
-      window.openMindmapManual();
-    });
-    var pdfBtn = menu.querySelector('#pdfBtn');
-    if(pdfBtn) menu.insertBefore(btn, pdfBtn);
-    else menu.appendChild(btn);
-  }
-
-  /* ============================================================
      Bindings
      ============================================================ */
   function bindAll(){
@@ -2165,8 +2052,6 @@
       };
       window._ibSwitchWrapped = true;
     }
-    injectCalSyncBtn();
-    injectMindmapBtn();
     setTimeout(injectPlanSimTab, 500);
     setTimeout(injectPlanSimTab, 1500);
     if(typeof window.renderDashboard === 'function' && !window._insightsWrapped){

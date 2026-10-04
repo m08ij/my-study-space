@@ -250,26 +250,21 @@
     bd.className = 'modal-backdrop show';
     var escFn = window.esc || function(s){ return String(s==null?'':s); };
     bd.innerHTML =
-      '<div class="modal" style="max-width:440px">' +
-        '<h3>☁️ رمز المزامنة</h3>' +
-        '<p style="color:var(--muted);font-size:var(--fs-sm);line-height:1.7;margin-bottom:16px">' +
-          'هذا الرمز هو مفتاح مساحتك في السحابة. أدخله على أي جهاز آخر لترى نفس بياناتك.' +
-        '</p>' +
-        '<div class="form-group">' +
-          '<label>الرمز</label>' +
-          '<input id="syncCodeInput" value="' + escFn(getCode()) + '" readonly ' +
-          'style="font-family:monospace;text-align:center;font-size:var(--fs-xl);font-weight:800;direction:ltr;letter-spacing:4px">' +
+      '<div class="modal sync-modal" role="dialog" aria-modal="true" aria-label="رمز المزامنة">' +
+        '<div class="sync-head"><span class="sync-ic" aria-hidden="true">☁️</span><div><h3>رمز المزامنة</h3><p class="sync-sub">مفتاح مساحتك في السحابة</p></div>' +
+          '<button class="sync-x" id="syncX" type="button" aria-label="إغلاق">✕</button></div>' +
+        '<div class="sync-code-box"><label for="syncCodeInput">رمزك</label>' +
+          '<input id="syncCodeInput" class="sync-code" value="' + escFn(getCode()) + '" readonly dir="ltr" aria-label="رمز المزامنة"></div>' +
+        '<div class="sync-actions">' +
+          '<button class="btn" id="syncCopy" type="button">📋 نسخ الرمز</button>' +
+          '<button class="btn" id="syncShare" type="button">📤 مشاركة</button>' +
         '</div>' +
-        '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">' +
-          '<button class="btn btn-sm" id="syncCopy" style="flex:1">📋 نسخ</button>' +
-          '<button class="btn btn-sm" id="syncShare" style="flex:1">📤 مشاركة</button>' +
-          '<button class="btn btn-sm btn-ghost" id="syncChange" style="flex:1">🔄 تغيير</button>' +
-          '<button class="btn btn-sm btn-ghost" id="syncClose" style="flex:1">إغلاق</button>' +
-        '</div>' +
-        '<div id="syncQr" style="margin-top:14px;text-align:center;display:none"></div>' +
-        '<div style="margin-top:14px;padding:10px;background:var(--grad-soft);border-radius:var(--r-md);font-size:var(--fs-xs);color:var(--muted);line-height:1.7">' +
-          '💡 احفظ هذا الرمز في مكان آمن.' +
-        '</div>' +
+        '<div class="sync-steps"><b>كيف تستخدمه؟</b><span>على جهاز آخر: افتح التطبيق ← المزامنة السحابية ← «تغيير» وأدخل هذا الرمز، فتظهر نفس بياناتك.</span></div>' +
+        '<div class="sync-warn">🔐 أي شخص يملك هذا الرمز يصل لبياناتك. احفظه بمكان آمن ولا تنشره.</div>' +
+        '<details class="sync-qr-box"><summary>عرض رمز QR (اختياري)</summary>' +
+          '<p>يُنشأ الـQR عبر خدمة خارجية (api.qrserver.com) وبتستقبل الرمز لحظة العرض. استخدمه فقط إن كنت تقبل ذلك.</p>' +
+          '<button class="btn btn-sm btn-ghost" id="syncQrBtn" type="button">إنشاء QR</button><div id="syncQr" class="sync-qr"></div></details>' +
+        '<div class="sync-footer"><button class="btn btn-ghost" id="syncChange" type="button">🔄 تغيير الرمز</button><button class="btn btn-ghost" id="syncClose" type="button">إغلاق</button></div>' +
       '</div>';
     document.body.appendChild(bd);
 
@@ -290,11 +285,13 @@
         navigator.clipboard.writeText(msg);
         if(window.toast) window.toast('📋 نُسخ الرابط', 'success');
       }
-      var qr = bd.querySelector('#syncQr');
+    };
+    bd.querySelector('#syncQrBtn').onclick = function(){
+      var qr = bd.querySelector('#syncQr'), c = getCode();
       if(qr && !qr.innerHTML){
-        qr.style.display = 'block';
-        qr.innerHTML = '<img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' +
-          encodeURIComponent(c) + '" alt="QR" style="border-radius:var(--r-md);background:#fff;padding:8px">';
+        var img = document.createElement('img'); img.alt = 'QR'; img.className = 'sync-qr-img';
+        img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' + encodeURIComponent(c);
+        qr.appendChild(img);
       }
     };
     bd.querySelector('#syncChange').onclick = function(){
@@ -312,6 +309,9 @@
       }
     };
     bd.querySelector('#syncClose').onclick = function(){ bd.remove(); };
+    bd.querySelector('#syncX').onclick = function(){ bd.remove(); };
+    bd.addEventListener('keydown', function(e){ if(e.key === 'Escape') bd.remove(); });
+    setTimeout(function(){ var c = bd.querySelector('#syncCopy'); if(c) c.focus(); }, 60);
     bd.onclick = function(e){ if(e.target === bd) bd.remove(); };
   }
 

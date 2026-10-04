@@ -1,5 +1,5 @@
 /* ============================================================
-   widgets.js v8 — Widgets + Calendar + Mindmap
+   widgets.js v8 — Widgets + Calendar
    - ✅ FIXED: كل UTC bugs (3 مواقع)
    - ✅ FIXED: focus screen + prayer + events
    ============================================================ */
