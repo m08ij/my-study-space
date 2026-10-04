@@ -1371,7 +1371,7 @@
 
   window.clearGpa = function(){
     window.customConfirm('مسح كل المواد؟', function(){
-      window.gpaRows = [{name:'', hrs:3, grade:'A (90-100)'}];
+      window.gpaRows = [{name:'', hrs:0, grade:'A (90-100)'}];
       getS().set('gpaRows', window.gpaRows);
       window.renderGpa();
     });
