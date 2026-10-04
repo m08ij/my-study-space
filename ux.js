@@ -215,6 +215,30 @@
   }
   setTimeout(function(){ maybeMorning(); }, 3500);
 
+  /* حبس Tab لكل نافذة .modal-backdrop تُضاف للصفحة (مزامنة، ICS، سجل الأخطاء، إدخال سريع، بطاقات...).
+     النوافذ التي تحبس بنفسها (showModal / customConfirm) تضع bd._trap فتُتخطّى. */
+  function trapDialogs(){
+    if(typeof MutationObserver === 'undefined' || !document.body) return;
+    new MutationObserver(function(muts){
+      muts.forEach(function(m){
+        Array.prototype.forEach.call(m.addedNodes, function(bd){
+          if(!bd.classList || !bd.classList.contains('modal-backdrop') || bd._trap) return;
+          bd._trap = true;
+          bd.addEventListener('keydown', function(e){
+            if(e.key !== 'Tab') return;
+            var f = Array.prototype.filter.call(bd.querySelectorAll('input,select,textarea,button,a[href],[tabindex]:not([tabindex="-1"])'), function(n){ return !n.disabled && !n.closest('[hidden]'); });
+            if(!f.length) return;
+            var first = f[0], last = f[f.length - 1];
+            if(!bd.contains(document.activeElement)){ e.preventDefault(); first.focus(); }
+            else if(e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
+            else if(!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
+          });
+        });
+      });
+    }).observe(document.body, { childList: true });
+  }
+  trapDialogs();
+
   var _enhance = enhance;
   enhance = function(){ _enhance(); renderExamMode(); };
   window.UX = { enhance: function(){ enhance(); }, renderExamMode: renderExamMode, maybeNag: maybeNag, maybeMorning: maybeMorning, morningData: morningData };

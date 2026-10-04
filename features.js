@@ -19,6 +19,38 @@
   function space(){ return window.space || {}; }
   function getS(){ return window.S || {get:function(k,d){return d;}}; }
 
+  /* حذف فوري مع «تراجع» 6 ثوانٍ (بدل نافذة تأكيد). التراجع يعيد العنصر لمكانه إن لم يُعَد إنشاؤه. */
+  function softDelete(list, id, label, after){
+    var arr = space()[list]; if(!Array.isArray(arr)) return;
+    var idx = -1; arr.forEach(function(x, i){ if(x.id === id) idx = i; });
+    if(idx < 0) return;
+    var item = arr.splice(idx, 1)[0];
+    saveSpace(); after();
+    if(window.toastUndo) window.toastUndo('حُذف: ' + label, function(){
+      var a = window.space && window.space[list]; if(!Array.isArray(a)) return;
+      if(a.some(function(x){ return x.id === id; })) return;
+      a.splice(Math.min(idx, a.length), 0, item); saveSpace(); after();
+    });
+  }
+  /* وقت: يقبل 10:30 / 10 / 3pm / 3 م / ١٠:٣٠ ويرجع HH:MM، أو مجال 10:00-12:00 كما هو؛ فاضي مسموح */
+  function normTime(s){
+    s = String(s == null ? '' : s).trim();
+    if(!s) return { ok: true, value: '' };
+    s = s.replace(/[٠-٩]/g, function(d){ return String(d.charCodeAt(0) - 1632); }).replace(/[۰-۹]/g, function(d){ return String(d.charCodeAt(0) - 1776); });
+    if(/^\d{1,2}:\d{2}\s*[-–]\s*\d{1,2}:\d{2}$/.test(s)) return { ok: true, value: s };
+    var m = /^(\d{1,2})(?::(\d{2}))?\s*(am|pm|ص|م|صباحا|صباحاً|مساء|مساءً|ظهرا|ظهراً)?$/i.exec(s);
+    if(!m) return { ok: false };
+    var h = parseInt(m[1], 10), mi = m[2] ? parseInt(m[2], 10) : 0, suf = (m[3] || '').toLowerCase();
+    if(mi > 59 || h > 23) return { ok: false };
+    if(suf){
+      if(h > 12 || h === 0) return { ok: false };
+      var pm = /^(pm|م|مساء|مساءً|ظهرا|ظهراً)$/.test(suf);
+      if(pm && h < 12) h += 12; else if(!pm && h === 12) h = 0;
+    }
+    return { ok: true, value: String(h).padStart(2, '0') + ':' + String(mi).padStart(2, '0') };
+  }
+  window._normTime = normTime;
+
   /* ============================================================
      CUSTOM CONFIRM
      ============================================================ */
@@ -38,6 +70,7 @@
         '<button class="btn btn-sm' + (danger ? ' btn-danger' : '') + '" id="cConfirm">' + esc(opts.okLabel || '🗑 نعم، احذف') + '</button>' +
       '</div></div>';
     document.body.appendChild(bd);
+    bd._trap = true;
     var done = false;
     var close = function(){ if(window.dismissOverlay) window.dismissOverlay(bd); else bd.remove(); };
     bd.querySelector('#cCancel').onclick = close;
@@ -484,8 +517,13 @@
   function refreshTasks(){ saveSpace(); window.renderTasks(); window.renderDashboard(); }
 
   window.addTask = function(){
+    var warned = null;
     window.showModal('إضافة مهمة', taskFields(), {title:'', type:'task', course:'', due:'', priority:'normal', status:'todo'}, function(data){
       if(!String(data.title || '').trim()){ toast('أدخل عنوانًا', 'warn'); return false; }
+      /* تاريخ ماضٍ: تنبيه مرة واحدة؛ الحفظ الثاني بنفس التاريخ يؤكد */
+      if(data.due && data.due < today() && data.status !== 'done' && warned !== data.due){
+        warned = data.due; toast('تاريخ التسليم مضى — اضغط حفظ مرة ثانية للتأكيد', 'warn', 3500); return { field: 'due', warn: true };
+      }
       if(!space().tasks) window.space.tasks = [];
       var t = { id: uid(), title: String(data.title).trim(), type: data.type, course: data.course, due: data.due, done: false,
         priority: data.priority || 'normal', order: nextOrder() };
@@ -521,10 +559,7 @@
       refreshTasks();
       return true;
     }, function(){
-      window.customConfirm('حذف "' + t.title + '"؟', function(){
-        window.space.tasks = window.space.tasks.filter(function(x){ return x.id !== id; });
-        refreshTasks();
-      });
+      softDelete('tasks', id, t.title, function(){ window.renderTasks(); window.renderDashboard(); });
     });
   };
 
@@ -541,10 +576,7 @@
   window.deleteTask = function(id){
     var t = (space().tasks || []).find(function(x){ return x.id === id; });
     if(!t) return;
-    window.customConfirm('حذف "' + t.title + '"؟', function(){
-      window.space.tasks = window.space.tasks.filter(function(x){ return x.id !== id; });
-      saveSpace(); window.renderTasks(); window.renderDashboard();
-    });
+    softDelete('tasks', id, t.title, function(){ window.renderTasks(); window.renderDashboard(); });
   };
 
   /* ============================================================
@@ -553,6 +585,7 @@
   /* renderExams: النسخة الفعلية في course-sync.js (حُذفت النسخة المكرّرة من هنا) */
 
   window.addExam = function(){
+    var warnedExam = null;
     var opts = [{v:'', l:'— بدون مادة —'}];
     (space().courses || []).forEach(function(c){ opts.push({v: c.name, l: c.name}); });
     window.showModal('إضافة امتحان', [
@@ -563,6 +596,12 @@
       {key:'room', label:'القاعة'}
     ], {name:'', course:'', date:'', time:'', room:''}, function(data){
       if(!data.name || !data.date){ toast('أدخل الاسم والتاريخ', 'warn'); return false; }
+      var tm = normTime(data.time);
+      if(!tm.ok){ toast('الوقت غير مفهوم — اكتبه مثل 10:30 أو 3 م', 'warn', 3500); return { field: 'time' }; }
+      data.time = tm.value;
+      if(data.date < today() && warnedExam !== data.date){
+        warnedExam = data.date; toast('تاريخ الامتحان مضى — اضغط حفظ مرة ثانية للتأكيد', 'warn', 3500); return { field: 'date', warn: true };
+      }
       if(!space().exams) window.space.exams = [];
       window.space.exams.push(Object.assign({id: uid()}, data));
       saveSpace(); window.renderExams(); window.renderDashboard();
@@ -583,25 +622,24 @@
       {key:'room', label:'القاعة'}
     ], e, function(data){
       if(!data.name || !data.date){ toast('أدخل الاسم والتاريخ', 'warn'); return false; }
+      if(data.time !== String(e.time || '')){   /* القيم القديمة غير المنسّقة تبقى كما هي ما لم تُعدَّل */
+        var tm = normTime(data.time);
+        if(!tm.ok){ toast('الوقت غير مفهوم — اكتبه مثل 10:30 أو 3 م', 'warn', 3500); return { field: 'time' }; }
+        data.time = tm.value;
+      }
       e.name = data.name; e.course = data.course; e.date = data.date;
       e.time = data.time; e.room = data.room;
       saveSpace(); window.renderExams(); window.renderDashboard();
       return true;
     }, function(){
-      window.customConfirm('حذف "' + e.name + '"؟', function(){
-        window.space.exams = window.space.exams.filter(function(x){ return x.id !== id; });
-        saveSpace(); window.renderExams(); window.renderDashboard();
-      });
+      softDelete('exams', id, e.name, function(){ window.renderExams(); window.renderDashboard(); });
     });
   };
 
   window.deleteExam = function(id){
     var e = (space().exams || []).find(function(x){ return x.id === id; });
     if(!e) return;
-    window.customConfirm('حذف "' + e.name + '"؟', function(){
-      window.space.exams = window.space.exams.filter(function(x){ return x.id !== id; });
-      saveSpace(); window.renderExams(); window.renderDashboard();
-    });
+    softDelete('exams', id, e.name, function(){ window.renderExams(); window.renderDashboard(); });
   };
 
   /* ============================================================
@@ -867,114 +905,7 @@
   /* ============================================================
      FLASHCARDS
      ============================================================ */
-  window.renderDecks = function(){
-    var c = document.getElementById('decksList'); if(!c) return;
-    var decks = space().decks || [];
-    if(!decks.length){
-      c.innerHTML = '<div class="empty"><div class="ic">🃏</div><p>لا توجد مجموعات</p></div>';
-      return;
-    }
-    var html = '';
-    decks.forEach(function(d){
-      html += '<div class="fc-deck" data-deck="' + d.id + '">' +
-        '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px">' +
-          '<div style="flex:1;min-width:0"><div class="name">🃏 ' + esc(d.name) + '</div>' +
-          '<div class="meta">' + (d.cards || []).length + ' بطاقة</div></div>' +
-          '<button class="btn btn-sm btn-danger" data-del-deck="' + d.id + '">🗑</button></div></div>';
-    });
-    c.innerHTML = html;
-    c.querySelectorAll('[data-deck]').forEach(function(b){
-      b.addEventListener('click', function(e){
-        if(e.target.closest('[data-del-deck]')) return;
-        window.openDeck(b.dataset.deck);
-      });
-    });
-    c.querySelectorAll('[data-del-deck]').forEach(function(b){
-      b.addEventListener('click', function(e){
-        e.stopPropagation();
-        window.deleteDeck(b.dataset.delDeck);
-      });
-    });
-  };
-
-  window.deleteDeck = function(id){
-    var d = (space().decks || []).find(function(x){ return x.id === id; });
-    if(!d) return;
-    window.customConfirm('حذف "' + d.name + '"؟', function(){
-      window.space.decks = window.space.decks.filter(function(x){ return x.id !== id; });
-      saveSpace(); window.renderDecks();
-    });
-  };
-
-  window.addDeck = function(){
-    window.showModal('مجموعة جديدة', [{key:'name', label:'الاسم'}], {name:''}, function(data){
-      if(!data.name){ toast('أدخل اسمًا', 'warn'); return false; }
-      if(!space().decks) window.space.decks = [];
-      window.space.decks.push({id: uid(), name: data.name, cards: []});
-      saveSpace(); window.renderDecks();
-      return true;
-    });
-  };
-
-  window.openDeck = function(id){
-    var d = (space().decks || []).find(function(x){ return x.id === id; });
-    if(!d) return;
-    if(!d.cards || !d.cards.length){
-      window.showModal('بطاقة جديدة: ' + d.name, [
-        {key:'q', label:'السؤال'}, {key:'a', label:'الجواب'}
-      ], {q:'', a:''}, function(data){
-        if(!data.q || !data.a){ toast('أدخل السؤال والجواب', 'warn'); return false; }
-        d.cards.push({q: data.q, a: data.a});
-        saveSpace(); window.openDeck(id);
-        return true;
-      });
-      return;
-    }
-    showCardSession(d);
-  };
-
-  function showCardSession(d){
-    var idx = 0, showBack = false;
-    function render(){
-      document.querySelectorAll('.modal-backdrop').forEach(function(m){ m.remove(); });
-      var bd = document.createElement('div');
-      bd.className = 'modal-backdrop show';
-      var card = d.cards[idx];
-      bd.innerHTML = '<div class="modal" style="max-width:520px">' +
-        '<h3 style="display:flex;justify-content:space-between;align-items:center">' +
-        '<span>🃏 ' + esc(d.name) + '</span><span style="font-size:var(--fs-sm);color:var(--muted)">' +
-        (idx+1) + '/' + d.cards.length + '</span></h3>' +
-        '<div class="fc-card" id="fcFlip"><div class="' + (showBack ? 'back' : 'front') + '">' +
-        esc(showBack ? card.a : card.q) + '</div>' +
-        '<div class="hint">انقر للقلب</div></div>' +
-        '<div class="modal-actions" style="justify-content:space-between">' +
-        '<button class="btn btn-sm btn-ghost" id="fcPrev" ' + (idx === 0 ? 'disabled' : '') + '>← السابق</button>' +
-        '<button class="btn btn-sm btn-ghost" id="fcAdd">+ بطاقة</button>' +
-        '<button class="btn btn-sm" id="fcNext">' +
-        (idx === d.cards.length - 1 ? 'إنهاء' : 'التالي →') + '</button></div></div>';
-      document.body.appendChild(bd);
-      var close = function(){ bd.remove(); };
-      bd.onclick = function(e){ if(e.target === bd) close(); };
-      bd.querySelector('#fcFlip').onclick = function(){ showBack = !showBack; render(); };
-      bd.querySelector('#fcPrev').onclick = function(){ if(idx > 0){ idx--; showBack = false; render(); } };
-      bd.querySelector('#fcAdd').onclick = function(){
-        close();
-        window.showModal('إضافة بطاقة', [
-          {key:'q', label:'السؤال'}, {key:'a', label:'الجواب'}
-        ], {q:'', a:''}, function(data){
-          if(!data.q || !data.a) return false;
-          d.cards.push({q: data.q, a: data.a});
-          saveSpace();
-          return true;
-        });
-      };
-      bd.querySelector('#fcNext').onclick = function(){
-        if(idx === d.cards.length - 1){ close(); toast('🎉 أكملت!', 'success', 2000); return; }
-        idx++; showBack = false; render();
-      };
-    }
-    render();
-  }
+  /* FLASHCARDS: انتقلت إلى cards.js (مراجعة متباعدة، جلسة مراجعة، إدارة) */
 
   /* ============================================================
      BUDGET
@@ -1116,18 +1047,12 @@
       saveSpace(); window.renderBudget(); window.renderDashboard();
       return true;
     }, function(){
-      window.customConfirm('حذف؟', function(){
-        window.space.budget = window.space.budget.filter(function(x){ return x.id !== id; });
-        saveSpace(); window.renderBudget(); window.renderDashboard();
-      });
+      softDelete('budget', id, 'المعاملة', function(){ window.renderBudget(); window.renderDashboard(); });
     });
   };
 
   window.deleteBudget = function(id){
-    window.customConfirm('حذف؟', function(){
-      window.space.budget = window.space.budget.filter(function(x){ return x.id !== id; });
-      saveSpace(); window.renderBudget(); window.renderDashboard();
-    });
+    softDelete('budget', id, 'المعاملة', function(){ window.renderBudget(); window.renderDashboard(); });
   };
 
   window.clearBudget = function(){
@@ -1188,8 +1113,13 @@
   };
 
   window.deleteNote = function(i){
-    window.customConfirm('حذف الملاحظة؟', function(){
-      window.notes.splice(i, 1);
+    var n = window.notes[i]; if(!n) return;
+    window.notes.splice(i, 1);
+    getS().set('notes', window.notes);
+    window.renderNotes(); window.renderDashboard();
+    if(window.toastUndo) window.toastUndo('حُذفت الملاحظة', function(){
+      if(window.notes.indexOf(n) > -1) return;
+      window.notes.splice(Math.min(i, window.notes.length), 0, n);
       getS().set('notes', window.notes);
       window.renderNotes(); window.renderDashboard();
     });

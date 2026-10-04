@@ -61,6 +61,7 @@
       '</div></div>';
     document.body.appendChild(bd);
 
+    bd._trap = true;
     var closed = false;
     function close(){
       if(closed) return; closed = true; if(window.dismissOverlay) window.dismissOverlay(bd); else bd.remove();
@@ -87,14 +88,16 @@
         if(window.toast) window.toast('تعذّر الحفظ — حاول مرة ثانية', 'warn', 3000);   /* بدل الفشل الصامت */
         return;
       }
-      if(result === false){
-        /* أول حقل فاضي يُعلَّم ويأخذ التركيز (بدل toast فقط) — القيم المدخلة تبقى كما هي */
-        var bad = null;
-        fields.forEach(function(f){ var el = document.getElementById('mf_' + f.key); if(!bad && el && !el.value.trim() && el.tagName !== 'SELECT' && f.type !== 'textarea') bad = el; });
+      if(result === false || (result && typeof result === 'object' && result.field)){
+        /* الحقل المحدّد (result.field) أو أول حقل فاضي يُعلَّم ويأخذ التركيز — القيم المدخلة تبقى كما هي */
+        var bad = (result && result.field) ? document.getElementById('mf_' + result.field) : null;
+        if(!bad) fields.forEach(function(f){ var el = document.getElementById('mf_' + f.key); if(!bad && el && !el.value.trim() && el.tagName !== 'SELECT' && f.type !== 'textarea') bad = el; });
         if(!bad){ var amt = bd.querySelector('input[type="number"]'); if(amt && !(parseFloat(amt.value) > 0)) bad = amt; }
         if(bad){
-          bad.setAttribute('aria-invalid', 'true'); bad.classList.add('is-invalid');
-          bad.addEventListener('input', function clr(){ bad.removeAttribute('aria-invalid'); bad.classList.remove('is-invalid'); bad.removeEventListener('input', clr); });
+          var warn = !!(result && result.warn), cls = warn ? 'is-warn' : 'is-invalid';
+          if(!warn) bad.setAttribute('aria-invalid', 'true');
+          bad.classList.add(cls);
+          bad.addEventListener('input', function clr(){ bad.removeAttribute('aria-invalid'); bad.classList.remove(cls); bad.removeEventListener('input', clr); });
           try{ bad.focus(); }catch(e){}
         }
         return;
