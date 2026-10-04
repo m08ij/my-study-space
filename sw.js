@@ -1,7 +1,7 @@
 /* ============================================================
    sw.js — شبكة أولاً + كاش احتياطي (v90)
    ============================================================ */
-var CACHE_NAME = 'ss-cache-v103';
+var CACHE_NAME = 'ss-cache-v104';
 var URLS_TO_CACHE = [
   './', './index.html', './app.css', './css/01-base.css', './css/02-motion-themes.css', './css/03-hub-dashboard-welcome.css', './css/04-responsive-components-phases.css',
   './core.js', './data.js', './supabase.js',

@@ -93,7 +93,7 @@
         if(st.allDay || (en.time === '00:00' && endDate > st.date)) endDate = addDays(endDate, -1);
         span = Math.max(1, diffDays(st.date, endDate) + 1);
       }
-      var base = { uid: r.UID ? String(r.UID.value).trim() : '', title: unescapeText(r.SUMMARY.value), date: st.date, time: st.time, allDay: !!st.allDay, span: span,
+      var base = { uid: r.UID ? String(r.UID.value).trim() : '', title: unescapeText(r.SUMMARY.value), date: st.date, time: st.time, endTime: (en && !en.allDay && en.date === st.date && st.time) ? en.time : '', allDay: !!st.allDay, span: span,
         location: r.LOCATION ? unescapeText(r.LOCATION.value) : '', categories: r.CATEGORIES ? unescapeText(r.CATEGORIES.value) : '',
         description: r.DESCRIPTION ? unescapeText(r.DESCRIPTION.value) : '', cancelled: !!(r.STATUS && /CANCELLED/i.test(r.STATUS.value)), notes: [] };
       if(st.tzUnknown) base.notes.push('منطقة زمنية غير معروفة (' + st.tzUnknown + '): الوقت كما هو بالملف');
@@ -125,7 +125,7 @@
         if(d > horizon || (untilMs !== null && instantOf(d) > untilMs) || (count && n >= count) || occ.length >= MAX_OCC){ if(occ.length >= MAX_OCC) truncated = true; break; }
         d = addDays(d, 1);
       }
-      occ.forEach(function(od){ var c = {}; Object.keys(base).forEach(function(k){ c[k] = base[k]; }); c.notes = base.notes.slice(); c.date = od; c.key = (base.uid || ('noid:' + base.title)) + '#' + od; c.recurring = true; out.push(c); });
+      occ.forEach(function(od){ var c = {}; Object.keys(base).forEach(function(k){ c[k] = base[k]; }); c.notes = base.notes.slice(); c.date = od; c.key = (base.uid || ('noid:' + base.title)) + '#' + od; c.recurring = true; c.weekly = freq === 'WEEKLY'; out.push(c); });
     });
     if(skippedNoDate) warnings.push(skippedNoDate + ' حدث بدون عنوان أو تاريخ صالح تم تجاهله');
     if(truncated) warnings.push('أحداث متكررة كثيرة: اقتُصر على أول ' + MAX_OCC + ' تكراراً لكل حدث');
@@ -187,12 +187,35 @@
     var fileKeys = {}; events.forEach(function(e){ fileKeys[e.key] = 1; if(e.uid) fileKeys[e.uid] = 1; });
     var missing = [];
     (s.tasks || []).concat(s.exams || []).forEach(function(x){ if((x.source === 'ics') && x.uid && !fileKeys[x.uid] && (x.due || x.date || '') >= today) missing.push(x.title || x.name); });
-    return { rows: rows, missing: missing };
+    /* محاضرات أسبوعية مكتشفة (متكررة أسبوعياً بوقت بداية ونهاية بنفس اليوم): مقترح إضافة لجدولك، بدون استبدال شيء */
+    var DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], slotMap = {}, slots = [], tt = s.timetable || {};
+    function mins(t){ var p = String(t || '').split(':'); return (+p[0]) * 60 + (+p[1] || 0); }
+    rows.forEach(function(r){
+      var ev = r.ev; if(!(ev.weekly && ev.time && ev.endTime && ev.span === 1) || r.status === 'cancelled' || r.status === 'repeat') return;
+      var day = DAYS[mkDate(ev.date).getDay()], id = (ev.uid || ev.title) + '|' + day;
+      r.slotId = id;
+      if(ev.notes.indexOf('جزء من محاضرة أسبوعية — الأفضل إضافتها كمحاضرة بالجدول') < 0) ev.notes.push('جزء من محاضرة أسبوعية — الأفضل إضافتها كمحاضرة بالجدول');
+      if(slotMap[id]) return;
+      var key = day + '-' + ev.time, sl = { id: id, day: day, time: ev.time, end: ev.endTime, title: ev.title, location: ev.location, match: r.match, key: key, status: 'new', note: '' };
+      if(tt[key]){
+        sl.status = (norm((tt[key] || {}).name) === norm(ev.title) || (r.match.course && (tt[key] || {}).name === r.match.course)) ? 'same' : 'conflict';
+        if(sl.status === 'conflict') sl.note = 'هذه الخانة محجوزة بمحاضرة «' + ((tt[key] || {}).name || '') + '»';
+      } else {
+        Object.keys(tt).forEach(function(k){
+          if(sl.status !== 'new') return;
+          var i = k.indexOf('-'); if(k.slice(0, i) !== day || !tt[k] || !tt[k].end) return;
+          var a1 = mins(ev.time), b1 = mins(ev.endTime), a2 = mins(k.slice(i + 1)), b2 = mins(tt[k].end);
+          if(a1 < b2 && a2 < b1){ sl.status = 'overlap'; sl.note = 'تتداخل مع «' + (tt[k].name || '') + '» (' + k.slice(i + 1) + '–' + tt[k].end + ')'; }
+        });
+      }
+      slotMap[id] = sl; slots.push(sl);
+    });
+    return { rows: rows, missing: missing, slots: slots };
   }
-  function defaultChecked(r){ return r.status === 'new' && !r.past; }
+  function defaultChecked(r){ return r.status === 'new' && !r.past && !r.slotId; }
 
   /* ---------- التطبيق (فقط بعد تأكيد المستخدم) ---------- */
-  function apply(rows, picks){
+  function apply(rows, picks, slots, slotPicks){
     var s = sp(); if(!s.tasks) s.tasks = []; if(!s.exams) s.exams = [];
     var added = { tasks: 0, exams: 0 }, updated = 0;
     rows.forEach(function(r){
@@ -209,14 +232,23 @@
       if(kind === 'exam'){ s.exams.push({ id: id, name: ev.title, course: r.match.course, date: ev.date, time: ev.time, room: ev.location, source: 'ics', uid: ev.key }); added.exams++; }
       else { s.tasks.push({ id: id, title: ev.title, type: kind === 'quiz' ? 'quiz' : 'assignment', course: r.match.course, due: ev.date, done: false, source: 'ics', uid: ev.key }); added.tasks++; }
     });
-    if(added.tasks || added.exams || updated){
+    var addedSlots = 0; slots = slots || []; slotPicks = slotPicks || {};
+    slots.forEach(function(sl){
+      if(!slotPicks[sl.id] || (sl.status !== 'new' && sl.status !== 'overlap')) return;
+      if(!s.timetable) s.timetable = {};
+      if(s.timetable[sl.key]) return;   /* لا نستبدل خانة موجودة أبداً */
+      s.timetable[sl.key] = { name: sl.match && sl.match.course ? sl.match.course : sl.title, room: sl.location || '', instructor: '', end: sl.end };
+      addedSlots++;
+    });
+    if(added.tasks || added.exams || updated || addedSlots){
       if(window.saveSpace) window.saveSpace();
       if(window.renderTasks) window.renderTasks();
       if(window.renderExams) window.renderExams();
       if(window.renderCourses) window.renderCourses();
+      if(addedSlots && window.renderTimetable) window.renderTimetable();
       if(window.renderDashboard) window.renderDashboard();
     }
-    return { added: added, updated: updated };
+    return { added: added, updated: updated, slots: addedSlots };
   }
 
   /* ---------- الواجهة ---------- */
@@ -277,7 +309,8 @@
   function preview(text, name){
     var parsed = parseIcs(text, todayStr());
     if(!parsed.valid){ fail(parsed.reason, name); return; }
-    var an = analyze(parsed.events, todayStr()), rows = an.rows, picks = {};
+    var an = analyze(parsed.events, todayStr()), rows = an.rows, picks = {}, slots = an.slots || [], slotPicks = {};
+    var DAYAR = { Sun: 'الأحد', Mon: 'الاثنين', Tue: 'الثلاثاء', Wed: 'الأربعاء', Thu: 'الخميس', Fri: 'الجمعة', Sat: 'السبت' };
     rows.forEach(function(r){ picks[r.i] = { on: defaultChecked(r), kind: r.kind }; });
     var cnt = {}; rows.forEach(function(r){ cnt[r.status] = (cnt[r.status] || 0) + 1; });
     var pastNew = rows.filter(function(r){ return r.status === 'new' && r.past; }).length;
@@ -286,6 +319,14 @@
       '<div class="ics-file">' + esc(name) + ' — <b>' + rows.length + '</b> حدث</div>' +
       '<div class="ics-chips">' + ['new', 'changed', 'dup', 'same', 'cancelled', 'repeat'].filter(function(k){ return cnt[k]; }).map(function(k){ return '<span class="ics-chip ' + STATUS[k][1] + '">' + STATUS[k][0] + ' ' + cnt[k] + '</span>'; }).join('') + (pastNew ? '<span class="ics-chip mute">منتهية ' + pastNew + '</span>' : '') + '</div>';
     if(parsed.warnings.length) html += '<div class="ics-warns">' + parsed.warnings.map(function(w){ return '<div>⚠️ ' + esc(w) + '</div>'; }).join('') + '</div>';
+    if(slots.length){
+      html += '<div class="ics-slots"><div class="ics-slots-h">🗓️ محاضرات أسبوعية مكتشفة (' + slots.length + ')</div><div class="ics-note">اختيار محاضرة يضيفها لجدولك الأسبوعي (خانة جديدة فقط، بدون استبدال أي محاضرة) ويستبعد تكراراتها من قائمة المهام. غير محدّدة افتراضياً.</div>';
+      slots.forEach(function(sl, si){
+        var can = sl.status === 'new' || sl.status === 'overlap', stl = sl.status === 'same' ? ['موجودة بجدولك', 'mute'] : sl.status === 'conflict' ? ['خانة محجوزة', 'warn'] : sl.status === 'overlap' ? ['تتداخل', 'warn'] : ['جديدة', 'ok'];
+        html += '<label class="ics-slot' + (can ? '' : ' off') + '"><input type="checkbox" data-slot="' + si + '"' + (can ? '' : ' disabled') + ' aria-label="' + esc(sl.title) + '"><span class="ics-slot-main"><b>' + esc(sl.title) + '</b><span class="ics-meta"><span>' + esc(DAYAR[sl.day] || sl.day) + ' · <bdi dir="ltr">' + esc(sl.time) + '–' + esc(sl.end) + '</bdi></span>' + (sl.location ? '<span>📍 ' + esc(sl.location) + '</span>' : '') + '<span>' + (sl.match.course ? '📚 ' + esc(sl.match.course) : '<span class="u-note">بدون مادة (ما في تطابق موثوق)</span>') + '</span></span>' + (sl.note ? '<span class="ics-old">' + esc(sl.note) + '</span>' : '') + '</span><span class="ics-chip ' + stl[1] + '">' + stl[0] + '</span></label>';
+      });
+      html += '</div>';
+    }
     html += '<div class="ics-toolbar"><button class="btn btn-sm btn-ghost" id="icsAllNew" type="button">تحديد الجديد</button><button class="btn btn-sm btn-ghost" id="icsNone" type="button">إلغاء التحديد</button></div><div class="ics-list" id="icsList">';
     rows.forEach(function(r){
       var ev = r.ev, st = STATUS[r.status], can = r.status === 'new' || r.status === 'dup' || (r.status === 'changed' && r.updatable);
@@ -304,19 +345,31 @@
       '<div class="ics-actions"><span class="ics-count" id="icsCount"></span><button class="btn btn-ghost" id="icsCancel" type="button">إلغاء</button><button class="btn" id="icsGo" type="button">استيراد</button></div>';
     var bd = overlay(html, true);
     function refresh(){
-      var n = rows.filter(function(r){ return picks[r.i].on; }).length;
+      var n = rows.filter(function(r){ return picks[r.i].on; }).length + slots.filter(function(sl){ return slotPicks[sl.id]; }).length;
       bd.querySelector('#icsCount').textContent = n + ' محدّد';
       var go = bd.querySelector('#icsGo'); go.disabled = n === 0; go.textContent = n ? 'استيراد (' + n + ')' : 'استيراد';
     }
     bd.querySelectorAll('[data-x]').forEach(function(b){ b.onclick = function(){ close(bd); }; });
     bd.querySelector('#icsCancel').onclick = function(){ close(bd); };
     bd.querySelectorAll('[data-pick]').forEach(function(c){ c.onchange = function(){ picks[c.dataset.pick].on = c.checked; refresh(); }; });
+    bd.querySelectorAll('[data-slot]').forEach(function(c){
+      c.onchange = function(){
+        var sl = slots[+c.dataset.slot]; slotPicks[sl.id] = c.checked;
+        rows.forEach(function(r){
+          if(r.slotId !== sl.id) return;
+          var cb = bd.querySelector('[data-pick="' + r.i + '"]');
+          if(c.checked){ picks[r.i].on = false; if(cb){ cb.checked = false; cb.disabled = true; } }
+          else if(cb && (r.status === 'new' || r.status === 'dup')){ cb.disabled = false; }
+        });
+        refresh();
+      };
+    });
     bd.querySelectorAll('[data-kind]').forEach(function(s){ s.onchange = function(){ picks[s.dataset.kind].kind = s.value; }; });
-    bd.querySelector('#icsAllNew').onclick = function(){ rows.forEach(function(r){ var on = defaultChecked(r) || (r.status === 'new'); picks[r.i].on = on; var c = bd.querySelector('[data-pick="' + r.i + '"]'); if(c && !c.disabled) c.checked = on; }); refresh(); };
+    bd.querySelector('#icsAllNew').onclick = function(){ rows.forEach(function(r){ var c = bd.querySelector('[data-pick="' + r.i + '"]'); if(!c || c.disabled) return; var on = r.status === 'new'; picks[r.i].on = on; c.checked = on; }); refresh(); };
     bd.querySelector('#icsNone').onclick = function(){ rows.forEach(function(r){ picks[r.i].on = false; var c = bd.querySelector('[data-pick="' + r.i + '"]'); if(c) c.checked = false; }); refresh(); };
     bd.querySelector('#icsGo').onclick = function(){
-      var res = apply(rows, picks); close(bd);
-      var parts = []; if(res.added.tasks) parts.push(res.added.tasks + ' مهمة'); if(res.added.exams) parts.push(res.added.exams + ' امتحان'); if(res.updated) parts.push(res.updated + ' محدَّث');
+      var res = apply(rows, picks, slots, slotPicks); close(bd);
+      var parts = []; if(res.added.tasks) parts.push(res.added.tasks + ' مهمة'); if(res.added.exams) parts.push(res.added.exams + ' امتحان'); if(res.slots) parts.push(res.slots + ' محاضرة بالجدول'); if(res.updated) parts.push(res.updated + ' محدَّث');
       if(window.toast) window.toast(parts.length ? '✅ تم الاستيراد: ' + parts.join(' و') : 'ما تم استيراد شي', parts.length ? 'success' : 'info', 4000);
     };
     refresh();

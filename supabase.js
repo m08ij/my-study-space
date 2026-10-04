@@ -261,6 +261,8 @@
         '</div>' +
         '<div class="sync-steps"><b>كيف تستخدمه؟</b><span>على جهاز آخر: افتح التطبيق ← المزامنة السحابية ← «تغيير» وأدخل هذا الرمز، فتظهر نفس بياناتك.</span></div>' +
         '<div class="sync-warn">🔐 أي شخص يملك هذا الرمز يصل لبياناتك. احفظه بمكان آمن ولا تنشره.</div>' +
+        '<div class="sync-backup"><div class="sync-backup-head"><b>💾 نسخة احتياطية على جهازك</b><span id="syncBkInfo"></span></div>' +
+          '<div class="sync-actions"><button class="btn btn-sm btn-ghost" id="syncBkExport" type="button">⬇️ تصدير نسخة</button><button class="btn btn-sm btn-ghost" id="syncBkImport" type="button">⬆️ استيراد نسخة</button></div></div>' +
         '<details class="sync-qr-box"><summary>عرض رمز QR (اختياري)</summary>' +
           '<p>يُنشأ الـQR عبر خدمة خارجية (api.qrserver.com) وبتستقبل الرمز لحظة العرض. استخدمه فقط إن كنت تقبل ذلك.</p>' +
           '<button class="btn btn-sm btn-ghost" id="syncQrBtn" type="button">إنشاء QR</button><div id="syncQr" class="sync-qr"></div></details>' +
@@ -310,6 +312,16 @@
     };
     bd.querySelector('#syncClose').onclick = function(){ bd.remove(); };
     bd.querySelector('#syncX').onclick = function(){ bd.remove(); };
+    function bkInfo(){
+      var t = 0; try{ t = parseInt(localStorage.getItem('ss_last_backup'), 10) || 0; }catch(e){}
+      var el = bd.querySelector('#syncBkInfo'); if(!el) return;
+      if(!t){ el.textContent = 'ما أخذت نسخة بعد'; return; }
+      var d = Math.floor((Date.now() - t) / 86400000);
+      el.textContent = 'آخر نسخة: ' + (d < 1 ? 'اليوم' : d === 1 ? 'أمس' : 'قبل ' + d + ' يوم');
+    }
+    bkInfo();
+    bd.querySelector('#syncBkExport').onclick = function(){ if(window.downloadBackup) window.downloadBackup(false); setTimeout(bkInfo, 50); };
+    bd.querySelector('#syncBkImport').onclick = function(){ bd.remove(); if(window.restoreFromFile) window.restoreFromFile(); };
     bd.addEventListener('keydown', function(e){ if(e.key === 'Escape') bd.remove(); });
     setTimeout(function(){ var c = bd.querySelector('#syncCopy'); if(c) c.focus(); }, 60);
     bd.onclick = function(e){ if(e.target === bd) bd.remove(); };

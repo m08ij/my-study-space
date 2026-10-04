@@ -599,6 +599,7 @@
       a.click();
       document.body.removeChild(a);
       setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+      try{ localStorage.setItem('ss_last_backup', String(Date.now())); }catch(e2){}   /* لتذكير النسخة الأسبوعي فقط؛ خارج الـsnapshot */
       if(!silent) window.toast('💾 تم التنزيل', 'success', 2500);
     }catch(e){ if(!silent) window.toast('فشل', 'warn', 2000); }
   };
