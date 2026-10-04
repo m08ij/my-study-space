@@ -66,7 +66,6 @@
         '<div class="wk-tile"><b>' + (w.total ? fmtMin(w.total) : '0') + '</b><span>وقت الدراسة</span>' + (delta ? '<small>' + delta + '</small>' : '') + '</div>' +
         '<div class="wk-tile"><b>' + w.daysStudied + ' / 7</b><span>أيام دراسة</span></div>' +
         '<div class="wk-tile"><b>' + w.done + '</b><span>مهام أُنجزت</span></div>' +
-        '<div class="wk-tile' + (w.overdue ? ' warn' : '') + '"><b>' + w.overdue + '</b><span>مهام متأخرة</span></div>' +
         '</div>' +
         '<div class="wk-bars" role="img" aria-label="دقائق الدراسة لكل يوم هذا الأسبوع">' + w.cur.map(function(x){
           var h = x.min ? Math.max(8, Math.round(x.min / max * 100)) : 4;

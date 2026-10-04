@@ -237,8 +237,6 @@
     var lines = '';
     if(dueAll.length) lines += '<div class="myday-line"><span>مهام اليوم</span><b>' + dueDone + ' / ' + dueAll.length + '</b></div><div class="myday-bar slim"><i style="width:' + (dueDone / dueAll.length * 100).toFixed(1) + '%"></i></div>';
     if(doneToday) lines += '<div class="myday-line"><span>مهام أُنجزت اليوم</span><b>' + doneToday + '</b></div>';
-    if(studyMin) lines += '<div class="myday-line"><span>وقت الدراسة</span><b>' + dur(studyMin) + '</b></div>';
-    if(st.today.length) lines += '<div class="myday-line"><span>محاضرات انتهت</span><b>' + st.doneCount + ' / ' + st.today.length + '</b></div>';
     tiles += '<button type="button" class="myday-tile wide" data-go="' + (lines ? 'tasks' : 'timer') + '">' +
       '<span class="myday-tile-ic">🏁</span><span class="myday-lbl strong">إنجاز اليوم</span>' +
       (lines ? '<span class="myday-lines">' + lines + '</span>' : '<span class="myday-note">ما في إنجاز مسجّل بعد اليوم — ابدأ جلسة تركيز أو أنجز مهمة.</span>') + '</button>';

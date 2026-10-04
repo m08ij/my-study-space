@@ -555,7 +555,7 @@
           '<div style="display:flex;align-items:center;gap:10px">' +
             '<div style="text-align:center">' +
               '<div style="font-size:var(--fs-xl);font-weight:800;color:' + color + '">' + pct.toFixed(1) + '%</div>' +
-              '<div style="font-size:var(--fs-2xs);color:var(--muted)">حتى الآن</div>' +
+              '<div class="u-note">حتى الآن</div>' +
             '</div>' +
             '<button class="unified-course-btn added" data-course-name="' + esc(course.name) + '">🗑</button>' +
           '</div>' +
@@ -652,7 +652,7 @@
         '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;gap:10px">' +
           '<div style="flex:1;min-width:0">' +
             '<div style="font-weight:700;font-size:var(--fs-base)">' + esc(c.name) + '</div>' +
-            (c.code ? '<div style="font-size:var(--fs-2xs);color:var(--muted2);font-family:monospace">' + esc(c.code) + '</div>' : '') +
+            (c.code ? '<div class="u-mono">' + esc(c.code) + '</div>' : '') +
           '</div>' +
           '<div style="display:flex;gap:6px;align-items:center;flex-shrink:0">' +
             '<button type="button" class="btn btn-sm btn-ghost" data-edit-course="' + esc(c.id) + '" title="تعديل المادة" style="padding:6px 9px">✏️</button>' +
@@ -671,7 +671,7 @@
             '<span style="font-size:var(--fs-2xs);color:var(--muted2)" data-files-count="' + c.id + '">—</span>' +
           '</div>' +
           '<div class="course-files-list" data-files-list="' + c.id + '">' +
-            '<div style="text-align:center;padding:10px;font-size:var(--fs-xs);color:var(--muted2)">جاري التحميل...</div>' +
+            '<div class="u-empty">جاري التحميل...</div>' +
           '</div>' +
           '<button class="upload-course-btn" data-upload-course="' + c.id + '">📤 رفع ملف</button>' +
           '<input type="file" style="display:none" data-file-input="' + c.id + '">' +
@@ -902,7 +902,7 @@
             '<div style="flex:1;min-width:0;display:flex;align-items:center;gap:6px;flex-wrap:wrap">' +
               '<span>' + esc(x.n) + '</span>' +
               (x.code && x.code !== '—'
-                ? '<span style="font-size:var(--fs-2xs);color:var(--muted2);font-family:monospace">' + esc(x.code) + '</span>'
+                ? '<span class="u-mono">' + esc(x.code) + '</span>'
                 : '') +
               (x.type === 'lab'
                 ? '<span style="font-size:var(--fs-2xs);padding:1px 7px;border-radius:var(--r-sm);background:rgba(52,211,153,.15);color:var(--green)">مختبر</span>'

@@ -1549,9 +1549,9 @@
     var activeDays = days.filter(function(d){ return d.minutes > 0; }).length;
     var streak = computeStreak(log);
     html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-top:14px">';
-    html += '<div style="background:var(--bg2);border-radius:var(--r-md);padding:10px;text-align:center"><div style="font-size:var(--fs-lg);font-weight:800;color:var(--accent)">' + (totalMin/60).toFixed(1) + '</div><div style="font-size:var(--fs-2xs);color:var(--muted)">ساعات (16 أسبوع)</div></div>';
-    html += '<div style="background:var(--bg2);border-radius:var(--r-md);padding:10px;text-align:center"><div style="font-size:var(--fs-lg);font-weight:800;color:var(--green)">' + activeDays + '</div><div style="font-size:var(--fs-2xs);color:var(--muted)">أيام نشطة</div></div>';
-    html += '<div style="background:var(--bg2);border-radius:var(--r-md);padding:10px;text-align:center"><div style="font-size:var(--fs-lg);font-weight:800;color:var(--amber)">' + streak + '</div><div style="font-size:var(--fs-2xs);color:var(--muted)">ستريك</div></div>';
+    html += '<div style="background:var(--bg2);border-radius:var(--r-md);padding:10px;text-align:center"><div style="font-size:var(--fs-lg);font-weight:800;color:var(--accent)">' + (totalMin/60).toFixed(1) + '</div><div class="u-note">ساعات (16 أسبوع)</div></div>';
+    html += '<div style="background:var(--bg2);border-radius:var(--r-md);padding:10px;text-align:center"><div style="font-size:var(--fs-lg);font-weight:800;color:var(--green)">' + activeDays + '</div><div class="u-note">أيام نشطة</div></div>';
+    html += '<div style="background:var(--bg2);border-radius:var(--r-md);padding:10px;text-align:center"><div style="font-size:var(--fs-lg);font-weight:800;color:var(--amber)">' + streak + '</div><div class="u-note">ستريك</div></div>';
     html += '</div>';
     container.innerHTML = html;
   }
@@ -1567,8 +1567,8 @@
     var diff = lastWeek === 0 ? (thisWeek > 0 ? 100 : 0) : Math.round(((thisWeek - lastWeek) / lastWeek) * 100);
     var color = diff > 0 ? 'var(--green)' : diff < 0 ? 'var(--red)' : 'var(--muted)';
     var html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">';
-    html += '<div style="background:var(--bg2);border-radius:var(--r-md);padding:12px"><div style="font-size:var(--fs-2xs);color:var(--muted)">هذا الأسبوع</div><div style="font-size:var(--fs-xl);font-weight:800;color:var(--accent);margin-top:4px">' + (thisWeek/60).toFixed(1) + ' س</div></div>';
-    html += '<div style="background:var(--bg2);border-radius:var(--r-md);padding:12px"><div style="font-size:var(--fs-2xs);color:var(--muted)">الأسبوع الماضي</div><div style="font-size:var(--fs-xl);font-weight:800;margin-top:4px">' + (lastWeek/60).toFixed(1) + ' س</div><div style="font-size:var(--fs-2xs);color:' + color + ';margin-top:4px;font-weight:700">' + (diff >= 0 ? '+' : '') + diff + '%</div></div>';
+    html += '<div style="background:var(--bg2);border-radius:var(--r-md);padding:12px"><div class="u-note">هذا الأسبوع</div><div style="font-size:var(--fs-xl);font-weight:800;color:var(--accent);margin-top:4px">' + (thisWeek/60).toFixed(1) + ' س</div></div>';
+    html += '<div style="background:var(--bg2);border-radius:var(--r-md);padding:12px"><div class="u-note">الأسبوع الماضي</div><div style="font-size:var(--fs-xl);font-weight:800;margin-top:4px">' + (lastWeek/60).toFixed(1) + ' س</div><div style="font-size:var(--fs-2xs);color:' + color + ';margin-top:4px;font-weight:700">' + (diff >= 0 ? '+' : '') + diff + '%</div></div>';
     html += '</div>';
     var container = document.getElementById('insightsTrends');
     if(container) container.innerHTML = html;
@@ -1797,7 +1797,7 @@
         html += '<div style="display:flex;align-items:center;gap:10px;padding:12px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-lg)' + (s.ready ? '' : ';opacity:.75') + '">' +
           '<div style="font-size:var(--fs-xl)">' + t.icon + '</div>' +
           '<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:var(--fs-md)">' + esc(s.name) + '</div>' +
-          '<div style="font-size:var(--fs-2xs);color:var(--muted2);font-family:monospace">' + esc(s.info.code) + ' · ' + s.info.h + ' ساعات</div>' +
+          '<div class="u-mono">' + esc(s.info.code) + ' · ' + s.info.h + ' ساعات</div>' +
           (s.blocked ? '<div style="font-size:var(--fs-2xs);color:var(--amber);margin-top:4px">🔒 محجوب بـ: ' + s.blocked.map(esc).join('، ') + '</div>' : '') +
           '</div>' + badge + '</div>';
       });

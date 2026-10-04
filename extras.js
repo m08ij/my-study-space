@@ -244,7 +244,7 @@
           '<div style="text-align:center">' +
             '<div style="font-size:var(--fs-2xl);line-height:1">' + (streak > 0 ? '🔥' : '💤') + '</div>' +
             '<div style="font-size:var(--fs-xl);font-weight:900;color:var(--amber)">' + streak + '</div>' +
-            '<div style="font-size:var(--fs-2xs);color:var(--muted)">يوم متتالي</div>' +
+            '<div class="u-note">يوم متتالي</div>' +
           '</div>' +
         '</div>' +
         '<div class="stats-grid">' +

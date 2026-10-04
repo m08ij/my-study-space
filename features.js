@@ -643,7 +643,7 @@
       html += '<div class="card" data-course-card="' + c.id + '">' +
         '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;gap:10px">' +
           '<div><div style="font-weight:700;font-size:var(--fs-base)">' + esc(c.name) + '</div>' +
-          (c.code ? '<div style="font-size:var(--fs-2xs);color:var(--muted2);font-family:monospace">' + esc(c.code) + '</div>' : '') + '</div>' +
+          (c.code ? '<div class="u-mono">' + esc(c.code) + '</div>' : '') + '</div>' +
           '<span class="badge">' + (c.hours || 3) + ' ساعات</span></div>' +
         '<div style="display:flex;gap:6px;margin-top:12px">' +
           '<button class="btn btn-sm btn-ghost" data-edit-course="' + c.id + '">✏️</button>' +
@@ -654,7 +654,7 @@
             '<span style="font-size:var(--fs-2xs);color:var(--muted2)" data-files-count="' + c.id + '">—</span>' +
           '</div>' +
           '<div class="course-files-list" data-files-list="' + c.id + '">' +
-            '<div style="text-align:center;padding:10px;font-size:var(--fs-xs);color:var(--muted2)">جاري التحميل...</div>' +
+            '<div class="u-empty">جاري التحميل...</div>' +
           '</div>' +
           '<button class="upload-course-btn" data-upload-course="' + c.id + '">📤 رفع ملف</button>' +
           '<input type="file" style="display:none" data-file-input="' + c.id + '">' +
@@ -733,7 +733,7 @@
     function paint(){
       var q = ui.q.trim().toLowerCase();
       var shown = cfSort(files.filter(function(f){ return !q || cfClean(f.name).toLowerCase().indexOf(q) > -1; }), ui.sort);
-      box.innerHTML = shown.length ? cfItems(shown, courseId) : '<div style="text-align:center;padding:10px;font-size:var(--fs-xs);color:var(--muted2)">ما في ملفات تطابق البحث</div>';
+      box.innerHTML = shown.length ? cfItems(shown, courseId) : '<div class="u-empty">ما في ملفات تطابق البحث</div>';
       var count = document.querySelector('[data-files-count="' + courseId + '"]');
       if(count) count.textContent = (q ? shown.length + ' من ' : '') + files.length + ' ملف';
     }
@@ -759,7 +759,7 @@
     if(!list) return;
 
     if(!window.SB || !window.SB.listCourseFiles){
-      list.innerHTML = '<div style="text-align:center;padding:10px;font-size:var(--fs-xs);color:var(--muted2)">المزامنة غير مفعّلة</div>';
+      list.innerHTML = '<div class="u-empty">المزامنة غير مفعّلة</div>';
       return;
     }
 
@@ -769,20 +769,20 @@
       var folders = [courseId].concat((course && course.filesFrom) || []);
       var files = await window.SB.listCourseFilesMulti(folders);
       if(files === null){
-        list.innerHTML = '<div style="text-align:center;padding:10px;font-size:var(--fs-xs);color:var(--muted2)">تعذّر تحميل الملفات (تحقق من الاتصال) ' +
+        list.innerHTML = '<div class="u-empty">تعذّر تحميل الملفات (تحقق من الاتصال) ' +
           '<a href="#" data-retry-files="' + esc(courseId) + '" style="color:var(--accent)">إعادة المحاولة</a></div>';
         if(count) count.textContent = '—';
         var rb = list.querySelector('[data-retry-files]');
         if(rb) rb.addEventListener('click', function(ev){
           ev.preventDefault();
-          list.innerHTML = '<div style="text-align:center;padding:10px;font-size:var(--fs-xs);color:var(--muted2)">جاري التحميل…</div>';
+          list.innerHTML = '<div class="u-empty">جاري التحميل…</div>';
           window.SB.listCourseFilesMulti(folders, true).then(function(){ window.loadCourseFilesForCard(courseId); });
         });
         return;
       }
       window.__cfFiles[courseId] = files;
       if(!files.length){
-        list.innerHTML = '<div style="text-align:center;padding:10px;font-size:var(--fs-xs);color:var(--muted2)">ما في ملفات بعد</div>';
+        list.innerHTML = '<div class="u-empty">ما في ملفات بعد</div>';
         if(count) count.textContent = '0 ملف';
         return;
       }
@@ -1494,7 +1494,7 @@
         '<div style="font-size:var(--fs-xs);color:var(--muted)">مجموع: ' + total + '%</div></div>' +
         '<div style="text-align:center"><div style="font-size:var(--fs-xl);font-weight:800;color:' + color + '">' +
         pct.toFixed(1) + '%</div>' +
-        '<div style="font-size:var(--fs-2xs);color:var(--muted)">حتى الآن</div></div></div>' +
+        '<div class="u-note">حتى الآن</div></div></div>' +
         itemsHtml +
         '<div style="display:flex;gap:6px;margin-top:10px">' +
         '<button class="btn btn-sm" data-gt-add="' + idx + '">+ علامة</button>' +
@@ -1568,7 +1568,7 @@
       s.courses.forEach(function(x){
         coursesHtml += '<div style="display:flex;justify-content:space-between;padding:10px 0;border-top:1px solid var(--border);font-size:var(--fs-sm)">' +
           '<div>' + esc(x.n) +
-          (x.code && x.code !== '—' ? ' <span style="font-size:var(--fs-2xs);color:var(--muted2);font-family:monospace">' + esc(x.code) + '</span>' : '') +
+          (x.code && x.code !== '—' ? ' <span class="u-mono">' + esc(x.code) + '</span>' : '') +
           (x.type === 'lab' ? ' <span style="font-size:var(--fs-2xs);padding:1px 7px;border-radius:var(--r-sm);background:rgba(52,211,153,.15);color:var(--green);margin-right:6px">مختبر</span>' : '') +
           '</div><span style="color:var(--accent);font-weight:700;font-size:var(--fs-sm)">' + x.h + ' س</span></div>';
       });
