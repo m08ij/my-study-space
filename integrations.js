@@ -1792,7 +1792,7 @@
         '<div class="chart-title" style="margin-bottom:10px">هذا الأسبوع vs الماضي</div>' +
         '<div id="insightsTrends"></div>' +
       '</div>' +
-      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px">' +
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr));gap:16px">' +
         '<div><div class="chart-title" style="margin-bottom:10px">أداء المواد</div>' +
         '<div id="insightsCourses"></div></div>' +
         '<div><div class="chart-title" style="margin-bottom:10px">توقع المعدل</div>' +

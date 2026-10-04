@@ -45,11 +45,13 @@
     return client;
   }
 
-  /* ---------- وضع RPC (جاهز لكنه مُعطّل افتراضياً: CFG.useRpc=false) ----------
+  /* ---------- وضع RPC (جاهز لكنه معطّل افتراضياً (CFG.useRpc=false) حتى تُنشأ الدوال بالخادم؛ ومع التفعيل يرجع للجدول تلقائياً إن لم توجد) ----------
      عند تشغيل ملفات supabase/*.sql (الدوال get_space/put_space/peek_space) يُفعَّل هذا الوضع لتتوقف القراءة/الكتابة المباشرة
      على جدول spaces. إن كانت الدالة غير موجودة بالخادم نرجع للجدول المباشر ونتذكر ذلك طوال الجلسة (طلب واحد فاشل فقط). */
-  CFG.useRpc = false;
+  CFG.useRpc = false;   /* يُقلب إلى true بعد تشغيل supabase/02a-create-rpc.sql (وإلا يظهر خطأ 404 بالـ Console مع كل جلسة) */
   var rpcMissing = false;
+  try{ rpcMissing = sessionStorage.getItem('ss_rpc_missing') === '1'; }catch(e){}   /* لا نكرر الطلب الفاشل أثناء الجلسة */
+  function markMissing(){ rpcMissing = true; try{ sessionStorage.setItem('ss_rpc_missing', '1'); }catch(e){} }
   function rpcAvailable(c){ return CFG.useRpc && !rpcMissing && c && typeof c.rpc === 'function'; }
   function isMissingFn(err){
     var m = String((err && (err.message || err.details || '')) || '');
@@ -69,7 +71,7 @@
           api.lastLoadStatus = 'ok';
           return { data: rr.data.data, updated_at: rr.data.updated_at };
         }
-        if(isMissingFn(rr.error)) rpcMissing = true;
+        if(isMissingFn(rr.error)) markMissing();
         else { console.warn('Supabase rpc load error:', rr.error); api.lastLoadStatus = 'error'; return null; }
       }
       var res = await c.from('spaces').select('data, updated_at').eq('code', k).maybeSingle();
@@ -87,7 +89,7 @@
       if(rpcAvailable(c)){
         var rr = await c.rpc('peek_space', { p_code: ensureCode() });
         if(!rr.error) return rr.data ? { status: 'ok', updated_at: rr.data } : { status: 'empty' };
-        if(isMissingFn(rr.error)) rpcMissing = true; else return { status: 'error' };
+        if(isMissingFn(rr.error)) markMissing(); else return { status: 'error' };
       }
       var res = await c.from('spaces').select('updated_at').eq('code', ensureCode()).maybeSingle();
       if(res.error) return { status: 'error' };
@@ -103,7 +105,7 @@
       if(rpcAvailable(c)){
         var rr = await c.rpc('put_space', { p_code: k, p_data: snapshot, p_updated_at: new Date().toISOString() });
         if(!rr.error) return true;
-        if(isMissingFn(rr.error)) rpcMissing = true;
+        if(isMissingFn(rr.error)) markMissing();
         else { console.warn('Supabase rpc save error:', rr.error); return false; }
       }
       var res = await c.from('spaces').upsert(
@@ -314,7 +316,7 @@
   }
 
   var api = window.SB = {
-    setUseRpc: function(v){ CFG.useRpc = !!v; rpcMissing = false; },   /* يُفعَّل بعد تشغيل supabase/02a-create-rpc.sql */
+    setUseRpc: function(v){ CFG.useRpc = !!v; rpcMissing = false; try{ sessionStorage.removeItem('ss_rpc_missing'); }catch(e){} },   /* يُفعَّل بعد تشغيل supabase/02a-create-rpc.sql */
     rpcMode: function(){ return CFG.useRpc ? (rpcMissing ? 'fallback' : 'rpc') : 'table'; },
     lastLoadStatus: null,
     init: init, load: load, save: save, peekUpdatedAt: peekUpdatedAt,

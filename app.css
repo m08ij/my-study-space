@@ -1330,3 +1330,54 @@ main{padding-left:max(24px,env(safe-area-inset-left))}
 .tt-ag-meta{font-size:.76rem;color:var(--muted);line-height:1.7;overflow-wrap:anywhere}
 .wk-bar span{font-size:.62rem}
 @media (max-width:420px){.wk-bar span{font-size:.58rem;letter-spacing:-.02em}}
+
+/* ============================================================
+   📱 تدقيق التجاوب: شاشات صغيرة جداً (≥240px) + أهداف لمس + مركزة الشاشات العريضة
+   ============================================================ */
+/* الشبكات لا تتجاوز عرض الحاوية مهما صغر (min(…,100%) بدل حد أدنى ثابت 280/220/170) */
+.grid-2{grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr))}
+.grid-3{grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr))}
+.grid-4{grid-template-columns:repeat(auto-fit,minmax(min(170px,100%),1fr))}
+.stat{min-width:0}
+.stat > div:last-child{min-width:0;overflow-wrap:anywhere}
+@media (max-width:300px){
+  #dashStats{grid-template-columns:minmax(0,1fr)}
+  .card{padding:12px}
+  .page-title{font-size:1.2rem}
+}
+/* بطاقة الامتحان: تلتف عناصرها بدل أن تخرج الأزرار خارج الشاشة */
+.exam-card{flex-wrap:wrap;overflow:hidden}
+.exam-card .exam-info{flex:1 1 170px;min-width:0}
+.exam-info .title,.exam-info .meta{overflow-wrap:anywhere}
+.exam-card > div:last-child{margin-inline-start:auto}
+@media (max-width:420px){.exam-card{padding:12px;gap:8px}.exam-countdown{font-size:1.25rem;min-width:56px}}
+/* قائمة الإعدادات: داخل الشاشة دائماً وقابلة للتمرير على الشاشات القصيرة */
+.settings-menu{max-width:calc(100vw - 16px);max-height:calc(100vh - 90px);overflow-y:auto;overscroll-behavior:contain}
+@media (max-width:480px){.settings-menu{position:fixed;top:68px;left:8px;right:8px;min-width:0;width:auto}}
+/* نوافذ التخصيص والخطة على الشاشات الضيقة */
+.dl-row{flex-wrap:wrap}
+.dl-row .dl-name{flex:1 1 90px}
+/* أهداف لمس مريحة (≥ ~38px) على الهاتف/الأجهزة اللمسية — بدون تغيير الشكل على سطح المكتب */
+@media (pointer:coarse),(max-width:900px){
+  .btn-sm{min-height:38px;padding:8px 14px}
+  .chip,.tt-chip,.hub-chip{min-height:38px;display:inline-flex;align-items:center}
+  .task-check{position:relative}
+  .task-check::after{content:'';position:absolute;inset:-12px}
+  .plan-add-btn,.unified-course-btn{min-width:38px;min-height:38px}
+  .section input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]),.section select{min-height:40px}
+}
+/* الشاشات العريضة جداً: المحتوى يتوسط المساحة المتاحة بجانب القائمة بدل الالتصاق بها وترك فراغ ضخم */
+@media (min-width:1700px){
+  main{margin-right:calc(250px + (100vw - 250px - 1300px) / 2)}
+}
+@media (max-width:300px){.btn{white-space:normal;text-align:center}.tt-chip,.hub-chip,.chip{white-space:nowrap}}
+
+/* شارات الأنواع بالثيمات الفاتحة: خلفية محايدة فاتحة ليبقى التباين ≥ 4.5 لكل الأنواع */
+[data-theme="ivory"] .badge.exam,[data-theme="sky"] .badge.exam,[data-theme="ivory"] .badge.assignment,[data-theme="sky"] .badge.assignment,[data-theme="ivory"] .badge.quiz,[data-theme="sky"] .badge.quiz,[data-theme="ivory"] .badge.project,[data-theme="sky"] .badge.project,[data-theme="ivory"] .badge.task,[data-theme="sky"] .badge.task{background:rgba(120,120,120,.09)}
+
+[data-theme="ivory"] .badge.project,[data-theme="sky"] .badge.project{color:#0b5326}
+[data-theme="ivory"] .badge.quiz,[data-theme="sky"] .badge.quiz{color:#7a4a04}
+
+/* شارة نوع المهمة تحمل الصنف task أيضاً فكانت ترث تنسيق بطاقة المهمة (flex/هامش/حدّ): نعيدها شارة عادية */
+.task-meta .badge.task{display:block;margin:0;border:0;padding:2px 8px;gap:0;border-radius:5px;background:var(--bg2);transform:none;box-shadow:none;animation:none;transition:none}
+.task-meta .badge.task:hover{transform:none;box-shadow:none;border:0}
