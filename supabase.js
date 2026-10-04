@@ -39,7 +39,16 @@
     if(!CFG.url || !CFG.anonKey || CFG.url.indexOf('YOUR-') > -1) return null;
     if(typeof window.supabase === 'undefined' || !window.supabase.createClient) return null;
     try{
-      client = window.supabase.createClient(CFG.url, CFG.anonKey, { auth: { persistSession: false } });
+      /* ترويسة x-space-code برمز المستخدم الحالي مع كل طلب: سياسات التخزين (supabase/04-storage-own-folder.sql) تقصر القراءة/الحذف/الرفع على مجلد رمزه فقط.
+         تُقرأ وقت الطلب لا وقت الإنشاء، فتتبع تغيير الرمز. لا أثر لها إن لم تُفعَّل السياسات. */
+      client = window.supabase.createClient(CFG.url, CFG.anonKey, {
+        auth: { persistSession: false },
+        global: { fetch: function(input, init){
+          init = init || {};
+          try{ var h = new Headers(init.headers || (input && input.headers) || {}); h.set('x-space-code', ensureCode()); init.headers = h; }catch(e){}
+          return fetch(input, init);
+        } }
+      });
       console.log('☁️ Supabase client ready');
     }catch(e){ console.error('Supabase init failed:', e); client = null; }
     return client;
