@@ -564,15 +564,9 @@
 .pg-sub{font-size:var(--fs-2xs);color:var(--muted)}
 .pg-note{font-size:var(--fs-2xs);color:var(--muted);line-height:1.7;margin-top:10px}
 .pg-h{margin:14px 0 8px;font-size:var(--fs-sm);color:var(--accent)}
-.pg-warn{color:var(--amber)}
-.pg-adv{margin-top:8px;font-size:var(--fs-xs);color:var(--muted)}
-.pg-adv summary{cursor:pointer;color:var(--accent)}
-.pg-adv input{width:100%;min-height:38px;margin-top:6px;padding:6px 10px;background:var(--bg2);color:var(--text);border:1px solid var(--border);border-radius:var(--r-md);font-family:inherit}
 .timer-link{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;margin:12px 0;font-size:var(--fs-sm);color:var(--muted)}
 .timer-link select{max-width:100%;min-height:38px;padding:6px 10px;background:var(--bg2);color:var(--text);border:1px solid var(--border);border-radius:var(--r-md);font-family:inherit}
 .focus-by-course{width:100%;max-width:420px;margin:14px auto 0}
 .bp-goals{display:flex;flex-direction:column;gap:10px}
 .bp-goal{background:var(--card2);border:1px solid var(--border);border-radius:var(--r-lg);padding:12px}
 .bp-goal-act{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:8px}
-.ical-card{margin-bottom:16px}
-.ical-card input[type=url],.ical-card input[type=text]{flex:1 1 220px}
