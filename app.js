@@ -766,6 +766,8 @@
 
     document.querySelectorAll('.nav-item').forEach(function(item){
       item.addEventListener('click', function(){ window.switchTab(item.dataset.tab); });
+      item.setAttribute('role', 'button'); item.setAttribute('tabindex', '0');
+      item.addEventListener('keydown', function(e){ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); window.switchTab(item.dataset.tab); } });
     });
     document.querySelectorAll('[data-goto]').forEach(function(el){
       el.addEventListener('click', function(){ window.switchTab(el.dataset.goto); });
