@@ -24,7 +24,7 @@
     if(bd && bd.remove) bd.remove();
   };
   /* رقم الإصدار: يجب أن يطابق BUILD في سكربت الحماية داخل index.html وCACHE_NAME في sw.js (اتركه متزامناً عند كل إصدار) */
-  window.APP_BUILD = '89';
+  window.APP_BUILD = '90';
 
   /* ============ Global State ============ */
   window.space = null;

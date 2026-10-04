@@ -169,8 +169,8 @@ Object.keys(COURSES_DB).forEach(function(k){ COURSES_DESC[k] = COURSES_DB[k].d; 
 
 /* ============ COURSE_TYPES ============ */
 var COURSE_TYPES = {
-  "uni-c":        {label:"جامعة إجبارية",  icon:"🏛️", color:"var(--cyan)"},
-  "uni-e":        {label:"جامعة اختيارية", icon:"🎨", color:"var(--purple)"},
+  "uni-c":        {label:"جامعة إجبارية",  icon:"🏛️", color:"var(--accent)"},
+  "uni-e":        {label:"جامعة اختيارية", icon:"🎨", color:"var(--accent-2)"},
   "faculty":      {label:"كلية إجبارية",   icon:"🏫", color:"var(--green)"},
   "major-c":      {label:"تخصص إجباري",    icon:"🎯", color:"var(--amber)"},
   "major-e":      {label:"تخصص اختياري",   icon:"⭐", color:"var(--pink)"},

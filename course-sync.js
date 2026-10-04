@@ -112,10 +112,10 @@
     bd.innerHTML = '<div class="modal" style="max-width:440px;text-align:center;position:relative">' +
       '<div style="font-size:2.4rem;margin-bottom:8px">📎</div>' +
       '<h3 style="margin-bottom:10px">ملفات قديمة لهذه المادة</h3>' +
-      '<p style="color:var(--muted);font-size:.88rem;line-height:1.8;margin-bottom:6px">لقيت <b>' + job.files.length + '</b> ملف محفوظ من مادة محذوفة سابقاً: <b>' + esc(job.arch.name) + '</b>' +
+      '<p style="color:var(--muted);font-size:var(--fs-md);line-height:1.8;margin-bottom:6px">لقيت <b>' + job.files.length + '</b> ملف محفوظ من مادة محذوفة سابقاً: <b>' + esc(job.arch.name) + '</b>' +
       (when ? ' (' + when + ')' : '') + '.</p>' +
-      (names ? '<p style="color:var(--muted2);font-size:.78rem;margin-bottom:12px">' + names + (job.files.length > 3 ? ' …' : '') + '</p>' : '') +
-      '<p style="color:var(--muted2);font-size:.78rem;margin-bottom:16px">اربطها فقط إذا كانت نفس المادة. بدون ربط تبقى محفوظة ولا يُحذف شي.</p>' +
+      (names ? '<p style="color:var(--muted2);font-size:var(--fs-xs);margin-bottom:12px">' + names + (job.files.length > 3 ? ' …' : '') + '</p>' : '') +
+      '<p style="color:var(--muted2);font-size:var(--fs-xs);margin-bottom:16px">اربطها فقط إذا كانت نفس المادة. بدون ربط تبقى محفوظة ولا يُحذف شي.</p>' +
       '<div style="display:flex;flex-direction:column;gap:8px">' +
         '<button class="btn btn-sm btn-ghost" id="lfNo">لا، مادة جديدة بدون الملفات القديمة</button>' +
         '<button class="btn btn-sm" id="lfYes">📎 ربط الملفات القديمة بـ "' + esc(job.course.name) + '"</button>' +
@@ -417,84 +417,7 @@
      ============================================================ */
   function injectCSS(){
     if(document.getElementById('unified-course-css')) return;
-    var s = document.createElement('style');
-    s.id = 'unified-course-css';
-    s.textContent = `
-      .unified-course-btn{
-        width:36px;height:36px;border-radius:10px;
-        border:none;cursor:pointer;font-family:inherit;
-        font-size:1.1rem;font-weight:900;line-height:1;
-        display:inline-flex;align-items:center;justify-content:center;
-        flex-shrink:0;
-        transition:all .3s cubic-bezier(.34,1.56,.64,1);
-        padding:0;position:relative;
-      }
-      .unified-course-btn.not-added{
-        background:var(--grad);color:var(--on-accent);
-        box-shadow:0 3px 10px var(--glow);
-      }
-      .unified-course-btn.not-added:hover{
-        transform:scale(1.15);
-        box-shadow:0 5px 18px var(--glow);
-      }
-      .unified-course-btn.added{
-        background:linear-gradient(135deg,#ef4444,#dc2626);
-        color:#fff;
-        box-shadow:0 3px 12px rgba(239,68,68,.45);
-      }
-      .unified-course-btn.added:hover{
-        transform:scale(1.15);
-        box-shadow:0 6px 20px rgba(239,68,68,.6);
-      }
-      .unified-course-btn:active{transform:scale(.9)}
-      @keyframes unifiedPulse{
-        0%,100%{box-shadow:0 3px 12px rgba(239,68,68,.45)}
-        50%{box-shadow:0 3px 16px rgba(239,68,68,.7), 0 0 0 4px rgba(239,68,68,.15)}
-      }
-
-      /* Plan row — compact button that fits inline */
-      .plan-course-row .unified-course-btn{
-        width:28px;
-        height:28px;
-        border-radius:8px;
-        font-size:.95rem;
-        margin:0;
-        flex-shrink:0;
-      }
-      .plan-course-row:hover{
-        background:var(--grad-soft);
-        border-radius:8px;
-      }
-      .plan-course-row .unified-course-btn.not-added{
-        animation:none;
-      }
-      .plan-course-row .unified-course-btn.added{
-        animation:none;
-      }
-      .plan-course-row .unified-course-btn:hover{
-        transform:scale(1.15);
-      }
-
-      /* Timetable cell — small button */
-      .class-block{
-        position:relative;
-      }
-      .class-block .unified-course-btn{
-        position:absolute;
-        top:4px;
-        left:4px;
-        width:22px;height:22px;
-        font-size:.75rem;
-        border-radius:6px;
-      }
-
-      /* Attendance & grade cards */
-      .att-card .unified-course-btn,
-      .gt-card .unified-course-btn{
-        margin-right:0;
-      }
-    `;
-    document.head.appendChild(s);
+    /* الأنماط انتقلت إلى app.css (قسم: أزرار المواد الموحّدة (كانت unified-course-css)) */
   }
 
   /* ============================================================
@@ -604,18 +527,18 @@
         earned += parseFloat(it.score) || 0;
       });
       var pct = total > 0 ? (earned / total * 100) : 0;
-      var color = pct >= 85 ? 'var(--green)' : pct >= 70 ? 'var(--cyan)' : pct >= 50 ? 'var(--amber)' : 'var(--red)';
+      var color = pct >= 85 ? 'var(--green)' : pct >= 70 ? 'var(--accent)' : pct >= 50 ? 'var(--amber)' : 'var(--red)';
 
       var itemsHtml = '';
       if(!g.items || !g.items.length){
-        itemsHtml = '<div style="text-align:center;padding:14px;font-size:.78rem;color:var(--muted2)">' +
+        itemsHtml = '<div style="text-align:center;padding:14px;font-size:var(--fs-xs);color:var(--muted2)">' +
           'ما في علامات — اضغط "+ علامة" للبدء</div>';
       } else {
         (g.items || []).forEach(function(it, i){
           itemsHtml += '<div class="gt-item-row">' +
             '<span style="flex:1">' + esc(it.name) + '</span>' +
             '<span style="color:var(--muted)">' + it.score + '/' + it.weight + '</span>' +
-            '<button class="btn btn-sm btn-danger" data-gt-del="' + esc(course.name) + '|' + i + '" style="padding:2px 6px;font-size:.7rem">✕</button>' +
+            '<button class="btn btn-sm btn-danger" data-gt-del="' + esc(course.name) + '|' + i + '" style="padding:2px 6px;font-size:var(--fs-2xs)">✕</button>' +
           '</div>';
         });
       }
@@ -623,16 +546,16 @@
       html += '<div class="card gt-card" style="margin-bottom:12px">' +
         '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">' +
           '<div style="flex:1;min-width:0">' +
-            '<div style="font-weight:700;font-size:.98rem">' + esc(course.name) + '</div>' +
-            '<div style="font-size:.72rem;color:var(--muted)">' +
+            '<div style="font-weight:700;font-size:var(--fs-base)">' + esc(course.name) + '</div>' +
+            '<div style="font-size:var(--fs-xs);color:var(--muted)">' +
               (course.code ? 'كود: ' + esc(course.code) + ' · ' : '') +
               'مجموع: ' + total + '%' +
             '</div>' +
           '</div>' +
           '<div style="display:flex;align-items:center;gap:10px">' +
             '<div style="text-align:center">' +
-              '<div style="font-size:1.4rem;font-weight:800;color:' + color + '">' + pct.toFixed(1) + '%</div>' +
-              '<div style="font-size:.65rem;color:var(--muted)">حتى الآن</div>' +
+              '<div style="font-size:var(--fs-xl);font-weight:800;color:' + color + '">' + pct.toFixed(1) + '%</div>' +
+              '<div style="font-size:var(--fs-2xs);color:var(--muted)">حتى الآن</div>' +
             '</div>' +
             '<button class="unified-course-btn added" data-course-name="' + esc(course.name) + '">🗑</button>' +
           '</div>' +
@@ -718,7 +641,7 @@
       }
       return '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">' +
         chip('attendance', '✅ ' + (ap === null ? '—' : ap + '%'), ac, 'الحضور') +
-        chip('gradecalc', '📊 ' + (gp === null ? '—' : gp + '%'), 'var(--cyan)', 'العلامات') +
+        chip('gradecalc', '📊 ' + (gp === null ? '—' : gp + '%'), 'var(--accent)', 'العلامات') +
         chip('tasks', '📝 ' + pend, pend ? 'var(--amber)' : 'var(--muted)', 'المهام المتبقية') +
         '</div>';
     }
@@ -728,8 +651,8 @@
       html += '<div class="card" data-course-card="' + c.id + '">' +
         '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;gap:10px">' +
           '<div style="flex:1;min-width:0">' +
-            '<div style="font-weight:700;font-size:.98rem">' + esc(c.name) + '</div>' +
-            (c.code ? '<div style="font-size:.7rem;color:var(--muted2);font-family:monospace">' + esc(c.code) + '</div>' : '') +
+            '<div style="font-weight:700;font-size:var(--fs-base)">' + esc(c.name) + '</div>' +
+            (c.code ? '<div style="font-size:var(--fs-2xs);color:var(--muted2);font-family:monospace">' + esc(c.code) + '</div>' : '') +
           '</div>' +
           '<div style="display:flex;gap:6px;align-items:center;flex-shrink:0">' +
             '<button type="button" class="btn btn-sm btn-ghost" data-edit-course="' + esc(c.id) + '" title="تعديل المادة" style="padding:6px 9px">✏️</button>' +
@@ -744,11 +667,11 @@
         courseQuickChips(sp, c) +
         '<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">' +
           '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">' +
-            '<span style="font-size:.78rem;font-weight:700;color:var(--muted)">📎 ملفات المادة</span>' +
-            '<span style="font-size:.68rem;color:var(--muted2)" data-files-count="' + c.id + '">—</span>' +
+            '<span style="font-size:var(--fs-xs);font-weight:700;color:var(--muted)">📎 ملفات المادة</span>' +
+            '<span style="font-size:var(--fs-2xs);color:var(--muted2)" data-files-count="' + c.id + '">—</span>' +
           '</div>' +
           '<div class="course-files-list" data-files-list="' + c.id + '">' +
-            '<div style="text-align:center;padding:10px;font-size:.75rem;color:var(--muted2)">جاري التحميل...</div>' +
+            '<div style="text-align:center;padding:10px;font-size:var(--fs-xs);color:var(--muted2)">جاري التحميل...</div>' +
           '</div>' +
           '<button class="upload-course-btn" data-upload-course="' + c.id + '">📤 رفع ملف</button>' +
           '<input type="file" style="display:none" data-file-input="' + c.id + '">' +
@@ -873,8 +796,8 @@
       html += '<div class="card" style="margin-bottom:12px">' +
         '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">' +
           '<div style="flex:1;min-width:0">' +
-            '<div style="font-weight:700;font-size:.98rem">📚 ' + esc(course.name) + '</div>' +
-            '<div style="font-size:.72rem;color:var(--muted)">' +
+            '<div style="font-weight:700;font-size:var(--fs-base)">📚 ' + esc(course.name) + '</div>' +
+            '<div style="font-size:var(--fs-xs);color:var(--muted)">' +
               (total ? total + ' امتحان مسجل' : 'ما في امتحانات مسجلة بعد') +
             '</div>' +
           '</div>' +
@@ -884,7 +807,7 @@
       if(courseExams.length){
         sortExams(courseExams).forEach(function(e){ html += examCard(e); });
       } else {
-        html += '<div style="text-align:center;padding:14px;font-size:.78rem;color:var(--muted2)">' +
+        html += '<div style="text-align:center;padding:14px;font-size:var(--fs-xs);color:var(--muted2)">' +
           'ما في امتحانات — اضغط "+ امتحان" لإضافة</div>';
       }
 
@@ -894,7 +817,7 @@
     /* Orphan exams (without course) */
     if(orphanExams.length){
       html += '<div class="card" style="margin-bottom:12px">' +
-        '<div style="font-weight:700;font-size:.95rem;margin-bottom:10px">📋 امتحانات بدون مادة</div>';
+        '<div style="font-weight:700;font-size:var(--fs-md);margin-bottom:10px">📋 امتحانات بدون مادة</div>';
       sortExams(orphanExams).forEach(function(e){ html += examCard(e, true); });
       html += '</div>';
     }
@@ -968,7 +891,7 @@
         var added   = isCourseAdded(cName);
 
         coursesHtml +=
-          '<div class="plan-course-row" style="display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--border);font-size:.86rem">' +
+          '<div class="plan-course-row" style="display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--border);font-size:var(--fs-sm)">' +
             '<button type="button" class="unified-course-btn ' + (added ? 'added' : 'not-added') + '" ' +
               'data-course-name="' + esc(cName) + '" ' +
               'data-code="' + esc(cCode) + '" ' +
@@ -979,24 +902,24 @@
             '<div style="flex:1;min-width:0;display:flex;align-items:center;gap:6px;flex-wrap:wrap">' +
               '<span>' + esc(x.n) + '</span>' +
               (x.code && x.code !== '—'
-                ? '<span style="font-size:.7rem;color:var(--muted2);font-family:monospace">' + esc(x.code) + '</span>'
+                ? '<span style="font-size:var(--fs-2xs);color:var(--muted2);font-family:monospace">' + esc(x.code) + '</span>'
                 : '') +
               (x.type === 'lab'
-                ? '<span style="font-size:.66rem;padding:1px 7px;border-radius:5px;background:rgba(52,211,153,.15);color:var(--green)">مختبر</span>'
+                ? '<span style="font-size:var(--fs-2xs);padding:1px 7px;border-radius:var(--r-sm);background:rgba(52,211,153,.15);color:var(--green)">مختبر</span>'
                 : '') +
             '</div>' +
-            '<span style="color:var(--cyan);font-weight:700;font-size:.8rem;white-space:nowrap;flex-shrink:0">' + x.h + ' س</span>' +
+            '<span style="color:var(--accent);font-weight:700;font-size:var(--fs-sm);white-space:nowrap;flex-shrink:0">' + x.h + ' س</span>' +
           '</div>';
       });
 
       el.innerHTML =
         '<div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer" class="sem-head">' +
           '<div style="display:flex;align-items:center;gap:12px">' +
-            '<span style="background:var(--grad);color:var(--on-accent);padding:3px 10px;border-radius:20px;font-size:.7rem;font-weight:800">سنة ' + s.year + '</span>' +
+            '<span style="background:var(--grad);color:var(--on-accent);padding:3px 10px;border-radius:var(--r-xl);font-size:var(--fs-2xs);font-weight:800">سنة ' + s.year + '</span>' +
             '<h3 style="margin:0">' + esc(s.name) + '</h3>' +
           '</div>' +
-          '<div style="display:flex;gap:10px;align-items:center;font-size:.78rem;color:var(--muted)">' +
-            '<span style="background:var(--bg2);padding:3px 10px;border-radius:8px;color:var(--cyan)">' + total + ' ساعة</span>' +
+          '<div style="display:flex;gap:10px;align-items:center;font-size:var(--fs-xs);color:var(--muted)">' +
+            '<span style="background:var(--bg2);padding:3px 10px;border-radius:var(--r-md);color:var(--accent)">' + total + ' ساعة</span>' +
             '<span class="arrow">▼</span>' +
           '</div>' +
         '</div>' +

@@ -32,7 +32,7 @@
     bd.innerHTML = '<div class="modal" role="alertdialog" aria-modal="true" style="max-width:400px;text-align:center">' +
       '<div style="font-size:3rem;margin-bottom:12px">' + (opts.icon || '⚠️') + '</div>' +
       '<h3 style="margin-bottom:18px">' + esc(opts.title || 'تأكيد الحذف') + '</h3>' +
-      '<p style="color:var(--muted);margin-bottom:22px;font-size:.9rem;white-space:pre-line">' + esc(message) + '</p>' +
+      '<p style="color:var(--muted);margin-bottom:22px;font-size:var(--fs-md);white-space:pre-line">' + esc(message) + '</p>' +
       '<div class="modal-actions" style="justify-content:center">' +
         '<button class="btn btn-sm btn-ghost" id="cCancel">إلغاء</button>' +
         '<button class="btn btn-sm' + (danger ? ' btn-danger' : '') + '" id="cConfirm">' + esc(opts.okLabel || '🗑 نعم، احذف') + '</button>' +
@@ -190,11 +190,11 @@
       var registered = (sp.courses || []).reduce(function(a,c){ return a + (c.hours || 0); }, 0);
       var pct = totalRequired > 0 ? Math.round(registered / totalRequired * 100) : 0;
       tp.innerHTML =
-        '<div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:.86rem">' +
+        '<div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:var(--fs-sm)">' +
         '<span style="color:var(--muted)">📚 ' + registered + ' / ' + totalRequired + ' ساعة</span>' +
-        '<span style="color:var(--cyan);font-weight:700">' + pct + '%</span></div>' +
+        '<span style="color:var(--accent);font-weight:700">' + pct + '%</span></div>' +
         '<div class="sc-progress"><div class="sc-progress-fill" style="width:' + pct + '%"></div></div>' +
-        '<div style="text-align:center;color:var(--muted2);font-size:.75rem;margin-top:6px">باقي ' +
+        '<div style="text-align:center;color:var(--muted2);font-size:var(--fs-xs);margin-top:6px">باقي ' +
         Math.max(0, totalRequired - registered) + ' ساعة للتخرج</div>';
     }
 
@@ -222,11 +222,11 @@
     if(db){
       var col2 = balance >= 0 ? 'var(--green)' : 'var(--red)';
       db.innerHTML =
-        '<div style="display:flex;justify-content:space-between;padding:8px 0;font-size:.85rem"><span>📈 دخل</span>' +
+        '<div style="display:flex;justify-content:space-between;padding:8px 0;font-size:var(--fs-sm)"><span>📈 دخل</span>' +
         '<span style="color:var(--green);font-weight:700">' + income.toFixed(0) + ' د</span></div>' +
-        '<div style="display:flex;justify-content:space-between;padding:8px 0;font-size:.85rem;border-top:1px solid var(--border)">' +
+        '<div style="display:flex;justify-content:space-between;padding:8px 0;font-size:var(--fs-sm);border-top:1px solid var(--border)">' +
         '<span>📉 مصروف</span><span style="color:var(--red);font-weight:700">' + expense.toFixed(0) + ' د</span></div>' +
-        '<div style="display:flex;justify-content:space-between;padding:8px 0;font-size:.88rem;border-top:2px solid var(--border);margin-top:6px">' +
+        '<div style="display:flex;justify-content:space-between;padding:8px 0;font-size:var(--fs-md);border-top:2px solid var(--border);margin-top:6px">' +
         '<span style="font-weight:700">💼 الرصيد</span><span style="color:' + col2 + ';font-weight:800">' + balance.toFixed(0) + ' د</span></div>';
     }
 
@@ -642,19 +642,19 @@
     sp.courses.forEach(function(c){
       html += '<div class="card" data-course-card="' + c.id + '">' +
         '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;gap:10px">' +
-          '<div><div style="font-weight:700;font-size:.98rem">' + esc(c.name) + '</div>' +
-          (c.code ? '<div style="font-size:.7rem;color:var(--muted2);font-family:monospace">' + esc(c.code) + '</div>' : '') + '</div>' +
+          '<div><div style="font-weight:700;font-size:var(--fs-base)">' + esc(c.name) + '</div>' +
+          (c.code ? '<div style="font-size:var(--fs-2xs);color:var(--muted2);font-family:monospace">' + esc(c.code) + '</div>' : '') + '</div>' +
           '<span class="badge">' + (c.hours || 3) + ' ساعات</span></div>' +
         '<div style="display:flex;gap:6px;margin-top:12px">' +
           '<button class="btn btn-sm btn-ghost" data-edit-course="' + c.id + '">✏️</button>' +
           '<button class="btn btn-sm btn-danger" data-del-course="' + c.id + '">🗑</button></div>' +
         '<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">' +
           '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">' +
-            '<span style="font-size:.78rem;font-weight:700;color:var(--muted)">📎 ملفات المادة</span>' +
-            '<span style="font-size:.68rem;color:var(--muted2)" data-files-count="' + c.id + '">—</span>' +
+            '<span style="font-size:var(--fs-xs);font-weight:700;color:var(--muted)">📎 ملفات المادة</span>' +
+            '<span style="font-size:var(--fs-2xs);color:var(--muted2)" data-files-count="' + c.id + '">—</span>' +
           '</div>' +
           '<div class="course-files-list" data-files-list="' + c.id + '">' +
-            '<div style="text-align:center;padding:10px;font-size:.75rem;color:var(--muted2)">جاري التحميل...</div>' +
+            '<div style="text-align:center;padding:10px;font-size:var(--fs-xs);color:var(--muted2)">جاري التحميل...</div>' +
           '</div>' +
           '<button class="upload-course-btn" data-upload-course="' + c.id + '">📤 رفع ملف</button>' +
           '<input type="file" style="display:none" data-file-input="' + c.id + '">' +
@@ -733,7 +733,7 @@
     function paint(){
       var q = ui.q.trim().toLowerCase();
       var shown = cfSort(files.filter(function(f){ return !q || cfClean(f.name).toLowerCase().indexOf(q) > -1; }), ui.sort);
-      box.innerHTML = shown.length ? cfItems(shown, courseId) : '<div style="text-align:center;padding:10px;font-size:.75rem;color:var(--muted2)">ما في ملفات تطابق البحث</div>';
+      box.innerHTML = shown.length ? cfItems(shown, courseId) : '<div style="text-align:center;padding:10px;font-size:var(--fs-xs);color:var(--muted2)">ما في ملفات تطابق البحث</div>';
       var count = document.querySelector('[data-files-count="' + courseId + '"]');
       if(count) count.textContent = (q ? shown.length + ' من ' : '') + files.length + ' ملف';
     }
@@ -759,7 +759,7 @@
     if(!list) return;
 
     if(!window.SB || !window.SB.listCourseFiles){
-      list.innerHTML = '<div style="text-align:center;padding:10px;font-size:.75rem;color:var(--muted2)">المزامنة غير مفعّلة</div>';
+      list.innerHTML = '<div style="text-align:center;padding:10px;font-size:var(--fs-xs);color:var(--muted2)">المزامنة غير مفعّلة</div>';
       return;
     }
 
@@ -769,26 +769,26 @@
       var folders = [courseId].concat((course && course.filesFrom) || []);
       var files = await window.SB.listCourseFilesMulti(folders);
       if(files === null){
-        list.innerHTML = '<div style="text-align:center;padding:10px;font-size:.75rem;color:var(--muted2)">تعذّر تحميل الملفات (تحقق من الاتصال) ' +
-          '<a href="#" data-retry-files="' + esc(courseId) + '" style="color:var(--cyan)">إعادة المحاولة</a></div>';
+        list.innerHTML = '<div style="text-align:center;padding:10px;font-size:var(--fs-xs);color:var(--muted2)">تعذّر تحميل الملفات (تحقق من الاتصال) ' +
+          '<a href="#" data-retry-files="' + esc(courseId) + '" style="color:var(--accent)">إعادة المحاولة</a></div>';
         if(count) count.textContent = '—';
         var rb = list.querySelector('[data-retry-files]');
         if(rb) rb.addEventListener('click', function(ev){
           ev.preventDefault();
-          list.innerHTML = '<div style="text-align:center;padding:10px;font-size:.75rem;color:var(--muted2)">جاري التحميل…</div>';
+          list.innerHTML = '<div style="text-align:center;padding:10px;font-size:var(--fs-xs);color:var(--muted2)">جاري التحميل…</div>';
           window.SB.listCourseFilesMulti(folders, true).then(function(){ window.loadCourseFilesForCard(courseId); });
         });
         return;
       }
       window.__cfFiles[courseId] = files;
       if(!files.length){
-        list.innerHTML = '<div style="text-align:center;padding:10px;font-size:.75rem;color:var(--muted2)">ما في ملفات بعد</div>';
+        list.innerHTML = '<div style="text-align:center;padding:10px;font-size:var(--fs-xs);color:var(--muted2)">ما في ملفات بعد</div>';
         if(count) count.textContent = '0 ملف';
         return;
       }
       cfRender(list, courseId, files);
     }catch(e){
-      list.innerHTML = '<div style="text-align:center;padding:10px;font-size:.75rem;color:var(--red)">فشل التحميل</div>';
+      list.innerHTML = '<div style="text-align:center;padding:10px;font-size:var(--fs-xs);color:var(--red)">فشل التحميل</div>';
     }
   };
 
@@ -1060,7 +1060,7 @@
       var card = d.cards[idx];
       bd.innerHTML = '<div class="modal" style="max-width:520px">' +
         '<h3 style="display:flex;justify-content:space-between;align-items:center">' +
-        '<span>🃏 ' + esc(d.name) + '</span><span style="font-size:.8rem;color:var(--muted)">' +
+        '<span>🃏 ' + esc(d.name) + '</span><span style="font-size:var(--fs-sm);color:var(--muted)">' +
         (idx+1) + '/' + d.cards.length + '</span></h3>' +
         '<div class="fc-card" id="fcFlip"><div class="' + (showBack ? 'back' : 'front') + '">' +
         esc(showBack ? card.a : card.q) + '</div>' +
@@ -1273,7 +1273,7 @@
       try{ dateStr = new Date(n.ts).toLocaleDateString('ar-EG', {weekday:'long', year:'numeric', month:'short', day:'numeric'}); }catch(e){}
       html += '<div class="note-card">' +
         '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">' +
-        '<span style="font-size:.72rem;color:var(--muted2)">' + dateStr + '</span>' +
+        '<span style="font-size:var(--fs-xs);color:var(--muted2)">' + dateStr + '</span>' +
         '<button class="btn btn-sm btn-danger" data-del-note="' + i + '">✕</button></div>' +
         '<input value="' + esc(n.title || '') + '" placeholder="عنوان..." data-note-title="' + i + '">' +
         '<textarea placeholder="اكتب..." data-note-body="' + i + '">' + esc(n.body || '') + '</textarea></div>';
@@ -1456,10 +1456,10 @@
     var msg, color;
     if(need <= 0){ msg = '🎉 مبروك! ضمنت العلامة'; color = 'var(--green)'; }
     else if(need <= 60){ msg = '✅ تحتاج ' + need.toFixed(1) + '% فقط'; color = 'var(--green)'; }
-    else if(need <= 85){ msg = '💪 تحتاج ' + need.toFixed(1) + '%'; color = 'var(--cyan)'; }
+    else if(need <= 85){ msg = '💪 تحتاج ' + need.toFixed(1) + '%'; color = 'var(--accent)'; }
     else if(need <= 100){ msg = '⚠️ تحتاج ' + need.toFixed(1) + '% — شد حيلك!'; color = 'var(--amber)'; }
     else { msg = '😅 مستحيل — ' + need.toFixed(1) + '% (>100)'; color = 'var(--red)'; }
-    res.innerHTML = '<div style="font-size:1.2rem;font-weight:800;color:' + color + '">' + msg + '</div>';
+    res.innerHTML = '<div style="font-size:var(--fs-lg);font-weight:800;color:' + color + '">' + msg + '</div>';
   };
 
   window.renderGradeCalc = function(){
@@ -1479,22 +1479,22 @@
         earned += parseFloat(it.score)  || 0;
       });
       var pct = total > 0 ? (earned / total * 100) : 0;
-      var color = pct >= 85 ? 'var(--green)' : pct >= 70 ? 'var(--cyan)' :
+      var color = pct >= 85 ? 'var(--green)' : pct >= 70 ? 'var(--accent)' :
                   pct >= 50 ? 'var(--amber)' : 'var(--red)';
       var itemsHtml = '';
       (g.items || []).forEach(function(it, i){
         itemsHtml += '<div class="gt-item-row"><span style="flex:1">' + esc(it.name) + '</span>' +
           '<span style="color:var(--muted)">' + it.score + '/' + it.weight + '</span>' +
           '<button class="btn btn-sm btn-danger" data-gt-del="' + idx + '-' + i +
-          '" style="padding:2px 6px;font-size:.7rem">✕</button></div>';
+          '" style="padding:2px 6px;font-size:var(--fs-2xs)">✕</button></div>';
       });
       html += '<div class="card" style="margin-bottom:12px">' +
         '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">' +
-        '<div><div style="font-weight:700;font-size:.98rem">' + esc(g.name) + '</div>' +
-        '<div style="font-size:.72rem;color:var(--muted)">مجموع: ' + total + '%</div></div>' +
-        '<div style="text-align:center"><div style="font-size:1.4rem;font-weight:800;color:' + color + '">' +
+        '<div><div style="font-weight:700;font-size:var(--fs-base)">' + esc(g.name) + '</div>' +
+        '<div style="font-size:var(--fs-xs);color:var(--muted)">مجموع: ' + total + '%</div></div>' +
+        '<div style="text-align:center"><div style="font-size:var(--fs-xl);font-weight:800;color:' + color + '">' +
         pct.toFixed(1) + '%</div>' +
-        '<div style="font-size:.65rem;color:var(--muted)">حتى الآن</div></div></div>' +
+        '<div style="font-size:var(--fs-2xs);color:var(--muted)">حتى الآن</div></div></div>' +
         itemsHtml +
         '<div style="display:flex;gap:6px;margin-top:10px">' +
         '<button class="btn btn-sm" data-gt-add="' + idx + '">+ علامة</button>' +
@@ -1566,19 +1566,19 @@
       var total = s.courses.reduce(function(a,x){ return a + x.h; }, 0);
       var coursesHtml = '';
       s.courses.forEach(function(x){
-        coursesHtml += '<div style="display:flex;justify-content:space-between;padding:10px 0;border-top:1px solid var(--border);font-size:.86rem">' +
+        coursesHtml += '<div style="display:flex;justify-content:space-between;padding:10px 0;border-top:1px solid var(--border);font-size:var(--fs-sm)">' +
           '<div>' + esc(x.n) +
-          (x.code && x.code !== '—' ? ' <span style="font-size:.7rem;color:var(--muted2);font-family:monospace">' + esc(x.code) + '</span>' : '') +
-          (x.type === 'lab' ? ' <span style="font-size:.66rem;padding:1px 7px;border-radius:5px;background:rgba(52,211,153,.15);color:var(--green);margin-right:6px">مختبر</span>' : '') +
-          '</div><span style="color:var(--cyan);font-weight:700;font-size:.8rem">' + x.h + ' س</span></div>';
+          (x.code && x.code !== '—' ? ' <span style="font-size:var(--fs-2xs);color:var(--muted2);font-family:monospace">' + esc(x.code) + '</span>' : '') +
+          (x.type === 'lab' ? ' <span style="font-size:var(--fs-2xs);padding:1px 7px;border-radius:var(--r-sm);background:rgba(52,211,153,.15);color:var(--green);margin-right:6px">مختبر</span>' : '') +
+          '</div><span style="color:var(--accent);font-weight:700;font-size:var(--fs-sm)">' + x.h + ' س</span></div>';
       });
       el.innerHTML =
         '<div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer" class="sem-head">' +
           '<div style="display:flex;align-items:center;gap:12px">' +
-            '<span style="background:var(--grad);color:var(--on-accent);padding:3px 10px;border-radius:20px;font-size:.7rem;font-weight:800">سنة ' + s.year + '</span>' +
+            '<span style="background:var(--grad);color:var(--on-accent);padding:3px 10px;border-radius:var(--r-xl);font-size:var(--fs-2xs);font-weight:800">سنة ' + s.year + '</span>' +
             '<h3 style="margin:0">' + esc(s.name) + '</h3></div>' +
-          '<div style="display:flex;gap:10px;align-items:center;font-size:.78rem;color:var(--muted)">' +
-            '<span style="background:var(--bg2);padding:3px 10px;border-radius:8px;color:var(--cyan)">' + total + ' ساعة</span>' +
+          '<div style="display:flex;gap:10px;align-items:center;font-size:var(--fs-xs);color:var(--muted)">' +
+            '<span style="background:var(--bg2);padding:3px 10px;border-radius:var(--r-md);color:var(--accent)">' + total + ' ساعة</span>' +
             '<span class="arrow">▼</span></div></div>' +
         '<div class="sem-body" style="max-height:0;overflow:hidden;transition:.4s">' + coursesHtml + '</div>';
       var head = el.querySelector('.sem-head');
@@ -1644,7 +1644,7 @@
     });
 
     if(!count) list.innerHTML = '<div class="empty"><div class="ic">📕</div><p>لا نتائج</p></div>';
-    else list.innerHTML = '<div style="color:var(--muted);font-size:.82rem;margin-bottom:12px">عدد المواد: ' + count + '</div>' + html;
+    else list.innerHTML = '<div style="color:var(--muted);font-size:var(--fs-sm);margin-bottom:12px">عدد المواد: ' + count + '</div>' + html;
   };
 
   /* ============================================================

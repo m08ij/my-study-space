@@ -428,125 +428,7 @@
     var old1 = document.getElementById('stt-style-v6');
     if(old1) old1.remove();
     if(document.getElementById(STT_CSS)) return;
-    var css = `
-      .stt-backdrop{position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.78);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:16px}
-      .stt-modal{background:var(--card);border:1px solid var(--border);border-radius:22px;width:100%;max-width:1200px;max-height:94vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.6);position:relative}
-      .stt-header{display:flex;justify-content:space-between;align-items:center;padding:16px 22px;border-bottom:1px solid var(--border);background:linear-gradient(135deg,rgba(34,211,238,.08),rgba(167,139,250,.08));flex-shrink:0;gap:10px;flex-wrap:wrap}
-      .stt-header h3{margin:0;font-size:1.05rem;font-weight:800;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-      .stt-close{width:34px;height:34px;border-radius:10px;background:var(--card2);border:1px solid var(--border);color:var(--muted);cursor:pointer;font-size:1.3rem;display:flex;align-items:center;justify-content:center;font-family:inherit;line-height:1}
-      .stt-close:hover{background:rgba(239,68,68,.15);border-color:var(--red);color:var(--red)}
-      .stt-stats{display:flex;gap:10px;padding:12px 22px;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto}
-      .stt-stat{flex:1;min-width:110px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px 14px;display:flex;flex-direction:column;gap:2px}
-      .stt-stat-v{font-size:1.3rem;font-weight:900;color:var(--cyan);line-height:1}
-      .stt-stat-l{font-size:.68rem;color:var(--muted);font-weight:600}
-      .stt-stat.green .stt-stat-v{color:var(--green)}
-      .stt-stat.amber .stt-stat-v{color:var(--amber)}
-      .stt-stat.purple .stt-stat-v{color:var(--purple)}
-      .stt-draft-notice{padding:8px 22px;background:rgba(251,191,36,.1);border-bottom:1px solid rgba(251,191,36,.25);font-size:.75rem;color:var(--amber);display:none;align-items:center;gap:8px}
-      .stt-draft-notice.show{display:flex}
-      .stt-draft-notice button{margin-right:auto;padding:4px 10px;border-radius:8px;background:transparent;border:1px solid currentColor;color:inherit;cursor:pointer;font-family:inherit;font-size:.7rem;font-weight:700}
-      .stt-rows-head{display:grid;grid-template-columns:36px 130px minmax(160px,1fr) 240px 220px 130px 70px;gap:8px;padding:8px 22px;background:var(--bg2);border-bottom:1px solid var(--border);font-size:.7rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.3px}
-      .stt-rows-head > div{text-align:center}
-      .stt-rows{flex:1;overflow-y:auto;padding:12px 22px;display:flex;flex-direction:column;gap:8px;background:var(--bg)}
-      .stt-row{display:grid;grid-template-columns:36px 130px minmax(160px,1fr) 240px 220px 130px 70px;gap:8px;align-items:center;padding:10px;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;transition:.25s}
-      .stt-row.matched{border-color:rgba(52,211,153,.4);background:linear-gradient(135deg,rgba(52,211,153,.04),transparent)}
-      .stt-row.ready{border-color:rgba(52,211,153,.5)}
-      .stt-num{width:28px;height:28px;border-radius:8px;background:var(--grad);color:var(--on-accent);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.8rem;justify-self:center}
-      .stt-row.matched .stt-num{background:linear-gradient(135deg,#34d399,#10b981)}
-      .stt-input{width:100%;background:var(--card);border:1.5px solid var(--border);color:var(--text);padding:8px 10px;border-radius:9px;font-family:inherit;font-size:.85rem;outline:none;height:38px;transition:.2s;min-width:0}
-      .stt-input:focus{border-color:var(--cyan);box-shadow:0 0 0 3px var(--glow)}
-      .stt-code{font-family:ui-monospace,monospace;direction:ltr;text-align:left;letter-spacing:.5px;font-weight:700}
-      .stt-name-cell{display:flex;flex-direction:column;gap:2px;min-width:0}
-      .stt-name-cell .stt-input{height:38px}
-      .stt-match{font-size:.65rem;color:var(--green);font-weight:700;padding:0 4px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-height:12px}
-      .stt-match.no-match{color:var(--amber)}
-      .stt-match:empty{display:none}
-      .stt-days{display:flex;gap:3px;padding:4px;background:var(--card);border:1.5px solid var(--border);border-radius:9px;height:38px;align-items:center;justify-content:center}
-      .stt-day{flex:1;height:26px;border-radius:6px;background:transparent;border:none;color:var(--muted);cursor:pointer;font-family:inherit;font-size:.62rem;font-weight:800;display:flex;align-items:center;justify-content:center;transition:.2s;padding:0;letter-spacing:.2px;text-transform:uppercase}
-      .stt-day:hover{color:var(--text);background:var(--card2)}
-      .stt-day.active{background:var(--grad);color:var(--on-accent);box-shadow:0 2px 6px var(--glow)}
-      .stt-time{display:flex;align-items:center;gap:4px;position:relative}
-      .stt-time input[type="time"]{flex:1;background:var(--card);border:1.5px solid var(--border);color:var(--text);padding:0 6px;border-radius:9px;font-family:ui-monospace,monospace;font-size:.82rem;outline:none;height:38px;direction:ltr;text-align:center;font-weight:700;min-width:0;color-scheme:dark}
-      .stt-time input[type="time"]::-webkit-calendar-picker-indicator{filter:invert(.7);cursor:pointer}
-      .stt-time input[type="time"]:focus{border-color:var(--cyan);box-shadow:0 0 0 3px var(--glow)}
-      .stt-arrow{color:var(--muted2);font-weight:700;font-size:.75rem;flex-shrink:0}
-      .stt-duration{position:absolute;bottom:-11px;right:50%;transform:translateX(50%);font-size:.6rem;font-weight:800;color:var(--cyan);background:var(--card);padding:1px 6px;border-radius:5px;border:1px solid var(--border);white-space:nowrap;pointer-events:none}
-      .stt-duration:empty{display:none}
-      .stt-row-actions{display:flex;gap:3px;justify-content:flex-end}
-      .stt-row-btn{width:30px;height:30px;border-radius:8px;background:transparent;border:1.5px solid var(--border);color:var(--muted);cursor:pointer;font-size:.9rem;display:flex;align-items:center;justify-content:center;transition:.2s;padding:0;font-family:inherit;line-height:1}
-      .stt-row-btn:hover{background:var(--card2);border-color:var(--cyan);color:var(--cyan)}
-      .stt-row-btn.del:hover{background:rgba(239,68,68,.15);border-color:var(--red);color:var(--red)}
-      .stt-row-btn.copy:hover{background:rgba(167,139,250,.15);border-color:var(--purple);color:var(--purple)}
-      .stt-footer{display:flex;justify-content:space-between;align-items:center;padding:14px 22px;border-top:1px solid var(--border);background:var(--card2);gap:10px;flex-wrap:wrap;flex-shrink:0}
-      .stt-footer-hint{font-size:.78rem;color:var(--muted);text-align:center;flex:1;min-width:150px}
-      .stt-btn{padding:10px 18px;border-radius:11px;font-family:inherit;font-size:.86rem;font-weight:800;cursor:pointer;border:none;display:inline-flex;align-items:center;gap:6px;transition:.2s}
-      .stt-btn-primary{background:var(--grad);color:var(--on-accent);box-shadow:0 6px 20px var(--glow)}
-      .stt-btn-primary:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 8px 24px var(--glow)}
-      .stt-btn-primary:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
-      .stt-btn-ghost{background:transparent;color:var(--text);border:1.5px solid var(--border)}
-      .stt-btn-ghost:hover{background:var(--card);border-color:var(--cyan);color:var(--cyan)}
-      .stt-btn-warn{background:linear-gradient(135deg,#f59e0b,#fbbf24);color:var(--on-accent)}
-      .stt-preview{position:absolute;inset:0;background:var(--card);z-index:100;display:none;flex-direction:column;overflow:hidden;border-radius:22px}
-      .stt-preview.show{display:flex}
-      .stt-preview-header{padding:16px 22px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,rgba(34,211,238,.08),rgba(167,139,250,.08))}
-      .stt-preview-header h3{margin:0;font-size:1rem;font-weight:800;color:var(--cyan)}
-      .stt-preview-body{flex:1;overflow-y:auto;padding:18px 22px}
-      .stt-preview-table{width:100%;border-collapse:collapse;font-size:.82rem;background:var(--bg2);border-radius:12px;overflow:hidden}
-      .stt-preview-table th{background:var(--card2);padding:10px 8px;text-align:right;font-weight:800;color:var(--cyan);font-size:.72rem;border-bottom:1px solid var(--border)}
-      .stt-preview-table td{padding:10px 8px;border-bottom:1px solid var(--border);font-size:.78rem}
-      .stt-preview-table tr:last-child td{border-bottom:none}
-      .stt-preview-table tr.conflict{background:rgba(239,68,68,.08)}
-      .stt-preview-table tr.conflict td{color:var(--red)}
-      .stt-preview-days{display:flex;gap:3px;flex-wrap:wrap}
-      .stt-preview-day{padding:2px 6px;background:var(--grad-soft);color:var(--cyan);border-radius:4px;font-size:.65rem;font-weight:800}
-      .stt-preview-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:16px}
-      .stt-preview-stat{background:var(--grad-soft);border:1px solid var(--glow);border-radius:12px;padding:12px;text-align:center}
-      .stt-preview-stat-v{font-size:1.5rem;font-weight:900;color:var(--cyan);line-height:1}
-      .stt-preview-stat-l{font-size:.68rem;color:var(--muted);margin-top:4px}
-      .stt-preview-footer{padding:14px 22px;border-top:1px solid var(--border);background:var(--card2);display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
-      .stt-issue-row{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;margin-bottom:6px}
-      .stt-issue-ic{font-size:1.1rem;flex-shrink:0}
-      .stt-issue-body{flex:1;min-width:0;font-size:.82rem;line-height:1.6}
-      @media (max-width: 1100px){
-        .stt-rows-head, .stt-row{grid-template-columns:36px 110px minmax(140px,1fr) 200px 180px 100px 60px;gap:6px}
-      }
-      @media (max-width: 860px){
-        .stt-rows-head{display:none}
-        .stt-row{
-          grid-template-columns:32px 1fr 60px;
-          grid-template-areas:
-            "num name actions"
-            "code code code"
-            "days days days"
-            "time time time"
-            "room room room";
-          gap:8px;padding:12px;
-        }
-        .stt-num{grid-area:num}
-        .stt-code{grid-area:code}
-        .stt-name-cell{grid-area:name}
-        .stt-days{grid-area:days}
-        .stt-time{grid-area:time}
-        .stt-room-input{grid-area:room}
-        .stt-row-actions{grid-area:actions}
-        .stt-input,.stt-time input[type="time"]{height:44px}
-        .stt-days{height:44px}
-      }
-      @media (max-width: 520px){
-        .stt-modal{border-radius:16px;max-height:96vh}
-        .stt-header{padding:12px 14px}
-        .stt-header h3{font-size:.9rem}
-        .stt-stats{padding:8px 14px}
-        .stt-stat{padding:8px 10px;min-width:90px}
-        .stt-stat-v{font-size:1.1rem}
-        .stt-rows{padding:10px;gap:10px}
-        .stt-footer{padding:10px 14px}
-      }
-    `;
-    var s = document.createElement('style');
-    s.id = STT_CSS;
-    s.textContent = css;
-    document.head.appendChild(s);
+    /* الأنماط انتقلت إلى app.css (قسم: الجدول الذكي STT (كان STT_CSS)) */
   }
 
   function sttLookupByCode(code){
@@ -997,17 +879,17 @@
         var dur = formatDuration(calcDuration(r.timeFrom, r.timeTo));
         html += '<tr class="' + cls + '">' +
           '<td>' + (i+1) + '</td>' +
-          '<td style="font-family:monospace;direction:ltr;text-align:left;font-size:.72rem">' + esc(r.code || '—') + '</td>' +
+          '<td style="font-family:monospace;direction:ltr;text-align:left;font-size:var(--fs-xs)">' + esc(r.code || '—') + '</td>' +
           '<td><b>' + esc(r.name) + '</b></td>' +
           '<td><div class="stt-preview-days">' + daysHtml + '</div></td>' +
-          '<td style="font-family:monospace;direction:ltr;font-size:.75rem">' + (r.timeFrom || '') + ' → ' + (r.timeTo || '') +
-            (dur ? ' <span style="color:var(--muted2);font-size:.65rem">(' + dur + ')</span>' : '') + '</td>' +
+          '<td style="font-family:monospace;direction:ltr;font-size:var(--fs-xs)">' + (r.timeFrom || '') + ' → ' + (r.timeTo || '') +
+            (dur ? ' <span style="color:var(--muted2);font-size:var(--fs-2xs)">(' + dur + ')</span>' : '') + '</td>' +
           '<td>' + esc(r.room || '—') + '</td>' +
         '</tr>';
       });
       html += '</tbody></table>';
       if(conflicts){
-        html = '<div style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:10px;padding:12px;margin-bottom:14px;font-size:.82rem;color:var(--red);font-weight:700">' +
+        html = '<div style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:var(--r-md);padding:12px;margin-bottom:14px;font-size:var(--fs-sm);color:var(--red);font-weight:700">' +
           '⚠️ عندك ' + conflicts + ' تعارض — راجع الصفوف الحمراء</div>' + html;
       }
       body.innerHTML = html;
@@ -1147,24 +1029,24 @@
     if(stats.incomplete.length) summary += '⚠️ ' + stats.incomplete.length + ' صف ناقص\n';
     if(stats.unknownCodes.length) summary += '⚠️ ' + stats.unknownCodes.length + ' كود غير معروف\n';
 
-    var html = '<div style="padding:12px;background:var(--bg2);border-radius:10px;font-family:monospace;font-size:.78rem;line-height:1.8;white-space:pre-line;margin-bottom:14px">' + esc(summary.trim()) + '</div>';
+    var html = '<div style="padding:12px;background:var(--bg2);border-radius:var(--r-md);font-family:monospace;font-size:var(--fs-xs);line-height:1.8;white-space:pre-line;margin-bottom:14px">' + esc(summary.trim()) + '</div>';
 
     if(stats.skipped.length){
-      html += '<div style="margin-bottom:14px"><div style="font-size:.85rem;font-weight:800;color:var(--red);margin-bottom:8px">❌ تعارضات (' + stats.skipped.length + ')</div>';
+      html += '<div style="margin-bottom:14px"><div style="font-size:var(--fs-sm);font-weight:800;color:var(--red);margin-bottom:8px">❌ تعارضات (' + stats.skipped.length + ')</div>';
       stats.skipped.forEach(function(s){
         html += '<div class="stt-issue-row" style="border-color:rgba(248,113,113,.4)"><div class="stt-issue-ic">🚫</div><div class="stt-issue-body"><b>الصف ' + s.row + '</b> — ' + esc(s.day) + ' ' + esc(s.time) + '<br>المادة: <b>' + esc(s.newName) + '</b><br>متعارضة مع: <b style="color:var(--red)">' + esc(s.conflictWith) + '</b></div></div>';
       });
       html += '</div>';
     }
     if(stats.incomplete.length){
-      html += '<div style="margin-bottom:14px"><div style="font-size:.85rem;font-weight:800;color:var(--amber);margin-bottom:8px">⚠️ صفوف ناقصة (' + stats.incomplete.length + ')</div>';
+      html += '<div style="margin-bottom:14px"><div style="font-size:var(--fs-sm);font-weight:800;color:var(--amber);margin-bottom:8px">⚠️ صفوف ناقصة (' + stats.incomplete.length + ')</div>';
       stats.incomplete.forEach(function(s){
         html += '<div class="stt-issue-row" style="border-color:rgba(251,191,36,.4)"><div class="stt-issue-ic">📝</div><div class="stt-issue-body"><b>الصف ' + s.row + '</b><br>ينقص: <b>' + esc(s.missing) + '</b></div></div>';
       });
       html += '</div>';
     }
     if(stats.unknownCodes.length){
-      html += '<div style="margin-bottom:14px"><div style="font-size:.85rem;font-weight:800;color:var(--amber);margin-bottom:8px">⚠️ أكواد غير معروفة (' + stats.unknownCodes.length + ')</div>';
+      html += '<div style="margin-bottom:14px"><div style="font-size:var(--fs-sm);font-weight:800;color:var(--amber);margin-bottom:8px">⚠️ أكواد غير معروفة (' + stats.unknownCodes.length + ')</div>';
       stats.unknownCodes.forEach(function(s){
         html += '<div class="stt-issue-row" style="border-color:rgba(251,191,36,.4)"><div class="stt-issue-ic">🔍</div><div class="stt-issue-body"><b>الصف ' + s.row + '</b> — <code style="direction:ltr">' + esc(s.code) + '</code></div></div>';
       });
@@ -1233,14 +1115,14 @@
     card.innerHTML =
       '<div style="text-align:center;padding:36px 20px 32px">' +
         '<div style="font-size:2.6rem;line-height:1;margin-bottom:14px">📅</div>' +
-        '<div style="font-size:1.15rem;font-weight:800;margin-bottom:8px">إضافة جدول</div>' +
-        '<div style="font-size:.85rem;color:var(--muted);line-height:1.7;margin-bottom:22px">' +
+        '<div style="font-size:var(--fs-lg);font-weight:800;margin-bottom:8px">إضافة جدول</div>' +
+        '<div style="font-size:var(--fs-sm);color:var(--muted);line-height:1.7;margin-bottom:22px">' +
           'اكتب رقم المادة — نعبّي الاسم والساعات تلقائياً.<br>اختر الأيام والوقت بضغطة واحدة.' +
         '</div>' +
         '<button class="btn" id="btnOpenSmartTimetable" ' +
           'style="background:var(--grad);color:var(--on-accent);font-weight:800;padding:12px 32px;' +
-          'font-size:.95rem;border-radius:12px;width:100%;max-width:420px;' +
-          'box-shadow:0 6px 20px var(--glow);justify-content:center">' +
+          'font-size:var(--fs-md);border-radius:var(--r-lg);width:100%;max-width:420px;' +
+          'box-shadow:var(--sh-glow);justify-content:center">' +
           '➕ إضافة جدول' +
         '</button>' +
       '</div>';
@@ -1272,26 +1154,7 @@
 
   function bnInject(){
     if(document.getElementById('bn-style')) return;
-    var s = document.createElement('style');
-    s.id = 'bn-style';
-    s.textContent = `
-      .bn-bar{position:fixed;bottom:0;left:0;right:0;z-index:350;display:none;background:var(--topbar-bg);backdrop-filter:blur(24px);border-top:1px solid var(--border);padding:6px 8px calc(6px + env(safe-area-inset-bottom, 0px));box-shadow:0 -8px 32px rgba(0,0,0,.25)}
-      @media (max-width: 900px){
-        .bn-bar{ display: flex; }
-        .fab-main{ bottom: 90px !important; }
-        .fab-menu{ bottom: 158px !important; }
-        .ai-fab{ bottom: 90px !important; left: auto !important; right: 16px !important; }
-        .ai-panel{ bottom: 158px !important; max-height: calc(100vh - 240px) !important; }
-        main{ padding-bottom: 100px !important; }
-      }
-      .bn-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px;background:transparent;border:none;color:var(--muted);font-family:inherit;font-size:.68rem;font-weight:600;cursor:pointer;border-radius:12px;position:relative}
-      .bn-item.active{ color: var(--cyan); background: var(--grad-soft); }
-      .bn-item.active::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:24px;height:3px;border-radius:3px;background:var(--grad)}
-      .bn-item .bn-ic{ font-size: 1.3rem; }
-      .bn-item .bn-lbl{ font-size: .62rem; white-space: nowrap; }
-      @media (max-width: 400px){ .bn-item{ padding: 8px 2px; } .bn-item .bn-lbl{ font-size: .58rem; } }
-    `;
-    document.head.appendChild(s);
+    /* الأنماط انتقلت إلى app.css (قسم: شريط التنقل السفلي (كان bn-style)) */
   }
   function bnInjectBar(){
     if(document.getElementById('bnBar')) return;
@@ -1668,7 +1531,7 @@
       days.push({date: ds, minutes: m});
     }
     if(maxMin === 0) maxMin = 60;
-    var colors = ['var(--bg2)', 'rgba(34,211,238,.25)', 'rgba(34,211,238,.5)', 'rgba(34,211,238,.75)', 'var(--cyan)'];
+    var colors = ['var(--bg2)', 'rgba(34,211,238,.25)', 'rgba(34,211,238,.5)', 'rgba(34,211,238,.75)', 'var(--accent)'];
     var html = '<div style="display:flex;gap:3px;overflow-x:auto;padding:8px 0;direction:ltr">';
     for(var w = 0; w < 17; w++){
       html += '<div style="display:flex;flex-direction:column;gap:3px">';
@@ -1677,7 +1540,7 @@
         if(idx >= days.length){ html += '<div style="width:13px;height:13px"></div>'; continue; }
         var day = days[idx];
         var intensity = day.minutes === 0 ? 0 : Math.min(4, Math.ceil((day.minutes / maxMin) * 4));
-        html += '<div title="' + day.date + ' - ' + day.minutes + ' min" style="width:13px;height:13px;border-radius:3px;background:' + colors[intensity] + '"></div>';
+        html += '<div title="' + day.date + ' - ' + day.minutes + ' min" style="width:13px;height:13px;border-radius:var(--r-sm);background:' + colors[intensity] + '"></div>';
       }
       html += '</div>';
     }
@@ -1686,9 +1549,9 @@
     var activeDays = days.filter(function(d){ return d.minutes > 0; }).length;
     var streak = computeStreak(log);
     html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-top:14px">';
-    html += '<div style="background:var(--bg2);border-radius:10px;padding:10px;text-align:center"><div style="font-size:1.2rem;font-weight:800;color:var(--cyan)">' + (totalMin/60).toFixed(1) + '</div><div style="font-size:.68rem;color:var(--muted)">ساعات (16 أسبوع)</div></div>';
-    html += '<div style="background:var(--bg2);border-radius:10px;padding:10px;text-align:center"><div style="font-size:1.2rem;font-weight:800;color:var(--green)">' + activeDays + '</div><div style="font-size:.68rem;color:var(--muted)">أيام نشطة</div></div>';
-    html += '<div style="background:var(--bg2);border-radius:10px;padding:10px;text-align:center"><div style="font-size:1.2rem;font-weight:800;color:var(--amber)">' + streak + '</div><div style="font-size:.68rem;color:var(--muted)">ستريك</div></div>';
+    html += '<div style="background:var(--bg2);border-radius:var(--r-md);padding:10px;text-align:center"><div style="font-size:var(--fs-lg);font-weight:800;color:var(--accent)">' + (totalMin/60).toFixed(1) + '</div><div style="font-size:var(--fs-2xs);color:var(--muted)">ساعات (16 أسبوع)</div></div>';
+    html += '<div style="background:var(--bg2);border-radius:var(--r-md);padding:10px;text-align:center"><div style="font-size:var(--fs-lg);font-weight:800;color:var(--green)">' + activeDays + '</div><div style="font-size:var(--fs-2xs);color:var(--muted)">أيام نشطة</div></div>';
+    html += '<div style="background:var(--bg2);border-radius:var(--r-md);padding:10px;text-align:center"><div style="font-size:var(--fs-lg);font-weight:800;color:var(--amber)">' + streak + '</div><div style="font-size:var(--fs-2xs);color:var(--muted)">ستريك</div></div>';
     html += '</div>';
     container.innerHTML = html;
   }
@@ -1704,8 +1567,8 @@
     var diff = lastWeek === 0 ? (thisWeek > 0 ? 100 : 0) : Math.round(((thisWeek - lastWeek) / lastWeek) * 100);
     var color = diff > 0 ? 'var(--green)' : diff < 0 ? 'var(--red)' : 'var(--muted)';
     var html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">';
-    html += '<div style="background:var(--bg2);border-radius:10px;padding:12px"><div style="font-size:.7rem;color:var(--muted)">هذا الأسبوع</div><div style="font-size:1.3rem;font-weight:800;color:var(--cyan);margin-top:4px">' + (thisWeek/60).toFixed(1) + ' س</div></div>';
-    html += '<div style="background:var(--bg2);border-radius:10px;padding:12px"><div style="font-size:.7rem;color:var(--muted)">الأسبوع الماضي</div><div style="font-size:1.3rem;font-weight:800;margin-top:4px">' + (lastWeek/60).toFixed(1) + ' س</div><div style="font-size:.68rem;color:' + color + ';margin-top:4px;font-weight:700">' + (diff >= 0 ? '+' : '') + diff + '%</div></div>';
+    html += '<div style="background:var(--bg2);border-radius:var(--r-md);padding:12px"><div style="font-size:var(--fs-2xs);color:var(--muted)">هذا الأسبوع</div><div style="font-size:var(--fs-xl);font-weight:800;color:var(--accent);margin-top:4px">' + (thisWeek/60).toFixed(1) + ' س</div></div>';
+    html += '<div style="background:var(--bg2);border-radius:var(--r-md);padding:12px"><div style="font-size:var(--fs-2xs);color:var(--muted)">الأسبوع الماضي</div><div style="font-size:var(--fs-xl);font-weight:800;margin-top:4px">' + (lastWeek/60).toFixed(1) + ' س</div><div style="font-size:var(--fs-2xs);color:' + color + ';margin-top:4px;font-weight:700">' + (diff >= 0 ? '+' : '') + diff + '%</div></div>';
     html += '</div>';
     var container = document.getElementById('insightsTrends');
     if(container) container.innerHTML = html;
@@ -1729,12 +1592,12 @@
     var data = grades.map(function(g){ return {name: g.name, pct: computeGradePercentage(g)}; }).sort(function(a,b){ return b.pct - a.pct; });
     var html = '<div style="display:flex;flex-direction:column;gap:8px">';
     data.forEach(function(d){
-      var color = d.pct >= 85 ? 'var(--green)' : d.pct >= 70 ? 'var(--cyan)' : d.pct >= 50 ? 'var(--amber)' : 'var(--red)';
-      html += '<div style="padding:10px 12px;background:var(--bg2);border-radius:10px">' +
+      var color = d.pct >= 85 ? 'var(--green)' : d.pct >= 70 ? 'var(--accent)' : d.pct >= 50 ? 'var(--amber)' : 'var(--red)';
+      html += '<div style="padding:10px 12px;background:var(--bg2);border-radius:var(--r-md)">' +
         '<div style="display:flex;justify-content:space-between;margin-bottom:6px">' +
-        '<span style="font-size:.85rem;font-weight:600">' + esc(d.name) + '</span>' +
+        '<span style="font-size:var(--fs-sm);font-weight:600">' + esc(d.name) + '</span>' +
         '<span style="font-weight:800;color:' + color + '">' + d.pct.toFixed(1) + '%</span></div>' +
-        '<div style="height:5px;background:var(--card);border-radius:5px;overflow:hidden">' +
+        '<div style="height:5px;background:var(--card);border-radius:var(--r-sm);overflow:hidden">' +
         '<div style="height:100%;width:' + d.pct + '%;background:' + color + '"></div></div></div>';
     });
     html += '</div>';
@@ -1744,7 +1607,7 @@
     var grades = space().grades || [];
     var container = document.getElementById('insightsGpa'); if(!container) return;
     if(!grades.length){
-      container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:.85rem">أضف علامات أولاً</div>';
+      container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:var(--fs-sm)">أضف علامات أولاً</div>';
       return;
     }
     var courses = space().courses || [];
@@ -1765,10 +1628,10 @@
                 currentGpa >= 3.0 ? 'جيد جداً' : currentGpa >= 2.5 ? 'جيد' :
                 currentGpa >= 2.0 ? 'مقبول' : 'يحتاج تحسين';
     container.innerHTML = '<div style="text-align:center;padding:16px">' +
-      '<div style="font-size:.78rem;color:var(--muted)">معدل متوقع</div>' +
+      '<div style="font-size:var(--fs-xs);color:var(--muted)">معدل متوقع</div>' +
       '<div style="font-size:2.6rem;font-weight:800;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin:8px 0">' + currentGpa.toFixed(2) + '</div>' +
-      '<div style="font-size:.85rem;color:var(--cyan);font-weight:700">' + label + '</div>' +
-      '<div style="font-size:.72rem;color:var(--muted);margin-top:12px">' + totalHrs + ' ساعة من ' + grades.length + ' مادة</div></div>';
+      '<div style="font-size:var(--fs-sm);color:var(--accent);font-weight:700">' + label + '</div>' +
+      '<div style="font-size:var(--fs-xs);color:var(--muted);margin-top:12px">' + totalHrs + ' ساعة من ' + grades.length + ' مادة</div></div>';
   }
   function renderInsights(){
     renderHeatmap(); renderTrends(); renderCoursePerformance(); renderGpaForecast();
@@ -1796,7 +1659,7 @@
         '<div><div class="chart-title" style="margin-bottom:10px">أداء المواد</div>' +
         '<div id="insightsCourses"></div></div>' +
         '<div><div class="chart-title" style="margin-bottom:10px">توقع المعدل</div>' +
-        '<div id="insightsGpa" style="background:var(--grad-soft);border-radius:12px;border:1px solid var(--glow)"></div></div>' +
+        '<div id="insightsGpa" style="background:var(--grad-soft);border-radius:var(--r-lg);border:1px solid var(--glow)"></div></div>' +
       '</div>';
     /* slot ثابت في index.html يضمن ترتيب الأقسام المتقدمة */
     (document.getElementById('slotInsights') || dash).appendChild(section);
@@ -1912,30 +1775,30 @@
     var html = '';
     html += '<div class="card" style="margin-bottom:16px">' +
       '<div class="card-head"><h3>📊 تقدمك نحو التخرج</h3>' +
-      '<span style="font-size:.85rem;color:var(--cyan);font-weight:800">' + pct + '%</span></div>' +
+      '<span style="font-size:var(--fs-sm);color:var(--accent);font-weight:800">' + pct + '%</span></div>' +
       '<div class="sc-progress"><div class="sc-progress-fill" style="width:' + pct + '%"></div></div>' +
-      '<div style="text-align:center;font-size:.75rem;color:var(--muted);margin-top:8px">' +
+      '<div style="text-align:center;font-size:var(--fs-xs);color:var(--muted);margin-top:8px">' +
       gap.progress.total + ' / ' + gap.totalRequired.total + ' ساعة · باقي ' + gap.remaining.total + '</div>' +
       '<div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">' +
       '<button class="btn btn-sm" id="psManageCompleted">☑ إدارة المنجزة</button>' +
       '<button class="btn btn-sm btn-ghost" id="psImportFromGpa">📥 استيراد من المعدل</button>' +
       '</div></div>';
     html += '<div class="card"><div class="card-head"><h3>🎯 مقترح للترم القادم (' + (semNames[result.semester] || '—') + ')</h3>' +
-      '<span class="badge" style="background:var(--grad-soft);color:var(--cyan)">' + result.totalHours + ' ساعة</span></div>';
+      '<span class="badge" style="background:var(--grad-soft);color:var(--accent)">' + result.totalHours + ' ساعة</span></div>';
     if(!result.suggestions.length){
       html += '<div class="empty"><div class="ic">✨</div><p>ما لقيت مواد مقترحة</p></div>';
     } else {
       html += '<div style="display:flex;flex-direction:column;gap:8px">';
       result.suggestions.forEach(function(s){
-        var t = (window.COURSE_TYPES && window.COURSE_TYPES[s.info.t]) || { label:'مادة', icon:'📘', color:'var(--cyan)' };
+        var t = (window.COURSE_TYPES && window.COURSE_TYPES[s.info.t]) || { label:'مادة', icon:'📘', color:'var(--accent)' };
         var badge = s.ready
-          ? '<span style="font-size:.68rem;padding:3px 9px;border-radius:6px;background:rgba(52,211,153,.15);color:var(--green);font-weight:700">✅ جاهز</span>'
-          : '<span style="font-size:.68rem;padding:3px 9px;border-radius:6px;background:rgba(251,191,36,.15);color:var(--amber);font-weight:700">⚠️ متطلب</span>';
-        html += '<div style="display:flex;align-items:center;gap:10px;padding:12px;background:var(--bg2);border:1px solid var(--border);border-radius:12px' + (s.ready ? '' : ';opacity:.75') + '">' +
-          '<div style="font-size:1.4rem">' + t.icon + '</div>' +
-          '<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:.9rem">' + esc(s.name) + '</div>' +
-          '<div style="font-size:.7rem;color:var(--muted2);font-family:monospace">' + esc(s.info.code) + ' · ' + s.info.h + ' ساعات</div>' +
-          (s.blocked ? '<div style="font-size:.7rem;color:var(--amber);margin-top:4px">🔒 محجوب بـ: ' + s.blocked.map(esc).join('، ') + '</div>' : '') +
+          ? '<span style="font-size:var(--fs-2xs);padding:3px 9px;border-radius:var(--r-sm);background:rgba(52,211,153,.15);color:var(--green);font-weight:700">✅ جاهز</span>'
+          : '<span style="font-size:var(--fs-2xs);padding:3px 9px;border-radius:var(--r-sm);background:rgba(251,191,36,.15);color:var(--amber);font-weight:700">⚠️ متطلب</span>';
+        html += '<div style="display:flex;align-items:center;gap:10px;padding:12px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-lg)' + (s.ready ? '' : ';opacity:.75') + '">' +
+          '<div style="font-size:var(--fs-xl)">' + t.icon + '</div>' +
+          '<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:var(--fs-md)">' + esc(s.name) + '</div>' +
+          '<div style="font-size:var(--fs-2xs);color:var(--muted2);font-family:monospace">' + esc(s.info.code) + ' · ' + s.info.h + ' ساعات</div>' +
+          (s.blocked ? '<div style="font-size:var(--fs-2xs);color:var(--amber);margin-top:4px">🔒 محجوب بـ: ' + s.blocked.map(esc).join('، ') + '</div>' : '') +
           '</div>' + badge + '</div>';
       });
       html += '</div>';
@@ -1994,22 +1857,22 @@
     var html = '<div class="modal" style="max-width:640px;padding:22px">' +
       '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">' +
       '<h3 style="margin:0">☑ إدارة المواد المنجزة</h3>' +
-      '<span id="cpmCount" style="font-size:.8rem;color:var(--cyan);font-weight:700"></span></div>' +
+      '<span id="cpmCount" style="font-size:var(--fs-sm);color:var(--accent);font-weight:700"></span></div>' +
       '<div style="margin-bottom:12px"><input id="cpmSearch" placeholder="🔍 ابحث..." ' +
-      'style="width:100%;padding:10px 14px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:10px;font-family:inherit"></div>' +
+      'style="width:100%;padding:10px 14px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:var(--r-md);font-family:inherit"></div>' +
       '<div id="cpmList" style="max-height:55vh;overflow-y:auto;padding:4px">';
     Object.keys(groups).forEach(function(t){
       if(!groups[t].length) return;
       var meta = typeLabels[t] || { i:'📘', l:t };
-      html += '<div data-cpm-group="' + t + '" style="margin-bottom:14px"><div style="font-size:.78rem;font-weight:800;color:var(--cyan);margin-bottom:6px">' +
+      html += '<div data-cpm-group="' + t + '" style="margin-bottom:14px"><div style="font-size:var(--fs-xs);font-weight:800;color:var(--accent);margin-bottom:6px">' +
         meta.i + ' ' + meta.l + ' (' + groups[t].length + ')</div>';
       groups[t].forEach(function(c){
         var checked = completed[c.name] ? 'checked' : '';
-        html += '<label class="cpm-item" data-name="' + esc(c.name) + '" style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;margin-bottom:4px;cursor:pointer">' +
-          '<input type="checkbox" ' + checked + ' style="width:18px;height:18px;accent-color:var(--cyan);cursor:pointer">' +
-          '<span style="flex:1;font-size:.84rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(c.name) + '</span>' +
-          '<span style="font-size:.7rem;color:var(--muted);font-family:monospace">' + esc(c.code) + '</span>' +
-          '<span style="font-size:.7rem;color:var(--cyan);font-weight:700">' + c.h + ' س</span></label>';
+        html += '<label class="cpm-item" data-name="' + esc(c.name) + '" style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:4px;cursor:pointer">' +
+          '<input type="checkbox" ' + checked + ' style="width:18px;height:18px;accent-color:var(--accent);cursor:pointer">' +
+          '<span style="flex:1;font-size:var(--fs-sm);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(c.name) + '</span>' +
+          '<span style="font-size:var(--fs-2xs);color:var(--muted);font-family:monospace">' + esc(c.code) + '</span>' +
+          '<span style="font-size:var(--fs-2xs);color:var(--accent);font-weight:700">' + c.h + ' س</span></label>';
       });
       html += '</div>';
     });
@@ -2151,7 +2014,7 @@
     return root;
   }
   function renderMindmapSVG(layout){
-    var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + layout.width + ' ' + layout.height + '" style="width:100%;height:auto;max-height:75vh;background:var(--bg2);border-radius:14px">';
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + layout.width + ' ' + layout.height + '" style="width:100%;height:auto;max-height:75vh;background:var(--bg2);border-radius:var(--r-lg)">';
     layout.links.forEach(function(l){
       var x1 = l.from.x, y1 = l.from.y, x2 = l.to.x, y2 = l.to.y;
       var cx1 = (x1 + x2) / 2, cx2 = (x1 + x2) / 2;
@@ -2205,7 +2068,7 @@
       bd2.innerHTML = '<div class="modal" style="max-width:96vw;width:1000px;padding:22px">' +
         '<div style="display:flex;justify-content:space-between;margin-bottom:14px"><h3 style="margin:0">🧠 ' + esc(title || 'خريطة') + '</h3>' +
         '<button class="btn btn-sm btn-ghost" id="mmClose2">✕</button></div>' +
-        '<div style="overflow:auto;background:var(--bg2);border-radius:14px;padding:8px">' + svg + '</div></div>';
+        '<div style="overflow:auto;background:var(--bg2);border-radius:var(--r-lg);padding:8px">' + svg + '</div></div>';
       document.body.appendChild(bd2);
       bd2.querySelector('#mmClose2').onclick = function(){ bd2.remove(); };
       bd2.onclick = function(e){ if(e.target === bd2) bd2.remove(); };

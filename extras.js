@@ -48,16 +48,16 @@
     });
 
     var typeLabels = {
-      'uni-c': {l:'جامعة إجبارية', total:18, color:'var(--cyan)'},
-      'uni-e': {l:'جامعة اختيارية', total:6, color:'var(--purple)'},
+      'uni-c': {l:'جامعة إجبارية', total:18, color:'var(--accent)'},
+      'uni-e': {l:'جامعة اختيارية', total:6, color:'var(--accent-2)'},
       'faculty': {l:'كلية إجبارية', total:33, color:'var(--green)'},
       'major-c': {l:'تخصص إجباري', total:88, color:'var(--amber)'},
       'major-e': {l:'تخصص اختياري', total:15, color:'var(--pink)'}
     };
 
-    var html = '<div style="display:flex;justify-content:space-between;margin-bottom:10px;font-size:.88rem;flex-wrap:wrap;gap:8px">' +
+    var html = '<div style="display:flex;justify-content:space-between;margin-bottom:10px;font-size:var(--fs-md);flex-wrap:wrap;gap:8px">' +
       '<span style="color:var(--muted)">📚 <b style="color:var(--text)">' + registered + '</b> / ' + TOTAL + ' ساعة</span>' +
-      '<span style="color:var(--cyan);font-weight:800">' + pct + '%</span></div>' +
+      '<span style="color:var(--accent);font-weight:800">' + pct + '%</span></div>' +
       '<div class="sc-progress"><div class="sc-progress-fill" style="width:' + pct + '%"></div></div>';
 
     /* تفصيل حسب النوع */
@@ -66,15 +66,15 @@
       var meta = typeLabels[k];
       var got = byType[k] || 0;
       var p = Math.round(got / meta.total * 100);
-      html += '<div style="padding:8px 10px;background:var(--bg2);border-radius:9px">' +
-        '<div style="display:flex;justify-content:space-between;font-size:.7rem;color:var(--muted);margin-bottom:5px">' +
+      html += '<div style="padding:8px 10px;background:var(--bg2);border-radius:var(--r-md)">' +
+        '<div style="display:flex;justify-content:space-between;font-size:var(--fs-2xs);color:var(--muted);margin-bottom:5px">' +
         '<span>' + meta.l + '</span><span style="color:' + meta.color + ';font-weight:700">' + got + '/' + meta.total + '</span></div>' +
-        '<div style="height:4px;background:var(--card);border-radius:4px;overflow:hidden">' +
+        '<div style="height:4px;background:var(--card);border-radius:var(--r-sm);overflow:hidden">' +
         '<div style="height:100%;width:' + Math.min(100,p) + '%;background:' + meta.color + '"></div></div></div>';
     });
     html += '</div>';
 
-    html += '<div style="text-align:center;color:var(--muted2);font-size:.75rem;margin-top:12px">باقي ' +
+    html += '<div style="text-align:center;color:var(--muted2);font-size:var(--fs-xs);margin-top:12px">باقي ' +
       Math.max(0, TOTAL - registered) + ' ساعة للتخرج</div>';
 
     tp.innerHTML = html;
@@ -242,9 +242,9 @@
             '<div class="big-lbl">إجمالي ساعات الدراسة</div>' +
           '</div>' +
           '<div style="text-align:center">' +
-            '<div style="font-size:2rem;line-height:1">' + (streak > 0 ? '🔥' : '💤') + '</div>' +
-            '<div style="font-size:1.4rem;font-weight:900;color:var(--amber)">' + streak + '</div>' +
-            '<div style="font-size:.68rem;color:var(--muted)">يوم متتالي</div>' +
+            '<div style="font-size:var(--fs-2xl);line-height:1">' + (streak > 0 ? '🔥' : '💤') + '</div>' +
+            '<div style="font-size:var(--fs-xl);font-weight:900;color:var(--amber)">' + streak + '</div>' +
+            '<div style="font-size:var(--fs-2xs);color:var(--muted)">يوم متتالي</div>' +
           '</div>' +
         '</div>' +
         '<div class="stats-grid">' +
@@ -266,7 +266,7 @@
               '<div class="t">ساعة</div>' +
             '</div>' +
           '</div>' +
-          '<div class="donut-legend">' + (legendHtml || '<div style="color:var(--muted);font-size:.85rem">أضف مواد أولاً</div>') + '</div>' +
+          '<div class="donut-legend">' + (legendHtml || '<div style="color:var(--muted);font-size:var(--fs-sm)">أضف مواد أولاً</div>') + '</div>' +
         '</div>' +
       '</div>';
 
@@ -455,7 +455,7 @@
           var btn = document.createElement('button');
           btn.className = 'btn btn-sm ecs-btn';
           btn.style.background = 'var(--grad-soft)';
-          btn.style.color = 'var(--cyan)';
+          btn.style.color = 'var(--accent)';
           btn.textContent = '⏳';
           btn.title = 'العد التنازلي';
           btn.addEventListener('click', function(e){
@@ -610,7 +610,7 @@
     /* === LMS قسم === */
     html += '<div class="card-head" style="margin-bottom:10px">' +
       '<h3>🎓 LMS HU — روابط سريعة</h3>' +
-      '<span class="card-action" style="color:var(--amber);font-size:.7rem;font-family:monospace">lms.hu.edu.jo</span>' +
+      '<span class="card-action" style="color:var(--amber);font-size:var(--fs-2xs);font-family:monospace">lms.hu.edu.jo</span>' +
       '</div>';
 
     LMS_LINKS.forEach(function(l){
@@ -627,8 +627,8 @@
     /* === Teams قسم === */
     html += '<div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border)">' +
       '<div class="card-head" style="margin-bottom:10px">' +
-      '<h3 style="font-size:.9rem">💬 Microsoft Teams</h3>' +
-      '<span class="card-action" style="color:var(--purple);font-size:.7rem;font-family:monospace">teams.microsoft.com</span>' +
+      '<h3 style="font-size:var(--fs-md)">💬 Microsoft Teams</h3>' +
+      '<span class="card-action" style="color:var(--accent-2);font-size:var(--fs-2xs);font-family:monospace">teams.microsoft.com</span>' +
       '</div>';
 
     TEAMS_LINKS.forEach(function(l){
@@ -645,7 +645,7 @@
 
     /* === .ics import === */
     html += '<div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">' +
-      '<div style="font-size:.8rem;color:var(--muted);margin-bottom:10px;line-height:1.7">' +
+      '<div style="font-size:var(--fs-sm);color:var(--muted);margin-bottom:10px;line-height:1.7">' +
         '📥 <b>استيراد تقويم LMS:</b> نزّل ملف <code>.ics</code> من LMS → استورده هنا لدمج الواجبات مع جدولك.' +
       '</div>' +
       '<button class="btn btn-sm" id="moodleImportBtn">📅 استيراد تقويم (.ics)</button>' +

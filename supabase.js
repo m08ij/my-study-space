@@ -252,13 +252,13 @@
     bd.innerHTML =
       '<div class="modal" style="max-width:440px">' +
         '<h3>☁️ رمز المزامنة</h3>' +
-        '<p style="color:var(--muted);font-size:.85rem;line-height:1.7;margin-bottom:16px">' +
+        '<p style="color:var(--muted);font-size:var(--fs-sm);line-height:1.7;margin-bottom:16px">' +
           'هذا الرمز هو مفتاح مساحتك في السحابة. أدخله على أي جهاز آخر لترى نفس بياناتك.' +
         '</p>' +
         '<div class="form-group">' +
           '<label>الرمز</label>' +
           '<input id="syncCodeInput" value="' + escFn(getCode()) + '" readonly ' +
-          'style="font-family:monospace;text-align:center;font-size:1.3rem;font-weight:800;direction:ltr;letter-spacing:4px">' +
+          'style="font-family:monospace;text-align:center;font-size:var(--fs-xl);font-weight:800;direction:ltr;letter-spacing:4px">' +
         '</div>' +
         '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">' +
           '<button class="btn btn-sm" id="syncCopy" style="flex:1">📋 نسخ</button>' +
@@ -267,7 +267,7 @@
           '<button class="btn btn-sm btn-ghost" id="syncClose" style="flex:1">إغلاق</button>' +
         '</div>' +
         '<div id="syncQr" style="margin-top:14px;text-align:center;display:none"></div>' +
-        '<div style="margin-top:14px;padding:10px;background:var(--grad-soft);border-radius:10px;font-size:.78rem;color:var(--muted);line-height:1.7">' +
+        '<div style="margin-top:14px;padding:10px;background:var(--grad-soft);border-radius:var(--r-md);font-size:var(--fs-xs);color:var(--muted);line-height:1.7">' +
           '💡 احفظ هذا الرمز في مكان آمن.' +
         '</div>' +
       '</div>';
@@ -294,7 +294,7 @@
       if(qr && !qr.innerHTML){
         qr.style.display = 'block';
         qr.innerHTML = '<img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' +
-          encodeURIComponent(c) + '" alt="QR" style="border-radius:10px;background:#fff;padding:8px">';
+          encodeURIComponent(c) + '" alt="QR" style="border-radius:var(--r-md);background:#fff;padding:8px">';
       }
     };
     bd.querySelector('#syncChange').onclick = function(){

@@ -164,7 +164,7 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
         </div>
         <div class="ocr-preview" id="ocrPreview"></div>
         <div class="ocr-result" id="ocrResult">
-          <label style="font-size:.82rem;color:var(--muted);display:block;margin-bottom:6px">📝 النص المستخرج</label>
+          <label style="font-size:var(--fs-sm);color:var(--muted);display:block;margin-bottom:6px">📝 النص المستخرج</label>
           <textarea id="ocrTextarea"></textarea>
           <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
             <button class="btn btn-sm" id="btnParseOcr">🔍 تحليل</button>
@@ -175,7 +175,7 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
       <div class="card">
         <h3>✨ أدوات سريعة</h3>
         <button class="btn" style="width:100%;margin-bottom:10px" id="btnLoadExample">🎯 تجربة مثال</button>
-        <button class="btn" style="width:100%;margin-bottom:10px;background:var(--grad-soft);color:var(--cyan);border:1px solid var(--cyan)" id="btnPasteOcr">📋 تجربة OCR</button>
+        <button class="btn" style="width:100%;margin-bottom:10px;background:var(--grad-soft);color:var(--accent);border:1px solid var(--accent)" id="btnPasteOcr">📋 تجربة OCR</button>
         <button class="btn" style="width:100%;margin-bottom:10px;background:transparent;color:var(--text);border:1px solid var(--border)" id="btnAutoFill">✨ توليد من موادي</button>
         <button class="btn" style="width:100%;background:transparent;color:var(--text);border:1px solid var(--border)" id="btnPrintTt">🖨️ طباعة</button>
       </div>
@@ -291,7 +291,7 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
     <div class="page-head"><h2 class="page-title">📔 ملاحظاتي</h2><p class="page-sub">تُحفظ تلقائيًا</p></div>
     <div class="controls">
       <button class="btn" id="btnAddNote">+ ملاحظة</button>
-      <span style="color:var(--muted);font-size:.8rem;margin-right:auto" id="notesCount">0</span>
+      <span style="color:var(--muted);font-size:var(--fs-sm);margin-right:auto" id="notesCount">0</span>
     </div>
     <div id="notesList"></div>
   </section>
@@ -321,7 +321,7 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
             </select></div>
           <div class="form-group"><label>&nbsp;</label><button class="btn" style="width:100%" id="ncCalc">احسب</button></div>
         </div>
-        <div id="ncResult" style="margin-top:12px;padding:14px;border-radius:10px;display:none;text-align:center"></div>
+        <div id="ncResult" style="margin-top:12px;padding:14px;border-radius:var(--r-md);display:none;text-align:center"></div>
       </div>
     </div>
     <div class="subsection" data-gc-sub="tracker">
@@ -345,7 +345,7 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
         </table>
       </div>
       <div class="gpa-result">
-        <div style="color:var(--muted);font-size:.84rem">المعدل التراكمي</div>
+        <div style="color:var(--muted);font-size:var(--fs-sm)">المعدل التراكمي</div>
         <div class="big" id="gpaVal">0.00</div>
         <div class="gpa-details">
           <div><div class="v" id="gpaHrs">0</div><div class="l">مجموع الساعات</div></div>
@@ -360,7 +360,7 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
           <div class="form-group"><label>التقدير المتوقع</label><select id="whatIfGrade"></select></div>
           <div class="form-group"><label>&nbsp;</label><button class="btn" style="width:100%" id="btnCalcWhatIf">احسب</button></div>
         </div>
-        <div id="whatIfResult" style="margin-top:12px;padding:14px;background:var(--grad-soft);border-radius:10px;font-size:.86rem;color:var(--cyan);font-weight:600;display:none"></div>
+        <div id="whatIfResult" style="margin-top:12px;padding:14px;background:var(--grad-soft);border-radius:var(--r-md);font-size:var(--fs-sm);color:var(--accent);font-weight:600;display:none"></div>
       </div>
     </div>
   </section>
@@ -387,7 +387,7 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
     </div>
     <div class="subsection" data-plan-sub="desc">
       <div class="controls">
-        <input type="search" id="cdSearch" placeholder="🔍 ابحث..." style="flex:1;min-width:220px;padding:10px 14px;background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:10px;font-family:inherit">
+        <input type="search" id="cdSearch" placeholder="🔍 ابحث..." style="flex:1;min-width:220px;padding:10px 14px;background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:var(--r-md);font-family:inherit">
         <button class="chip active" data-cd-year="all">الكل</button>
         <button class="chip" data-cd-year="1">سنة 1</button>
         <button class="chip" data-cd-year="2">سنة 2</button>
@@ -411,13 +411,13 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
         <p>بوابة الطالب، البريد، المكتبة، التعلم الإلكتروني</p>
       </div>
     </div>
-    <h3 style="margin:20px 0 12px;font-size:1rem;color:var(--cyan)">🔗 الخدمات الأساسية</h3>
+    <h3 style="margin:20px 0 12px;font-size:var(--fs-base);color:var(--accent)">🔗 الخدمات الأساسية</h3>
     <div class="grid grid-2" id="huMainLinks"></div>
-    <h3 style="margin:20px 0 12px;font-size:1rem;color:var(--cyan)">📚 المكتبة والمصادر</h3>
+    <h3 style="margin:20px 0 12px;font-size:var(--fs-base);color:var(--accent)">📚 المكتبة والمصادر</h3>
     <div class="grid grid-2" id="huLibraryLinks"></div>
-    <h3 style="margin:20px 0 12px;font-size:1rem;color:var(--cyan)">📱 التطبيقات الرسمية</h3>
+    <h3 style="margin:20px 0 12px;font-size:var(--fs-base);color:var(--accent)">📱 التطبيقات الرسمية</h3>
     <div class="grid grid-2" id="huAppLinks"></div>
-    <h3 style="margin:20px 0 12px;font-size:1rem;color:var(--cyan)">🆘 الدعم والمساعدة</h3>
+    <h3 style="margin:20px 0 12px;font-size:var(--fs-base);color:var(--accent)">🆘 الدعم والمساعدة</h3>
     <div class="grid grid-2" id="huSupportLinks"></div>
   </section>
 </main>
@@ -480,7 +480,7 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
    1) إن لم يطابق window.APP_BUILD رقم BUILD هنا → يمسح كاش التطبيق ويعيد التحميل مرة واحدة (حارس sessionStorage يمنع التكرار).
    2) أقسام اللوحة المتقدمة (تحليلات/LMS/إحصائيات) تُنقل إلى خانتها الثابتة إذا أضافتها سكربتات قديمة بمكان آخر. */
 (function(){
-  var BUILD = '89';
+  var BUILD = '90';
   var SLOTS = { insightsSection: 'slotInsights', lmsWidget: 'slotLms', enhancedStatsSection: 'slotEnhanced' };
   function heal(){
     var dash = document.getElementById('dashboard'); if(!dash) return;

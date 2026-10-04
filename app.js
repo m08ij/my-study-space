@@ -328,8 +328,8 @@
     bd.innerHTML = '<div class="modal" style="max-width:440px;text-align:center;position:relative">' +
       '<div style="font-size:2.6rem;margin-bottom:8px">🔀</div>' +
       '<h3 style="margin-bottom:12px">تعديلات من جهازين</h3>' +
-      '<p style="color:var(--muted);font-size:.88rem;line-height:1.8;margin-bottom:8px">تم تعديل بياناتك على السحابة من جهاز آخر، وعندك تعديلات غير مرفوعة على هذا الجهاز.</p>' +
-      '<p style="color:var(--muted2);font-size:.78rem;margin-bottom:18px">حفظنا نسخة من الطرفين على هذا الجهاز قبل أي قرار.</p>' +
+      '<p style="color:var(--muted);font-size:var(--fs-md);line-height:1.8;margin-bottom:8px">تم تعديل بياناتك على السحابة من جهاز آخر، وعندك تعديلات غير مرفوعة على هذا الجهاز.</p>' +
+      '<p style="color:var(--muted2);font-size:var(--fs-xs);margin-bottom:18px">حفظنا نسخة من الطرفين على هذا الجهاز قبل أي قرار.</p>' +
       '<div style="display:flex;flex-direction:column;gap:8px">' +
         '<button class="btn btn-sm" id="scCloud">☁️ استخدام نسخة السحابة (تعديلات هذا الجهاز تبقى بالنسخة الاحتياطية)</button>' +
         '<button class="btn btn-sm btn-ghost" id="scLocal">💾 الاحتفاظ بنسخة هذا الجهاز (نسخة السحابة تبقى بالنسخة الاحتياطية)</button>' +
@@ -534,7 +534,7 @@
       var idx = buildIndex();
       var m = idx.filter(function(x){ return String(x.name || '').toLowerCase().indexOf(q) > -1; }).slice(0,10);
       current = m; activeI = -1;
-      if(!m.length) res.innerHTML = '<div style="padding:16px;text-align:center;color:var(--muted);font-size:.85rem">لا نتائج</div>';
+      if(!m.length) res.innerHTML = '<div style="padding:16px;text-align:center;color:var(--muted);font-size:var(--fs-sm)">لا نتائج</div>';
       else {
         var html = '';
         m.forEach(function(x, i){
@@ -1104,7 +1104,7 @@
     rows.forEach(function(item){
       if(item.type === 'gap'){
         var gm = item.to - item.from;
-        html += '<tr><td colspan="' + (days.length + 1) + '" style="background:transparent;text-align:center;font-size:.72rem;color:var(--muted2);padding:6px">فجوة ' + ttDur(gm) + '</td></tr>';
+        html += '<tr><td colspan="' + (days.length + 1) + '" style="background:transparent;text-align:center;font-size:var(--fs-xs);color:var(--muted2);padding:6px">فجوة ' + ttDur(gm) + '</td></tr>';
         return;
       }
       var time = item.time, rowMin = ttMin(time);
