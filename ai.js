@@ -174,6 +174,17 @@
       setTimeout(function(){
         var reply = window.aiRespond(txt);
         addMsg(reply, 'bot');
+        /* أزرار إجراءات مرتبطة بالسياق (تنقّل/فتح فقط) تضيفها طبقة ai-context.js */
+        var acts = window.aiTakeActions ? window.aiTakeActions() : [];
+        if(acts.length && msgs && msgs.lastChild){
+          var row = document.createElement('div'); row.className = 'ai-actions';
+          acts.forEach(function(a){
+            var btn = document.createElement('button'); btn.type = 'button'; btn.className = 'ai-act'; btn.textContent = a.label;
+            btn.addEventListener('click', function(){ try{ a.run(); }catch(e){ console.warn(e); } if(panel.classList.contains('show') && window.innerWidth <= 900) panel.classList.remove('show'); });
+            row.appendChild(btn);
+          });
+          msgs.lastChild.appendChild(row);
+        }
       }, 350);
     }
 

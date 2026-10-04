@@ -1378,12 +1378,11 @@ main{padding-left:max(24px,env(safe-area-inset-left))}
   .plan-add-btn,.unified-course-btn{min-width:38px;min-height:38px}
   .section input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]),.section select{min-height:40px}
 }
-/* الشاشات العريضة: الغلاف (القائمة الجانبية + المحتوى) كتلة واحدة متوسّطة بعرض أقصى — بدون فجوة أفقية بين القائمة والمحتوى
-   (كان المحتوى يُوسَّط وحده فيترك فراغاً ضخماً بينه وبين القائمة) */
-:root{--shell-max:1680px;--sidebar-w:250px}
+/* الشاشات العريضة: القائمة الجانبية ثابتة على حافة الشاشة اليمنى والمحتوى ملاصق لها بمسافة طبيعية، وعرضه محدود لراحة القراءة؛ الفائض يبقى على يسار المحتوى */
+:root{--content-max:1760px;--sidebar-w:250px}
 @media (min-width:901px){
-  .sidebar{right:max(0px,calc((100vw - var(--shell-max)) / 2));width:var(--sidebar-w)}
-  main{margin-right:calc(var(--sidebar-w) + max(0px,(100vw - var(--shell-max)) / 2));max-width:calc(var(--shell-max) - var(--sidebar-w))}
+  .sidebar{width:var(--sidebar-w)}
+  main{margin-right:var(--sidebar-w);max-width:var(--content-max)}
 }@media (max-width:300px){.btn{white-space:normal;text-align:center}.tt-chip,.hub-chip,.chip{white-space:nowrap}}
 
 /* شارات الأنواع بالثيمات الفاتحة: خلفية محايدة فاتحة ليبقى التباين ≥ 4.5 لكل الأنواع */
@@ -1395,7 +1394,6 @@ main{padding-left:max(24px,env(safe-area-inset-left))}
 /* شارة نوع المهمة تحمل الصنف task أيضاً فكانت ترث تنسيق بطاقة المهمة (flex/هامش/حدّ): نعيدها شارة عادية */
 .task-meta .badge.task{display:block;margin:0;border:0;padding:2px 8px;gap:0;border-radius:var(--r-sm);background:var(--bg2);transform:none;box-shadow:none;animation:none;transition:none}
 .task-meta .badge.task:hover{transform:none;box-shadow:none;border:0}
-@media (min-width:1681px){.sidebar{border-right:1px solid var(--border)}.topbar{right:calc((100vw - var(--shell-max)) / 2 + 14px);left:calc((100vw - var(--shell-max)) / 2 + 14px)}}
 
 
 /* ============================================================
@@ -1771,3 +1769,56 @@ main{padding-left:max(24px,env(safe-area-inset-left))}
 .u-empty a{color:var(--accent)}
 @media (prefers-reduced-motion:reduce){.u-empty.is-loading::before{animation:none}}
 @keyframes spin{to{transform:rotate(360deg)}}
+
+/* ============================================================
+   تخطيط الميزانية التفاعلي (budget-plan.js)
+   ============================================================ */
+.bp{margin-bottom:16px}
+.bp-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.bp-alerts{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.bp-alert{padding:8px 12px;border-radius:var(--r-md);font-size:var(--fs-sm);border:1px solid var(--border);background:var(--card2)}
+.bp-alert.warn{border-color:var(--amber)}
+.bp-alert.danger{border-color:var(--red);color:var(--red)}
+.bp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(180px,100%),1fr));gap:10px;margin-bottom:12px}
+.bp-f{display:flex;flex-direction:column;gap:4px;font-size:var(--fs-xs);color:var(--muted)}
+.bp-f input,.bp-rec-add input,.bp-rec-add select,.bp-save input{min-height:38px;padding:6px 10px;background:var(--bg2);color:var(--text);border:1px solid var(--border);border-radius:var(--r-md);font-family:inherit;font-size:var(--fs-sm);min-width:0}
+.bp-f small{color:var(--muted2);font-size:var(--fs-2xs)}
+.bp-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(130px,100%),1fr));gap:10px;margin-bottom:10px}
+.bp-kpi{background:var(--card2);border:1px solid var(--border);border-radius:var(--r-lg);padding:10px;text-align:center}
+.bp-kpi b{display:block;font-size:var(--fs-xl);color:var(--accent);font-weight:800}
+.bp-kpi.neg b{color:var(--red)}
+.bp-kpi span{font-size:var(--fs-xs);color:var(--muted)}
+.bp-bar{height:6px;background:var(--card2);border-radius:var(--r-pill);overflow:hidden;margin:6px 0}
+.bp-bar i{display:block;height:100%;background:var(--grad);border-radius:var(--r-pill);transition:width .6s var(--ease)}
+.bp-bar.near i{background:var(--amber)}
+.bp-bar.over i{background:var(--red)}
+.bp-h{margin:16px 0 8px;font-size:var(--fs-base);color:var(--accent)}
+.bp-note,.bp-assump{font-size:var(--fs-xs);color:var(--muted);line-height:1.7;margin:6px 0 10px}
+.bp-assump{background:var(--card2);border:1px solid var(--border);border-radius:var(--r-md);padding:8px 12px}
+.bp-warn{color:var(--amber)}
+.bp-cats{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(240px,100%),1fr));gap:10px}
+.bp-cat{background:var(--card2);border:1px solid var(--border);border-radius:var(--r-md);padding:10px}
+.bp-cat-top{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:var(--fs-sm)}
+.bp-limit{width:90px;min-height:34px;padding:4px 8px;background:var(--bg2);color:var(--text);border:1px solid var(--border);border-radius:var(--r-sm);font-family:inherit}
+.bp-cat-sub{display:flex;justify-content:space-between;font-size:var(--fs-2xs);color:var(--muted);margin-top:4px}
+.bp-rec-add,.bp-save{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.bp-rec-add input,.bp-save input{flex:1 1 140px}
+.bp-rec-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-bottom:1px solid var(--border)}
+.bp-rec-row span{flex:1;min-width:0}
+.bp-rec-row small{color:var(--muted2);margin-inline-start:6px}
+.bp-cmp{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));gap:10px;margin:12px 0}
+.bp-col{background:var(--card2);border:1px solid var(--border);border-radius:var(--r-lg);padding:12px}
+.bp-col.sim{border-color:var(--accent)}
+.bp-col h5{margin:0 0 8px;font-size:var(--fs-sm)}
+.bp-line{display:flex;justify-content:space-between;gap:8px;font-size:var(--fs-sm);padding:3px 0}
+.bp .pos{color:var(--green)}
+.bp .neg{color:var(--red)}
+.bp-diff{font-size:var(--fs-sm);margin:6px 0 12px}
+.bp-table{display:flex;flex-direction:column;gap:6px;overflow-x:auto}
+.bp-tr{display:grid;grid-template-columns:1.2fr 1fr 1.2fr 1.4fr 1fr 1.6fr;gap:8px;align-items:center;padding:8px 10px;background:var(--card2);border-radius:var(--r-md);font-size:var(--fs-xs);min-width:560px}
+.bp-tr.head{background:transparent;color:var(--muted);font-weight:700}
+
+/* إجراءات المساعد المرتبطة بالسياق */
+.ai-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.ai-act{padding:5px 11px;background:var(--grad-soft);border:1px solid var(--accent);color:var(--accent);border-radius:var(--r-pill);cursor:pointer;font-family:inherit;font-size:var(--fs-xs);font-weight:700}
+.ai-act:hover{background:var(--grad);color:var(--on-accent)}
