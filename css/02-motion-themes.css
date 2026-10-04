@@ -109,9 +109,9 @@
 .plan-add-btn:hover{transform:scale(1.12);box-shadow:var(--sh-glow-sm)}
 .plan-add-btn:active{transform:scale(.94)}
 .plan-add-btn.added{
-  background:linear-gradient(135deg,#10b981,#34d399) !important;
-  color:#053b25 !important;cursor:default !important;
-  box-shadow:0 4px 14px rgba(52,211,153,.4) !important;
+  background:var(--green) !important;
+  color:var(--on-accent) !important;cursor:default !important;
+  box-shadow:var(--sh-sm) !important;
   animation:planAddedPop .5s cubic-bezier(.34,1.56,.64,1);
 }
 .plan-add-btn.added:hover{transform:none}
@@ -126,7 +126,7 @@
 .stats-hero{
   background:linear-gradient(135deg,rgba(34,211,238,.1),rgba(167,139,250,.1));
   border:1px solid var(--glow);border-radius:var(--r-xl);
-  padding:24px;margin-bottom:16px;position:relative;overflow:hidden;
+  padding:var(--sp-5);margin-bottom:var(--sp-4);position:relative;overflow:hidden;
 }
 .stats-hero::before{
   content:'';position:absolute;top:0;right:0;left:0;height:3px;
@@ -138,15 +138,15 @@
   -webkit-text-fill-color:transparent;background-clip:text;
 }
 .stats-hero .big-lbl{font-size:var(--fs-sm);color:var(--muted);margin-top:6px}
-.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-top:16px}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:var(--sp-3);margin-top:var(--sp-4)}
 .stats-tile{
   background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-lg);
   padding:14px;text-align:center;transition:var(--dur-2);
 }
 .stats-tile:hover{border-color:var(--accent);transform:translateY(-2px)}
 .stats-tile .v{font-size:var(--fs-2xl);font-weight:800;color:var(--accent);line-height:1.1}
-.stats-tile .l{font-size:var(--fs-2xs);color:var(--muted);margin-top:4px}
-.donut-wrap{display:flex;align-items:center;gap:20px;flex-wrap:wrap;justify-content:center;padding:16px 0}
+.stats-tile .l{font-size:var(--fs-2xs);color:var(--muted);margin-top:var(--sp-1)}
+.donut-wrap{display:flex;align-items:center;gap:20px;flex-wrap:wrap;justify-content:center;padding:var(--sp-4) 0}
 .donut{width:160px;height:160px;position:relative}
 .donut svg{width:100%;height:100%;transform:rotate(-90deg)}
 .donut .donut-bg{fill:none;stroke:var(--bg2);stroke-width:16}
@@ -171,7 +171,7 @@
 }
 .exam-countdown-screen.open{display:flex}
 .ecs-header{
-  padding:18px 24px;display:flex;align-items:center;
+  padding:18px var(--sp-5);display:flex;align-items:center;
   justify-content:space-between;border-bottom:1px solid var(--border);
 }
 .ecs-header h2{
@@ -181,7 +181,7 @@
 }
 .ecs-body{
   flex:1;display:flex;flex-direction:column;align-items:center;
-  justify-content:center;padding:24px;gap:24px;overflow-y:auto;
+  justify-content:center;padding:var(--sp-5);gap:var(--sp-5);overflow-y:auto;
 }
 .ecs-ring{position:relative;width:280px;height:280px;max-width:70vw}
 .ecs-ring svg{width:100%;height:100%;transform:rotate(-90deg)}
@@ -203,7 +203,7 @@
   width:100%;max-width:520px;background:var(--card);
   border:1px solid var(--border);border-radius:var(--r-lg);padding:18px;
 }
-.ecs-checklist h4{margin:0 0 12px;font-size:var(--fs-md);font-weight:800;display:flex;align-items:center;gap:8px}
+.ecs-checklist h4{margin:0 0 var(--sp-3);font-size:var(--fs-md);font-weight:800;display:flex;align-items:center;gap:var(--sp-2)}
 .ecs-check-item{
   display:flex;align-items:center;gap:10px;padding:10px 0;
   border-bottom:1px solid var(--border);font-size:var(--fs-sm);cursor:pointer;
@@ -221,7 +221,7 @@
 .onb-overlay.show{display:flex}
 .onb-card{
   background:var(--card);border:1px solid var(--border);
-  border-radius:var(--r-xl);padding:36px 32px;max-width:480px;width:100%;
+  border-radius:var(--r-xl);padding:36px var(--sp-6);max-width:480px;width:100%;
   text-align:center;box-shadow:var(--shadow-lg);
   position:relative;overflow:hidden;
   animation:onbIn .5s var(--ease);
@@ -237,7 +237,7 @@
 .onb-dots{display:flex;gap:6px;justify-content:center;margin-bottom:20px}
 .onb-dots .dot{width:8px;height:8px;border-radius:50%;background:var(--border);transition:var(--dur-2)}
 .onb-dots .dot.active{background:var(--accent);width:24px;border-radius:var(--r-sm)}
-.onb-actions{display:flex;gap:8px;justify-content:space-between}
+.onb-actions{display:flex;gap:var(--sp-2);justify-content:space-between}
 .onb-skip{background:transparent;border:none;color:var(--muted);cursor:pointer;font-family:inherit;font-size:var(--fs-sm);padding:10px}
 .onb-skip:hover{color:var(--red)}
 .onb-next{
@@ -263,9 +263,9 @@
   border:1px solid rgba(255,152,0,.3);
 }
 .moodle-link{
-  display:flex;align-items:center;gap:12px;padding:12px;
+  display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-3);
   background:var(--bg2);border:1px solid var(--border);
-  border-radius:var(--r-lg);margin-bottom:8px;
+  border-radius:var(--r-lg);margin-bottom:var(--sp-2);
   text-decoration:none;color:var(--text);transition:var(--dur-2);
 }
 .moodle-link:hover{border-color:#ff9800;transform:translateX(-3px)}
@@ -284,7 +284,7 @@
 
 /* الجدول: عند وجود محاضرات يظهر أولاً، وكروت الإعداد تحته */
 #timetable.active.tt-has-data{display:flex;flex-direction:column}
-#timetable.tt-has-data > .grid.grid-2{order:10;margin-top:16px}
+#timetable.tt-has-data > .grid.grid-2{order:10;margin-top:var(--sp-4)}
 .timetable td[colspan]{height:auto}
 
 /* أقسام اللوحة القابلة للطي */

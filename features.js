@@ -321,7 +321,7 @@
       '<div class="task-meta"><span class="badge ' + (t.type || 'task') + '">' + (TASK_TYPES[t.type] || 'مهمة') + '</span>' +
       (p !== 'normal' ? '<span class="prio-chip ' + p + '" title="الأولوية: ' + PRIO[p].l + '">' + PRIO[p].ic + ' ' + PRIO[p].l + '</span>' : '') +
       (t.doing && !t.done ? '<span class="status-chip">⏳ جارية</span>' : '') +
-      (t.course ? '<span>📚 ' + esc(t.course) + '</span>' : '') +
+      (t.course ? '<span>' + (window.courseLink ? window.courseLink(t.course, '📚 ') : '📚 ' + esc(t.course)) + '</span>' : '') +
       (t.due ? '<span class="due-chip' + dueCls + '">📅 <bdi dir="ltr">' + esc(t.due) + '</bdi>' + (when && !t.done ? ' · ' + when : '') + '</span>' : '') + '</div></div>' +
       '<div class="task-actions">' +
       (manual && !t.done ? '<button type="button" class="task-handle" data-task-handle="' + t.id + '" aria-label="اسحب لإعادة ترتيب: ' + esc(t.title) + '" title="اسحب لإعادة الترتيب">⠿</button>' +

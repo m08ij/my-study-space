@@ -476,6 +476,7 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
 <script src="study.js"></script>
 <script src="budget-plan.js"></script>
 <script src="progress.js"></script>
+<script src="ux.js"></script>
 <script src="ics-import.js"></script>
 <script src="ai-context.js"></script>
 <script src="pwa.js"></script>
@@ -486,7 +487,7 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
    1) إن لم يطابق window.APP_BUILD رقم BUILD هنا → يمسح كاش التطبيق ويعيد التحميل مرة واحدة (حارس sessionStorage يمنع التكرار).
    2) أقسام اللوحة المتقدمة (تحليلات/LMS/إحصائيات) تُنقل إلى خانتها الثابتة إذا أضافتها سكربتات قديمة بمكان آخر. */
 (function(){
-  var BUILD = '102';
+  var BUILD = '103';
   var SLOTS = { insightsSection: 'slotInsights', lmsWidget: 'slotLms', enhancedStatsSection: 'slotEnhanced' };
   function heal(){
     var dash = document.getElementById('dashboard'); if(!dash) return;

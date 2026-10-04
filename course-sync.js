@@ -457,7 +457,7 @@
 
       html += '<div class="att-card">' +
         '<div class="att-head">' +
-          '<div class="att-name">📚 ' + esc(name) + '</div>' +
+          '<div class="att-name">' + (window.courseLink ? window.courseLink(name, '📚 ') : '📚 ' + esc(name)) + '</div>' +
           '<div style="display:flex;align-items:center;gap:8px">' +
             '<div class="att-pct ' + lvl + '">' + (hasData ? pct + '%' : '—') + '</div>' +
             '<button class="unified-course-btn added" data-course-name="' + esc(name) + '">🗑</button>' +
@@ -546,7 +546,7 @@
       html += '<div class="card gt-card" style="margin-bottom:12px">' +
         '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">' +
           '<div style="flex:1;min-width:0">' +
-            '<div style="font-weight:700;font-size:var(--fs-base)">' + esc(course.name) + '</div>' +
+            '<div style="font-weight:700;font-size:var(--fs-base)">' + (window.courseLink ? window.courseLink(course.name) : esc(course.name)) + '</div>' +
             '<div style="font-size:var(--fs-xs);color:var(--muted)">' +
               (course.code ? 'كود: ' + esc(course.code) + ' · ' : '') +
               'مجموع: ' + total + '%' +
@@ -745,7 +745,7 @@
       '<div class="exam-info">' +
         '<div class="title">📝 ' + esc(e.name) + '</div>' +
         '<div class="meta">' +
-          (showCourse && e.course ? '📚 ' + esc(e.course) + ' · ' : '') +
+          (showCourse && e.course ? (window.courseLink ? window.courseLink(e.course, '📚 ') : '📚 ' + esc(e.course)) + ' · ' : '') +
           '📅 <bdi dir="ltr">' + esc(e.date) + '</bdi>' +
           (e.time ? ' · ⏰ <bdi dir="ltr">' + esc(e.time) + '</bdi>' : '') +
           (e.room ? ' · 📍 ' + esc(e.room) : '') +
@@ -796,7 +796,7 @@
       html += '<div class="card" style="margin-bottom:12px">' +
         '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">' +
           '<div style="flex:1;min-width:0">' +
-            '<div style="font-weight:700;font-size:var(--fs-base)">📚 ' + esc(course.name) + '</div>' +
+            '<div style="font-weight:700;font-size:var(--fs-base)">' + (window.courseLink ? window.courseLink(course.name, '📚 ') : '📚 ' + esc(course.name)) + '</div>' +
             '<div style="font-size:var(--fs-xs);color:var(--muted)">' +
               (total ? total + ' امتحان مسجل' : 'ما في امتحانات مسجلة بعد') +
             '</div>' +
