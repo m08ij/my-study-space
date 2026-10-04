@@ -238,6 +238,9 @@
     var s = window.gatherSnapshot();
     var core = { space: s.space, notes: s.notes, gpaRows: s.gpaRows, timerSettings: s.timerSettings,
       pomoSessions: s.pomoSessions, pomoFocus: s.pomoFocus, studyLog: s.studyLog, theme: s.theme, welcomeDone: s.welcomeDone };
+    /* تُضاف فقط عند وجودها حتى لا تتغيّر بصمة من لا يستخدمها (فلا يظهر تعديل وهمي بعد التحديث) */
+    if(s.budgetPlan) core.budgetPlan = s.budgetPlan;
+    if(s.focusLinks) core.focusLinks = s.focusLinks;
     var str = canon(core), h = 5381;
     for(var i = 0; i < str.length; i++) h = ((h << 5) + h + str.charCodeAt(i)) | 0;
     return 'v2:' + str.length + ':' + h;
@@ -378,6 +381,8 @@
       pomoSessions: window.S.get('pomoSessions', 0),
       pomoFocus: window.S.get('pomoFocus', 0),
       studyLog: window.S.get('studyLog', {}),
+      budgetPlan: window.S.get('budgetPlan', null),
+      focusLinks: window.S.get('focusLinks', null),
       theme: window.S.get('theme', 'dark'),
       activeTab: window.S.get('activeTab', 'dashboard'),
       welcomeDone: window.S.get('welcomeDone', false),
@@ -390,6 +395,24 @@
     if(state === 'ok'){ el.textContent = '☁️'; el.title = '✅ متصل'; el.style.color = 'var(--green)'; el.onclick = null; }
     else { el.textContent = '💾'; el.title = '💾 حفظ محلي'; el.style.color = 'var(--muted)'; el.onclick = function(){ if(window.SB) window.SB.showSyncPanel(); }; }
   };
+
+  function isPlainObj(v){ return v && typeof v === 'object' && !Array.isArray(v); }
+  function safePlan(p){
+    if(!isPlainObj(p)) return null;
+    try{ if(JSON.stringify(p).length > 200000) return null; }catch(e){ return null; }
+    var out = {};
+    ['openingBalance','monthlyBudget','horizon'].forEach(function(k){ if(typeof p[k] === 'number' && isFinite(p[k])) out[k] = p[k]; });
+    if(typeof p.balanceDate === 'string') out.balanceDate = p.balanceDate.slice(0, 10);
+    if(isPlainObj(p.limits)){ out.limits = {}; Object.keys(p.limits).forEach(function(k){ if(k !== '__proto__' && typeof p.limits[k] === 'number' && isFinite(p.limits[k])) out.limits[k] = p.limits[k]; }); }
+    ['recurring','scenarios','goals'].forEach(function(k){ if(Array.isArray(p[k])) out[k] = p[k].filter(isPlainObj).slice(0, 200); });
+    return out;
+  }
+  function safeFocus(f){
+    if(!isPlainObj(f)) return null;
+    var out = { tasks: {}, courses: {} };
+    ['tasks','courses'].forEach(function(g){ if(isPlainObj(f[g])) Object.keys(f[g]).slice(0, 2000).forEach(function(k){ var n = f[g][k]; if(k !== '__proto__' && typeof n === 'number' && isFinite(n) && n >= 0) out[g][k] = n; }); });
+    return out;
+  }
 
   window.applyServerData = function(data){
     if(!data || typeof data !== 'object') return;
@@ -419,6 +442,9 @@
       if(typeof data.pomoSessions === 'number') window.S.set('pomoSessions', data.pomoSessions);
       if(typeof data.pomoFocus === 'number') window.S.set('pomoFocus', data.pomoFocus);
       if(data.studyLog && typeof data.studyLog === 'object') window.S.set('studyLog', data.studyLog);
+      /* خطة الميزانية وربط التركيز: تُستعاد فقط إن وُجدت بالنسخة وكانت بصيغة سليمة؛ غيابها (نسخ قديمة) لا يمسّ المحلي */
+      var bp = safePlan(data.budgetPlan); if(bp) window.S.set('budgetPlan', bp);
+      var fl = safeFocus(data.focusLinks); if(fl) window.S.set('focusLinks', fl);
       if(typeof data.theme === 'string') window.S.set('theme', data.theme);
       if(typeof data.activeTab === 'string') window.S.set('activeTab', data.activeTab);
       if(typeof data.welcomeDone === 'boolean') window.S.set('welcomeDone', data.welcomeDone);
@@ -591,6 +617,8 @@
       if(sp[k] !== undefined && !isObj(sp[k])) errors.push('الحقل ' + k + ' بصيغة غير صالحة');
     });
     if(data.notes !== undefined && !Array.isArray(data.notes)) errors.push('الملاحظات بصيغة غير صالحة');
+    if(data.budgetPlan != null && !isObj(data.budgetPlan)) errors.push('خطة الميزانية بصيغة غير صالحة');
+    if(data.focusLinks != null && !isObj(data.focusLinks)) errors.push('بيانات ربط التركيز بصيغة غير صالحة');
     var courses = Array.isArray(sp.courses) ? sp.courses : [];
     var badCourse = 0, seen = {}, dup = 0;
     courses.forEach(function(c){
