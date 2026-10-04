@@ -85,6 +85,20 @@
     var sel = document.getElementById('timerTask'); if(!sel || !sel.value) return null;
     return (sp().tasks || []).filter(function(t){ return t.id === sel.value; })[0] || null;
   }
+  function selectedCourse(){
+    var sel = document.getElementById('timerTask'); if(!sel || sel.value.indexOf('course:') !== 0) return null;
+    var name = sel.value.slice(7);
+    return (sp().courses || []).some(function(c){ return c.name === name; }) ? name : null;
+  }
+  /* من نافذة المادة: افتح المؤقت مرتبطاً بالمادة وابدأ جلسة تركيز (إن لم يكن يعمل) */
+  function focusCourse(name){
+    if(!name) return;
+    if(window.switchTab) window.switchTab('timer');
+    buildPicker();
+    var sel = document.getElementById('timerTask'); if(sel){ sel.value = 'course:' + name; if(sel.value !== 'course:' + name) return; try{ S().set('focusSel', sel.value); }catch(e){} }
+    if(window.ts && !window.ts.running && window.setMode){ window.setMode(document.getElementById('btnFocus'), 'focus'); if(window.startTimer) window.startTimer(); }
+    if(window.toast) window.toast('⏱️ بدأت جلسة تركيز لـ «' + name + '»', 'success', 2500);
+  }
   function fmtMin(m){ m = Math.round(m); return m >= 60 ? Math.floor(m / 60) + 'س ' + (m % 60) + 'د' : m + ' د'; }
 
   function buildPicker(){
@@ -99,8 +113,11 @@
     }
     var sel = document.getElementById('timerTask'), keep = sel.value || (S() && S().get('focusSel', '')) || '';
     var open = (sp().tasks || []).filter(function(t){ return !t.done; });
-    sel.innerHTML = '<option value="">بدون ربط</option>' + open.map(function(t){ return '<option value="' + esc(t.id) + '">' + esc(t.title) + (t.course ? ' — ' + esc(t.course) : '') + '</option>'; }).join('');
-    if(open.some(function(t){ return t.id === keep; })) sel.value = keep;
+    var courses = (sp().courses || []).filter(function(c){ return c && c.name; });
+    sel.innerHTML = '<option value="">بدون ربط</option>' +
+      (open.length ? '<optgroup label="مهام">' + open.map(function(t){ return '<option value="' + esc(t.id) + '">' + esc(t.title) + (t.course ? ' — ' + esc(t.course) : '') + '</option>'; }).join('') + '</optgroup>' : '') +
+      (courses.length ? '<optgroup label="مواد">' + courses.map(function(c){ return '<option value="course:' + esc(c.name) + '">📚 ' + esc(c.name) + '</option>'; }).join('') + '</optgroup>' : '');
+    if(open.some(function(t){ return t.id === keep; }) || courses.some(function(c){ return 'course:' + c.name === keep; })) sel.value = keep;
     renderFocusStats();
   }
   function renderFocusStats(){
@@ -116,8 +133,10 @@
   /* app.js يطلق ss:focus-complete عند انتهاء جلسة تركيز كاملة (لا راحة ولا عدّاد تصاعدي) */
   document.addEventListener('ss:focus-complete', function(e){
     try{
-      var task = selectedTask(); if(!task) { renderFocusStats(); return; }
       var mins = num(e && e.detail && e.detail.minutes) || 25, L = loadLinks();
+      var cs = selectedCourse();
+      if(cs){ L.courses[cs] = (L.courses[cs] || 0) + mins; S().set(FKEY, L); renderFocusStats(); return; }   /* جلسة مرتبطة بمادة مباشرة */
+      var task = selectedTask(); if(!task) { renderFocusStats(); return; }
       L.tasks[task.id] = (L.tasks[task.id] || 0) + mins;
       var c = task.course || 'بدون مادة'; L.courses[c] = (L.courses[c] || 0) + mins;
       S().set(FKEY, L); renderFocusStats();
@@ -135,5 +154,5 @@
   }  onShown('timer', buildPicker);
   buildPicker();
 
-  window.Progress = { report: report, letterFor: letterFor, courseProjection: courseProjection, loadLinks: loadLinks, render: renderForecast, buildPicker: buildPicker };
+  window.Progress = { focusCourse: focusCourse, report: report, letterFor: letterFor, courseProjection: courseProjection, loadLinks: loadLinks, render: renderForecast, buildPicker: buildPicker };
 })();

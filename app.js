@@ -273,7 +273,7 @@
     if(!window.SB || window.cloudSyncBlocked) return;
     if(window.serverSaveInFlight){ window.queueServerSave(); return; }
     try{
-      window.serverSaveInFlight = true;
+      window.serverSaveInFlight = true; window.setServerStatus();
       /* منع الكتابة فوق تعديل أحدث من جهاز آخر */
       var ver = metaGet('ss_cloud_ver');
       if(ver !== null){
@@ -291,7 +291,7 @@
         else metaDel('ss_cloud_ver');
       } else { window.serverOnline = false; window.setServerStatus('off'); scheduleSaveRetry(); }
     }catch(e){ window.serverOnline = false; window.setServerStatus('off'); scheduleSaveRetry(); }
-    finally { window.serverSaveInFlight = false; }
+    finally { window.serverSaveInFlight = false; window.setServerStatus(); }
   };
 
   /* قرار المزامنة عند توفر نسخة سحابية: 'apply' | 'keep-local' | 'conflict' */
@@ -390,11 +390,30 @@
     };
   };
 
-  window.setServerStatus = function(state){
-    var el = document.getElementById('serverStatus'); if(!el) return;
-    if(state === 'ok'){ el.textContent = '☁️'; el.title = '✅ متصل'; el.style.color = 'var(--green)'; el.onclick = null; }
-    else { el.textContent = '💾'; el.title = '💾 حفظ محلي'; el.style.color = 'var(--muted)'; el.onclick = function(){ if(window.SB) window.SB.showSyncPanel(); }; }
+  /* حالة المزامنة بصيغة مقروءة (للأيقونة العلوية ونافذة الرمز): لا تغيّر آلية المزامنة، تقرأ المؤشرات الموجودة فقط */
+  function agoText(ms){
+    var m = Math.floor(ms / 60000);
+    return m < 1 ? 'الآن' : m < 60 ? 'قبل ' + m + ' د' : m < 1440 ? 'قبل ' + Math.floor(m / 60) + ' س' : 'قبل ' + Math.floor(m / 1440) + ' يوم';
+  }
+  window.getSyncStatus = function(){
+    var last = metaGet('ss_cloud_ver'), ago = (typeof last === 'number' && last > 0) ? ' · آخر مزامنة ' + agoText(Math.max(0, Date.now() - last)) : '';
+    if(window._conflictOpen) return { state: 'conflict', level: 'warn', icon: '⚠️', text: 'تعارض بين نسخة جهازك والسحابة — بانتظار قرارك' };
+    if(window.cloudLoadFailed) return { state: 'error', level: 'warn', icon: '⚠️', text: 'تعذّر الاتصال بالسحابة — بياناتك محفوظة على جهازك' };
+    if(typeof navigator !== 'undefined' && navigator.onLine === false) return { state: 'offline', level: 'muted', icon: '📴', text: 'بدون اتصال — محفوظ على جهازك' };
+    if(window.serverSaveInFlight) return { state: 'syncing', level: 'ok', icon: '🔄', text: 'جاري المزامنة…' };
+    if(window.serverOnline) return { state: 'ok', level: 'ok', icon: '☁️', text: 'متزامن مع السحابة' + ago };
+    if((window._saveRetryN || 0) > 0) return { state: 'retry', level: 'warn', icon: '🔄', text: 'فشل آخر حفظ سحابي — يعيد المحاولة تلقائياً' };
+    return { state: 'local', level: 'muted', icon: '💾', text: 'حفظ على جهازك (المزامنة السحابية غير متصلة)' };
   };
+  window.setServerStatus = function(){
+    var el = document.getElementById('serverStatus'); if(!el) return;
+    var st = window.getSyncStatus();
+    el.textContent = st.icon; el.title = st.text; el.setAttribute('aria-label', 'حالة المزامنة: ' + st.text); el.setAttribute('data-sync', st.state);
+    el.style.color = st.level === 'ok' ? 'var(--green)' : st.level === 'warn' ? 'var(--amber)' : 'var(--muted)';
+    el.onclick = function(){ if(window.SB) window.SB.showSyncPanel(); };
+  };
+  window.addEventListener('online', function(){ window.setServerStatus(); });
+  window.addEventListener('offline', function(){ window.setServerStatus(); });
 
   function isPlainObj(v){ return v && typeof v === 'object' && !Array.isArray(v); }
   function safePlan(p){
@@ -1123,10 +1142,14 @@
       var dt = ttDateOf(d, DE), ymd = ttYmd(dt);
       var dayExams = ((window.space && window.space.exams) || []).filter(function(e){ return e.date === ymd; });
       var isToday = d === todayKey && isThisWeek;
-      html += '<th' + (isToday ? ' data-today="1" style="background:var(--grad);color:var(--on-accent)"' : '') + '>' + DA[DE.indexOf(d)] +
-        '<small class="tt-date">' + dt.getDate() + '/' + (dt.getMonth() + 1) + '</small>' +
-        (dayExams.length ? '<span class="tt-exam" title="' + window.esc(dayExams.map(function(e){ return e.name + (e.time ? ' ' + e.time : ''); }).join(' • ')) + '">📝 ' + (dayExams.length > 1 ? dayExams.length + ' امتحانات' : 'امتحان') + '</span>' : '') +
-        '</th>';
+      var examBadge = '';
+      if(dayExams.length){
+        var nowD = new Date(), dd = Math.round((dt - new Date(nowD.getFullYear(), nowD.getMonth(), nowD.getDate())) / 86400000);
+        var when = dd < 0 ? 'انتهى' : dd === 0 ? 'اليوم' : dd === 1 ? 'غداً' : 'بعد ' + dd + ' يوم';
+        examBadge = '<span class="tt-exam" title="' + window.esc(dayExams.map(function(e){ return e.name + (e.time ? ' ' + e.time : ''); }).join(' • ')) + '">📝 ' + (dayExams.length > 1 ? dayExams.length + ' امتحانات' : window.esc(String(dayExams[0].name || 'امتحان').slice(0, 14))) + ' · ' + when + '</span>';
+      }
+      html += '<th' + (isToday ? ' data-today="1" style="background:var(--grad);color:var(--on-accent)"' : '') + (dayExams.length ? ' class="tt-exam-day"' : '') + '>' + DA[DE.indexOf(d)] +
+        '<small class="tt-date">' + dt.getDate() + '/' + (dt.getMonth() + 1) + '</small>' + examBadge + '</th>';
     });
     html += '</tr></thead><tbody>';
 
@@ -1164,6 +1187,8 @@
     });
     html += '</tbody>';
     t.innerHTML = html;
+    /* أعمدة أيام الامتحانات: تظليل خفيف لكل خلايا العمود */
+    t.querySelectorAll('thead th').forEach(function(th, ci){ if(th.classList.contains('tt-exam-day')) t.querySelectorAll('tbody tr').forEach(function(tr){ if(tr.children.length > ci && tr.children[ci].tagName === 'TD') tr.children[ci].classList.add('tt-exam-col'); }); });
 
     /* الضغط على المحاضرة يفتح تفاصيلها (ومنها الوصول للمادة والتعديل)؛ Enter/مسافة بلوحة المفاتيح */
     var openClass = function(k){ if(window.showClassDetails) window.showClassDetails(k); else window.editClassSlot(k); };

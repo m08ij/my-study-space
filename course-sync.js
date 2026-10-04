@@ -464,7 +464,7 @@
           '</div>' +
         '</div>' +
         '<div class="att-bar"><div class="att-fill ' + lvl + '" style="width:' + (hasData ? pct : 0) + '%"></div></div>' +
-        (function(){ var h = window.attendanceHint ? window.attendanceHint(a.present, a.absent) : null; return h ? '<div class="att-hint ' + h.level + '" role="status">' + esc(h.text) + '</div>' : ''; })() +
+        (function(){ var h = window.attendanceHint ? window.attendanceHint(a.present, a.absent, window.weeklyLectures ? window.weeklyLectures(name) : 0) : null; return h ? '<div class="att-hint ' + h.level + '" role="status">' + esc(h.text) + '</div>' : ''; })() +
         '<div class="att-actions">' +
           '<span style="margin-right:auto">✅ <b>' + a.present + '</b> · ❌ <b>' + a.absent + '</b></span>' +
           '<button class="btn btn-sm" data-mark-p="' + esc(name) + '">+ حاضر</button>' +

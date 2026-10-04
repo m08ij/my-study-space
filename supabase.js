@@ -271,7 +271,7 @@
     var escFn = window.esc || function(s){ return String(s==null?'':s); };
     bd.innerHTML =
       '<div class="modal sync-modal" role="dialog" aria-modal="true" aria-label="رمز المزامنة">' +
-        '<div class="sync-head"><span class="sync-ic" aria-hidden="true">☁️</span><div><h3>رمز المزامنة</h3><p class="sync-sub">مفتاح مساحتك في السحابة</p></div>' +
+        '<div class="sync-head"><span class="sync-ic" aria-hidden="true">☁️</span><div><h3>رمز المزامنة</h3><p class="sync-sub" id="syncSub">مفتاح مساحتك في السحابة</p></div>' +
           '<button class="sync-x" id="syncX" type="button" aria-label="إغلاق">✕</button></div>' +
         '<div class="sync-code-box"><label for="syncCodeInput">رمزك</label>' +
           '<input id="syncCodeInput" class="sync-code" value="' + escFn(getCode()) + '" readonly dir="ltr" aria-label="رمز المزامنة"></div>' +
@@ -290,6 +290,7 @@
       '</div>';
     document.body.appendChild(bd);
 
+    (function(){ var st = window.getSyncStatus && window.getSyncStatus(), el = bd.querySelector('#syncSub'); if(st && el){ el.textContent = st.icon + ' ' + st.text; el.className = 'sync-sub st-' + st.level; } })();
     var input = bd.querySelector('#syncCodeInput');
     bd.querySelector('#syncCopy').onclick = function(){
       input.select();

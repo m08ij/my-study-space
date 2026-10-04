@@ -690,3 +690,27 @@
 .ics-modal.wide .ics-list{flex:none;max-height:min(42vh,420px)}
 .ics-modal.wide .ics-actions{position:sticky;bottom:-22px;margin:var(--sp-3) -22px -22px;padding:var(--sp-3) 22px;background:var(--card);border-top:1px solid var(--border);z-index:2}
 @media (max-height:700px){.ics-modal.wide .ics-list{max-height:34vh}}
+
+
+/* ============================================================
+   حالة المزامنة، سجل الأخطاء، ملخص الصباح، أيام الامتحانات بالجدول
+   ============================================================ */
+#serverStatus[data-sync="syncing"]{animation:spin 1.4s linear infinite}
+@media (prefers-reduced-motion:reduce){#serverStatus[data-sync="syncing"]{animation:none}}
+.sync-sub.st-ok{color:var(--green)}
+.sync-sub.st-warn{color:var(--amber)}
+.diag-count{margin-inline-start:auto;min-width:20px;padding:0 6px;border-radius:var(--r-pill);background:var(--amber);color:var(--on-accent);font-size:var(--fs-2xs);font-weight:800;text-align:center;line-height:18px}
+.diag-modal{max-width:560px;padding:22px}
+.diag-list{max-height:min(48vh,380px);overflow:auto;border:1px solid var(--border);border-radius:var(--r-lg);background:var(--bg2)}
+.diag-row{padding:10px 12px;border-bottom:1px solid var(--border)}
+.diag-row:last-child{border-bottom:0}
+.diag-top{display:flex;justify-content:space-between;align-items:center;gap:var(--sp-2);margin-bottom:4px}
+.diag-msg{font-size:var(--fs-sm);overflow-wrap:anywhere}
+.diag-src{font-size:var(--fs-2xs);color:var(--muted);font-family:ui-monospace,monospace;margin-top:2px}
+.morning-card{position:fixed;z-index:430;top:84px;left:50%;transform:translateX(-50%);width:min(440px,calc(100vw - 24px));padding:12px 14px;background:var(--card);border:1px solid var(--accent);border-radius:var(--r-lg);box-shadow:var(--sh-md);animation:itemIn .35s var(--ease)}
+.morning-card .mc-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.morning-card ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px;font-size:var(--fs-sm);line-height:1.6}
+@media (prefers-reduced-motion:reduce){.morning-card{animation:none}}
+.timetable th.tt-exam-day,#timetableTable th.tt-exam-day{box-shadow:inset 0 -3px 0 var(--amber)}
+#timetableTable td.tt-exam-col{background-image:linear-gradient(var(--grad-soft),var(--grad-soft))}
+#timetableTable th .tt-exam{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--fs-2xs)}

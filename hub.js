@@ -584,7 +584,7 @@
     h += '<div class="hub-course-top">' +
       '<div class="hub-chips">' + (c.code ? '<span class="badge mono">' + esc(c.code) + '</span>' : '') + '<span class="badge">' + (c.hours || 3) + ' ساعات</span>' +
         (c.instructor ? '<span class="badge">👤 ' + esc(c.instructor) + '</span>' : '') + (c.room ? '<span class="badge">📍 ' + esc(c.room) + '</span>' : '') + '</div>' +
-      '<div class="hub-actions inline"><button type="button" class="btn btn-sm btn-ghost" data-act="edit">✏️ تعديل</button><button type="button" class="btn btn-sm btn-danger" data-act="delete">🗑 حذف</button></div></div>';
+      '<div class="hub-actions inline"><button type="button" class="btn btn-sm" data-act="focus">⏱️ جلسة تركيز</button><button type="button" class="btn btn-sm btn-ghost" data-act="edit">✏️ تعديل</button><button type="button" class="btn btn-sm btn-danger" data-act="delete">🗑 حذف</button></div></div>';
     h += '<nav class="hub-secnav" aria-label="أقسام المادة">' + [['sched','🗓 الجدول'],['files','📎 الملفات'],['tasks','📝 المهام'],['exams','⏳ الامتحانات'],['grades','📊 العلامات'],['att','✅ الحضور'],['notes','📔 ملاحظات']]
       .map(function(s){ return '<button type="button" class="hub-chip" data-jump="' + s[0] + '">' + s[1] + '</button>'; }).join('') + '</nav>';
 
@@ -655,6 +655,7 @@
   function bindCourseSheet(sheet, c){
     var b = sheet.body, name = c.name, id = c.id;
     function on(sel, fn){ b.querySelectorAll(sel).forEach(function(el){ el.addEventListener('click', function(e){ fn(el, e); }); }); }
+    on('[data-act="focus"]', function(){ sheet.close(); if(window.Progress && window.Progress.focusCourse) window.Progress.focusCourse(name); });
     on('[data-act="edit"]', function(){ window.editCourseDialog(id); });
     on('[data-act="delete"]', function(){ window.confirmRemoveCourse(name); });
     on('[data-act="addclass"]', function(){ sheet.close(); if(window.addClassSlot) window.addClassSlot(); });

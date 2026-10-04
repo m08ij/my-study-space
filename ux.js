@@ -69,14 +69,27 @@
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 
   /* ---------- 3) تنبيه الغياب (نفس حد التنبيه 75% المستخدم بألوان بطاقة الحضور) ---------- */
-  window.attendanceHint = function(present, absent){
-    present = +present || 0; absent = +absent || 0;
+  /* عدد محاضرات المادة بالأسبوع من الجدول (تطابق تام باسم المادة؛ 0 إن لم توجد) */
+  window.weeklyLectures = function(name){
+    var tt = sp().timetable || {}, n = 0;
+    Object.keys(tt).forEach(function(k){ if(tt[k] && tt[k].name === name) n++; });
+    return n;
+  };
+  /* weekly (اختياري): محاضرات المادة بالأسبوع؛ إن وُجد يضاف توقع «لو غبت أسبوعاً كاملاً» */
+  window.attendanceHint = function(present, absent, weekly){
+    present = +present || 0; absent = +absent || 0; weekly = +weekly || 0;
     var total = present + absent; if(total <= 0) return null;
+    var h = null;
     if(present / total < 0.75) return { level: 'danger', text: 'نسبة حضورك تحت 75% (حد التنبيه بالتطبيق). تأكد من شروط مادتك بالجامعة.' };
     var allowed = Math.floor(present / 3 + 1e-9) - absent;   /* غيابات إضافية ممكنة قبل النزول تحت 75% بدون حضور جديد */
-    if(allowed <= 0) return { level: 'warn', text: 'غياب واحد إضافي ينزّلك تحت 75% (حد التنبيه بالتطبيق) ما لم تحضر محاضرات جديدة.' };
-    if(allowed <= 2) return { level: 'warn', text: 'تقدر تغيب ' + allowed + (allowed === 1 ? ' مرة' : ' مرات') + ' إضافية فقط قبل 75% (حد التنبيه) بدون حضور جديد.' };
-    return null;
+    if(allowed <= 0) h = { level: 'warn', text: 'غياب واحد إضافي ينزّلك تحت 75% (حد التنبيه بالتطبيق) ما لم تحضر محاضرات جديدة.' };
+    else if(allowed <= 2) h = { level: 'warn', text: 'تقدر تغيب ' + allowed + (allowed === 1 ? ' مرة' : ' مرات') + ' إضافية فقط قبل 75% (حد التنبيه) بدون حضور جديد.' };
+    if(weekly > 0){
+      var after = Math.round(present / (total + weekly) * 100), wk = 'لو غبت أسبوعاً كاملاً (' + weekly + (weekly === 1 ? ' محاضرة' : ' محاضرات') + ' بجدولك) بتصير نسبتك ' + after + '%.';
+      if(h) h.text += ' ' + wk;
+      else if(present / (total + weekly) < 0.75) h = { level: 'warn', text: wk + ' (تحت 75%)' };
+    }
+    return h;
   };
 
   /* ---------- 4) وضع الامتحانات: يظهر تلقائياً إذا كان في امتحان خلال 7 أيام ---------- */
@@ -156,7 +169,53 @@
   }
   setTimeout(maybeNag, 7000);
 
+  /* ---------- 6) ملخص الصباح: مرة واحدة بأول فتح لليوم، وفقط بين 5:00 و11:59 ---------- */
+  var DE = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  function dstr(d){ return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+  function whenText(n){ return n <= 0 ? 'اليوم' : n === 1 ? 'غداً' : n === 2 ? 'بعد يومين' : 'بعد ' + n + ' أيام'; }
+  /* يرجع { lines: [...] } من بيانات موجودة فقط (لا يخترع شيئاً)؛ lines فارغة = لا شيء يستحق العرض */
+  function morningData(now){
+    var s = sp(), tt = s.timetable || {}, lines = [], today = dstr(now);
+    var slots = []; Object.keys(tt).forEach(function(k){ var i = k.indexOf('-'); if(i > 0 && k.slice(0, i) === DE[now.getDay()] && tt[k]) slots.push({ time: k.slice(i + 1), name: tt[k].name, room: tt[k].room }); });
+    slots.sort(function(a, b){ return a.time.localeCompare(b.time); });
+    if(slots.length) lines.push('📅 محاضرات اليوم: ' + slots.length + ' — أولها «' + (slots[0].name || 'محاضرة') + '» الساعة <bdi dir="ltr">' + esc(slots[0].time) + '</bdi>' + (slots[0].room ? ' (' + esc(slots[0].room) + ')' : ''));
+    else if(Object.keys(tt).length) lines.push('🌴 ما في محاضرات اليوم');
+    var items = [];
+    (s.tasks || []).forEach(function(t){ if(!t.done && t.due && t.due >= today) items.push({ d: t.due, label: t.title, ex: false }); });
+    (s.exams || []).forEach(function(e){ if(e.date && e.date >= today) items.push({ d: e.date, label: e.name || 'امتحان', ex: true }); });
+    items.sort(function(a, b){ return a.d < b.d ? -1 : a.d > b.d ? 1 : (b.ex ? 1 : 0) - (a.ex ? 1 : 0); });
+    if(items.length){ var n = daysLeft(items[0].d); lines.push((items[0].ex ? '⏳ أقرب امتحان: ' : '📝 أقرب موعد: ') + '«' + esc(items[0].label) + '» — ' + whenText(n === null ? 0 : n)); }
+    var over = (s.tasks || []).filter(function(t){ return !t.done && t.due && t.due < today; }).length;
+    if(over) lines.push('⚠️ ' + over + (over === 1 ? ' مهمة متأخرة' : ' مهام متأخرة'));
+    var att = s.attendance || {}, warn = [];
+    Object.keys(att).forEach(function(name){ var h = window.attendanceHint(att[name].present, att[name].absent, window.weeklyLectures(name)); if(h) warn.push(name); });
+    if(warn.length) lines.push('✅ تنبيه حضور: ' + esc(warn.slice(0, 2).join('، ')) + (warn.length > 2 ? ' و' + (warn.length - 2) + ' أخرى' : ''));
+    return { lines: lines, name: (s.profile && s.profile.name) || '' };
+  }
+  function maybeMorning(now, opt){
+    opt = opt || {}; now = now || new Date();
+    var key = 'ss_morning_date', today = dstr(now);
+    var h = now.getHours();
+    if(!opt.force){
+      if(h < 5 || h >= 12) return false;
+      try{ if(localStorage.getItem(key) === today) return false; }catch(e){}
+      if(document.querySelector('.modal-backdrop,.welcome-overlay.show,#onbOverlay[style*="flex"],#morningCard')) return false;
+    }
+    var data = morningData(now);
+    if(!data.lines.length) return false;
+    try{ localStorage.setItem(key, today); }catch(e){}
+    var card = document.createElement('div'); card.id = 'morningCard'; card.className = 'morning-card'; card.setAttribute('role', 'status');
+    card.innerHTML = '<div class="mc-head"><b>☀️ صباح الخير' + (data.name ? ' ' + esc(data.name) : '') + '</b><button type="button" class="sync-x" data-mc aria-label="إغلاق">✕</button></div>' +
+      '<ul>' + data.lines.map(function(l){ return '<li>' + l + '</li>'; }).join('') + '</ul>';
+    document.body.appendChild(card);
+    var done = function(){ if(card.parentNode) card.remove(); };
+    card.querySelector('[data-mc]').onclick = done;
+    setTimeout(done, 25000);
+    return true;
+  }
+  setTimeout(function(){ maybeMorning(); }, 3500);
+
   var _enhance = enhance;
   enhance = function(){ _enhance(); renderExamMode(); };
-  window.UX = { enhance: function(){ enhance(); }, renderExamMode: renderExamMode, maybeNag: maybeNag };
+  window.UX = { enhance: function(){ enhance(); }, renderExamMode: renderExamMode, maybeNag: maybeNag, maybeMorning: maybeMorning, morningData: morningData };
 })();

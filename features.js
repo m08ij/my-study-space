@@ -846,7 +846,7 @@
     if(!window.space.attendance[name]) window.space.attendance[name] = {present:0, absent:0};
     window.space.attendance[name][type]++;
     saveSpace(); window.renderAttendance(); window.renderDashboard();
-    if(type === 'absent' && window.attendanceHint){ var hint = window.attendanceHint(window.space.attendance[name].present, window.space.attendance[name].absent); if(hint) toast(hint.text, 'warn', 4500); }
+    if(type === 'absent' && window.attendanceHint){ var hint = window.attendanceHint(window.space.attendance[name].present, window.space.attendance[name].absent, window.weeklyLectures ? window.weeklyLectures(name) : 0); if(hint) toast(hint.text, 'warn', 4500); }
   };
 
   window.removeAttendance = function(name){

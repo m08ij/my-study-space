@@ -67,6 +67,7 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
         <button class="settings-item" id="syncCodeBtn"><span>☁️</span> المزامنة السحابية</button>
         <div class="settings-divider"></div>
         <button class="settings-item" id="calSyncBtn"><span>📅</span> مزامنة التقويم (.ics)</button>
+        <button class="settings-item" id="diagBtn"><span>🩺</span> سجل الأخطاء</button>
         <button class="settings-item" id="restorePrevBtn" style="display:none"><span>🕘</span> استرجاع نسخة سابقة</button>
       </div>
     </div>
@@ -465,6 +466,7 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
 
 <!-- الملفات الأساسية (الترتيب مهم جداً!) -->
 <script src="core.js"></script>
+<script src="diag.js"></script>
 <script src="data.js"></script>
 <script src="supabase.js"></script>
 <script src="features.js"></script>
@@ -488,7 +490,7 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
    1) إن لم يطابق window.APP_BUILD رقم BUILD هنا → يمسح كاش التطبيق ويعيد التحميل مرة واحدة (حارس sessionStorage يمنع التكرار).
    2) أقسام اللوحة المتقدمة (تحليلات/LMS/إحصائيات) تُنقل إلى خانتها الثابتة إذا أضافتها سكربتات قديمة بمكان آخر. */
 (function(){
-  var BUILD = '107';
+  var BUILD = '108';
   var SLOTS = { insightsSection: 'slotInsights', lmsWidget: 'slotLms', enhancedStatsSection: 'slotEnhanced' };
   function heal(){
     var dash = document.getElementById('dashboard'); if(!dash) return;
