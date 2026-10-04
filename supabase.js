@@ -48,8 +48,8 @@
   /* ---------- وضع RPC (جاهز لكنه معطّل افتراضياً (CFG.useRpc=false) حتى تُنشأ الدوال بالخادم؛ ومع التفعيل يرجع للجدول تلقائياً إن لم توجد) ----------
      عند تشغيل ملفات supabase/*.sql (الدوال get_space/put_space/peek_space) يُفعَّل هذا الوضع لتتوقف القراءة/الكتابة المباشرة
      على جدول spaces. إن كانت الدالة غير موجودة بالخادم نرجع للجدول المباشر ونتذكر ذلك طوال الجلسة (طلب واحد فاشل فقط). */
-  CFG.useRpc = false;   /* يُقلب إلى true بعد تشغيل supabase/02a-create-rpc.sql (وإلا يظهر خطأ 404 بالـ Console مع كل جلسة) */
-  var rpcMissing = false;
+  CFG.useRpc = true;    /* الدوال get_space/put_space/peek_space/list_course_files أُنشئت بالخادم (02a)؛ إن غابت يرجع للجدول تلقائياً */
+  var rpcMissing = false, listRpcMissing = false;
   try{ rpcMissing = sessionStorage.getItem('ss_rpc_missing') === '1'; }catch(e){}   /* لا نكرر الطلب الفاشل أثناء الجلسة */
   function markMissing(){ rpcMissing = true; try{ sessionStorage.setItem('ss_rpc_missing', '1'); }catch(e){} }
   function rpcAvailable(c){ return CFG.useRpc && !rpcMissing && c && typeof c.rpc === 'function'; }
@@ -162,11 +162,22 @@
       /* صفحات من 100 (حتى 1000 ملف): فشل أي صفحة = null حتى لا تظهر قائمة ناقصة كأنها كاملة */
       var rows = [];
       for(var page = 0; page < 10; page++){
-        var res = await c.storage.from(CFG.bucket).list(path, {
-          limit: 100, offset: page * 100, sortBy: {column:'created_at', order:'desc'}
-        });
-        if(res.error){ if(!unloading) console.warn('list files error:', res.error); return null; }
-        var got = res.data || [];
+        var got;
+        if(rpcAvailable(c) && !listRpcMissing){
+          /* القائمة عبر دالة تأخذ الرمز (لا يوجد list مباشر على الـ bucket): لا يمكن سرد مجلدات الرموز كلها */
+          var rr = await c.rpc('list_course_files', { p_code: k, p_course: String(courseId), p_limit: 100, p_offset: page * 100 });
+          if(rr.error){
+            if(isMissingFn(rr.error)){ listRpcMissing = true; rows = []; page = -1; continue; }
+            if(!unloading) console.warn('list files rpc error:', rr.error); return null;
+          }
+          got = rr.data || [];
+        } else {
+          var res = await c.storage.from(CFG.bucket).list(path, {
+            limit: 100, offset: page * 100, sortBy: {column:'created_at', order:'desc'}
+          });
+          if(res.error){ if(!unloading) console.warn('list files error:', res.error); return null; }
+          got = res.data || [];
+        }
         rows = rows.concat(got);
         if(got.length < 100) break;
       }
