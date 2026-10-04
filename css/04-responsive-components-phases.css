@@ -714,3 +714,8 @@
 .timetable th.tt-exam-day,#timetableTable th.tt-exam-day{box-shadow:inset 0 -3px 0 var(--amber)}
 #timetableTable td.tt-exam-col{background-image:linear-gradient(var(--grad-soft),var(--grad-soft))}
 #timetableTable th .tt-exam{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--fs-2xs)}
+
+/* UX: حقل غير صالح داخل النوافذ (حدّ أحمر + اهتزاز خفيف يُلغى مع تقليل الحركة) */
+.form-group input.is-invalid,.form-group select.is-invalid,.form-group textarea.is-invalid{border-color:var(--red);box-shadow:0 0 0 3px color-mix(in srgb,var(--red) 22%,transparent);animation:fieldShake .28s var(--ease)}
+@keyframes fieldShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+@media (prefers-reduced-motion:reduce){.form-group input.is-invalid,.form-group select.is-invalid,.form-group textarea.is-invalid{animation:none}}

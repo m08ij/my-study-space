@@ -38,10 +38,17 @@
         '<button class="btn btn-sm' + (danger ? ' btn-danger' : '') + '" id="cConfirm">' + esc(opts.okLabel || '🗑 نعم، احذف') + '</button>' +
       '</div></div>';
     document.body.appendChild(bd);
+    var done = false;
     var close = function(){ if(window.dismissOverlay) window.dismissOverlay(bd); else bd.remove(); };
     bd.querySelector('#cCancel').onclick = close;
     bd.onclick = function(e){ if(e.target === bd) close(); };
-    bd.querySelector('#cConfirm').onclick = function(){ close(); onConfirm(); };
+    bd.querySelector('#cConfirm').onclick = function(){ if(done) return; done = true; close(); onConfirm(); };   /* منع التأكيد المزدوج */
+    bd.addEventListener('keydown', function(e){
+      if(e.key !== 'Tab') return;
+      var a = bd.querySelector('#cCancel'), b = bd.querySelector('#cConfirm');
+      if(e.shiftKey && document.activeElement === a){ e.preventDefault(); b.focus(); }
+      else if(!e.shiftKey && document.activeElement === b){ e.preventDefault(); a.focus(); }
+    });
     var f = bd.querySelector('#cCancel'); if(f && f.focus) f.focus();
   };
   /* ============================================================
@@ -575,6 +582,7 @@
       {key:'time', label:'الوقت'},
       {key:'room', label:'القاعة'}
     ], e, function(data){
+      if(!data.name || !data.date){ toast('أدخل الاسم والتاريخ', 'warn'); return false; }
       e.name = data.name; e.course = data.course; e.date = data.date;
       e.time = data.time; e.room = data.room;
       saveSpace(); window.renderExams(); window.renderDashboard();
@@ -1101,6 +1109,7 @@
       {key:'date', label:'التاريخ', type:'date'},
       {key:'note', label:'ملاحظة', type:'textarea'}
     ], b, function(data){
+      if(!(parseFloat(data.amount) > 0)){ toast('أدخل مبلغًا أكبر من صفر', 'warn'); return false; }
       b.category = data.category;
       b.amount = parseFloat(data.amount) || 0;
       b.date = data.date; b.note = data.note;
@@ -1175,6 +1184,7 @@
     getS().set('notes', window.notes);
     window.renderNotes(); window.renderDashboard();
     toast('تمت الإضافة', 'success', 1500);
+    var nt = document.querySelector('#notesList [data-note-title="0"]'); if(nt){ try{ nt.focus(); }catch(e){} }   /* جاهز للكتابة مباشرة */
   };
 
   window.deleteNote = function(i){

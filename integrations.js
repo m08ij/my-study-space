@@ -87,10 +87,30 @@
         if(window.toast) window.toast('تعذّر الحفظ — حاول مرة ثانية', 'warn', 3000);   /* بدل الفشل الصامت */
         return;
       }
-      if(result === false) return;
+      if(result === false){
+        /* أول حقل فاضي يُعلَّم ويأخذ التركيز (بدل toast فقط) — القيم المدخلة تبقى كما هي */
+        var bad = null;
+        fields.forEach(function(f){ var el = document.getElementById('mf_' + f.key); if(!bad && el && !el.value.trim() && el.tagName !== 'SELECT' && f.type !== 'textarea') bad = el; });
+        if(!bad){ var amt = bd.querySelector('input[type="number"]'); if(amt && !(parseFloat(amt.value) > 0)) bad = amt; }
+        if(bad){
+          bad.setAttribute('aria-invalid', 'true'); bad.classList.add('is-invalid');
+          bad.addEventListener('input', function clr(){ bad.removeAttribute('aria-invalid'); bad.classList.remove('is-invalid'); bad.removeEventListener('input', clr); });
+          try{ bad.focus(); }catch(e){}
+        }
+        return;
+      }
       close();
     };
     if(onDelete) bd.querySelector('#mDel').onclick = function(){ onDelete(); close(); };
+    /* حبس Tab داخل النافذة: التركيز لا يهرب للصفحة خلفها */
+    bd.addEventListener('keydown', function(e){
+      if(e.key !== 'Tab') return;
+      var f = Array.prototype.filter.call(bd.querySelectorAll('input,select,textarea,button'), function(n){ return !n.disabled && !n.hidden; });
+      if(!f.length) return;
+      var first = f[0], last = f[f.length - 1];
+      if(e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
+      else if(!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
+    });
     setTimeout(function(){
       var i = bd.querySelector('input,textarea') || bd.querySelector('select');
       if(i) i.focus();
