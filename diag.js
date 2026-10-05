@@ -115,8 +115,7 @@
     bd.querySelector('#diagClear').onclick = function(){ save([]); badge(); close(); if(window.toast) window.toast('تم مسح السجل', 'info', 1800); };
     bd.querySelector('#diagCopy').onclick = function(){
       var txt = report();
-      try{ navigator.clipboard.writeText(txt).then(function(){ if(window.toast) window.toast('📋 نُسخ التقرير', 'success', 1800); }, function(){ if(window.toast) window.toast('تعذّر النسخ — حدّد النص يدوياً', 'warn', 2500); }); }
-      catch(e){ if(window.toast) window.toast('تعذّر النسخ', 'warn', 2500); }
+      if(window.copyText) window.copyText(txt, '📋 نُسخ التقرير'); else if(window.toast) window.toast('تعذّر النسخ', 'warn', 2500);
     };
     var c = bd.querySelector('#diagCopy'); if(c) c.focus();
   }

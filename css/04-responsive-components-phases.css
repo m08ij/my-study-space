@@ -963,3 +963,7 @@ html[data-fs="lg"]{font-size:17.5px}
 body:has(.settings-menu.show) .fab-main,body:has(.settings-menu.show) .fab-menu,body:has(.settings-menu.show) .ai-fab{opacity:0;pointer-events:none}
 
 @media (min-width:601px) and (max-width:900px){.settings-menu{width:min(560px,100%);margin-inline:auto}}
+
+.ex-empty-list{display:flex;flex-direction:column;gap:var(--sp-1)}
+.ex-empty-row{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3);padding:var(--sp-1) var(--sp-2);border-radius:var(--r-md)}
+.ex-empty-row:hover{background:var(--bg2)}

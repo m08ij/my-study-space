@@ -302,7 +302,7 @@
     var inc = (sp.budget || []).filter(function(b){ return b.type === 'income'; }).reduce(function(a,b){ return a + (parseFloat(b.amount) || 0); }, 0);
     var exp = (sp.budget || []).filter(function(b){ return b.type === 'expense'; }).reduce(function(a,b){ return a + (parseFloat(b.amount) || 0); }, 0);
     var bal = inc - exp;
-    body.innerHTML = '<div class="lw-stats"><div class="lw-stat"><div class="lw-stat-val green">' + inc.toFixed(0) + '</div><div class="lw-stat-lbl">دخل</div></div><div class="lw-stat"><div class="lw-stat-val red">' + exp.toFixed(0) + '</div><div class="lw-stat-lbl">مصروف</div></div><div class="lw-stat"><div class="lw-stat-val ' + (bal >= 0 ? 'green' : 'red') + '">' + bal.toFixed(0) + '</div><div class="lw-stat-lbl">رصيد</div></div></div>';
+    body.innerHTML = '<div class="lw-stats"><div class="lw-stat"><div class="lw-stat-val green">' + (window.fmtJD ? window.fmtJD(inc) : inc.toFixed(0)) + '</div><div class="lw-stat-lbl">دخل</div></div><div class="lw-stat"><div class="lw-stat-val red">' + (window.fmtJD ? window.fmtJD(exp) : exp.toFixed(0)) + '</div><div class="lw-stat-lbl">مصروف</div></div><div class="lw-stat"><div class="lw-stat-val ' + (bal >= 0 ? 'green' : 'red') + '">' + (window.fmtJD ? window.fmtJD(bal) : bal.toFixed(0)) + '</div><div class="lw-stat-lbl">رصيد</div></div></div>';
   }
 
   /* ============ Focus Screen ============ */

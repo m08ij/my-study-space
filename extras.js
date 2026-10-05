@@ -792,9 +792,9 @@
       });
       var bal = inc - exp;
       return '💰 ميزانيتك:\n' +
-        '📈 دخل: ' + inc.toFixed(0) + ' د\n' +
-        '📉 مصروف: ' + exp.toFixed(0) + ' د\n' +
-        '💼 رصيد: ' + bal.toFixed(0) + ' د' +
+        '📈 دخل: ' + window.fmtJD(inc) + ' د\n' +
+        '📉 مصروف: ' + window.fmtJD(exp) + ' د\n' +
+        '💼 رصيد: ' + window.fmtJD(bal) + ' د' +
         (bal < 0 ? '\n⚠️ أنت بالعجز!' : '');
     }
 

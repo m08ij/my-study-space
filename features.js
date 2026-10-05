@@ -194,7 +194,7 @@
     var idx = (d.getFullYear()*365 + d.getMonth()*31 + d.getDate()) % quotes.length;
     var q = quotes[idx];
     var el1 = document.getElementById('dailyQuoteText'); if(el1) el1.textContent = q.t;
-    var el2 = document.getElementById('dailyQuoteAuthor'); if(el2) el2.textContent = '— ' + q.a;
+    var el2 = document.getElementById('dailyQuoteAuthor'); if(el2) el2.textContent = (q.a && q.a !== '—') ? '— ' + q.a : '';
   };
 
   /* ============================================================
@@ -266,11 +266,11 @@
       var col2 = balance >= 0 ? 'var(--green)' : 'var(--red)';
       db.innerHTML =
         '<div style="display:flex;justify-content:space-between;padding:8px 0;font-size:var(--fs-sm)"><span>📈 دخل</span>' +
-        '<span style="color:var(--green);font-weight:700">' + income.toFixed(0) + ' د</span></div>' +
+        '<span style="color:var(--green);font-weight:700">' + window.fmtJD(income) + ' د</span></div>' +
         '<div style="display:flex;justify-content:space-between;padding:8px 0;font-size:var(--fs-sm);border-top:1px solid var(--border)">' +
-        '<span>📉 مصروف</span><span style="color:var(--red);font-weight:700">' + expense.toFixed(0) + ' د</span></div>' +
+        '<span>📉 مصروف</span><span style="color:var(--red);font-weight:700">' + window.fmtJD(expense) + ' د</span></div>' +
         '<div style="display:flex;justify-content:space-between;padding:8px 0;font-size:var(--fs-md);border-top:2px solid var(--border);margin-top:6px">' +
-        '<span style="font-weight:700">💼 الرصيد</span><span style="color:' + col2 + ';font-weight:800">' + balance.toFixed(0) + ' د</span></div>';
+        '<span style="font-weight:700">💼 الرصيد</span><span style="color:' + col2 + ';font-weight:800">' + window.fmtJD(balance) + ' د</span></div>';
     }
 
     try{ if(typeof window.updateTimerUI === 'function') window.updateTimerUI(); }catch(e){}
@@ -545,7 +545,8 @@
     var course = '';
     (space().courses || []).forEach(function(c){ if(!course && c.name && raw.indexOf(c.name) > -1) course = c.name; });
     if(!space().tasks) window.space.tasks = [];
-    window.space.tasks.push({ id: uid(), title: title, type: 'task', course: course, due: due, done: false, priority: 'normal', order: nextOrder() });
+    var qtype = /^\s*(واجب|هومورك|homework|assignment)/i.test(raw) ? 'assignment' : /^\s*(كويز|quiz)/i.test(raw) ? 'quiz' : /^\s*(مشروع|project)/i.test(raw) ? 'project' : 'task';   /* النوع من الكلمة الأولى (كان يُحفظ دائماً «مهمة») */
+    window.space.tasks.push({ id: uid(), title: title, type: qtype, course: course, due: due, done: false, priority: 'normal', order: nextOrder() });
     refreshTasks();
     toast('✓ أُضيفت: ' + title, 'success', 1500);
     return true;
@@ -865,7 +866,7 @@
       /* مواد لها ملفات قديمة محذوفة بنفس الكود: نسأل (بدون ربط تلقائي) */
       added.forEach(function(nc){ if(window.offerArchivedFiles) window.offerArchivedFiles(nc); });
       return true;
-    });
+    }, null, { saveLabel: 'استيراد' });
   };
 
   /* ============================================================
@@ -924,11 +925,11 @@
 
     sumEl.innerHTML =
       '<div class="budget-card income"><div class="bc-icon">📈</div><div class="bc-val">' +
-        income.toFixed(0) + ' د</div><div class="bc-lbl">إجمالي الدخل</div></div>' +
+        window.fmtJD(income) + ' د</div><div class="bc-lbl">إجمالي الدخل</div></div>' +
       '<div class="budget-card expense"><div class="bc-icon">📉</div><div class="bc-val">' +
-        expense.toFixed(0) + ' د</div><div class="bc-lbl">إجمالي المصاريف</div></div>' +
+        window.fmtJD(expense) + ' د</div><div class="bc-lbl">إجمالي المصاريف</div></div>' +
       '<div class="budget-card balance ' + (balance < 0 ? 'neg' : '') + '"><div class="bc-icon">💼</div>' +
-        '<div class="bc-val">' + balance.toFixed(0) + ' د</div><div class="bc-lbl">الرصيد</div></div>';
+        '<div class="bc-val">' + window.fmtJD(balance) + ' د</div><div class="bc-lbl">الرصيد</div></div>';
 
     var BC = window.BUDGET_CATS || [];
     var catsEl = document.getElementById('budgetCats');
@@ -1014,7 +1015,7 @@
       {key:'date', label:'التاريخ', type:'date'},
       {key:'note', label:'ملاحظة', type:'textarea'}
     ], {
-      category: catOpts[0].v, amount:0, date: today(), note:''
+      category: catOpts[0].v, amount:'', date: today(), note:''
     }, function(data){
       if(!data.amount || parseFloat(data.amount) <= 0){ toast('أدخل مبلغًا', 'warn'); return false; }
       if(!space().budget) window.space.budget = [];
@@ -1302,7 +1303,7 @@
       if(!data.name){ toast('أدخل اسمًا', 'warn'); return false; }
       var score = parseFloat(data.score) || 0;
       var weight = parseFloat(data.weight) || 0;
-      if(score > weight){ toast('⚠️ العلامة أكبر من الوزن', 'warn', 2500); return false; }
+      if(score > weight){ toast('⚠️ العلامة أكبر من الوزن', 'warn', 2500); return { field: 'score' }; }
       g.items.push({ name: data.name, score: score, weight: weight });
       saveSpace(); window.renderGradeCalc();
       return true;

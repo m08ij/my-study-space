@@ -709,7 +709,7 @@
     ], { name: '', score: 0, weight: 10 }, function(data){
       if(!data.name){ toast('أدخل اسمًا', 'warn'); return false; }
       var score = parseFloat(data.score) || 0, weight = parseFloat(data.weight) || 0;
-      if(score > weight){ toast('⚠️ العلامة أكبر من الوزن', 'warn', 2500); return false; }
+      if(score > weight){ toast('⚠️ العلامة أكبر من الوزن', 'warn', 2500); return { field: 'score' }; }
       if(!Array.isArray(sp().grades)) window.space.grades = [];
       var g = window.space.grades.filter(function(x){ return x.name === name; })[0];
       if(!g){ g = { name: name, items: [] }; window.space.grades.push(g); }
@@ -920,19 +920,20 @@
 
   /* ============================================================
      3) تخصيص لوحة التحكم (DashLayout)
-     - الترتيب الافتراضي الحقيقي هو ترتيب DOM في index.html (عناصر data-dsec).
+     - الترتيب الافتراضي هو ترتيب DASH_SECTIONS أدناه (يُطبَّق عند الإقلاع على عناصر data-dsec بـ index.html).
      - التخصيص يُحفظ محلياً فقط في localStorage['dash_layout'] = {v, order, hidden}؛ لا يدخل في المزامنة ولا يمس أي بيانات.
      - order يشمل كل الأقسام (المخفية أيضاً) فتعود لمكانها عند إظهارها. أقسام جديدة بإصدار لاحق تُدرج بعد سابقها الافتراضي.
      ============================================================ */
   var DASH_KEY = 'dash_layout';
   var DASH_SECTIONS = [
+    { id: 'quote', name: 'الاقتباس اليومي', icon: '💬' },
+    { id: 'myday', name: 'يومي الجامعي', icon: '🧭' },
     { id: 'term', name: 'تقدم الترم', icon: '🎓' },
     { id: 'stats', name: 'الأرقام الرئيسية', icon: '🔢' },
-    { id: 'myday', name: 'يومي الجامعي', icon: '🧭' },
     { id: 'weekly', name: 'ملخصك الأسبوعي', icon: '📈' },
     { id: 'timer', name: 'مؤقت التركيز', icon: '⏱️' },
     { id: 'budget', name: 'نظرة الميزانية', icon: '💰' },
-    { id: 'quote', name: 'الاقتباس اليومي', icon: '💬' },
+    { id: 'qspend', name: 'مصروف سريع', icon: '💸' },
     { id: 'lms', name: 'روابط LMS HU السريعة', icon: '🔗' },
     { id: 'enhanced', name: 'الإحصائيات المتقدمة', icon: '📊' },
     { id: 'insights', name: 'التحليلات المتقدمة', icon: '📈' }

@@ -951,7 +951,14 @@
 
   window.autoFillTimetable = function(){
     if(!window.space || !(window.space.courses || []).length){ window.toast('أضف موادي أولاً', 'warn', 2500); return; }
-    if(window.openSmartTimetable) window.openSmartTimetable();
+    /* «توليد من موادي»: صفوف جاهزة بأسماء/أكواد موادك التي ليست بالجدول بعد (كانت تفتح نموذجاً فاضياً) */
+    var tt = window.space.timetable || {}, used = {};
+    Object.keys(tt).forEach(function(k){ if(tt[k] && tt[k].name) used[tt[k].name] = true; });
+    var rows = (window.space.courses || []).filter(function(c){ return c.name && !used[c.name]; }).map(function(c){
+      return { code: c.code || '', name: c.name, matched: null, days: [], timeFrom: '', timeTo: '', room: c.room || '' };
+    });
+    if(!rows.length){ window.toast('كل موادك موجودة بالجدول أصلاً', 'info', 2500); return; }
+    if(window.openSmartTimetable) window.openSmartTimetable(rows);
     else window.toast('استخدم "✨ إضافة دفعة"', 'info', 3500);
   };
 

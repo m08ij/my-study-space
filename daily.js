@@ -224,12 +224,10 @@
   }
   var qsSel = '';
   function renderQuickSpend(dash){
-    var n = $('quickSpend');
-    if(!n){
-      n = ensure(dash, 'quickSpend', qsHtml(qsSel, spentToday()), 'quick-spend');
-      n.setAttribute('aria-label', 'مصروف سريع');
-      /* مكانه قبل قسم الميزانية (سياقه الطبيعي) وليس أول اللوحة؛ وإن لم يوجد القسم فبآخرها */
-      var ref = dash.querySelector('[data-dsec="budget"]'); if(ref) dash.insertBefore(n, ref); else dash.appendChild(n);
+    /* العنصر ثابت بـ index.html (قسم قابل للتخصيص data-dsec="qspend" يلي «نظرة الميزانية»)؛ نملأه ونربطه مرة واحدة */
+    var n = $('quickSpend'); if(!n) return;
+    if(!n._qs){
+      n._qs = true; n.innerHTML = qsHtml(qsSel, spentToday());
       n.addEventListener('click', function(ev){
         var c = ev.target.closest && ev.target.closest('[data-qs-cat]');
         if(c){

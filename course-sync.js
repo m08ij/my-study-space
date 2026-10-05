@@ -464,12 +464,13 @@
           '</div>' +
         '</div>' +
         '<div class="att-bar"><div class="att-fill ' + lvl + '" style="width:' + (hasData ? pct : 0) + '%"></div></div>' +
-        (function(){ var h = window.attendanceHint ? window.attendanceHint(a.present, a.absent, window.weeklyLectures ? window.weeklyLectures(name) : 0) : null; return h ? '<div class="att-hint ' + h.level + '" role="status">' + esc(h.text) + '</div>' : ''; })() +
         '<div class="att-actions">' +
           '<span style="margin-right:auto">✅ <b>' + a.present + '</b> · ❌ <b>' + a.absent + '</b></span>' +
           '<button class="btn btn-sm" data-mark-p="' + esc(name) + '">+ حاضر</button>' +
           '<button class="btn btn-sm btn-ghost" data-mark-a="' + esc(name) + '">+ غائب</button>' +
         '</div>' +
+        /* التلميح تحت الأزرار: ظهوره بعد أول تسجيل كان يزيح الأزرار للأسفل فتفوت النقرة التالية */
+        (function(){ var h = window.attendanceHint ? window.attendanceHint(a.present, a.absent, window.weeklyLectures ? window.weeklyLectures(name) : 0) : null; return h ? '<div class="att-hint ' + h.level + '" role="status">' + esc(h.text) + '</div>' : ''; })() +
       '</div>';
     });
     c.innerHTML = html;
@@ -555,8 +556,9 @@
           '</div>' +
           '<div style="display:flex;align-items:center;gap:10px">' +
             '<div style="text-align:center">' +
-              '<div style="font-size:var(--fs-xl);font-weight:800;color:' + color + '">' + pct.toFixed(1) + '%</div>' +
-              '<div class="u-note">حتى الآن</div>' +
+              (g.items && g.items.length
+                ? '<div style="font-size:var(--fs-xl);font-weight:800;color:' + color + '">' + pct.toFixed(1) + '%</div><div class="u-note">حتى الآن</div>'
+                : '<div style="font-size:var(--fs-xl);font-weight:800;color:var(--muted)">—</div><div class="u-note">بلا علامات</div>') +   /* 0.0% بالأحمر كان يوحي بعلامة صفر لمادة ما أُدخلت لها علامات */
             '</div>' +
             '<button class="unified-course-btn added" data-course-name="' + esc(course.name) + '">🗑</button>' +
           '</div>' +
@@ -592,7 +594,7 @@
           if(!data.name){ toast('أدخل اسمًا', 'warn'); return false; }
           var score = parseFloat(data.score) || 0;
           var weight = parseFloat(data.weight) || 0;
-          if(score > weight){ toast('⚠️ العلامة أكبر من الوزن', 'warn', 2500); return false; }
+          if(score > weight){ toast('⚠️ العلامة أكبر من الوزن', 'warn', 2500); return { field: 'score' }; }
           g.items.push({ name: data.name, score: score, weight: weight });
           save();
           window.renderGradeCalc();
@@ -789,40 +791,38 @@
       }
     });
 
-    /* Show each course with its exams */
+    /* الترتيب: المواد التي لها امتحانات (الأقرب أولاً) ← «بدون مادة» ← المواد الفاضية بصفوف مدمجة.
+       قبل كان الامتحان الفعلي يظهر آخر الصفحة بعد بطاقة فاضية لكل مادة. */
+    var withEx = [], noEx = [];
     courses.forEach(function(course){
-      var courseExams = examsByCourse[course.name] || [];
+      var ce = examsByCourse[course.name] || [];
+      if(ce.length) withEx.push({ course: course, exams: ce, first: sortExams(ce.slice())[0] }); else noEx.push(course);
+    });
+    withEx.sort(function(a, b){ return String(a.first && a.first.date || '9999').localeCompare(String(b.first && b.first.date || '9999')); });
+    function courseCard(course, courseExams){
       var total = courseExams.length;
-
-      html += '<div class="card" style="margin-bottom:12px">' +
+      var h = '<div class="card" style="margin-bottom:12px">' +
         '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">' +
           '<div style="flex:1;min-width:0">' +
             '<div style="font-weight:700;font-size:var(--fs-base)">' + (window.courseLink ? window.courseLink(course.name, '📚 ') : '📚 ' + esc(course.name)) + '</div>' +
-            '<div style="font-size:var(--fs-xs);color:var(--muted)">' +
-              (total ? total + ' امتحان مسجل' : 'ما في امتحانات مسجلة بعد') +
-            '</div>' +
+            '<div style="font-size:var(--fs-xs);color:var(--muted)">' + total + ' امتحان مسجل</div>' +
           '</div>' +
           '<button class="btn btn-sm" data-add-exam="' + esc(course.name) + '">+ امتحان</button>' +
         '</div>';
-
-      if(courseExams.length){
-        sortExams(courseExams).forEach(function(e){ html += examCard(e); });
-      } else {
-        html += '<div class="u-empty">' +
-          'ما في امتحانات — اضغط "+ امتحان" لإضافة</div>';
-      }
-
-      html += '</div>';
-    });
-
-    /* Orphan exams (without course) */
+      sortExams(courseExams).forEach(function(e){ h += examCard(e); });
+      return h + '</div>';
+    }
+    withEx.forEach(function(x){ html += courseCard(x.course, x.exams); });
     if(orphanExams.length){
       html += '<div class="card" style="margin-bottom:12px">' +
         '<div style="font-weight:700;font-size:var(--fs-md);margin-bottom:10px">📋 امتحانات بدون مادة</div>';
       sortExams(orphanExams).forEach(function(e){ html += examCard(e, true); });
       html += '</div>';
     }
-
+    if(noEx.length){
+      html += '<div class="card ex-empty-card" style="margin-bottom:12px"><div style="font-weight:700;font-size:var(--fs-sm);color:var(--muted);margin-bottom:8px">مواد بدون امتحانات مسجّلة (' + noEx.length + ')</div><div class="ex-empty-list">' +
+        noEx.map(function(course){ return '<div class="ex-empty-row"><span>' + (window.courseLink ? window.courseLink(course.name, '📚 ') : '📚 ' + esc(course.name)) + '</span><button class="btn btn-sm btn-ghost" data-add-exam="' + esc(course.name) + '">+ امتحان</button></div>'; }).join('') + '</div></div>';
+    }
     c.innerHTML = html;
 
     c.querySelectorAll('[data-add-exam]').forEach(function(b){
@@ -837,6 +837,7 @@
   };
 
   window.addExamForCourse = function(courseName){
+    var warnedPast = null;
     window.showModal('إضافة امتحان — ' + courseName, [
       {key:'name', label:'اسم الامتحان'},
       {key:'date', label:'التاريخ', type:'date'},
@@ -844,6 +845,11 @@
       {key:'room', label:'القاعة'}
     ], {name:'', date:'', time:'', room:''}, function(data){
       if(!data.name || !data.date){ toast('أدخل الاسم والتاريخ', 'warn'); return false; }
+      /* نفس تحقق نافذة الإضافة العامة: وقت مفهوم يُحوَّل لـ HH:MM، وتاريخ ماضٍ يطلب تأكيداً بالحفظ الثاني */
+      var tm = window._normTime ? window._normTime(data.time) : { ok: true, value: data.time };
+      if(!tm.ok){ toast('الوقت غير مفهوم — اكتبه مثل 10:30 أو 3 م', 'warn', 3500); return { field: 'time' }; }
+      data.time = tm.value;
+      if(data.date < window.today() && warnedPast !== data.date){ warnedPast = data.date; toast('تاريخ الامتحان مضى — اضغط حفظ مرة ثانية للتأكيد', 'warn', 3500); return { field: 'date', warn: true }; }
       if(!space().exams) window.space.exams = [];
       window.space.exams.push({
         id: window.uid ? window.uid() : Date.now().toString(36),

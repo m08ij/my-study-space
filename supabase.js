@@ -294,20 +294,14 @@
     var input = bd.querySelector('#syncCodeInput');
     bd.querySelector('#syncCopy').onclick = function(){
       input.select();
-      try{
-        navigator.clipboard.writeText(input.value);
-        if(window.toast) window.toast('📋 نُسخ الرمز', 'success');
-      }catch(e){ document.execCommand('copy'); }
+      window.copyText(input.value, '📋 نُسخ الرمز');
     };
     bd.querySelector('#syncShare').onclick = function(){
       var c = getCode();
       var msg = '🎓 مساحتي الدراسية\n\nرمز المزامنة: ' + c + '\n\nافتح: ' +
                 location.origin + location.pathname;
       if(navigator.share) navigator.share({ title: 'مساحتي الدراسية', text: msg }).catch(function(){});
-      else if(navigator.clipboard){
-        navigator.clipboard.writeText(msg);
-        if(window.toast) window.toast('📋 نُسخ الرابط', 'success');
-      }
+      else window.copyText(msg, '📋 نُسخ الرابط');
     };
     bd.querySelector('#syncQrBtn').onclick = function(){
       var qr = bd.querySelector('#syncQr'), c = getCode();

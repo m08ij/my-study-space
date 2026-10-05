@@ -56,7 +56,7 @@
     if(g === 0) return { ivl: 0, ease: Math.max(1.3, ease - 0.2), reps: 0, lapses: lapses + 1 };
     var next;
     if(g === 1){ next = reps ? Math.max(1, Math.round(ivl * 1.2)) : 1; ease = Math.max(1.3, ease - 0.15); }
-    else if(g === 2){ next = reps === 0 ? 1 : reps === 1 ? 3 : Math.round(ivl * ease); if(reps >= 2) next = Math.max(next, ivl + 1); }
+    else if(g === 2){ next = reps === 0 ? 2 : reps === 1 ? 3 : Math.round(ivl * ease);   /* جيد لبطاقة جديدة: يومان (كان يوماً فيتطابق مع «صعب» ويُربك المعاينة) */ if(reps >= 2) next = Math.max(next, ivl + 1); }
     else { next = reps === 0 ? 4 : Math.round(Math.max(ivl, 1) * ease * 1.3); next = Math.max(next, ivl + 2); ease = ease + 0.15; }
     return { ivl: Math.min(MAX_IVL, Math.max(1, next)), ease: Math.round(ease * 100) / 100, reps: reps + 1, lapses: lapses };
   }

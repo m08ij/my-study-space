@@ -31,7 +31,9 @@
   /* ============================================================
      showModal
      ============================================================ */
-  window.showModal = function(title, fields, values, onSubmit, onDelete){
+  /* opts اختيارية: { saveLabel } — نص زر الحفظ (الافتراضي «حفظ») */
+  window.showModal = function(title, fields, values, onSubmit, onDelete, opts){
+    opts = opts || {};
     var opener = document.activeElement;
     document.querySelectorAll('.modal-backdrop').forEach(function(m){ m.remove(); });
     var bd = document.createElement('div');
@@ -57,7 +59,7 @@
       '<div class="modal-actions">' +
         (onDelete ? '<button class="btn btn-sm btn-danger" id="mDel">🗑 حذف</button>' : '') +
         '<button class="btn btn-sm btn-ghost" id="mCancel">إلغاء</button>' +
-        '<button class="btn btn-sm" id="mSave">حفظ</button>' +
+        '<button class="btn btn-sm" id="mSave">' + esc(opts.saveLabel || 'حفظ') + '</button>' +
       '</div></div>';
     document.body.appendChild(bd);
 
@@ -116,7 +118,7 @@
     });
     setTimeout(function(){
       var i = bd.querySelector('input,textarea') || bd.querySelector('select');
-      if(i) i.focus();
+      if(i){ i.focus(); if(i.type === 'number' && i.value !== '' && i.select) try{ i.select(); }catch(e){} }   /* قيمة رقمية معبّأة: تُحدَّد ليحلّ الكتابة محلّها (كانت «0» تتحول 150 → 1500) */
     }, 100);
   };
 
@@ -1975,10 +1977,7 @@
     lines.push('');
     lines.push('المجموع: ' + result.totalHours + ' ساعة');
     var text = lines.join('\n');
-    if(navigator.clipboard){
-      navigator.clipboard.writeText(text);
-      toast('📋 نُسخت الخطة', 'success');
-    } else alert(text);
+    window.copyText(text, '📋 نُسخت الخطة');
   }
 
   function injectPlanSimTab(){
