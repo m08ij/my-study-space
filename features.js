@@ -125,6 +125,7 @@
     t = resolveTheme(t);
     if(animate) themeFade();
     setThemeAttr(t);
+    if(window.applyCustomAccent) window.applyCustomAccent();   /* لون التمييز المخصص يُعاد حسابه لخلفية الثيم الجديد */
     S().set('theme', t);
     document.querySelectorAll('.theme-swatch').forEach(function(sw){
       sw.classList.toggle('active', sw.dataset.theme === t);

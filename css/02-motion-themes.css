@@ -305,7 +305,7 @@ html.theme-fading *,html.theme-fading *::before,html.theme-fading *::after{
 body{transition:background-color var(--dur-3) ease,color var(--dur-3) ease}
 
 /* خروج التنبيه كان مُلغى بسبب !important على أنيميشن الدخول */
-.toast.out{animation:toastOut .3s ease forwards!important}
+.toast.out{animation:toastOut .3s ease forwards}
 
 /* نبض الزر العائم: 3 مرات فقط بدل حلقة لا نهائية (تقليل إعادة الرسم واستهلاك البطارية) */
 .fab-main{animation:uiFabPulse 4s ease-in-out 3}

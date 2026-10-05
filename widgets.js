@@ -386,7 +386,7 @@
     var sub = document.getElementById('focusHeaderSub');
     if(sub){
       var hour = new Date().getHours();
-      var greet = hour < 12 ? 'صباح الخير' : 'مساء الخير';
+      var greet = window.greetWord(hour);
       sub.textContent = (name ? greet + ' ' + name.split(' ')[0] + ' · ' : '') + 'ركز على مهمة واحدة';
     }
     renderFocusTasks(); updateFocusTimerUI(); startFocusTimerLoop();

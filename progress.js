@@ -142,7 +142,73 @@
       S().set(FKEY, L); renderFocusStats();
     }catch(err){ console.warn('progress focus link', err); }
   });
+  /* ---------- 3) سيناريوهات المعدل التراكمي (من جدول «حاسبة المعدل» gpaRows؛ قراءة فقط) ---------- */
+  var scen = { hrs: 15, target: null };
+  function gpaTotals(){
+    var G = window.GRADES || {}, pts = 0, hrs = 0;
+    (window.gpaRows || []).forEach(function(r){ var h = num(r.hrs); if(h > 0){ pts += h * (G[r.grade] || 0); hrs += h; } });
+    return { pts: pts, hrs: hrs, gpa: hrs ? pts / hrs : 0 };
+  }
+  /* نتيجة معدل تراكمي لو أخذت h ساعة بمعدل نقاط avg */
+  function afterSem(t, h, avg){ return (t.pts + h * avg) / (t.hrs + h); }
+  /* يحسب السيناريوهات والهدف: يرجع كائناً نقياً للعرض والاختبار */
+  function scenarios(h, target){
+    var t = gpaTotals(); if(!t.hrs || !(h > 0)) return null;
+    var G = window.GRADES || {}, rows = [];
+    scale().forEach(function(s){ if(s.pts >= 2.0) rows.push({ label: s.label, pts: s.pts, gpa: afterSem(t, h, s.pts) }); });
+    var need = (target * (t.hrs + h) - t.pts) / h, res = { totals: t, rows: rows, need: need, target: target, h: h, maxGpa: afterSem(t, h, 4), minGpa: afterSem(t, h, 0) };
+    if(need <= 0) res.status = 'done';
+    else if(need <= 4){
+      res.status = 'ok'; var L = null; scale().slice().reverse().forEach(function(s){ if(!L && s.pts >= need - 1e-9) L = s; });
+      res.letter = L ? L.label : 'A'; res.minPct = L ? L.min : 90;
+    } else {
+      res.status = 'far'; res.semesters = target < 4 ? Math.ceil((target * t.hrs - t.pts) / (h * (4 - target)) - 1e-9) : null;
+    }
+    return res;
+  }
+  function defaultTarget(g){ var ladder = [2.0, 2.5, 3.0, 3.5, 3.75, 4.0]; for(var i = 0; i < ladder.length; i++) if(ladder[i] > g + 0.005) return ladder[i]; return 4.0; }
+  function fmt2(n){ return (Math.round(n * 100) / 100).toFixed(2); }
+  function scenResultHtml(r){
+    if(!r) return '<div class="u-empty">أدخل موادك بجدول «حاسبة المعدل» (الساعات والتقدير) لتظهر السيناريوهات.</div>';
+    var cur = r.totals.gpa;
+    var goal = r.status === 'done' ? '🎉 هدفك ' + fmt2(r.target) + ' محقق حتى لو جبت 0 هذا الفصل (على الأرقام الحالية).'
+      : r.status === 'ok' ? 'لتوصل ' + fmt2(r.target) + ' تحتاج متوسط <b>' + fmt2(r.need) + '</b> هذا الفصل، يعني تقريباً <b>' + esc(r.letter) + '</b> (≥ ' + r.minPct + '%) بكل المواد.'
+      : '🎯 ' + fmt2(r.target) + ' ما بتتحقق بفصل واحد (أقصى معدل ممكن ' + fmt2(r.maxGpa) + ' بكل المواد A).' + (r.semesters ? ' بنفس عدد الساعات تحتاج ' + r.semesters + ' فصول بتقدير A.' : '');
+    return '<div class="sc-goal">' + goal + '</div>' +
+      '<div class="sc-table" role="table" aria-label="سيناريوهات المعدل">' + r.rows.map(function(x){
+        var d = x.gpa - cur, cls = d > 0.004 ? 'up' : d < -0.004 ? 'down' : '';
+        return '<div class="sc-row" role="row"><span class="sc-l">لو كل مواد الفصل ' + esc(x.label) + '</span><b class="sc-v">' + fmt2(x.gpa) + '</b><span class="sc-d ' + cls + '">' + (d > 0.004 ? '▲ ' : d < -0.004 ? '▼ ' : '= ') + fmt2(Math.abs(d)) + '</span></div>';
+      }).join('') + '</div>' +
+      '<p class="pg-note">الافتراضات: معدلك الحالي ' + fmt2(cur) + ' على ' + r.totals.hrs + ' ساعة (من جدول حاسبة المعدل)، وفصل جديد ' + r.h + ' ساعة بتقدير موحّد لكل المواد. المدى الممكن بعد الفصل: ' + fmt2(r.minGpa) + ' – ' + fmt2(r.maxGpa) + '. تقديري، وقد يختلف عن حساب الجامعة الرسمي.</p>';
+  }
+  function renderScenarios(){
+    var host = document.querySelector('#gradecalc .subsection[data-gc-sub="gpa"]'); if(!host) return;
+    var box = document.getElementById('gpaScen');
+    if(!box){
+      box = document.createElement('div'); box.id = 'gpaScen'; box.className = 'card pg-card'; box.style.marginTop = '18px';
+      box.innerHTML = '<div class="card-head"><h3>🧭 سيناريوهات المعدل التراكمي</h3></div>' +
+        '<div class="grid grid-2"><div class="form-group"><label for="scHrs">ساعات الفصل القادم</label><input id="scHrs" type="number" min="1" max="30" step="1"></div>' +
+        '<div class="form-group"><label for="scTarget">المعدل الذي تستهدفه</label><input id="scTarget" type="number" min="0.5" max="4" step="0.05"></div></div><div id="scOut"></div>';
+      host.appendChild(box);
+      var upd = function(){ var h = num(document.getElementById('scHrs').value), t = num(document.getElementById('scTarget').value); scen.hrs = h; scen.target = t > 0 ? Math.min(4, t) : null; paintScen(); };
+      box.querySelector('#scHrs').addEventListener('input', upd); box.querySelector('#scTarget').addEventListener('input', upd);
+    }
+    var tt = gpaTotals();
+    if(scen.target === null || !box._seeded){ scen.target = defaultTarget(tt.gpa); box._seeded = true; }
+    var hi = box.querySelector('#scHrs'), ti = box.querySelector('#scTarget');
+    if(document.activeElement !== hi) hi.value = scen.hrs;
+    if(document.activeElement !== ti) ti.value = scen.target;
+    paintScen();
+  }
+  function paintScen(){
+    var out = document.getElementById('scOut'); if(!out) return;
+    var h = scenResultHtml(scenarios(scen.hrs, scen.target === null ? 3 : scen.target));
+    if(out._h !== h){ out._h = h; out.innerHTML = h; }
+  }
+
   /* ---------- ربط بالتصيير ---------- */
+  var prevCalcGpa = window.calcGpa;
+  window.calcGpa = function(){ var r = prevCalcGpa ? prevCalcGpa.apply(this, arguments) : undefined; try{ renderScenarios(); }catch(e){ console.warn('progress scenarios', e); } return r; };
   var prevGrade = window.renderGradeCalc;
   window.renderGradeCalc = function(){ var r = prevGrade ? prevGrade.apply(this, arguments) : undefined; try{ renderForecast(); }catch(e){ console.warn('progress forecast', e); } return r; };
   /* app.js يُحمَّل بعد هذا الملف ويعرّف switchTab من جديد، فنراقب ظهور القسم نفسه بدل تغليف الدالة */
@@ -154,5 +220,5 @@
   }  onShown('timer', buildPicker);
   buildPicker();
 
-  window.Progress = { focusCourse: focusCourse, report: report, letterFor: letterFor, courseProjection: courseProjection, loadLinks: loadLinks, render: renderForecast, buildPicker: buildPicker };
+  window.Progress = { focusCourse: focusCourse, report: report, letterFor: letterFor, courseProjection: courseProjection, loadLinks: loadLinks, render: renderForecast, buildPicker: buildPicker, scenarios: scenarios, renderScenarios: renderScenarios };
 })();

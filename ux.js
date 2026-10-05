@@ -239,6 +239,45 @@
   }
   trapDialogs();
 
+
+  /* ---------- 7) ملخص بدء التشغيل: كرت واحد بدل 3 تنبيهات متتالية (تحية + متأخرة + اليوم) ----------
+     يقرأ من البيانات الموجودة فقط. يتخطّى نفسه إن كان «ملخص الصباح» سيظهر (أغنى منه)، وإن كانت نافذة مفتوحة. */
+  window._briefAt = 0;
+  function briefChips(now){
+    var s = sp(), t = dstr(now), chips = [], pend = (s.tasks || []).filter(function(k){ return !k.done; });
+    var over = pend.filter(function(k){ return k.due && k.due < t; }).length;
+    var today = pend.filter(function(k){ return k.due === t; }).length;
+    var tomHigh = pend.filter(function(k){ return k.priority === 'high' && daysLeft(k.due) === 1; }).length;
+    if(over) chips.push({ cls: 'warn', go: 'tasks', icon: '⚠️', text: over + (over === 1 ? ' مهمة متأخرة' : ' مهام متأخرة') });
+    if(today) chips.push({ cls: 'info', go: 'tasks', icon: '📌', text: today + (today === 1 ? ' مهمة اليوم' : ' مهام اليوم') });
+    if(tomHigh) chips.push({ cls: 'info', go: 'tasks', icon: '🔺', text: tomHigh + ' مهمة مهمة غدًا' });
+    var ex = (s.exams || []).map(function(e){ return { e: e, d: daysLeft(e.date) }; }).filter(function(x){ return x.d !== null && x.d >= 0 && x.d <= 3; }).sort(function(a, b){ return a.d - b.d; })[0];
+    if(ex) chips.push({ cls: 'warn', go: 'exams', icon: '⏳', text: String(ex.e.name || 'امتحان').slice(0, 22) + ' ' + (ex.d === 0 ? 'اليوم' : ex.d === 1 ? 'غدًا' : 'بعد ' + ex.d + ' أيام') });
+    var due = 0; (s.decks || []).forEach(function(d){ (d.cards || []).forEach(function(c){ if(c.last && (c.due || t) <= t) due++; }); });
+    if(due) chips.push({ cls: 'info', go: 'flashcards', icon: '🃏', text: due + ' بطاقة مستحقة' });
+    return chips.slice(0, 4);
+  }
+  window.startupBrief = function(name, opt){
+    opt = opt || {}; var now = new Date(), h = now.getHours();
+    if(!window.space || !window.toastCard) return false;
+    if(!opt.force && Date.now() - window._briefAt < 600000) return false;                 /* لا تكرار خلال 10 دقائق */
+    if(document.querySelector('.modal-backdrop,.welcome-overlay.show,#onbOverlay[style*="flex"]')) return false;
+    var chips = briefChips(now), first = String(name || (sp().profile && sp().profile.name) || '').split(' ')[0];
+    var greet = window.greetWord(h) + (first ? ' ' + first : '');
+    /* الصباح: ملخص الصباح (أغنى) سيظهر بعد قليل، فلا نكرر عليه */
+    try{ if(h >= 5 && h < 12 && localStorage.getItem('ss_morning_date') !== dstr(now) && morningData(now).lines.length && !opt.force) return 'morning'; }catch(e){}
+    window._briefAt = Date.now();
+    if(!chips.length){ window.toast(greet + ' 👋', 'success', 2400); return true; }
+    var el = window.toastCard('<div class="brief-head"><b>' + esc(greet) + ' 👋</b><span class="brief-sub">عندك اليوم:</span></div>' +
+      '<div class="brief-chips">' + chips.map(function(c){ return '<button type="button" class="brief-chip ' + c.cls + '" data-go="' + c.go + '">' + c.icon + ' ' + esc(c.text) + '</button>'; }).join('') + '</div>',
+      { cls: 'brief', icon: '👋', dur: 9000 });
+    if(el) el.addEventListener('click', function(ev){
+      var b = ev.target.closest && ev.target.closest('[data-go]'); if(!b) return;
+      if(window.switchTab) window.switchTab(b.getAttribute('data-go'));
+      var x = el.querySelector('.t-x'); if(x) x.click();
+    });
+    return true;
+  };
   var _enhance = enhance;
   enhance = function(){ _enhance(); renderExamMode(); };
   window.UX = { enhance: function(){ enhance(); }, renderExamMode: renderExamMode, maybeNag: maybeNag, maybeMorning: maybeMorning, morningData: morningData };

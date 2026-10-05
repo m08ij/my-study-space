@@ -58,7 +58,7 @@
 
     if(/(سلام|هلا|مرحبا|هاي|صباح|مساء|أهلا)/.test(lower)){
       var hour = d.now.getHours();
-      var g = hour < 12 ? 'صباح الخير' : 'مساء الخير';
+      var g = window.greetWord(hour);
       return g + ' ' + d.name + '! 👋\nعندك ' + d.tasks.length + ' مهمة، ' + d.exams.length + ' امتحان.';
     }
 

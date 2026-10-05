@@ -704,7 +704,7 @@
 
     /* Greetings */
     if(/^(سلام|هلا|مرحبا|هاي|صباح|مساء|أهلا)/.test(lower)){
-      var g = c.hour < 12 ? 'صباح الخير' : 'مساء الخير';
+      var g = window.greetWord(c.hour);
       var parts = [g + ' ' + name + '! 👋'];
       if(c.overdue.length) parts.push('⚠️ عندك ' + c.overdue.length + ' مهمة متأخرة');
       else if(c.todayTasks.length) parts.push('📌 ' + c.todayTasks.length + ' مهمة اليوم');

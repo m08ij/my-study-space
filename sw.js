@@ -1,15 +1,11 @@
 /* ============================================================
    sw.js — شبكة أولاً + كاش احتياطي (v90)
    ============================================================ */
-var CACHE_NAME = 'ss-cache-v110';
+var CACHE_NAME = 'ss-cache-v111';
+var NET_WAIT_MS = 3500;   /* أقصى انتظار للشبكة قبل خدمة النسخة المخزّنة */
 var URLS_TO_CACHE = [
   './', './index.html', './app.css', './css/01-base.css', './css/02-motion-themes.css', './css/03-hub-dashboard-welcome.css', './css/04-responsive-components-phases.css',
-  './core.js', './diag.js', './data.js', './supabase.js',
-  './features.js', './widgets.js', './ai.js', './integrations.js',
-  './course-sync.js',    
-  './extras.js', './hub.js', './study.js', './budget-plan.js', './cards.js', './progress.js', './ux.js', './ics-import.js', './ai-context.js',
-  './pwa.js', './app.js', './tests.js',
-  './manifest.json', './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png', './icons/apple-touch-icon.png'
+  './app.bundle.js?v=111', './manifest.json', './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png', './icons/apple-touch-icon.png'
 ];
 self.addEventListener('install', function(e){
   e.waitUntil(
@@ -40,23 +36,51 @@ self.addEventListener('fetch', function(e){
   if(url.indexOf('aladhan.com') > -1) return;
   if(e.request.method !== 'GET') return;
 
+  var isLocal = url.indexOf(self.location.origin) === 0;
+  var isStatic = isLocal && /\/(icons\/[^?#]+|manifest\.json)(\?|#|$)/.test(url);
+
+  /* أيقونات والـ manifest: كاش أولاً + تحديث بالخلفية (لا تتغير بين إصدار وآخر عملياً، وتفتح فوراً بلا شبكة) */
+  if(isStatic){
+    e.respondWith(
+      caches.match(e.request).then(function(cached){
+        var net = fetch(e.request).then(function(res){
+          if(res && res.status === 200){ var c = res.clone(); caches.open(CACHE_NAME).then(function(cache){ cache.put(e.request, c).catch(function(){}); }); }
+          return res;
+        }).catch(function(){ return cached || Response.error(); });
+        return cached || net;
+      })
+    );
+    return;
+  }
+
   /* الشبكة أولاً لكل ملفات الموقع (HTML/JS/CSS) مع revalidate صريح (يتجاوز كاش المتصفح لـ10 دقائق على GitHub Pages)،
-     والكاش احتياط عند انقطاع الإنترنت. هكذا لا يُخدَم سكربت قديم مع HTML جديد (خلط إصدارات). */
-  e.respondWith(
-    fetch(e.request, { cache: 'no-cache' }).then(function(res){
-      if(res && res.status === 200 && url.indexOf(self.location.origin) === 0){
-        var clone = res.clone();
-        caches.open(CACHE_NAME).then(function(cache){ cache.put(e.request, clone).catch(function(){}); });
-      }
-      return res;
-    }).catch(function(){
+     والكاش احتياط عند انقطاع الإنترنت أو بطء الشبكة (أكثر من NET_WAIT_MS مع وجود نسخة مخزّنة: نخدم المخزّنة فوراً
+     ويكمل التحميل بالخلفية فيتحدّث الكاش). حارس الإصدار بـ index.html يعالج أي خلط إصدارات ناتج عن ذلك. */
+  e.respondWith(new Promise(function(resolve){
+    var settled = false;
+    function fallback(){
       return caches.match(e.request).then(function(cached){
         if(cached) return cached;
         var isHTML = e.request.mode === 'navigate' || (e.request.headers.get('accept') || '').indexOf('text/html') > -1;
-        return isHTML ? caches.match('./index.html') : Response.error();
+        return isHTML ? caches.match('./index.html') : null;
       });
-    })
-  );
+    }
+    var timer = isLocal ? setTimeout(function(){
+      fallback().then(function(c){ if(c && !settled){ settled = true; resolve(c); } });
+    }, NET_WAIT_MS) : null;
+    fetch(e.request, { cache: 'no-cache' }).then(function(res){
+      clearTimeout(timer);
+      if(res && res.status === 200 && isLocal){
+        var clone = res.clone();
+        caches.open(CACHE_NAME).then(function(cache){ cache.put(e.request, clone).catch(function(){}); });
+      }
+      if(!settled){ settled = true; resolve(res); }
+    }).catch(function(){
+      clearTimeout(timer);
+      if(settled) return;
+      fallback().then(function(c){ settled = true; resolve(c || Response.error()); });
+    });
+  }));
 });
 self.addEventListener('notificationclick', function(e){
   e.notification.close();

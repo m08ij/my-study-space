@@ -32,11 +32,59 @@
     add('promise', msg, st ? st.replace(/^.*?([\w.\-]+\.js:\d+(?::\d+)?).*$/, '$1') : '');
   });
 
+
+  /* ---------- قياس الأداء (بالذاكرة فقط؛ لا يُحفظ ولا يُرسل) ---------- */
+  var perfStats = {}, longTasks = { n: 0, max: 0 };
+  var RENDERS = ['renderDashboard', 'renderTasks', 'renderExams', 'renderCourses', 'renderBudget', 'renderDecks', 'renderNotes', 'renderTimetable', 'renderAttendance', 'renderGradeCalc', 'renderPlan'];
+  function wrapRenders(){
+    RENDERS.forEach(function(name){
+      var f = window[name]; if(typeof f !== 'function' || f._perf) return;
+      var w = function(){
+        var t0 = (window.performance && performance.now) ? performance.now() : Date.now();
+        try{ return f.apply(this, arguments); }
+        finally{
+          var d = ((window.performance && performance.now) ? performance.now() : Date.now()) - t0, s = perfStats[name] || (perfStats[name] = { n: 0, sum: 0, max: 0 });
+          s.n++; s.sum += d; if(d > s.max) s.max = d;
+        }
+      };
+      w._perf = true; window[name] = w;
+    });
+  }
+  try{
+    if(window.PerformanceObserver){ new PerformanceObserver(function(l){ l.getEntries().forEach(function(e){ longTasks.n++; if(e.duration > longTasks.max) longTasks.max = e.duration; }); }).observe({ entryTypes: ['longtask'] }); }
+  }catch(e){}
+  window.addEventListener('load', function(){ setTimeout(wrapRenders, 0); });
+  function bootInfo(){
+    var o = { dcl: null, load: null, scripts: 0, kb: null };
+    try{
+      var nav = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
+      if(nav){ o.dcl = Math.round(nav.domContentLoadedEventEnd); o.load = nav.loadEventEnd ? Math.round(nav.loadEventEnd) : null; }
+      var res = performance.getEntriesByType ? performance.getEntriesByType('resource') : [], bytes = 0, hasSize = false;
+      res.forEach(function(r){ if(r.initiatorType === 'script' && /\.js(\?|$)/.test(r.name)){ o.scripts++; if(r.transferSize){ bytes += r.transferSize; hasSize = true; } } });
+      if(hasSize) o.kb = Math.round(bytes / 1024);
+    }catch(e){}
+    return o;
+  }
+  function perfRows(){
+    return Object.keys(perfStats).map(function(k){ var s = perfStats[k]; return { name: k, n: s.n, avg: s.sum / s.n, max: s.max }; }).sort(function(a, b){ return b.max - a.max; });
+  }
+  function perfText(){
+    var b = bootInfo(), rows = perfRows().slice(0, 6), L = ['⚡ الأداء'];
+    L.push('الإقلاع: DOM ' + (b.dcl == null ? '؟' : b.dcl + 'ms') + ' · تحميل كامل ' + (b.load == null ? '؟' : b.load + 'ms') + ' · سكربتات ' + b.scripts + (b.kb != null ? ' (~' + b.kb + 'KB)' : ''));
+    L.push('مهام طويلة (>50ms): ' + longTasks.n + (longTasks.n ? ' · أطولها ' + Math.round(longTasks.max) + 'ms' : ''));
+    if(rows.length) rows.forEach(function(r){ L.push('رسم ' + r.name.replace(/^render/, '') + ': متوسط ' + r.avg.toFixed(1) + 'ms · أقصى ' + r.max.toFixed(1) + 'ms · ×' + r.n); });
+    else L.push('لا قياسات رسم بعد — تنقّل بين الصفحات ثم افتح السجل.');
+    return L;
+  }
+  function perfHtml(){
+    return '<div class="diag-perf"><b>⚡ الأداء</b>' + perfText().slice(1).map(function(l){ return '<div class="u-note">' + esc(l) + '</div>'; }).join('') + '</div>';
+  }
   function fmtTime(t){ try{ return new Date(t).toLocaleString('ar-JO', { dateStyle: 'short', timeStyle: 'medium' }); }catch(e){ return String(t); } }
   function report(){
     var a = load().slice().reverse(), L = ['Study Space — تقرير أخطاء', 'الإصدار: ' + (window.APP_BUILD || '?'), 'المتصفح: ' + (navigator.userAgent || ''), 'الوقت: ' + fmtTime(Date.now()), ''];
     if(!a.length) L.push('لا أخطاء مسجّلة.');
     a.forEach(function(x){ L.push('[' + fmtTime(x.t) + '] ' + (x.k === 'promise' ? 'Promise' : 'Error') + (x.n > 1 ? ' ×' + x.n : '') + ' — ' + x.m + (x.s ? '  (' + x.s + ')' : '')); });
+    L.push(''); perfText().forEach(function(l){ L.push(l); });
     return L.join('\n');
   }
 
@@ -54,7 +102,7 @@
     bd.innerHTML = '<div class="modal diag-modal" role="dialog" aria-modal="true" aria-label="سجل الأخطاء">' +
       '<div class="ics-head"><h3>🩺 سجل الأخطاء</h3><button class="sync-x" data-x type="button" aria-label="إغلاق">✕</button></div>' +
       '<p class="ics-note">آخر ' + MAX + ' خطأ برمجي على هذا الجهاز. محفوظ محلياً فقط ولا يُرسل لأي مكان. إذا واجهت مشكلة انسخ التقرير وأرسله.</p>' +
-      (a.length ? '<div class="diag-list">' + a.map(function(x){
+      perfHtml() + (a.length ? '<div class="diag-list">' + a.map(function(x){
         return '<div class="diag-row"><div class="diag-top"><span class="ics-chip ' + (x.k === 'promise' ? 'warn' : 'mute') + '">' + (x.k === 'promise' ? 'Promise' : 'Error') + (x.n > 1 ? ' ×' + x.n : '') + '</span><span class="u-note">' + esc(fmtTime(x.t)) + '</span></div>' +
           '<div class="diag-msg">' + esc(x.m) + '</div>' + (x.s ? '<div class="diag-src" dir="ltr">' + esc(x.s) + '</div>' : '') + '</div>';
       }).join('') + '</div>' : '<div class="u-empty">✅ ما في أخطاء مسجّلة</div>') +
@@ -80,5 +128,5 @@
   }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind); else bind();
 
-  window.DiagLog = { list: load, clear: function(){ save([]); badge(); }, report: report, open: open, add: add };
+  window.DiagLog = { perf: function(){ return { boot: bootInfo(), longTasks: longTasks, rows: perfRows() }; }, wrap: wrapRenders, list: load, clear: function(){ save([]); badge(); }, report: report, open: open, add: add };
 })();

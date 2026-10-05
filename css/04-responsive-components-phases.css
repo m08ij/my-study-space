@@ -797,5 +797,115 @@
 .cd-row-side{display:flex;align-items:center;gap:var(--sp-1);flex-shrink:0}
 .cd-row-btns{display:flex;gap:var(--sp-2);justify-content:flex-end}
 .cd-lbl{display:block;font-size:var(--fs-xs);color:var(--muted);font-weight:600}
-@media(max-width:560px){.cd-addrow{grid-template-columns:1fr}.cd-row:not(.editing){flex-direction:column}.cd-grade .gi{display:none}}
+@media(max-width:560px){.cd-addrow{grid-template-columns:1fr}.cd-row:not(.editing){flex-direction:column}.cd-grade .gi{font-size:10px}.cd-grade{padding-inline:2px}}
 @media (prefers-reduced-motion:reduce){.cd-grade,.cd-prog span{transition:none}.cd-grade:hover{transform:none}}
+/* ===== يومك الدراسي: وضع اليوم فقط / تهدئة / بين محاضرتين / مصروف سريع / أوقات الذروة ===== */
+body.focus-calm:not(.focus-today) #dashboard>:not(.page-head):not(#examMode):not(#calmCard){display:none}
+body.focus-today #dashboard>:not(.page-head):not(#examMode):not(#calmCard):not(#todayView):not(#gapCard):not(#quickSpend){display:none}
+.today-toggle{margin-top:var(--sp-2)}
+.today-view .td-sec{margin-top:var(--sp-3)}
+.today-view .td-sec>b{display:block;font-size:var(--fs-sm);color:var(--muted);margin-bottom:var(--sp-2)}
+.td-row{display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-2) var(--sp-3);border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg2);margin-bottom:var(--sp-2);flex-wrap:wrap}
+.td-row.done{opacity:.55}
+.td-row.late{border-color:color-mix(in srgb,var(--red) 45%,var(--border))}
+.td-time{font-weight:700;color:var(--accent);font-size:var(--fs-sm);min-width:92px}
+.td-main{flex:1;min-width:0;overflow-wrap:anywhere}
+.td-task{cursor:pointer}
+.td-task input{width:18px;height:18px;accent-color:var(--accent)}
+.td-badge{font-size:var(--fs-xs);padding:2px var(--sp-2);border-radius:99px;border:1px solid var(--border);color:var(--muted);white-space:nowrap}
+.td-badge.now{color:var(--green);border-color:color-mix(in srgb,var(--green) 50%,var(--border))}
+.td-badge.next{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 50%,var(--border))}
+.td-badge.late{color:var(--red);border-color:color-mix(in srgb,var(--red) 50%,var(--border))}
+.td-peak{margin-top:var(--sp-3)}
+.gap-list{display:flex;flex-direction:column;gap:var(--sp-2)}
+.gap-item{display:flex;align-items:center;gap:var(--sp-3);width:100%;text-align:start;padding:var(--sp-3);border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg2);color:var(--text);font:inherit;cursor:pointer;transition:border-color var(--dur-2),transform var(--dur-2)}
+.gap-item:hover{border-color:var(--accent);transform:translateY(-1px)}
+.gap-ic{font-size:1.3rem}.gap-tx{flex:1;display:flex;flex-direction:column;gap:2px}.gap-tx small{color:var(--muted);font-size:var(--fs-xs)}.gap-est{color:var(--accent);font-size:var(--fs-sm);font-weight:700}
+.calm-card{border-color:color-mix(in srgb,var(--accent) 40%,var(--border))}
+.calm-main{margin:var(--sp-2) 0 var(--sp-3);font-size:var(--fs-md)}
+.calm-acts{display:flex;gap:var(--sp-2);flex-wrap:wrap;margin-bottom:var(--sp-2)}
+.qs-chips{display:flex;gap:var(--sp-2);flex-wrap:wrap;margin-bottom:var(--sp-3)}
+.qs-chip{padding:var(--sp-2) var(--sp-3);border-radius:99px;border:1px solid var(--border);background:var(--bg2);color:var(--text);font:inherit;font-size:var(--fs-sm);cursor:pointer;transition:border-color var(--dur-2),background var(--dur-2)}
+.qs-chip:hover{border-color:var(--accent)}
+.qs-chip.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:700}
+.qs-row{display:flex;gap:var(--sp-2)}
+.qs-row input{flex:1;min-width:0;background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:var(--sp-2) var(--sp-3);border-radius:var(--r-md);font:inherit}
+.qs-row input:focus{border-color:var(--accent);outline:none}
+.qs-row input.is-invalid{border-color:var(--red)}
+.pk-line{font-weight:600;margin:var(--sp-2) 0}
+.pk-card{margin-top:var(--sp-4)}
+
+/* ===== تقسيم القوائم الطويلة ===== */
+.lz-hidden{display:none!important}
+.lz-more{width:100%;margin-top:var(--sp-3)}
+
+/* ===== سيناريوهات المعدل ===== */
+.sc-goal{padding:var(--sp-3);border-radius:var(--r-md);background:var(--grad-soft);margin:var(--sp-2) 0 var(--sp-3);font-size:var(--fs-sm);line-height:1.8}
+.sc-table{display:flex;flex-direction:column;gap:var(--sp-1)}
+.sc-row{display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-2) var(--sp-3);border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg2);font-size:var(--fs-sm)}
+.sc-l{flex:1}.sc-v{min-width:48px;text-align:center}
+.sc-d{min-width:64px;text-align:end;color:var(--muted)}.sc-d.up{color:var(--green)}.sc-d.down{color:var(--red)}
+
+/* ===== لون تمييز مخصص ===== */
+.accent-row{margin-top:var(--sp-3);padding-top:var(--sp-3);border-top:1px solid var(--border)}
+.accent-row label{display:block;font-size:var(--fs-sm);color:var(--muted);margin-bottom:var(--sp-2);font-weight:600}
+.accent-ctl{display:flex;gap:var(--sp-2);align-items:center}
+.accent-ctl input[type=color]{width:46px;height:34px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg2);padding:2px;cursor:pointer}
+
+/* ===== كثافة مضغوطة ===== */
+html[data-density="compact"]{--sp-1:3px;--sp-2:6px;--sp-3:9px;--sp-4:12px;--sp-5:18px;--sp-6:24px;--fs-xs:.72rem;--fs-sm:.8rem;--fs-md:.87rem;--fs-base:.94rem;--fs-lg:1.06rem}
+html[data-density="compact"] .card{padding:14px}
+html[data-density="compact"] .nav-item{min-height:38px;padding-block:4px}
+html[data-density="compact"] .page-head{margin-bottom:14px;padding-bottom:8px}
+html[data-density="compact"] main{padding-top:var(--sp-4)}
+
+/* ===== انتقال ناعم بين الصفحات ===== */
+@keyframes secIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.section.active{animation:secIn .24s var(--ease)}
+@media (prefers-reduced-motion:reduce){.section.active{animation:none}}
+
+/* ===== هيكل تحميل (Skeleton): يظهر فقط والحاوية فاضية تماماً قبل أول رسم، ويختفي تلقائياً ===== */
+@keyframes skelSlide{from{background-position:200% 0}to{background-position:-200% 0}}
+#tasksList:empty::before,#examsList:empty::before,#attendanceList:empty::before,#decksList:empty::before,#budgetList:empty::before,#notesList:empty::before,#gradeTrackerList:empty::before,#dashTermProgress:empty::before{content:'';display:block;height:84px;border-radius:var(--r-lg);border:1px solid var(--border);background:linear-gradient(90deg,var(--bg2) 25%,var(--card2) 50%,var(--bg2) 75%);background-size:200% 100%;animation:skelSlide 1.4s linear infinite}
+@media (prefers-reduced-motion:reduce){#tasksList:empty::before,#examsList:empty::before,#attendanceList:empty::before,#decksList:empty::before,#budgetList:empty::before,#notesList:empty::before,#gradeTrackerList:empty::before,#dashTermProgress:empty::before{animation:none}}
+.diag-perf{margin:var(--sp-2) 0 var(--sp-3);padding:var(--sp-2) var(--sp-3);border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg2)}
+.diag-perf>b{display:block;margin-bottom:var(--sp-1)}
+
+/* مصروف سريع: صف تصنيفات واحد قابل للتمرير بدل التفاف على سطرين */
+.qs-chips{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.qs-chips::-webkit-scrollbar{display:none}
+.qs-chip{flex:0 0 auto}
+
+/* حاسبة المعدل بالموبايل: قائمة التقدير كانت تُقصّ (تظهر "-100)" فقط) */
+.gpa-table select{min-width:104px;padding-inline:6px}
+.gpa-table input[type=number]{min-width:46px}
+
+/* ===== Toast (تنبيهات): أيقونة + شريط مؤقت + إغلاق + دمج المتكرر ===== */
+.toast-container{width:min(440px,calc(100vw - 24px));align-items:stretch}
+.toast{display:flex;align-items:center;gap:var(--sp-3);position:relative;overflow:hidden;padding:var(--sp-3) var(--sp-3) calc(var(--sp-3) + 3px);max-width:none;width:100%;cursor:default;border-left-width:1px;border-left-color:var(--border);backdrop-filter:blur(8px)}
+.toast.success::before,.toast.info::before,.toast.warn::before,.toast.error::before{content:none}
+.toast .t-ic{flex:0 0 auto;display:grid;place-items:center;width:26px;height:26px;border-radius:50%;font-size:.8rem;font-weight:900;background:color-mix(in srgb,var(--tc,var(--accent)) 18%,transparent);color:var(--tc,var(--accent))}
+.toast.success{--tc:var(--green)}.toast.warn{--tc:var(--amber)}.toast.error{--tc:var(--red)}.toast.info{--tc:var(--accent)}
+.toast{border-color:color-mix(in srgb,var(--tc,var(--accent)) 38%,var(--border))}
+.toast .t-msg{flex:1;min-width:0;overflow-wrap:anywhere;line-height:1.5}
+.toast .t-count{flex:0 0 auto;font-size:var(--fs-xs);font-weight:800;padding:1px var(--sp-2);border-radius:99px;background:var(--bg2);color:var(--muted)}
+.toast .t-x{flex:0 0 auto;width:24px;height:24px;border-radius:50%;border:0;background:transparent;color:var(--muted);font-size:.75rem;cursor:pointer;opacity:.7;transition:opacity var(--dur-1),background var(--dur-1)}
+.toast .t-x:hover,.toast .t-x:focus-visible{opacity:1;background:var(--bg2)}
+.toast .t-bar{position:absolute;inset:auto 0 0 0;height:3px;background:var(--tc,var(--accent));opacity:.75;transform-origin:right center;animation:toastBar var(--tdur,3s) linear forwards}
+.toast.paused .t-bar{animation-play-state:paused}
+@keyframes toastBar{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+.toast-undo-wrap{display:flex}
+.toast .toast-undo{flex:0 0 auto}
+@media (prefers-reduced-motion:reduce){.toast .t-bar{animation:none;transform:scaleX(.0001)}}
+
+/* كرت ملخص بدء التشغيل */
+.toast.brief{align-items:flex-start;padding-block:var(--sp-3)}
+.toast.brief .t-ic{font-size:1rem;width:30px;height:30px;background:var(--grad-soft)}
+.toast.brief .t-body{flex:1;min-width:0}
+.brief-head{display:flex;align-items:baseline;gap:var(--sp-2);flex-wrap:wrap;margin-bottom:var(--sp-2)}
+.brief-head b{font-size:var(--fs-md)}
+.brief-sub{font-size:var(--fs-xs);color:var(--muted)}
+.brief-chips{display:flex;gap:var(--sp-2);flex-wrap:wrap}
+.brief-chip{font:inherit;font-size:var(--fs-sm);font-weight:600;padding:var(--sp-1) var(--sp-3);border-radius:99px;border:1px solid var(--border);background:var(--bg2);color:var(--text);cursor:pointer;transition:border-color var(--dur-1),transform var(--dur-1)}
+.brief-chip:hover,.brief-chip:focus-visible{transform:translateY(-1px);border-color:var(--accent)}
+.brief-chip.warn{border-color:color-mix(in srgb,var(--amber) 55%,var(--border))}

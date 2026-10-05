@@ -63,6 +63,8 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
       <div class="settings-menu" id="settingsMenu">
         <button class="settings-item" id="notifBtn"><span>🔔</span> <span id="notifBtnText">تفعيل الإشعارات</span></button>
         <button class="settings-item" id="themeBtn"><span>🎨</span> الثيمات</button>
+        <button class="settings-item" id="todayBtn"><span>🎯</span> <span class="tb-t">وضع اليوم فقط</span></button>
+        <button class="settings-item" id="densityBtn"><span>📏</span> <span class="db-t">الكثافة: مريحة</span></button>
         <button class="settings-item" id="pwaInstallBtn" style="display:none"><span>📲</span> تثبيت التطبيق</button>
         <button class="settings-item" id="syncCodeBtn"><span>☁️</span> المزامنة السحابية</button>
         <div class="settings-divider"></div>
@@ -343,8 +345,8 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
       </div>
       <div style="overflow-x:auto">
         <table class="gpa-table">
-          <thead><tr><th style="width:45%">المادة</th><th style="width:15%">الساعات</th>
-            <th style="width:30%">التقدير</th><th style="width:10%"></th></tr></thead>
+          <thead><tr><th style="width:36%">المادة</th><th style="width:14%">الساعات</th>
+            <th style="width:38%">التقدير</th><th style="width:12%"></th></tr></thead>
           <tbody id="gpaBody"></tbody>
         </table>
       </div>
@@ -465,33 +467,13 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <!-- الملفات الأساسية (الترتيب مهم جداً!) -->
-<script src="core.js"></script>
-<script src="diag.js"></script>
-<script src="data.js"></script>
-<script src="supabase.js"></script>
-<script src="features.js"></script>
-<script src="widgets.js"></script>
-<script src="ai.js"></script>
-<script src="integrations.js"></script>
-<script src="course-sync.js"></script>
-<script src="extras.js"></script>
-<script src="hub.js"></script>
-<script src="study.js"></script>
-<script src="budget-plan.js"></script>
-<script src="cards.js"></script>
-<script src="progress.js"></script>
-<script src="ux.js"></script>
-<script src="ics-import.js"></script>
-<script src="ai-context.js"></script>
-<script src="pwa.js"></script>
-<script src="app.js"></script>
-<script src="tests.js"></script>
+<script src="app.bundle.js?v=111"></script>
 <script>
 /* حماية من خلط الإصدارات (HTML جديد + سكربتات قديمة من كاش الـ Service Worker): هذا السكربت داخل الـ HTML نفسه فيأتي دائماً بأحدث نسخة.
    1) إن لم يطابق window.APP_BUILD رقم BUILD هنا → يمسح كاش التطبيق ويعيد التحميل مرة واحدة (حارس sessionStorage يمنع التكرار).
    2) أقسام اللوحة المتقدمة (تحليلات/LMS/إحصائيات) تُنقل إلى خانتها الثابتة إذا أضافتها سكربتات قديمة بمكان آخر. */
 (function(){
-  var BUILD = '110';
+  var BUILD = '111';
   var SLOTS = { insightsSection: 'slotInsights', lmsWidget: 'slotLms', enhancedStatsSection: 'slotEnhanced' };
   function heal(){
     var dash = document.getElementById('dashboard'); if(!dash) return;

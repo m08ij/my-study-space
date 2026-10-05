@@ -779,10 +779,9 @@
       if(fired[r.tag]) return;
       fired[r.tag] = true; anyNew = true;
       var delay = 1500 + (shown++) * 2500;
-      setTimeout(function(){ window.toast(r.t, 'warn', 5000); }, delay);
       if(typeof window.showNotif === 'function') setTimeout(function(){ window.showNotif(r.t, r.b, {tag: 'ss-' + r.tag + '-' + today}); }, delay);
     });
-    if(anyNew) window.S.set(firedKey, fired);
+    if(anyNew){ window.S.set(firedKey, fired); if(window.startupBrief) setTimeout(function(){ window.startupBrief(null, {}); }, 1500); }   /* داخل التطبيق: كرت واحد مجمّع (يتخطّى إن ظهر قبل أقل من 10 دقائق) */
   };
   /* عند الرجوع للتبويب (يوم جديد/فترة غياب) نفحص مرة أخرى؛ التكرار ممنوع بمفتاح اليوم */
   if(!window._reminderVisBound){
@@ -1526,10 +1525,9 @@
         document.documentElement.classList.remove('is-new');   /* الحالة جاءت من السحابة/ملف: لا ترحيب */
         setTimeout(function(){
           try{
-            var hour = new Date().getHours();
-            var greet = hour < 12 ? 'صباح الخير' : 'مساء الخير';
-            window.toast(greet + ' ' + window.space.profile.name.split(' ')[0] + '! ☁️', 'success', 3000);
-            window.checkReminders();
+            /* كرت ملخص واحد (تحية + مهام + امتحانات) بدل 3 تنبيهات متتالية */
+            if(window.startupBrief) window.startupBrief(window.space.profile.name);
+            else { window.toast(window.greetWord(new Date().getHours()) + ' ' + window.space.profile.name.split(' ')[0] + '! ☁️', 'success', 3000); window.checkReminders(); }
             setTimeout(window.checkSmartReminders, 4000);
           }catch(err){}
         }, 800);

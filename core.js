@@ -5,6 +5,7 @@
   'use strict';
   if(window._coreLoaded) return;
   window._coreLoaded = true;
+  try{ if(localStorage.getItem('ss_density') === 'compact') document.documentElement.setAttribute('data-density', 'compact'); }catch(e){}   /* كثافة الواجهة: تُطبَّق مبكراً بدون وميض */
   /* خروج ناعم للنوافذ المنبثقة: تُزال النافذة الحقيقية فوراً (DOM والتركيز والاختبارات سليمة) وتُترك نسخة شبحية
      بأسماء أصناف مختلفة (modal-ghost / mg-box) تتلاشى ~140ms ثم تُحذف. تُتخطى مع prefers-reduced-motion. */
   window.dismissOverlay = function(bd){
@@ -25,7 +26,7 @@
   };
   /* رقم الإصدار: يجب أن يطابق BUILD في سكربت الحماية داخل index.html وCACHE_NAME في sw.js (اتركه متزامناً عند كل إصدار) */
   window.NAV_SVG = {"dashboard":"<svg class=\"ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect x=\"3\" y=\"3\" width=\"7\" height=\"9\" rx=\"1.5\"/><rect x=\"14\" y=\"3\" width=\"7\" height=\"5\" rx=\"1.5\"/><rect x=\"14\" y=\"12\" width=\"7\" height=\"9\" rx=\"1.5\"/><rect x=\"3\" y=\"16\" width=\"7\" height=\"5\" rx=\"1.5\"/></svg>","timetable":"<svg class=\"ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect x=\"3\" y=\"4.5\" width=\"18\" height=\"16.5\" rx=\"2.5\"/><path d=\"M3 9.5h18M8 2.5v4M16 2.5v4\"/></svg>","courses":"<svg class=\"ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5v-15zM4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5\"/></svg>","tasks":"<svg class=\"ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M9 6h11M9 12h11M9 18h11\"/><path d=\"M3.5 6l1.2 1.2L7 4.8M3.5 12l1.2 1.2L7 10.8M3.5 18l1.2 1.2L7 16.8\"/></svg>","exams":"<svg class=\"ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M6 3h12M6 21h12M7 3v3.5c0 1.6 1 2.6 2.2 3.5L12 12l-2.8 2c-1.2.9-2.2 1.9-2.2 3.5V21M17 3v3.5c0 1.6-1 2.6-2.2 3.5L12 12l2.8 2c1.2.9 2.2 1.9 2.2 3.5V21\"/></svg>","attendance":"<svg class=\"ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M8 12.3l2.8 2.8L16.3 9.5\"/></svg>","timer":"<svg class=\"ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"13.5\" r=\"8\"/><path d=\"M12 9v4.5l3 1.8M9.5 2.5h5\"/></svg>","flashcards":"<svg class=\"ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect x=\"6\" y=\"7\" width=\"15\" height=\"13\" rx=\"2.5\"/><path d=\"M3 15V6a2.5 2.5 0 0 1 2.5-2.5H16\"/></svg>","gradecalc":"<svg class=\"ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4 20V10M10 20V4M16 20v-7M22 20H2\"/></svg>","budget":"<svg class=\"ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M3 7.5A2.5 2.5 0 0 1 5.5 5H19v14H5.5A2.5 2.5 0 0 1 3 16.5v-9z\"/><path d=\"M16 12h5v4h-5a2 2 0 0 1 0-4z\"/></svg>","notes":"<svg class=\"ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5z\"/><path d=\"M14 3v5h5M9 13h6M9 17h6\"/></svg>","plan":"<svg class=\"ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14\"/></svg>","hulinks":"<svg class=\"ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M2 9l10-5 10 5-10 5-10-5z\"/><path d=\"M6 11.5V16c0 1.4 2.7 3 6 3s6-1.6 6-3v-4.5M22 9v6\"/></svg>"};
-window.APP_BUILD = '110';
+window.APP_BUILD = '111';
 
   /* ============ Global State ============ */
   window.space = null;
@@ -88,35 +89,65 @@ window.APP_BUILD = '110';
     return n + ' يومًا';
   };
 
-  /* ============ Toast ============ */
-  window.toast = function(msg, type, dur){
-    type = type || 'info'; dur = dur || 2600;
-    var c = document.getElementById('toastContainer');
-    if(!c){ console.log('[toast]', msg); return; }
-    var t = document.createElement('div');
-    t.className = 'toast ' + type;
-    t.textContent = msg;
-    c.appendChild(t);
-    setTimeout(function(){
-      t.classList.add('out');
-      setTimeout(function(){ t.remove(); }, 300);
-    }, dur);
-  };
+  /* تحية حسب الساعة: صباح الخير من 5:00 حتى 11:59 فقط (قبلها كانت "صباح الخير" تظهر بعد منتصف الليل) */
+  window.greetWord = function(hour){ return (hour >= 5 && hour < 12) ? 'صباح الخير' : 'مساء الخير'; };
 
+  /* ============ Toast ============
+     إشعارات داخل التطبيق: أيقونة حسب النوع + شريط مؤقت + إغلاق بنقرة/زر + إيقاف مؤقت عند التحويم/التركيز
+     + دمج الرسائل المتطابقة (×2) + حدّ أقصى 3 ظاهرة معاً. واجهة الاستدعاء كما كانت: toast(msg, type, dur). */
+  var TOAST_MAX = 3, TOAST_ICONS = { success: '✓', info: 'ℹ', warn: '!', error: '✕' }, toastList = [];
+  function toastDrop(t){
+    if(t.gone) return; t.gone = true; clearTimeout(t.timer);
+    var i = toastList.indexOf(t); if(i > -1) toastList.splice(i, 1);
+    t.el.classList.add('out'); setTimeout(function(){ if(t.el.parentNode) t.el.parentNode.removeChild(t.el); }, 300);
+  }
+  function toastArm(t, ms, restartBar){
+    clearTimeout(t.timer); t.remaining = ms; t.start = Date.now();
+    t.timer = setTimeout(function(){ toastDrop(t); }, ms);
+    t.el.style.setProperty('--tdur', ms + 'ms');
+    if(restartBar && t.bar){ t.bar.style.animation = 'none'; void t.bar.offsetWidth; t.bar.style.animation = ''; }
+    t.el.classList.remove('paused');
+  }
+  function toastMount(o){
+    var c = document.getElementById('toastContainer');
+    if(!c){ console.log('[toast]', o.msg || ''); return null; }
+    var type = o.type || 'info', dur = o.dur || 2600, key = type + '|' + (o.msg || ''), i, t;
+    if(!o.html && !o.action){
+      for(i = 0; i < toastList.length; i++) if(toastList[i].key === key && !toastList[i].gone){ t = toastList[i]; break; }
+      if(t){ t.count++; t.badge.textContent = '×' + t.count; t.badge.hidden = false; toastArm(t, dur, true); return t.el; }
+    }
+    var el = document.createElement('div'); el.className = 'toast ' + type + (o.cls ? ' ' + o.cls : '');
+    t = { el: el, key: key, count: 1, gone: false };
+    var ic = document.createElement('span'); ic.className = 't-ic'; ic.setAttribute('aria-hidden', 'true'); ic.textContent = o.icon || TOAST_ICONS[type] || 'ℹ'; el.appendChild(ic);
+    if(o.html){ var body = document.createElement('div'); body.className = 't-body'; body.innerHTML = o.html; el.appendChild(body); }
+    else {
+      var m = document.createElement('span'); m.className = 't-msg'; m.textContent = o.msg; el.appendChild(m);
+      t.badge = document.createElement('span'); t.badge.className = 't-count'; t.badge.hidden = true; el.appendChild(t.badge);
+    }
+    if(o.action){
+      var ab = document.createElement('button'); ab.type = 'button'; ab.className = o.action.cls || 'toast-undo'; ab.textContent = o.action.label;
+      ab.addEventListener('click', function(e){ e.stopPropagation(); if(t.gone) return; try{ o.action.fn(); }catch(err){ console.error(err); } toastDrop(t); });
+      el.appendChild(ab);
+    }
+    var x = document.createElement('button'); x.type = 'button'; x.className = 't-x'; x.setAttribute('aria-label', 'إغلاق'); x.textContent = '✕';
+    x.addEventListener('click', function(e){ e.stopPropagation(); toastDrop(t); }); el.appendChild(x);
+    t.bar = document.createElement('i'); t.bar.className = 't-bar'; t.bar.setAttribute('aria-hidden', 'true'); el.appendChild(t.bar);
+    el.addEventListener('mouseenter', function(){ if(t.gone || el.classList.contains('paused')) return; clearTimeout(t.timer); t.remaining = Math.max(600, t.remaining - (Date.now() - t.start)); el.classList.add('paused'); });
+    el.addEventListener('mouseleave', function(){ if(t.gone) return; toastArm(t, t.remaining, false); });
+    el.addEventListener('focusin', function(){ if(t.gone || el.classList.contains('paused')) return; clearTimeout(t.timer); t.remaining = Math.max(600, t.remaining - (Date.now() - t.start)); el.classList.add('paused'); });
+    el.addEventListener('focusout', function(){ if(t.gone) return; toastArm(t, t.remaining, false); });
+    if(!o.html && !o.action) el.addEventListener('click', function(){ toastDrop(t); });
+    c.appendChild(el); toastList.push(t); toastArm(t, dur, false);
+    while(toastList.length > TOAST_MAX) toastDrop(toastList[0]);
+    return el;
+  }
+  window.toast = function(msg, type, dur){ return toastMount({ msg: msg, type: type, dur: dur }); };
+  /* بطاقة غنية (محتوى HTML موثوق من الكود فقط، يُهرَّب القيم بـesc) — تُستخدم لملخص بدء التشغيل */
+  window.toastCard = function(html, opts){ opts = opts || {}; return toastMount({ html: html, type: opts.type || 'info', cls: opts.cls, icon: opts.icon, dur: opts.dur || 8000 }); };
   /* toast مع زر «تراجع» (حذف فوري بدل نافذة تأكيد). onUndo يُنفَّذ مرة واحدة فقط */
   window.toastUndo = function(msg, onUndo, dur){
-    var c = document.getElementById('toastContainer'); dur = dur || 6000;
-    if(!c) return;
-    var t = document.createElement('div'); t.className = 'toast info toast-undo-wrap';
-    var s = document.createElement('span'); s.textContent = msg;
-    var b = document.createElement('button'); b.type = 'button'; b.className = 'toast-undo'; b.textContent = '↶ تراجع';
-    var gone = false;
-    function drop(){ if(gone) return; gone = true; t.classList.add('out'); setTimeout(function(){ t.remove(); }, 300); }
-    b.addEventListener('click', function(){ if(gone) return; try{ onUndo(); }catch(e){ console.error(e); } drop(); });
-    t.appendChild(s); t.appendChild(b); c.appendChild(t);
-    setTimeout(drop, dur);
+    return toastMount({ msg: msg, type: 'info', dur: dur || 6000, icon: '↶', action: { label: 'تراجع', fn: onUndo, cls: 'toast-undo' } });
   };
-
   /* ============ Storage S ============ */
   var storageAvailable = (function(){
     try{ var k='__test__'; localStorage.setItem(k,'x'); localStorage.removeItem(k); return true; }
