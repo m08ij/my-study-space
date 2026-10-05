@@ -1264,10 +1264,11 @@
     var txt = document.getElementById('notifBtnText');
     if(!txt) return;
     var perm = window.getNotifPermission();
-    if(perm === 'granted') txt.textContent = 'الإشعارات (مفعّلة ✅)';
-    else if(perm === 'denied') txt.textContent = 'الإشعارات (محظورة ❌)';
-    else if(perm === 'unsupported') txt.textContent = 'الإشعارات (غير مدعومة)';
-    else txt.textContent = 'تفعيل الإشعارات';
+    if(perm === 'granted') txt.textContent = 'مفعّلة';
+    else if(perm === 'denied') txt.textContent = 'محظورة من المتصفح';
+    else if(perm === 'unsupported') txt.textContent = 'غير مدعومة بهذا المتصفح';
+    else txt.textContent = 'اضغط للتفعيل';
+    var nb = document.getElementById('notifBtn'); if(nb) nb.setAttribute('aria-checked', perm === 'granted' ? 'true' : 'false');
   };
 
   /* ============================================================

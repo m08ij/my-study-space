@@ -829,7 +829,7 @@
     document.addEventListener('click', function(e){
       var p = document.getElementById('themePanel');
       if(p && p.classList.contains('show') && !e.target.closest('#themePanel') && !e.target.closest('#themeBtn')) p.classList.remove('show');
-      if(!e.target.closest('.settings-wrap')) window.closeSettingsMenu();
+      if(!e.target.closest('.settings-wrap') && !e.target.closest('#settingsMenu')) window.closeSettingsMenu();
     });
     var rp = document.getElementById('restorePrevBtn'); if(rp) rp.addEventListener('click', function(){ window.closeSettingsMenu(); window.restorePreviousBackup(); });
     window.refreshRestorePrevBtn();

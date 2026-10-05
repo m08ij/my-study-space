@@ -174,9 +174,11 @@
   };
   window.toggleSettingsMenu = function(){
     var m = document.getElementById('settingsMenu'); if(m) m.classList.toggle('show');
+    if(window.settingsMenuSync) window.settingsMenuSync();
   };
   window.closeSettingsMenu = function(){
     var m = document.getElementById('settingsMenu'); if(m) m.classList.remove('show');
+    if(window.settingsMenuSync) window.settingsMenuSync();
   };
   window.exportPDF = function(){
     toast('🖨️ جاري تجهيز الملف...', 'info', 1500);

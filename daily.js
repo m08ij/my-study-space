@@ -278,7 +278,7 @@
     }
     b.textContent = on ? '📋 اللوحة الكاملة' : '🎯 اليوم فقط';
     b.setAttribute('aria-pressed', on ? 'true' : 'false');
-    var m = $('todayBtn'); if(m) m.querySelector('.tb-t') && (m.querySelector('.tb-t').textContent = on ? 'اللوحة الكاملة' : 'وضع اليوم فقط');
+    var m = $('todayBtn'); if(m){ var tt = m.querySelector('.tb-t'); if(tt) tt.textContent = on ? 'مفعّل — اللوحة مبسّطة' : 'اللوحة الكاملة'; m.setAttribute('aria-checked', on ? 'true' : 'false'); }
   }
   function setTodayMode(on){
     lsSet('ss_today_mode', on ? '1' : '0'); renderDaily();
@@ -331,7 +331,7 @@
      ============================================================ */
   function applyDensity(v){
     if(v === 'compact') document.documentElement.setAttribute('data-density', 'compact'); else document.documentElement.removeAttribute('data-density');
-    var b = $('densityBtn'); if(b){ var t = b.querySelector('.db-t'); if(t) t.textContent = v === 'compact' ? 'الكثافة: مضغوطة' : 'الكثافة: مريحة'; }
+    var b = $('densityBtn'); if(b){ var t = b.querySelector('.db-t'); if(t) t.textContent = v === 'compact' ? 'مضغوطة' : 'مريحة'; b.setAttribute('aria-checked', v === 'compact' ? 'true' : 'false'); }
   }
   function toggleDensity(){
     var next = lsGet('ss_density') === 'compact' ? 'comfy' : 'compact';
@@ -414,7 +414,7 @@
   function schedRender(){ if(raf) return; raf = true; (window.requestAnimationFrame || setTimeout)(function(){ raf = false; try{ limitAll(); }catch(e){} }); }
   function init(){
     applyDensity(lsGet('ss_density') === 'compact' ? 'compact' : 'comfy');
-    var db = $('densityBtn'); if(db && !db._d){ db._d = true; db.addEventListener('click', function(){ if(window.closeSettingsMenu) window.closeSettingsMenu(); toggleDensity(); }); }
+    var db = $('densityBtn'); if(db && !db._d){ db._d = true; db.addEventListener('click', function(){ toggleDensity(); });   /* مفتاح تبديل: تبقى القائمة مفتوحة لرؤية الأثر */ }
     var tb = $('todayBtn'); if(tb && !tb._d){ tb._d = true; tb.addEventListener('click', function(){ if(window.closeSettingsMenu) window.closeSettingsMenu(); setTodayMode(lsGet('ss_today_mode') !== '1'); }); }
     buildAccentRow(); applyCustomAccent(); renderPeak();
     var main = document.querySelector('main');

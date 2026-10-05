@@ -278,6 +278,90 @@
     });
     return true;
   };
+  /* ---------- 8) قائمة الإعدادات: حالات العناصر، حجم الخط، ورقة سفلية على الموبايل ---------- */
+  var FS_LABEL = { sm: 'صغير', md: 'عادي', lg: 'كبير' };
+  function lsv(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+  function applyFont(v){
+    if(v === 'sm' || v === 'lg') document.documentElement.setAttribute('data-fs', v); else document.documentElement.removeAttribute('data-fs');
+    var cur = (v === 'sm' || v === 'lg') ? v : 'md';
+    document.querySelectorAll('#settingsMenu [data-fs]').forEach(function(b){ b.setAttribute('aria-pressed', b.getAttribute('data-fs') === cur ? 'true' : 'false'); });
+    var s = document.getElementById('fontSub'); if(s) s.textContent = FS_LABEL[cur];
+  }
+  window.refreshSettingsMenu = function(){
+    var th = document.documentElement.getAttribute('data-theme') || 'dark', ts = document.getElementById('themeSub');
+    if(ts){ var f = (window.THEMES || []).filter(function(x){ return x.id === th; })[0]; ts.textContent = f ? f.name : th; }
+    applyFont(lsv('ss_font'));
+    var d = document.getElementById('densityBtn'); if(d){ var on = lsv('ss_density') === 'compact', t = d.querySelector('.db-t'); if(t) t.textContent = on ? 'مضغوطة' : 'مريحة'; d.setAttribute('aria-checked', on ? 'true' : 'false'); }
+    var td = document.getElementById('todayBtn'); if(td){ var on2 = lsv('ss_today_mode') === '1', t2 = td.querySelector('.tb-t'); if(t2) t2.textContent = on2 ? 'مفعّل — اللوحة مبسّطة' : 'اللوحة الكاملة'; td.setAttribute('aria-checked', on2 ? 'true' : 'false'); }
+    if(window.updateNotifBtn) try{ window.updateNotifBtn(); }catch(e){}
+    var ss = document.getElementById('syncMenuSub'); if(ss && window.getSyncStatus) try{ ss.textContent = window.getSyncStatus().text; }catch(e){}
+  };
+  /* على الموبايل تُنقل القائمة إلى body (الشريط العلوي له backdrop-filter فيحبس العناصر fixed بداخله) وتصير ورقة سفلية */
+  var smWrap = null;
+  window.settingsMenuSync = function(){
+    var m = document.getElementById('settingsMenu'); if(!m) return;
+    if(!smWrap) smWrap = m.parentNode;
+    var open = m.classList.contains('show'), phone = window.innerWidth <= 900;
+    if(open && phone && m.parentNode !== document.body) document.body.appendChild(m);
+    else if((!open || !phone) && m.parentNode === document.body && smWrap) smWrap.appendChild(m);
+    if(open) window.refreshSettingsMenu();
+  };
+  function initSettingsMenu(){
+    var m = document.getElementById('settingsMenu'); if(!m || m._smInit) return; m._smInit = true;
+    applyFont(lsv('ss_font'));
+    m.addEventListener('click', function(e){
+      var f = e.target.closest && e.target.closest('[data-fs]');
+      if(f){ var v = f.getAttribute('data-fs'); try{ if(v === 'md') localStorage.removeItem('ss_font'); else localStorage.setItem('ss_font', v); }catch(x){} applyFont(v); return; }
+      if(e.target === m && window.innerWidth <= 900 && window.closeSettingsMenu) window.closeSettingsMenu();   /* النقر على الخلفية المعتمة */
+    });
+    /* سحب المقبض للأسفل يغلق الورقة */
+    var y0 = null;
+    m.addEventListener('pointerdown', function(e){ if(window.innerWidth <= 900 && e.target.closest && e.target.closest('.sm-handle')){ y0 = e.clientY; try{ m.setPointerCapture(e.pointerId); }catch(x){} } });
+    m.addEventListener('pointermove', function(e){ if(y0 !== null){ var dy = Math.max(0, e.clientY - y0); m.style.transform = 'translateY(' + dy + 'px)'; } });
+    function endDrag(e){ if(y0 === null) return; var dy = e.clientY - y0; y0 = null; m.style.transform = ''; if(dy > 70 && window.closeSettingsMenu) window.closeSettingsMenu(); }
+    m.addEventListener('pointerup', endDrag); m.addEventListener('pointercancel', function(){ y0 = null; m.style.transform = ''; });
+    window.addEventListener('resize', function(){ window.settingsMenuSync(); });
+    document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && m.classList.contains('show') && window.closeSettingsMenu) window.closeSettingsMenu(); });
+    window.refreshSettingsMenu();
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initSettingsMenu); else initSettingsMenu();
+
+  /* ---------- 9) السحب على المهام (لمس فقط): يمين = إنجاز، يسار = حذف (مع «تراجع») ---------- */
+  var SWIPE_GO = 90;
+  function initSwipe(){
+    var list = document.getElementById('tasksList'); if(!list || list._swipe) return; list._swipe = true;
+    var st = null;
+    function reset(s){ s.row.classList.remove('swiping'); s.row.style.transform = ''; s.row.removeAttribute('data-swipe'); s.row.style.removeProperty('--sw'); }
+    list.addEventListener('pointerdown', function(e){
+      if(e.pointerType !== 'touch') return;
+      var row = e.target.closest && e.target.closest('.task[data-task-id]'); if(!row) return;
+      if(e.target.closest('button,a,input,select,[role="checkbox"],.course-link,.task-handle')) return;
+      st = { row: row, id: row.getAttribute('data-task-id'), x: e.clientX, y: e.clientY, dx: 0, lock: null, pid: e.pointerId };
+    });
+    list.addEventListener('pointermove', function(e){
+      if(!st || e.pointerId !== st.pid) return;
+      var dx = e.clientX - st.x, dy = e.clientY - st.y;
+      if(st.lock === null){
+        if(Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 1.5){ st.lock = 'x'; st.row.classList.add('swiping'); try{ list.setPointerCapture(e.pointerId); }catch(x){} }
+        else if(Math.abs(dy) > 10){ st = null; return; }
+      }
+      if(st.lock === 'x'){
+        st.dx = Math.max(-140, Math.min(140, dx));
+        st.row.style.transform = 'translateX(' + st.dx + 'px)';
+        st.row.setAttribute('data-swipe', st.dx > 0 ? 'done' : 'del');
+        st.row.style.setProperty('--sw', String(Math.min(1, Math.abs(st.dx) / SWIPE_GO)));
+      }
+    });
+    function end(){
+      if(!st) return; var s = st; st = null; if(s.lock !== 'x') return;
+      var go = Math.abs(s.dx) >= SWIPE_GO, right = s.dx > 0; reset(s);
+      if(!go) return;
+      if(right){ if(window.toggleTask) window.toggleTask(s.id); } else if(window.deleteTask) window.deleteTask(s.id);
+    }
+    list.addEventListener('pointerup', end); list.addEventListener('pointercancel', function(){ if(st){ var s = st; st = null; if(s.lock === 'x') reset(s); } });
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initSwipe); else initSwipe();
+
   var _enhance = enhance;
   enhance = function(){ _enhance(); renderExamMode(); };
   window.UX = { enhance: function(){ enhance(); }, renderExamMode: renderExamMode, maybeNag: maybeNag, maybeMorning: maybeMorning, morningData: morningData };

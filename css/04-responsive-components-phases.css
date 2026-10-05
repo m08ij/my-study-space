@@ -909,3 +909,57 @@ html[data-density="compact"] main{padding-top:var(--sp-4)}
 .brief-chip{font:inherit;font-size:var(--fs-sm);font-weight:600;padding:var(--sp-1) var(--sp-3);border-radius:99px;border:1px solid var(--border);background:var(--bg2);color:var(--text);cursor:pointer;transition:border-color var(--dur-1),transform var(--dur-1)}
 .brief-chip:hover,.brief-chip:focus-visible{transform:translateY(-1px);border-color:var(--accent)}
 .brief-chip.warn{border-color:color-mix(in srgb,var(--amber) 55%,var(--border))}
+/* ===== قائمة الإعدادات (إعادة تصميم): مجموعات + عناصر موحّدة + مفاتيح تبديل + ورقة سفلية بالموبايل ===== */
+.settings-menu{min-width:292px;padding:var(--sp-2);border-radius:var(--r-xl)}
+.settings-item span{font-size:inherit}
+.settings-item{gap:var(--sp-3);padding:var(--sp-2) var(--sp-3);min-height:48px}
+.settings-item > span.si-ic,.si-row > span.si-ic{width:34px;height:34px;flex:none;display:inline-grid;place-items:center;border-radius:var(--r-md);background:var(--card2);border:1px solid var(--border);font-size:1.05rem;line-height:1}
+.settings-item:hover > span.si-ic{background:var(--grad-soft);border-color:var(--accent)}
+.sm-title{font-size:var(--fs-xs);font-weight:700;color:var(--muted);padding:var(--sp-2) var(--sp-3) var(--sp-1);letter-spacing:.02em}
+.sm-group + .sm-group{margin-top:var(--sp-1);padding-top:var(--sp-1);border-top:1px solid var(--border)}
+.si-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;text-align:start;overflow:hidden}
+.si-tx b{font-weight:600;font-size:var(--fs-sm);line-height:1.35;color:var(--text)}
+.si-tx small{font-size:var(--fs-xs);color:var(--muted);font-weight:400;line-height:1.35;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.si-go{color:var(--muted);font-size:1.1rem;flex:none}
+.si-kbd{flex:none;font-family:inherit;font-size:var(--fs-2xs);font-weight:700;color:var(--muted);border:1px solid var(--border);border-radius:var(--r-sm);padding:2px var(--sp-2);background:var(--bg2)}
+.si-sw{flex:none;position:relative;width:38px;height:22px;border-radius:99px;background:var(--bg2);border:1px solid var(--border2);transition:background var(--dur-2) var(--ease),border-color var(--dur-2) var(--ease)}
+.si-sw::after{content:'';position:absolute;top:2px;inset-inline-start:2px;width:16px;height:16px;border-radius:50%;background:var(--muted);transition:inset-inline-start var(--dur-2) var(--ease),background var(--dur-2) var(--ease)}
+.settings-item[aria-checked="true"] .si-sw{background:var(--accent);border-color:var(--accent)}
+.settings-item[aria-checked="true"] .si-sw::after{inset-inline-start:calc(100% - 18px);background:var(--on-accent)}
+.settings-item[aria-checked="true"] .si-tx small{color:var(--accent)}
+.si-row{display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-2) var(--sp-3);min-height:48px}
+.si-seg{flex:none;display:flex;gap:2px;padding:2px;border-radius:var(--r-md);background:var(--bg2);border:1px solid var(--border)}
+.si-seg button{width:32px;height:28px;border:0;border-radius:var(--r-sm);background:transparent;color:var(--muted);font:inherit;font-weight:700;cursor:pointer;line-height:1}
+.si-seg button[data-fs="sm"]{font-size:.72rem}.si-seg button[data-fs="md"]{font-size:.92rem}.si-seg button[data-fs="lg"]{font-size:1.15rem}
+.si-seg button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
+.si-seg button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.sm-handle{display:none}
+.diag-count{margin-inline-start:var(--sp-2)}
+
+/* حجم الخط: يغيّر أساس rem فتتبعه كل النصوص المبنية على --fs-* */
+html[data-fs="sm"]{font-size:14.5px}
+html[data-fs="lg"]{font-size:17.5px}
+
+/* ورقة سفلية على الموبايل (القائمة تُنقل لـbody عبر settingsMenuSync لأن الشريط العلوي يحبس العناصر fixed) */
+@keyframes sheetUp{from{transform:translateY(36px);opacity:0}to{transform:none;opacity:1}}
+@media (max-width:900px){
+  .settings-menu{position:fixed;top:auto;left:0;right:0;bottom:0;width:auto;min-width:0;max-width:none;max-height:84vh;border-radius:24px 24px 0 0;border-bottom:0;padding:var(--sp-2) var(--sp-3) calc(var(--sp-5) + env(safe-area-inset-bottom,0px));box-shadow:0 -14px 44px rgba(0,0,0,.5);z-index:1200}
+  .settings-menu.show{animation:sheetUp .28s var(--ease)}
+  .settings-menu.show::before{content:'';position:fixed;inset:0;background:rgba(0,0,0,.52);z-index:-1}
+  .sm-handle{display:block;width:44px;height:5px;border-radius:99px;background:var(--border2);margin:var(--sp-1) auto var(--sp-2);touch-action:none;cursor:grab}
+  .settings-item,.si-row{min-height:54px}
+}
+@media (prefers-reduced-motion:reduce){.settings-menu.show{animation:none}.si-sw,.si-sw::after{transition:none}}
+
+/* السحب على المهام (لمس): تلميح لوني يتدرّج مع المسافة */
+/* السحب يعمل بأي جهاز لمس (حتى الهجين): touch-action ضروري ليصل الحدث الأفقي للصفحة */
+  .task[data-task-id]{touch-action:pan-y;transition:transform var(--dur-2) var(--ease)}
+  .task.swiping{transition:none}
+  .task[data-swipe="done"]{background:color-mix(in srgb,var(--green) calc(var(--sw,0) * 22%),var(--card));border-color:color-mix(in srgb,var(--green) calc(var(--sw,0) * 100%),var(--border))}
+  .task[data-swipe="del"]{background:color-mix(in srgb,var(--red) calc(var(--sw,0) * 22%),var(--card));border-color:color-mix(in srgb,var(--red) calc(var(--sw,0) * 100%),var(--border))}
+
+
+
+body:has(.settings-menu.show) .fab-main,body:has(.settings-menu.show) .fab-menu,body:has(.settings-menu.show) .ai-fab{opacity:0;pointer-events:none}
+
+@media (min-width:601px) and (max-width:900px){.settings-menu{width:min(560px,100%);margin-inline:auto}}

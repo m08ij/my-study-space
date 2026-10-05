@@ -1152,13 +1152,15 @@
 
   function initUI(){
     var menu = document.getElementById('settingsMenu');
-    if(menu && !document.getElementById('cmdkBtn')){
-      var b = document.createElement('button');
-      b.className = 'settings-item'; b.id = 'cmdkBtn'; b.type = 'button';
-      b.innerHTML = '<span>⌘</span> لوحة الأوامر (Alt+K)';
-      b.addEventListener('click', function(){ if(window.closeSettingsMenu) window.closeSettingsMenu(); openPalette(); });
-      var anchor = document.getElementById('syncCodeBtn');
-      if(anchor && anchor.parentNode === menu) menu.insertBefore(b, anchor); else menu.appendChild(b);
+    if(menu){
+      var b = document.getElementById('cmdkBtn');   /* الزر ثابت بـ index.html (مجموعة «وضع العمل»)؛ نُنشئه فقط إن غاب */
+      if(!b){
+        b = document.createElement('button');
+        b.className = 'settings-item'; b.id = 'cmdkBtn'; b.type = 'button';
+        b.innerHTML = '<span class="si-ic">⌘</span><span class="si-tx"><b>لوحة الأوامر</b></span><kbd class="si-kbd" dir="ltr">Alt+K</kbd>';
+        menu.appendChild(b);
+      }
+      if(!b._cmdk){ b._cmdk = true; b.addEventListener('click', function(){ if(window.closeSettingsMenu) window.closeSettingsMenu(); openPalette(); }); }
     }
     wrapSwitchTab();
     markFab();

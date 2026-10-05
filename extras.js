@@ -565,17 +565,21 @@
   /* زر في الإعدادات */
   function injectOnbBtn(){
     var menu = document.getElementById('settingsMenu');
-    if(!menu || menu.querySelector('#onbBtn')) return;
-    var btn = document.createElement('button');
-    btn.className = 'settings-item';
-    btn.id = 'onbBtn';
-    btn.innerHTML = '<span>🎓</span> جولة تعريفية';
+    if(!menu) return;
+    var btn = menu.querySelector('#onbBtn');   /* الزر ثابت بـ index.html (مجموعة «النظام»)؛ نُنشئه فقط إن غاب */
+    if(!btn){
+      btn = document.createElement('button');
+      btn.className = 'settings-item';
+      btn.id = 'onbBtn';
+      btn.innerHTML = '<span class="si-ic">🎓</span><span class="si-tx"><b>جولة تعريفية</b></span>';
+      menu.appendChild(btn);
+    }
+    if(btn._onb) return; btn._onb = true;
     btn.addEventListener('click', function(){
       if(window.closeSettingsMenu) window.closeSettingsMenu();
       getS().set(ONB_KEY, false);
       showOnboarding();
     });
-    menu.appendChild(btn);
   }
 
   /* ============================================================
