@@ -1019,6 +1019,21 @@
     return { keys: bad, list: list };
   };
 
+  /* محاضرات متتالية بدون فاصل كافٍ (من نهاية الأولى لبداية الثانية أقل من gap دقيقة، ولا تداخل) */
+  window.getTimetableTight = function(gap){
+    gap = gap == null ? 10 : gap;
+    var tt = (window.space && window.space.timetable) || {}, byDay = {}, out = [];
+    Object.keys(tt).forEach(function(k){
+      var p = ttSplitKey(k), s = p ? ttMin(p.time) : null, e = tt[k] ? ttMin(tt[k].end) : null; if(s === null || e === null || e <= s) return;
+      (byDay[p.day] = byDay[p.day] || []).push({ key: k, s: s, e: e });
+    });
+    Object.keys(byDay).forEach(function(d){
+      var a = byDay[d].sort(function(x, y){ return x.s - y.s; });
+      for(var i = 0; i < a.length - 1; i++){ var g = a[i + 1].s - a[i].e; if(g >= 0 && g < gap && tt[a[i].key].name !== tt[a[i + 1].key].name) out.push({ day: d, a: a[i].key, b: a[i + 1].key, gap: g }); }
+    });
+    return out;
+  };
+
   window.editClassSlot = function(key){
     if(!window.space || !window.space.timetable) return;
     var cls = window.space.timetable[key];

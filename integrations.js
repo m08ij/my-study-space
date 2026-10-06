@@ -551,19 +551,23 @@
     function isRowComplete(row){
       return !!(row.name && row.days && row.days.length && row.timeFrom && row.timeTo);
     }
-    function countConflicts(){
-      var seen = {};
-      var conflicts = 0;
-      state.rows.forEach(function(row){
-        if(!row.name || !row.days || !row.days.length || !row.timeFrom) return;
-        row.days.forEach(function(d){
-          var key = d + '-' + row.timeFrom;
-          if(seen[key]) conflicts++;
-          else seen[key] = true;
-        });
-      });
-      return conflicts;
+    /* تعارض بين صفين: نفس اليوم ومجالا الوقت يتقاطعان (أو نفس وقت البداية إن لم تُحدَّد النهاية) */
+    function tmin(t){ var p = String(t || '').split(':'), h = parseInt(p[0], 10), m = parseInt(p[1], 10) || 0; return isNaN(h) ? null : h * 60 + m; }
+    function rowsOverlap(a, b){
+      var as = tmin(a.timeFrom), bs = tmin(b.timeFrom); if(as === null || bs === null) return false;
+      var ae = tmin(a.timeTo), be = tmin(b.timeTo);
+      if(ae === null || ae <= as || be === null || be <= bs) return as === bs;
+      return as < be && bs < ae;
     }
+    function rowConflicts(){
+      var rows = state.rows.filter(function(r){ return r.name && r.days && r.days.length && r.timeFrom; }), bad = {}, count = 0;
+      for(var i = 0; i < rows.length; i++) for(var j = i + 1; j < rows.length; j++){
+        var shared = rows[i].days.filter(function(d){ return rows[j].days.indexOf(d) > -1; });
+        if(shared.length && rowsOverlap(rows[i], rows[j])){ count += shared.length; bad[state.rows.indexOf(rows[i])] = true; bad[state.rows.indexOf(rows[j])] = true; }
+      }
+      return { count: count, rows: bad };
+    }
+    function countConflicts(){ return rowConflicts().count; }
     function updateStats(){
       var ready = state.rows.filter(isRowComplete);
       var totalMin = ready.reduce(function(a, r){ return a + calcDuration(r.timeFrom, r.timeTo); }, 0);
@@ -881,15 +885,8 @@
         '<div class="stt-preview-stat"><div class="stt-preview-stat-v">' + (totalMin/60).toFixed(1) + '</div><div class="stt-preview-stat-l">ساعة</div></div>' +
         '<div class="stt-preview-stat"><div class="stt-preview-stat-v" style="color:' + (conflicts ? 'var(--red)' : 'var(--green)') + '">' + conflicts + '</div><div class="stt-preview-stat-l">تعارضات</div></div>' +
       '</div>';
-      var seen = {};
-      var conflictRows = {};
-      ready.forEach(function(r, i){
-        r.days.forEach(function(d){
-          var k = d + '-' + r.timeFrom;
-          if(seen[k]){ conflictRows[i] = true; conflictRows[seen[k].idx] = true; }
-          else seen[k] = { idx: i };
-        });
-      });
+      var rc = rowConflicts(), conflictRows = {};
+      ready.forEach(function(r, i){ if(rc.rows[state.rows.indexOf(r)]) conflictRows[i] = true; });
       html += '<table class="stt-preview-table"><thead><tr>' +
         '<th style="width:36px">#</th>' +
         '<th style="width:100px">الكود</th>' +
@@ -951,7 +948,8 @@
       if(!sp.attendance) sp.attendance = {};
 
       var stats = { courses: 0, classes: 0, skipped: [], incomplete: [], unknownCodes: [] };
-      var newCourses = [];
+      var newCourses = [], newKeys = {};
+      if(!Array.isArray(sp.grades)) sp.grades = [];
 
       state.rows.forEach(function(row, idx){
         if(!isRowComplete(row)){
@@ -980,6 +978,7 @@
             instructor: '', room: row.room || ''
           };
           sp.courses.push(addedCourse);
+          if(!sp.grades.some(function(g){ return g.name === finalName; })) sp.grades.push({ name: finalName, items: [] });   /* نفس مصدر الحقيقة: علامات المادة تُنشأ معها */
           newCourses.push(addedCourse);
           stats.courses++;
         }
@@ -994,7 +993,7 @@
             name: finalName, room: row.room || '', instructor: (prevCls && prevCls.instructor) || '',
             end: row.timeTo || ''
           };
-          stats.classes++;
+          stats.classes++; newKeys[key] = true;
         });
         if(!sp.attendance[finalName]) sp.attendance[finalName] = { present: 0, absent: 0 };
         if(row.room) addToSTTCache('rooms', row.room);
@@ -1010,6 +1009,14 @@
       /* مواد جديدة لها ملفات قديمة محذوفة بنفس الكود: نسأل المستخدم (بدون ربط تلقائي) */
       newCourses.forEach(function(c){ try{ if(window.offerArchivedFiles) window.offerArchivedFiles(c); }catch(e){} });
 
+      /* تعارض زمني حقيقي مع محاضرات ثانية (حتى لو اختلف وقت البداية) + محاضرات بلا فاصل */
+      try{
+        var cf = window.getTimetableConflicts ? window.getTimetableConflicts().list.filter(function(p){ return newKeys[p.a] || newKeys[p.b]; }) : [];
+        var tight = window.getTimetableTight ? window.getTimetableTight(10).filter(function(p){ return newKeys[p.a] || newKeys[p.b]; }) : [];
+        var tt = sp.timetable, nm = function(k){ return (tt[k] && tt[k].name) || k; }, dn = function(d){ var i = (window.DAYS_EN || []).indexOf(d); return i > -1 ? window.DAYS_AR[i] : d; };
+        if(cf.length) toast('⚠️ تعارض بالجدول: ' + cf.slice(0, 2).map(function(p){ return nm(p.a) + ' مع ' + nm(p.b) + ' (' + dn(p.day) + ')'; }).join('، ') + (cf.length > 2 ? ' و' + (cf.length - 2) + ' غيرها' : ''), 'warn', 7000);
+        else if(tight.length) toast('ℹ️ ' + tight.length + ' محاضرة بدون فاصل (أقل من 10 دقائق) — مثل ' + nm(tight[0].a) + ' ثم ' + nm(tight[0].b), 'info', 5000);
+      }catch(e){}
       var issues = stats.skipped.length + stats.incomplete.length + stats.unknownCodes.length;
       if(issues === 0){
         var msg = '✅ ' + stats.courses + ' مادة · ' + stats.classes + ' محاضرة';

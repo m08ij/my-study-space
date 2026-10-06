@@ -177,6 +177,20 @@
     var sp = space();
     var count = 0;
     opts = opts || {};
+    /* لقطة قبل الحذف للتراجع (id المادة نفسه يرجع فتبقى ملفاتها مربوطة) */
+    var snap = null;
+    if(!opts.noUndo){
+      var cp = function(x){ return JSON.parse(JSON.stringify(x)); };
+      snap = {
+        courses: (sp.courses || []).filter(function(c){ return c.name === name; }).map(cp),
+        att: sp.attendance && sp.attendance[name] ? cp(sp.attendance[name]) : null,
+        grades: (sp.grades || []).filter(function(g){ return g.name === name; }).map(cp),
+        exams: (sp.exams || []).filter(function(e){ return e.course === name; }).map(cp),
+        tt: Object.keys(sp.timetable || {}).filter(function(k){ return sp.timetable[k] && sp.timetable[k].name === name; }).map(function(k){ return [k, cp(sp.timetable[k])]; }),
+        tasks: (sp.tasks || []).filter(function(t){ return t.course === name; }).map(function(t){ return t.id; }),
+        notes: (window.notes || []).filter(function(n){ return n && n.course === name; })
+      };
+    }
 
     /* 1. From courses */
     if(Array.isArray(sp.courses)){
@@ -232,7 +246,24 @@
 
     save();
     syncAllUI();
-    toast('🗑 حُذفت "' + name + '"', 'success', 2200);
+    if(snap && snap.courses.length && window.toastUndo){
+      window.toastUndo('🗑 حُذفت "' + name + '"', function(){
+        var s = space(); if(!Array.isArray(s.courses)) s.courses = [];
+        snap.courses.forEach(function(c){ if(!s.courses.some(function(x){ return x.id === c.id; })) s.courses.push(c); });
+        s.archivedCourses = (s.archivedCourses || []).filter(function(a){ return snap.courses.every(function(c){ return c.id !== a.id; }); });
+        if(snap.att){ if(!s.attendance) s.attendance = {}; if(!s.attendance[name]) s.attendance[name] = snap.att; }
+        if(!Array.isArray(s.grades)) s.grades = [];
+        snap.grades.forEach(function(g){ if(!s.grades.some(function(x){ return x.name === name; })) s.grades.push(g); });
+        if(!Array.isArray(s.exams)) s.exams = [];
+        snap.exams.forEach(function(e){ if(!s.exams.some(function(x){ return x.id === e.id; })) s.exams.push(e); });
+        if(!s.timetable) s.timetable = {};
+        snap.tt.forEach(function(kv){ if(!s.timetable[kv[0]]) s.timetable[kv[0]] = kv[1]; });
+        (s.tasks || []).forEach(function(t){ if(snap.tasks.indexOf(t.id) > -1 && !t.course) t.course = name; });
+        snap.notes.forEach(function(n){ if(n && !n.course) n.course = name; });
+        if(snap.notes.length && window.S) window.S.set('notes', window.notes);
+        save(); syncAllUI(); toast('↩️ رجعت "' + name + '" بكل بياناتها', 'success', 2200);
+      }, 10000);
+    } else toast('🗑 حُذفت "' + name + '"', 'success', 2200);
     return count;
   };
 
@@ -310,10 +341,12 @@
     var tl = Object.keys(sp.timetable || {}).filter(function(k){ return sp.timetable[k] && sp.timetable[k].name === name; }).length;
     if(tl) parts.push(tl + ' محاضرة من الجدول');
     var course = (sp.courses || []).filter(function(x){ return x.name === name; })[0];
+    var tk = (sp.tasks || []).filter(function(t){ return t.course === name; }).length;
+    var kept = tk ? ' و' + tk + ' مهمة بتبقى بدون ربط بمادة' : '';
 
     /* ملفات المادة على السحابة: نفحصها قبل التأكيد (بمهلة قصيرة) لنوضح للمستخدم أنها تبقى محفوظة */
     function ask(files){
-      var msg = 'حذف "' + name + '" من كل الأماكن؟' + (parts.length ? ' سيُحذف معها: ' + parts.join('، ') + '.' : '');
+      var msg = 'حذف "' + name + '" من كل الأماكن؟' + (parts.length ? ' سيُحذف معها: ' + parts.join('، ') + (kept ? '،' + kept : '') + '.' : (kept ? ' (' + tk + ' مهمة بتبقى بدون ربط بمادة.)' : '')) + ' بتقدر تتراجع خلال 10 ثواني.';
       if(files > 0) msg += ' الملفات المرفوعة (' + files + ') تبقى محفوظة على السحابة، ولو أضفت المادة من جديد بنسألك إذا بدك تربطها.';
       else if(files === null) msg += ' (تعذّر التحقق من ملفاتها — إن كان لها ملفات فتبقى محفوظة ويمكن ربطها لاحقاً.)';
       var run = function(){ window.removeCourseEverywhere(name, { archive: files === null || files > 0, files: files }); };
@@ -859,6 +892,96 @@
   };
 
   /* ============================================================
+     متطلبات سابقة + ساعات الخطة + فحص سلامة البيانات
+     ============================================================ */
+  window.missingPrereqs = function(name){
+    var info = (window.COURSES_DB || {})[name]; if(!info || !info.pre || !info.pre.length) return [];
+    var done = window.getCompletedCourses ? window.getCompletedCourses() : {};
+    return info.pre.filter(function(p){ return !done[p]; });
+  };
+  window.planHoursSummary = function(){
+    var DB = window.COURSES_DB || {}, done = window.getCompletedCourses ? window.getCompletedCourses() : {}, doneH = 0, byType = {}, cur = 0;
+    Object.keys(done).forEach(function(n){ var i = DB[n]; if(!i || i.t === 'remedial') return; doneH += i.h; byType[i.t] = (byType[i.t] || 0) + i.h; });
+    var curByType = {}, curCounted = 0;
+    (space().courses || []).forEach(function(c){
+      if(c.completed === true || done[c.name]) return; var i = DB[c.name], h = (parseInt(c.hours, 10) || (i && i.h) || 3);
+      cur += h; if(i && i.t !== 'remedial'){ curByType[i.t] = (curByType[i.t] || 0) + h; curCounted += h; }
+    });
+    var total = (window.TOTAL_REQUIRED_HOURS && window.TOTAL_REQUIRED_HOURS.total) || 160;
+    return { done: doneH, byType: byType, current: cur, curByType: curByType, curCounted: curCounted, total: total, over: cur > 18 };
+  };
+  var TYPE_LABEL = { 'uni-c': 'جامعة إجباري', 'uni-e': 'جامعة اختياري', 'faculty': 'كلية', 'major-c': 'تخصص إجباري', 'major-e': 'تخصص اختياري' };
+  function planBarHtml(){
+    var s = window.planHoursSummary(), T = window.TOTAL_REQUIRED_HOURS || {};
+    var pctDone = Math.min(100, s.done / s.total * 100), pctCur = Math.min(100 - pctDone, s.curCounted / s.total * 100);
+    var chips = Object.keys(TYPE_LABEL).map(function(k){
+      var d = s.byType[k] || 0, c = s.curByType[k] || 0, req = T[k];
+      return '<span class="plan-chip' + (c ? ' has-cur' : '') + '" title="' + TYPE_LABEL[k] + ': منجز ' + d + (c ? ' + مسجّل حالياً ' + c : '') + '">' + TYPE_LABEL[k] + ' <b>' + d + (c ? '<em>+' + c + '</em>' : '') + (req ? '/' + req : '') + '</b></span>';
+    }).join('');
+    return '<div class="plan-hours" id="planHoursBar">' +
+      '<div class="plan-hours-row"><b>الساعات المنجزة</b><span>' + s.done + ' / ' + s.total + ' (' + Math.round(pctDone) + '%)</span></div>' +
+      '<div class="plan-hours-track" role="progressbar" aria-valuemin="0" aria-valuemax="' + s.total + '" aria-valuenow="' + (s.done + s.curCounted) + '" aria-label="منجز ' + s.done + ' ومسجّل حالياً ' + s.curCounted + ' من ' + s.total + '"><i class="d" style="width:' + pctDone + '%"></i><i class="c" style="width:' + pctCur + '%"></i></div>' +
+      '<div class="plan-hours-row"><b>المسجّل حالياً (موادي)</b><span class="' + (s.over ? 'plan-over' : '') + '">' + s.current + ' ساعة' + (s.over ? ' ⚠️ أكثر من 18 — تأكد من حدّ الجامعة' : '') + '</span></div>' +
+      '<div class="plan-hours-row"><b>الإجمالي لو أنهيتها</b><span>' + (s.done + s.curCounted) + ' / ' + s.total + '</span></div>' +
+      '<div class="plan-chips">' + chips + '</div>' +
+      '<div class="plan-hint">المنجز = مواد علّمتها منجزة من «محاكي الترم الجاي». المواد اللي تضيفها بتظهر كـ«مسجّلة حالياً» (الجزء الفاتح بالشريط) لحتى تنهيها.</div></div>';
+  }
+  /* فحص سلامة البيانات: كل مادة بالجدول/الحضور/العلامات/الامتحانات/المهام لازم تكون بـ«موادي» */
+  window.checkDataIntegrity = function(){
+    var sp = space(), names = {}, issues = [], codes = {};
+    (sp.courses || []).forEach(function(c){
+      names[c.name] = true;
+      var nc = normCodeOf(c.code); if(nc){ if(codes[nc]) issues.push({ k: 'dup', name: c.name, other: codes[nc], text: 'رقم مكرر بين «' + codes[nc] + '» و«' + c.name + '» (للتنبيه فقط)' }); else codes[nc] = c.name; }
+      if(!sp.attendance || !sp.attendance[c.name]) issues.push({ k: 'noatt', name: c.name, text: '«' + c.name + '»: ما إلها سجل حضور — بينشأ فاضي' });
+      if(!(sp.grades || []).some(function(g){ return g.name === c.name; })) issues.push({ k: 'nogr', name: c.name, text: '«' + c.name + '»: ما إلها سجل علامات — بينشأ فاضي' });
+    });
+    Object.keys(sp.attendance || {}).forEach(function(n){ if(!names[n]){ var a = sp.attendance[n] || {}, has = (a.present || 0) + (a.absent || 0) > 0; issues.push({ k: 'orphAtt', name: n, has: has, text: 'حضور «' + n + '» بدون مادة' + (has ? ' (فيه بيانات → بنضيف المادة)' : ' (فاضي → بينحذف)') }); } });
+    (sp.grades || []).forEach(function(g){ if(!names[g.name]){ var has = (g.items || []).length > 0; issues.push({ k: 'orphGr', name: g.name, has: has, text: 'علامات «' + g.name + '» بدون مادة' + (has ? ' (فيها بيانات → بنضيف المادة)' : ' (فاضية → بتنحذف)') }); } });
+    var ttNames = {}; Object.keys(sp.timetable || {}).forEach(function(k){ var e = sp.timetable[k]; if(e && e.name && !names[e.name]) ttNames[e.name] = (ttNames[e.name] || 0) + 1; });
+    Object.keys(ttNames).forEach(function(n){ issues.push({ k: 'orphTt', name: n, text: 'محاضرات «' + n + '» (' + ttNames[n] + ') بالجدول بدون مادة → بنضيف المادة' }); });
+    var ex = (sp.exams || []).filter(function(e){ return e.course && !names[e.course]; }); if(ex.length) issues.push({ k: 'orphEx', n: ex.length, text: ex.length + ' امتحان مربوط بمادة مش موجودة → بيصير «بدون مادة»' });
+    var tk = (sp.tasks || []).filter(function(t){ return t.course && !names[t.course]; }); if(tk.length) issues.push({ k: 'orphTk', n: tk.length, text: tk.length + ' مهمة مربوطة بمادة مش موجودة → بتصير بدون مادة' });
+    var nt = (window.notes || []).filter(function(x){ return x && x.course && !names[x.course]; }); if(nt.length) issues.push({ k: 'orphNt', n: nt.length, text: nt.length + ' ملاحظة مربوطة بمادة مش موجودة → بتصير بدون مادة' });
+    return issues;
+  };
+  /* إصلاح بدون فقد بيانات: الفارغ يُحذف، وما فيه بيانات يُحافَظ عليه بإضافة مادته، والباقي يفك الربط فقط */
+  window.fixDataIntegrity = function(){
+    var sp = space(), fixed = 0, issues = window.checkDataIntegrity(), toAdd = {};
+    issues.forEach(function(i){
+      if(i.k === 'noatt'){ if(!sp.attendance) sp.attendance = {}; sp.attendance[i.name] = { present: 0, absent: 0 }; fixed++; }
+      else if(i.k === 'nogr'){ if(!Array.isArray(sp.grades)) sp.grades = []; sp.grades.push({ name: i.name, items: [] }); fixed++; }
+      else if(i.k === 'orphAtt'){ if(i.has) toAdd[i.name] = 1; else { delete sp.attendance[i.name]; fixed++; } }
+      else if(i.k === 'orphGr'){ if(i.has) toAdd[i.name] = 1; else { sp.grades = sp.grades.filter(function(g){ return g.name !== i.name; }); fixed++; } }
+      else if(i.k === 'orphTt') toAdd[i.name] = 1;
+    });
+    Object.keys(toAdd).forEach(function(n){
+      var db = (window.COURSES_DB || {})[n];
+      if(window.addCourseEverywhere(n, db ? db.code : '', db ? db.h : 3, { silent: true, noPrompt: true })) fixed++;
+    });
+    var names = {}; (sp.courses || []).forEach(function(c){ names[c.name] = true; });
+    (sp.exams || []).forEach(function(e){ if(e.course && !names[e.course]){ e.course = ''; fixed++; } });
+    (sp.tasks || []).forEach(function(t){ if(t.course && !names[t.course]){ t.course = ''; fixed++; } });
+    var nm = false; (window.notes || []).forEach(function(x){ if(x && x.course && !names[x.course]){ x.course = ''; nm = true; fixed++; } });
+    if(nm && window.S) window.S.set('notes', window.notes);
+    save(); syncAllUI();
+    return fixed;
+  };
+  window.openIntegrityCheck = function(){
+    var issues = window.checkDataIntegrity();
+    if(!issues.length){ toast('✅ بياناتك سليمة: كل شي مربوط بموادك', 'success', 2600); return; }
+    document.querySelectorAll('.modal-backdrop').forEach(function(m){ m.remove(); });
+    var bd = document.createElement('div'); bd.className = 'modal-backdrop show'; bd._trap = true;
+    var fixable = issues.filter(function(i){ return i.k !== 'dup'; }).length;
+    bd.innerHTML = '<div class="modal" role="dialog" aria-modal="true" aria-label="فحص سلامة البيانات"><h3>🩺 فحص سلامة البيانات</h3>' +
+      '<p style="color:var(--muted);font-size:var(--fs-sm);margin-bottom:10px">لقيت ' + issues.length + ' ملاحظة. الإصلاح ما بحذف أي بيانات فيها شي: الفاضي بس بيتحذف، والباقي بيضل بإضافة مادته أو فك الربط.</p>' +
+      '<ul class="integ-list">' + issues.map(function(i){ return '<li>' + esc(i.text) + '</li>'; }).join('') + '</ul>' +
+      '<div class="modal-actions"><button class="btn btn-sm btn-ghost" id="igClose">إغلاق</button>' + (fixable ? '<button class="btn btn-sm" id="igFix">🛠 إصلاح تلقائي</button>' : '') + '</div></div>';
+    document.body.appendChild(bd);
+    var close = function(){ if(window.dismissOverlay) window.dismissOverlay(bd); else bd.remove(); };
+    bd.querySelector('#igClose').onclick = close; bd.onclick = function(e){ if(e.target === bd) close(); };
+    var fx = bd.querySelector('#igFix'); if(fx) fx.onclick = function(){ var f = window.fixDataIntegrity(); close(); toast('🛠 صُلّح ' + f + ' عنصر', 'success', 2600); };
+  };
+  /* ============================================================
      OVERRIDE: renderPlan — unified buttons built-in
      ============================================================ */
   window.renderPlan = function(){
@@ -867,7 +990,7 @@
     if(!Array.isArray(openSems)) openSems = [0];
     var SEMESTERS = window.SEMESTERS || [];
 
-    c.innerHTML = '';
+    c.innerHTML = planBarHtml();
     SEMESTERS.forEach(function(s, i){
       var el = document.createElement('div');
       el.className = 'card';
@@ -903,6 +1026,7 @@
               (x.code && x.code !== '—'
                 ? '<span class="u-mono">' + esc(x.code) + '</span>'
                 : '') +
+              (!added && window.missingPrereqs(cName).length ? '<span class="plan-lock" title="متطلب سابق لم تنجزه">🔒 يتطلب: ' + esc(window.missingPrereqs(cName).join('، ')) + '</span>' : '') +
               (x.type === 'lab'
                 ? '<span style="font-size:var(--fs-2xs);padding:1px 7px;border-radius:var(--r-sm);background:rgba(52,211,153,.15);color:var(--green)">مختبر</span>'
                 : '') +
@@ -957,7 +1081,10 @@
           if(isCourseAdded(name)){
             window.confirmRemoveCourse(name);
           } else {
-            window.addCourseEverywhere(name, code, hours);
+            var miss = window.missingPrereqs(name);
+            if(miss.length && window.customConfirm){
+              window.customConfirm('«' + name + '» تتطلب: ' + miss.join('، ') + ' — وما سجّلتها منجزة. تضيفها مع ذلك؟', function(){ window.addCourseEverywhere(name, code, hours); }, { title: 'متطلب سابق ناقص', icon: '🔒', okLabel: 'أضفها مع ذلك', danger: false });
+            } else window.addCourseEverywhere(name, code, hours);
           }
         });
       });
@@ -971,6 +1098,8 @@
      ============================================================ */
   function init(){
     injectCSS();
+    var ib = document.getElementById('integrityBtn');
+    if(ib && !ib._bound){ ib._bound = true; ib.addEventListener('click', function(){ if(window.closeSettingsMenu) window.closeSettingsMenu(); window.openIntegrityCheck(); }); }
 
     /* Re-run on tab switch */
     if(window.switchTab && !window._courseSyncTabPatched){

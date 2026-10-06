@@ -936,12 +936,20 @@
       {key:'instructor', label:'الدكتور'},
       {key:'room', label:'القاعة'}
     ], {name:'', code:'', hours:3, instructor:'', room:''}, function(data){
-      var name = String(data.name || '').trim();
-      if(!name){ toast('أدخل اسمًا', 'warn'); return false; }
+      var name = String(data.name || '').trim(), code = String(data.code || '').trim(), hrs = data.hours;
+      /* الرقم وحده يكفي: نجيب الاسم والساعات من قاعدة المواد، والعكس (الاسم بدون رقم) نكمّل رقمه */
+      var byCode = code && window.findCourseByCode ? window.findCourseByCode(code) : null, byName = name && window.COURSES_DB ? window.COURSES_DB[name] : null;
+      if(byCode && (!name || byCode.name === name)) code = byCode.info.code;   /* نخزّن الرقم الرسمي حتى لو كُتب بدون الصفر البادئ */
+      if(!name && byCode){ name = byCode.name; hrs = byCode.info.h; }
+      else if(!name && code){ toast('هذا الرقم مش موجود بقاعدة المواد — اكتب اسم المادة', 'warn', 3000); return { field: 'name' }; }
+      else if(name && !code && byName){ code = byName.code; if(!(parseInt(hrs, 10) > 0) || parseInt(hrs, 10) === 3) hrs = byName.h; }
+      else if(name && byCode && byCode.name === name && (!(parseInt(hrs, 10) > 0) || parseInt(hrs, 10) === 3)) hrs = byCode.info.h;
+      if(!name){ toast('أدخل اسمًا أو رقم المادة', 'warn'); return false; }
+      var miss = window.missingPrereqs ? window.missingPrereqs(name) : [];
+      var doAdd = function(){ window.addCourseEverywhere(name, code, hrs, { instructor: data.instructor, room: data.room }); };
       /* مصدر واحد: يفحص التكرار وينشئ الحضور والعلامات ويحدّث الواجهات */
-      var added = window.addCourseEverywhere(name, String(data.code || '').trim(), data.hours,
-        { instructor: data.instructor, room: data.room });
-      return added !== false;
+      if(miss.length && window.customConfirm){ window.customConfirm('«' + name + '» تتطلب: ' + miss.join('، ') + ' — وما سجّلتها منجزة. تضيفها مع ذلك؟', doAdd, { title: 'متطلب سابق ناقص', icon: '🔒', okLabel: 'أضفها مع ذلك', danger: false }); return true; }
+      return window.addCourseEverywhere(name, code, hrs, { instructor: data.instructor, room: data.room }) !== false;
     });
   };
 
@@ -977,18 +985,18 @@
     ], {sem:0}, function(data){
       var s = SEMESTERS[parseInt(data.sem)];
       if(!s) return false;
-      var count = 0, added = [];
+      var count = 0, added = [], locked = 0;
       s.courses.forEach(function(c){
-        if(!(space().courses || []).find(function(mc){ return mc.name === c.n; })){
-          if(!window.space.courses) window.space.courses = [];
-          var nc = {id: uid(), name: c.n, code: c.code || '', hours: c.h, instructor:'', room:''};
-          window.space.courses.push(nc);
-          added.push(nc);
+        /* مصدر واحد: addCourseEverywhere ينشئ المادة + الحضور + العلامات (كان الاستيراد يتجاوزه فتنقص سجلات المادة) */
+        if(window.missingPrereqs && window.missingPrereqs(c.n).length) locked++;
+        if(window.addCourseEverywhere(c.n, c.code || '', c.h, { silent: true, noPrompt: true })){
+          var nc = (space().courses || []).find(function(mc){ return mc.name === c.n; });
+          if(nc) added.push(nc);
           count++;
         }
       });
       saveSpace(); window.renderCourses(); window.renderDashboard();
-      toast('تم استيراد ' + count + ' مادة', 'success', 2500);
+      toast('تم استيراد ' + count + ' مادة' + (locked ? ' — منها ' + locked + ' بمتطلب سابق ناقص (🔒 بالخطة)' : ''), 'success', 3500);
       /* مواد لها ملفات قديمة محذوفة بنفس الكود: نسأل (بدون ربط تلقائي) */
       added.forEach(function(nc){ if(window.offerArchivedFiles) window.offerArchivedFiles(nc); });
       return true;

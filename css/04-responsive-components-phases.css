@@ -1056,3 +1056,21 @@ html{scrollbar-color:var(--border2) transparent}
 .ai-msg{animation:aiMsgIn .28s cubic-bezier(.22,1,.36,1)}
 @keyframes aiMsgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.hub-card,.myday-tile,.stat,.ai-msg,.ai-panel.show,.toast-container .toast:not(.out){animation:none!important}.btn:hover,.btn:active{transform:none}}
+/* ===== v115: ساعات الخطة، قفل المتطلبات، فحص السلامة ===== */
+.plan-hours{background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);padding:var(--sp-3) var(--sp-4);margin-bottom:12px;display:flex;flex-direction:column;gap:8px}
+.plan-hours-row{display:flex;justify-content:space-between;gap:10px;font-size:var(--fs-sm)}
+.plan-hours-row span{color:var(--muted)}
+.plan-hours-row .plan-over{color:var(--amber);font-weight:700}
+.plan-hours-track{height:8px;border-radius:var(--r-pill);background:var(--bg2);overflow:hidden}
+.plan-hours-track i{display:block;height:100%;background:var(--grad);border-radius:inherit;transition:width .6s cubic-bezier(.22,1,.36,1)}
+.plan-chips{display:flex;flex-wrap:wrap;gap:6px}
+.plan-chip{font-size:var(--fs-2xs);padding:2px 9px;border-radius:var(--r-pill);background:var(--bg2);border:1px solid var(--border);color:var(--muted)}
+.plan-chip b{color:var(--text)}
+.plan-lock{font-size:var(--fs-2xs);padding:1px 8px;border-radius:var(--r-sm);background:color-mix(in srgb,var(--amber) 14%,transparent);color:var(--amber)}
+.integ-list{list-style:none;padding:0;margin:0 0 12px;max-height:46vh;overflow:auto;display:flex;flex-direction:column;gap:6px}
+.integ-list li{font-size:var(--fs-sm);padding:8px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md)}.plan-hours-track{display:flex;flex-direction:row}
+.plan-hours-track i.d{background:var(--grad)}
+.plan-hours-track i.c{background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--accent) 55%,transparent) 0 6px,color-mix(in srgb,var(--accent) 28%,transparent) 6px 12px)}
+.plan-chip em{font-style:normal;color:var(--accent);margin-inline-start:2px}
+.plan-chip.has-cur{border-color:color-mix(in srgb,var(--accent) 45%,var(--border))}
+.plan-hint{font-size:var(--fs-2xs);color:var(--muted2);line-height:1.6}
