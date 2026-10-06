@@ -756,7 +756,8 @@
   window.checkSmartReminders = function(){
     if(!window.space || !window.space.tasks) return;
     var today = window.today(), now = new Date(), hour = now.getHours();
-    if(hour < 8 || hour > 23) return;
+    var NC = window.NotifyCenter, startHour = NC ? NC.tasksHour() : 8;      /* وقت الملخص من «مركز التنبيهات» */
+    if(hour < startHour || hour > 23) return;
     var firedKey = 'ss_smart_reminders_v4_' + today;
     var fired = window.S.get(firedKey, {}) || {};
     var du = window.daysUntil || function(){ return null; };
@@ -775,6 +776,7 @@
       reminders.push({tag: 'exam-' + uid, t: '⏳ امتحان ' + (r.days === 0 ? 'اليوم!' : r.days === 1 ? 'غدًا!' : r.label), b: e.name + (e.time ? ' — ' + e.time : '')});
     });
     var anyNew = false, shown = 0;
+    reminders = reminders.filter(function(r){ return !NC || NC.allow(/^exam-/.test(r.tag) ? 'exams' : 'tasks'); });
     reminders.forEach(function(r){
       if(fired[r.tag]) return;
       fired[r.tag] = true; anyNew = true;
@@ -936,6 +938,15 @@
 
   window.loadExampleTimetable = function(){
     if(!window.space) return;
+    var had = Object.keys(window.space.timetable || {}).length;
+    if(had){
+      /* كان يستبدل جدولك الحقيقي بجدول تجريبي بدون أي سؤال */
+      var prev = JSON.parse(JSON.stringify(window.space.timetable));
+      return window.customConfirm('عندك ' + had + ' محاضرة بالجدول. الجدول التجريبي بيستبدلها كلها. متأكد؟', function(){ window._applyExampleTimetable(); if(window.toastUndo) window.toastUndo('تم تحميل الجدول التجريبي', function(){ window.space.timetable = prev; window.saveSpace(); if(window.renderTimetable) window.renderTimetable(); if(window.renderDashboard) window.renderDashboard(); }, 12000); }, { title: 'استبدال جدولك؟', icon: '⚠️', okLabel: 'استبدل بالتجريبي', danger: true });
+    }
+    window._applyExampleTimetable();
+  };
+  window._applyExampleTimetable = function(){
     window.space.timetable = {
       'Sun-08:00': { name: 'تفاضل وتكامل (1)', room: '101', instructor: '' },
       'Sun-09:00': { name: 'فيزياء عامة (1)', room: '102', instructor: '' },
@@ -1102,6 +1113,10 @@
   window.renderTimetable = function(){
     var t = document.getElementById('timetableTable'); if(!t) return;
     var tt = (window.space && window.space.timetable) || {};
+    /* بطاقة «إضافة جدول» الكبيرة وزر «تجربة مثال» للجدول الفاضي فقط (كانت تحتل أول الصفحة حتى لو جدولك كامل) */
+    var hasAny = Object.keys(tt).length > 0, heroCard = document.querySelector('#timetable .card[data-tui-replaced="1"]'), exBtn = document.getElementById('btnLoadExample');
+    if(heroCard) heroCard.style.display = hasAny ? 'none' : '';
+    if(exBtn) exBtn.style.display = hasAny ? 'none' : '';
     var now = new Date(), nowMin = now.getHours() * 60 + now.getMinutes();
     var DE = window.DAYS_EN || ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
     var DA = window.DAYS_AR || ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];

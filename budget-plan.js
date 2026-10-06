@@ -258,13 +258,17 @@
     var BC = window.BUDGET_CATS || [], rows = {};
     s.rows.forEach(function(r){ rows[r.cat] = r; });
     var expCats = BC.filter(function(x){ return !isIncomeCat(x.v); });
-    h += '<div class="bp-cats">' + expCats.map(function(x){
+    function catHtml(x){
       var r = rows[x.v] || { spent: 0, limit: p.limits[x.v] || 0, left: null, pct: null };
       return '<div class="bp-cat"><div class="bp-cat-top"><span>' + x.i + ' ' + x.l + '</span>' +
         '<input type="number" inputmode="decimal" min="0" step="any" class="bp-limit" data-cat="' + x.v + '" placeholder="الحد" value="' + (p.limits[x.v] || '') + '" aria-label="حد ' + esc(x.l) + '"></div>' +
         '<div class="bp-cat-sub"><span>صرفت ' + money(r.spent) + '</span><span>' + (r.limit ? (r.left >= 0 ? 'متبقي ' + money(r.left) : 'تجاوز ' + money(-r.left)) + ' · ' + Math.round(r.pct) + '%' : 'بدون حد') + '</span></div>' +
         (r.limit ? bar(r.pct) : '') + '</div>';
-    }).join('') + '</div>';
+    }
+    /* الفئات اللي فيها مصروف أو حد بالأول؛ الباقي (18 فئة كان كلها تظهر بـ«صرفت 0 د») مطويّة */
+    var active = expCats.filter(function(x){ var r = rows[x.v]; return (r && r.spent > 0) || p.limits[x.v]; }), rest = expCats.filter(function(x){ return active.indexOf(x) < 0; });
+    h += '<div class="bp-cats">' + active.map(catHtml).join('') + '</div>';
+    if(rest.length) h += '<details class="bp-more"' + (active.length ? '' : ' open') + '><summary>' + (active.length ? 'باقي الفئات (' + rest.length + ') — حدّد حداً لأي منها' : 'حدّد حداً للفئات') + '</summary><div class="bp-cats">' + rest.map(catHtml).join('') + '</div></details>';
     return h;
   }
 

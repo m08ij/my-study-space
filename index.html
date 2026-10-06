@@ -215,10 +215,12 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
     <div class="page-head"><h2 class="page-title">📚 موادي</h2><p class="page-sub">موادك الدراسية</p></div>
     <div class="controls">
       <button class="btn" id="btnAddCourse">+ مادة</button>
-      <button class="btn btn-ghost" id="btnImportPlan">📥 استيراد من الخطة</button>
       <button class="btn btn-ghost" id="btnUploadHub" type="button">📤 رفع ملفات</button>
-      <button class="btn btn-ghost" id="btnCloseSem" type="button">📦 إغلاق الفصل</button>
-      <button class="btn btn-ghost" id="btnSemArchive" type="button">🗂 أرشيف الفصول</button>
+      <details class="more-menu"><summary class="btn btn-ghost" aria-label="المزيد من الإجراءات">⋯ المزيد</summary><div class="more-pop">
+        <button class="btn btn-ghost" id="btnImportPlan" type="button">📥 استيراد من الخطة</button>
+        <button class="btn btn-ghost" id="btnCloseSem" type="button">📦 إغلاق الفصل</button>
+        <button class="btn btn-ghost" id="btnSemArchive" type="button">🗂 أرشيف الفصول</button>
+      </div></details>
     </div>
     <div class="grid grid-2" id="myCoursesGrid"></div>
   </section>
@@ -227,6 +229,7 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
     <div class="page-head"><h2 class="page-title">📝 المهام</h2><p class="page-sub">تابع واجباتك</p></div>
     <div class="controls">
       <button class="btn" id="btnAddTask">+ مهمة</button>
+      <button class="btn btn-ghost" id="btnNextTask" type="button">🎯 شو أبدأ؟</button>
       <button class="chip active" data-tf="all">الكل</button>
       <button class="chip" data-tf="pending">قيد الانتظار</button>
       <button class="chip" data-tf="overdue">متأخرة</button>
@@ -491,13 +494,13 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <!-- الملفات الأساسية (الترتيب مهم جداً!) -->
-<script src="app.bundle.js?v=116"></script>
+<script src="app.bundle.js?v=117"></script>
 <script>
 /* حماية من خلط الإصدارات (HTML جديد + سكربتات قديمة من كاش الـ Service Worker): هذا السكربت داخل الـ HTML نفسه فيأتي دائماً بأحدث نسخة.
    1) إن لم يطابق window.APP_BUILD رقم BUILD هنا → يمسح كاش التطبيق ويعيد التحميل مرة واحدة (حارس sessionStorage يمنع التكرار).
    2) أقسام اللوحة المتقدمة (تحليلات/LMS/إحصائيات) تُنقل إلى خانتها الثابتة إذا أضافتها سكربتات قديمة بمكان آخر. */
 (function(){
-  var BUILD = '116';
+  var BUILD = '117';
   var SLOTS = { insightsSection: 'slotInsights', lmsWidget: 'slotLms', enhancedStatsSection: 'slotEnhanced' };
   function heal(){
     var dash = document.getElementById('dashboard'); if(!dash) return;

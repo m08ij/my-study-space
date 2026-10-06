@@ -1212,9 +1212,11 @@
      ============================================================ */
   function init(){
     injectCSS();
-    [['exportBackupBtn', function(){ window.downloadBackup(false); }], ['importBackupBtn', function(){ window.restoreFromFile(); }], ['btnCloseSem', function(){ window.closeSemester(); }], ['btnSemArchive', function(){ window.openSemesterArchive(); }]].forEach(function(x){
+    [['exportBackupBtn', function(){ window.downloadBackup(false); }], ['importBackupBtn', function(){ window.restoreFromFile(); }], ['btnCloseSem', function(){ window.closeSemester(); }], ['btnSemArchive', function(){ window.openSemesterArchive(); }], ['btnNextTask', function(){ window.showNextTask(); }]].forEach(function(x){
       var b = document.getElementById(x[0]); if(b && !b._bound){ b._bound = true; b.addEventListener('click', function(){ if(window.closeSettingsMenu) window.closeSettingsMenu(); x[1](); }); }
     });
+    /* قائمة «المزيد»: تنغلق بالنقر خارجها أو بعد اختيار إجراء */
+    if(!window._moreMenuBound){ window._moreMenuBound = true; document.addEventListener('click', function(e){ document.querySelectorAll('.more-menu[open]').forEach(function(m){ if(!m.contains(e.target) || (e.target.closest && e.target.closest('.more-pop button'))) m.removeAttribute('open'); }); }); }
     var ib = document.getElementById('integrityBtn');
     if(ib && !ib._bound){ ib._bound = true; ib.addEventListener('click', function(){ if(window.closeSettingsMenu) window.closeSettingsMenu(); window.openIntegrityCheck(); }); }
 

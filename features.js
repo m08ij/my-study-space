@@ -360,7 +360,7 @@
     var dueCls = t.done ? '' : isOver ? ' over' : isUrgent ? ' soon' : '';
     return '<div class="task ' + (t.done ? 'done' : '') + ' ' + (isOver ? 'overdue' : isUrgent ? 'urgent' : '') + (p === 'high' && !t.done ? ' prio-high' : '') + '" data-task-id="' + t.id + '">' +
       '<div class="task-check" role="checkbox" tabindex="0" aria-checked="' + (t.done ? 'true' : 'false') + '" aria-label="إكمال: ' + esc(t.title) + '" data-toggle-task="' + t.id + '"></div>' +
-      '<div class="task-body"><div class="task-title">' + esc(t.title) + '</div>' +
+      '<div class="task-body"><div class="task-title">' + esc(t.title) + (t.repeat ? ' <span class="task-rep" title="' + (t.repeat === 'weekly' ? 'تتكرر أسبوعياً' : 'تتكرر يومياً') + '">🔁</span>' : '') + '</div>' +
       '<div class="task-meta"><span class="badge ' + (t.type || 'task') + '">' + (TASK_TYPES[t.type] || 'مهمة') + '</span>' +
       (p !== 'normal' ? '<span class="prio-chip ' + p + '" title="الأولوية: ' + PRIO[p].l + '">' + PRIO[p].ic + ' ' + PRIO[p].l + '</span>' : '') +
       (t.doing && !t.done ? '<span class="status-chip">⏳ جارية</span>' : '') +
@@ -508,7 +508,8 @@
       {key:'course', label:'المادة', type:'select', options: opts},
       {key:'due', label:'تاريخ التسليم', type:'date'},
       {key:'priority', label:'الأولوية', type:'select', options: [{v:'high', l:'🔺 عالية'}, {v:'normal', l:'عادية'}, {v:'low', l:'🔻 منخفضة'}]},
-      {key:'status', label:'الحالة', type:'select', options: [{v:'todo', l:'قيد الانتظار'}, {v:'doing', l:'⏳ جارية'}, {v:'done', l:'✅ مكتملة'}]}
+      {key:'status', label:'الحالة', type:'select', options: [{v:'todo', l:'قيد الانتظار'}, {v:'doing', l:'⏳ جارية'}, {v:'done', l:'✅ مكتملة'}]},
+      {key:'repeat', label:'التكرار', type:'select', options: [{v:'', l:'بدون تكرار'}, {v:'daily', l:'🔁 يومياً'}, {v:'weekly', l:'🔁 أسبوعياً'}]}
     ];
   }
   function applyStatus(t, status){
@@ -521,7 +522,7 @@
 
   window.addTask = function(){
     var warned = null;
-    window.showModal('إضافة مهمة', taskFields(), {title:'', type:'task', course:'', due:'', priority:'normal', status:'todo'}, function(data){
+    window.showModal('إضافة مهمة', taskFields(), {title:'', type:'task', course:'', due:'', priority:'normal', status:'todo', repeat:''}, function(data){
       if(!String(data.title || '').trim()){ toast('أدخل عنوانًا', 'warn'); return false; }
       /* تاريخ ماضٍ: تنبيه مرة واحدة؛ الحفظ الثاني بنفس التاريخ يؤكد */
       if(data.due && data.due < today() && data.status !== 'done' && warned !== data.due){
@@ -530,6 +531,7 @@
       if(!space().tasks) window.space.tasks = [];
       var t = { id: uid(), title: String(data.title).trim(), type: data.type, course: data.course, due: data.due, done: false,
         priority: data.priority || 'normal', order: nextOrder() };
+      if(data.repeat) t.repeat = data.repeat;
       applyStatus(t, data.status || 'todo');
       window.space.tasks.push(t);
       refreshTasks();
@@ -555,10 +557,11 @@
   window.editTask = function(id){
     var t = (space().tasks || []).find(function(x){ return x.id === id; });
     if(!t) return;
-    var init = { title: t.title, type: t.type || 'task', course: t.course || '', due: t.due || '', priority: prioOf(t), status: t.done ? 'done' : t.doing ? 'doing' : 'todo' };
+    var init = { title: t.title, type: t.type || 'task', course: t.course || '', due: t.due || '', priority: prioOf(t), status: t.done ? 'done' : t.doing ? 'doing' : 'todo', repeat: t.repeat || '' };
     window.showModal('تعديل مهمة', taskFields(), init, function(data){
       if(!String(data.title || '').trim()){ toast('أدخل عنوانًا', 'warn'); return false; }
       t.title = String(data.title).trim(); t.type = data.type; t.course = data.course; t.due = data.due; t.priority = data.priority || 'normal';
+      if(data.repeat) t.repeat = data.repeat; else delete t.repeat;
       applyStatus(t, data.status || 'todo');
       refreshTasks();
       return true;
@@ -567,14 +570,52 @@
     });
   };
 
+  /* «شو أبدأ؟»: يختار لك المهمة التالية (متأخرة عالية ← اليوم ← الأقرب موعداً) ويعرضها بزر بدء تركيز */
+  window.pickNextTask = function(skipIds){
+    skipIds = skipIds || []; var td = window.today(), best = null, bs = -1;
+    (space().tasks || []).forEach(function(t){
+      if(t.done || skipIds.indexOf(t.id) > -1) return;
+      var d = t.due ? Math.round((new Date(t.due + 'T00:00:00') - new Date(td + 'T00:00:00')) / 864e5) : null, s = 10;
+      if(d !== null) s = d < 0 ? 100 + Math.min(30, -d) : d === 0 ? 90 : Math.max(20, 80 - d * 3);
+      if(t.priority === 'high') s += 15; if(t.doing) s += 5;
+      if(s > bs){ bs = s; best = t; }
+    });
+    return best;
+  };
+  window.showNextTask = function(skipIds){
+    skipIds = skipIds || []; var t = window.pickNextTask(skipIds);
+    if(!t){ toast(skipIds.length ? 'ما في مهام ثانية 🎉' : '🎉 ما عندك مهام مفتوحة!', 'success', 2500); return; }
+    var d = t.due ? Math.round((new Date(t.due + 'T00:00:00') - new Date(window.today() + 'T00:00:00')) / 864e5) : null;
+    var when = d === null ? 'بدون موعد' : d < 0 ? 'متأخرة ' + (-d) + ' يوم' : d === 0 ? 'اليوم' : d === 1 ? 'بكرة' : 'بعد ' + d + ' يوم';
+    document.querySelectorAll('.modal-backdrop').forEach(function(m){ m.remove(); });
+    var bd = document.createElement('div'); bd.className = 'modal-backdrop show'; bd._trap = true;
+    bd.innerHTML = '<div class="modal nt-modal" role="dialog" aria-modal="true" aria-label="المهمة التالية"><div class="nt-ic">🎯</div><h3>ابدأ بهاي</h3><div class="nt-title">' + esc(t.title) + '</div><div class="nt-meta">' + (t.course ? '📚 ' + esc(t.course) + ' · ' : '') + '📅 ' + when + (t.priority === 'high' ? ' · 🔺 مهمة' : '') + '</div>' +
+      '<div class="modal-actions" style="flex-wrap:wrap;justify-content:center"><button class="btn btn-sm btn-ghost" id="ntSkip">⏭ مش هسا</button><button class="btn btn-sm btn-ghost" id="ntDone">✓ أنجزتها</button><button class="btn btn-sm" id="ntFocus">⏱️ ابدأ تركيز</button></div></div>';
+    document.body.appendChild(bd);
+    var close = function(){ if(window.dismissOverlay) window.dismissOverlay(bd); else bd.remove(); };
+    bd.onclick = function(e){ if(e.target === bd) close(); };
+    bd.querySelector('#ntSkip').onclick = function(){ close(); setTimeout(function(){ window.showNextTask(skipIds.concat([t.id])); }, 80); };
+    bd.querySelector('#ntDone').onclick = function(){ close(); window.toggleTask(t.id); };
+    bd.querySelector('#ntFocus').onclick = function(){ close(); if(window.Progress && window.Progress.focusCourse && t.course) window.Progress.focusCourse(t.course); else window.switchTab('timer'); };
+  };
+
   window.toggleTask = function(id){
     var t = (space().tasks || []).find(function(x){ return x.id === id; });
     if(!t) return;
     t.done = !t.done; if(t.done) t.doing = false;
     /* تاريخ الإكمال (حقل إضافي متوافق مع القديم): يعتمد عليه "إنجاز اليوم" وعدّاد الاحتفال */
     t.completedAt = t.done ? window.today() : null;
+    /* مهمة متكررة: عند إنجازها تُنشأ التالية تلقائياً (من موعدها، أو من اليوم إن كان الموعد فات) */
+    var nextMsg = '';
+    if(t.done && t.repeat && !t.spawned){
+      var step = t.repeat === 'weekly' ? 7 : 1, base = (t.due && t.due >= window.today()) ? t.due : window.today(), p = base.split('-'), nd = new Date(+p[0], +p[1] - 1, +p[2] + step);
+      var due2 = nd.getFullYear() + '-' + String(nd.getMonth() + 1).padStart(2, '0') + '-' + String(nd.getDate()).padStart(2, '0');
+      t.spawned = true;
+      space().tasks.push({ id: uid(), title: t.title, type: t.type, course: t.course, due: due2, done: false, priority: t.priority || 'normal', order: nextOrder(), repeat: t.repeat });
+      nextMsg = ' 🔁 جدولت التالية ' + due2;
+    }
     saveSpace(); window.renderTasks(); window.renderDashboard();
-    if(t.done) toast('✓ أحسنت!', 'success', 1200);
+    if(t.done) toast('✓ أحسنت!' + nextMsg, 'success', nextMsg ? 2600 : 1200);
   };
 
   window.deleteTask = function(id){
