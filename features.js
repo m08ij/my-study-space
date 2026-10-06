@@ -792,7 +792,7 @@
         setTimeout(function(){ if(progress) progress.style.display = 'none'; }, 800);
         if(res.error){ toast('❌ فشل الرفع: ' + res.error + ' — يمكنك المحاولة مرة ثانية', 'warn', 4000); return; }
         toast('✅ تم الرفع!', 'success', 2000);
-        window.loadCourseFilesForCard(courseId);
+        cfAfter(courseId);
       }catch(e){
         if(progress) progress.style.display = 'none';
         toast('فشل الرفع — تحقق من الاتصال وحاول مرة ثانية', 'warn', 3000);
@@ -800,6 +800,132 @@
         delete cfUploading[key]; cfUploadBusy(courseId, false);
       }
     }
+  };
+
+  /* ---------- رفع عدة ملفات دفعة واحدة (زر، سحب وإفلات، أو نافذة «رفع ملفات») ----------
+     يتحقق من كل ملف (فارغ/كبير/مكرر/قيد الرفع) ثم يرفعها بالتتابع مع حالة لكل ملف وشريط إجمالي وملخص أخير.
+     ملف واحد = نفس مسار handleCourseFileUpload القديم (تأكيد التكرار، إلخ). */
+  var cfBatch = {}, CF_MAX = 25 * 1024 * 1024;
+  function cfAfter(courseId){ window.loadCourseFilesForCard(courseId); if(window.Hub && window.Hub.refreshFiles) window.Hub.refreshFiles(courseId); }
+  function cfQueueBox(courseId){
+    var bar = document.querySelector('[data-upload-progress="' + courseId + '"]'); if(!bar) return null;
+    var box = bar.parentNode.querySelector('[data-upload-status="' + courseId + '"]');
+    if(!box){ box = document.createElement('div'); box.className = 'cf-queue'; box.setAttribute('data-upload-status', courseId); box.setAttribute('role', 'status'); bar.parentNode.insertBefore(box, bar.nextSibling); }
+    return box;
+  }
+  window.handleCourseFiles = async function(courseId, files){
+    files = Array.prototype.slice.call(files || []);
+    if(!files.length) return;
+    if(files.length === 1) return window.handleCourseFileUpload(courseId, files[0]);
+    if(!window.SB || !window.SB.uploadCourseFile){ toast('خدمة الرفع غير متوفرة', 'warn', 2500); return; }
+    if(cfBatch[courseId]){ toast('في دفعة رفع شغّالة لهذه المادة — انتظر تخلص', 'info', 2200); return; }
+    var queue = [], skipped = [];
+    files.forEach(function(f){
+      var key = [courseId, f.name, f.size, f.lastModified].join('|');
+      var why = !f.size ? 'فارغ' : f.size > CF_MAX ? 'أكبر من 25 MB' : cfUploading[key] ? 'قيد الرفع' :
+        (window.__cfFiles[courseId] || []).some(function(x){ return cfClean(x.name) === f.name && x.size === f.size; }) ? 'موجود مسبقاً' :
+        queue.some(function(q){ return q.f.name === f.name && q.f.size === f.size; }) ? 'مكرر بالدفعة' : '';
+      if(why) skipped.push({ n: f.name, why: why }); else queue.push({ f: f, key: key });
+    });
+    var box = cfQueueBox(courseId), bar = document.querySelector('[data-upload-progress="' + courseId + '"]');
+    function row(item, st, msg){ if(item.el){ item.el.setAttribute('data-s', st); item.el.querySelector('.cf-q-ic').textContent = { wait: '⏳', run: '⬆️', ok: '✅', err: '❌', skip: '⏭️' }[st]; item.el.querySelector('.cf-q-m').textContent = msg || ''; } }
+    if(box){
+      box.innerHTML = '';
+      queue.concat(skipped.map(function(s){ return { f: { name: s.n }, skip: s.why }; })).forEach(function(it){
+        var el = document.createElement('div'); el.className = 'cf-q'; el.innerHTML = '<span class="cf-q-ic"></span><span class="cf-q-n"></span><span class="cf-q-m"></span>';
+        el.querySelector('.cf-q-n').textContent = it.f.name; it.el = el; box.appendChild(el); row(it, it.skip ? 'skip' : 'wait', it.skip || 'بالانتظار');
+      });
+    }
+    if(!queue.length){ toast('ما في ملفات صالحة للرفع (' + skipped.map(function(s){ return s.why; }).filter(function(v, i, a){ return a.indexOf(v) === i; }).join('، ') + ')', 'warn', 3500); return; }
+    cfBatch[courseId] = true; cfUploadBusy(courseId, true);
+    if(bar) bar.style.display = 'block';
+    var okN = 0, failN = 0, i;
+    for(i = 0; i < queue.length; i++){
+      var it = queue[i]; row(it, 'run', 'جاري الرفع…'); cfUploading[it.key] = true;
+      if(bar) bar.querySelector('.inner').style.width = Math.round(i / queue.length * 100) + '%';
+      try{
+        var res = await window.SB.uploadCourseFile(courseId, it.f);
+        if(res && res.error){ failN++; row(it, 'err', 'فشل'); } else { okN++; row(it, 'ok', 'تم'); }
+      }catch(e){ failN++; row(it, 'err', 'فشل'); }
+      delete cfUploading[it.key];
+    }
+    cfBatch[courseId] = false; cfUploadBusy(courseId, false);
+    if(bar){ bar.querySelector('.inner').style.width = '100%'; setTimeout(function(){ bar.style.display = 'none'; bar.querySelector('.inner').style.width = '0'; }, 800); }
+    toast((failN ? '⚠️ ' : '✅ ') + 'رُفع ' + okN + ' من ' + queue.length + (failN ? ' — فشل ' + failN + ' (أعد المحاولة)' : '') + (skipped.length ? ' · تخطّيت ' + skipped.length : ''), failN ? 'warn' : 'success', 4000);
+    if(okN) cfAfter(courseId);
+    if(!failN && box) setTimeout(function(){ if(!cfBatch[courseId]) box.innerHTML = ''; }, 8000);
+  };
+  /* ربط زر الرفع + حقل الملفات (متعدد) + السحب والإفلات على بطاقة المادة */
+  window.bindCourseUpload = function(root, courseId, zone){
+    var btn = root.querySelector('[data-upload-course="' + courseId + '"]'), inp = root.querySelector('[data-file-input="' + courseId + '"]');
+    if(!btn || !inp) return;
+    inp.multiple = true;
+    btn.addEventListener('click', function(){ inp.click(); });
+    inp.addEventListener('change', function(e){
+      var arr = Array.prototype.slice.call(e.target.files || []); if(!arr.length) return;
+      inp.value = ''; window.handleCourseFiles(courseId, arr);
+    });
+    if(zone) window.bindCourseDrop(zone, courseId);
+  };
+  window.bindCourseDrop = function(zone, courseId){
+    if(!zone || zone._cfDrop) return;
+    zone._cfDrop = true; var depth = 0;
+    var has = function(e){ var t = e.dataTransfer && e.dataTransfer.types; return !!t && Array.prototype.indexOf.call(t, 'Files') > -1; };
+    zone.addEventListener('dragenter', function(e){ if(!has(e)) return; e.preventDefault(); depth++; zone.classList.add('cf-drop'); });
+    zone.addEventListener('dragover', function(e){ if(!has(e)) return; e.preventDefault(); try{ e.dataTransfer.dropEffect = 'copy'; }catch(x){} });
+    zone.addEventListener('dragleave', function(){ depth = Math.max(0, depth - 1); if(!depth) zone.classList.remove('cf-drop'); });
+    zone.addEventListener('drop', function(e){ if(!has(e)) return; e.preventDefault(); depth = 0; zone.classList.remove('cf-drop'); window.handleCourseFiles(courseId, e.dataTransfer.files); });
+  };
+
+  /* نافذة «رفع ملفات»: اختر المادة (تُقترح تلقائياً من اسم الملف/رقم المادة) واسحب الملفات أو اخترها */
+  function cfGuessCourse(fileName){
+    var n = String(fileName || '').toLowerCase(), best = '';
+    (space().courses || []).forEach(function(c){
+      if(best) return;
+      if((c.code && n.indexOf(String(c.code).toLowerCase()) > -1) || (c.name && n.indexOf(String(c.name).toLowerCase()) > -1)) best = c.id;
+    });
+    return best;
+  }
+  window.openUploadHub = function(preId){
+    var courses = space().courses || [];
+    if(!courses.length){ toast('أضف مادة أولاً، بعدين ارفع ملفاتها', 'info', 2500); return; }
+    document.querySelectorAll('.modal-backdrop').forEach(function(m){ m.remove(); });
+    var opener = document.activeElement, bd = document.createElement('div'); bd.className = 'modal-backdrop show'; bd._trap = true;
+    bd.innerHTML = '<div class="modal" role="dialog" aria-modal="true" aria-label="رفع ملفات"><h3>📤 رفع ملفات</h3>' +
+      '<div class="form-group"><label for="uhCourse">المادة</label><select id="uhCourse">' + courses.map(function(c){ return '<option value="' + esc(c.id) + '"' + (c.id === preId ? ' selected' : '') + '>' + esc(c.name) + '</option>'; }).join('') + '</select></div>' +
+      '<div class="uh-drop" id="uhDrop" tabindex="0" role="button" aria-label="اختر ملفات أو اسحبها هنا"><div class="uh-ic">📂</div><b>اسحب الملفات هنا أو اضغط للاختيار</b><small>أكثر من ملف بنفس الوقت · حتى 25 MB للملف</small></div>' +
+      '<input type="file" id="uhInput" multiple style="display:none">' +
+      '<div class="modal-actions"><button class="btn btn-sm btn-ghost" id="uhClose">إغلاق</button></div></div>';
+    document.body.appendChild(bd);
+    var sel = bd.querySelector('#uhCourse'), drop = bd.querySelector('#uhDrop'), inp = bd.querySelector('#uhInput'), done = false;
+    function close(){ if(done) return; done = true; if(window.dismissOverlay) window.dismissOverlay(bd); else bd.remove(); if(opener && opener.focus && document.contains(opener)){ try{ opener.focus(); }catch(e){} } }
+    function go(files){
+      files = Array.prototype.slice.call(files || []); if(!files.length) return;
+      var id = sel.value, g = cfGuessCourse(files[0].name);
+      if(g && g !== id && files.every(function(f){ return cfGuessCourse(f.name) === g; })){
+        var gc = courses.filter(function(c){ return c.id === g; })[0];
+        window.customConfirm('اسم الملف بيطابق «' + (gc && gc.name) + '» — ترفعه لها بدل «' + sel.options[sel.selectedIndex].text + '»؟', function(){ sel.value = g; send(g, files); }, { title: 'مادة أنسب؟', icon: '🎯', okLabel: 'ارفع لـ ' + (gc && gc.name), danger: false });
+        return;
+      }
+      send(id, files);
+    }
+    function send(id, files){
+      close();
+      if(window.switchTab) window.switchTab('courses');
+      setTimeout(function(){
+        var card = document.querySelector('[data-course-card="' + id + '"]'); if(card && card.scrollIntoView) card.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        window.handleCourseFiles(id, files);
+      }, 120);
+    }
+    bd.querySelector('#uhClose').onclick = close;
+    bd.onclick = function(e){ if(e.target === bd) close(); };
+    drop.addEventListener('click', function(){ inp.click(); });
+    drop.addEventListener('keydown', function(e){ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); inp.click(); } });
+    inp.addEventListener('change', function(){ var a = Array.prototype.slice.call(inp.files || []); inp.value = ''; go(a); });
+    ['dragenter', 'dragover'].forEach(function(ev){ drop.addEventListener(ev, function(e){ e.preventDefault(); drop.classList.add('over'); }); });
+    ['dragleave', 'drop'].forEach(function(ev){ drop.addEventListener(ev, function(e){ e.preventDefault(); drop.classList.remove('over'); if(ev === 'drop') go(e.dataTransfer.files); }); });
+    bd.addEventListener('keydown', function(e){ if(e.key === 'Escape'){ e.stopPropagation(); close(); } });
+    setTimeout(function(){ try{ drop.focus(); }catch(e){} }, 80);
   };
 
   window.addMyCourse = function(){
@@ -1364,8 +1490,8 @@
      HU LINKS
      ============================================================ */
   window.renderHuLinks = function(){
-    var sections = ['huMainLinks','huLibraryLinks','huAppLinks','huSupportLinks'];
-    var keys = ['main','library','apps','support'];
+    var sections = ['huMainLinks','huLibraryLinks','huMajorLinks','huAppLinks','huSupportLinks'];
+    var keys = ['main','library','major','apps','support'];
     var HU = window.HU_LINKS || {};
     keys.forEach(function(key, idx){
       var el = document.getElementById(sections[idx]); if(!el) return;

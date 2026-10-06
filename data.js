@@ -402,7 +402,6 @@ var HU_LINKS = {
   main: [
     {icon:'🎓', title:'بوابة الطالب المباشرة', desc:'الرسوم، الجدول، العلامات، البريد', url:'https://reg1.hu.edu.jo/'},
     {icon:'📚', title:'التعلم الإلكتروني (Moodle)', desc:'المحاضرات، الواجبات، المواد', url:'https://lms.hu.edu.jo/my/'},
-    {icon:'📝', title:'الالتحاق والتسجيل', desc:'طلبات الالتحاق للطلبة الجدد', url:'https://admission.hu.edu.jo/'},
     {icon:'🌐', title:'الموقع الرسمي للجامعة', desc:'الأخبار، الإعلانات، الكليات', url:'https://hu.edu.jo/'},
     {icon:'📊', title:'الخطة الدراسية', desc:'الخطط الدراسية للتخصصات', url:'https://hu.edu.jo/unitCenter/class_a.aspx?t=0&unitid=40000000'},
     {icon:'💰', title:'دفع الرسوم (eFawateercom)', desc:'دفع الرسوم الجامعية إلكترونيًا', url:'https://www.efawateercom.jo/'}
@@ -411,14 +410,19 @@ var HU_LINKS = {
     {icon:'📖', title:'المكتبة الرقمية', desc:'كتب إلكترونية وقواعد بيانات', url:'https://library.hu.edu.jo/'},
     {icon:'🔍', title:'قواعد البيانات العلمية', desc:'IEEE، Springer، ScienceDirect', url:'https://library.hu.edu.jo/'},
     {icon:'📰', title:'المجلات العلمية المحكمة', desc:'مجلة الجامعة الهاشمية', url:'https://hu.edu.jo/'},
-    {icon:'🎓', title:'مكتبة الرسائل الجامعية', desc:'رسائل الماجستير والدكتوراه', url:'https://library.hu.edu.jo/'}
+    {icon:'🎓', title:'Google Scholar', desc:'بحث الأوراق العلمية والمراجع', url:'https://scholar.google.com/'}
+  ],
+  major: [
+    {icon:'🤝', title:'ElCoM — لجنة الطلبة', desc:'موقع لجنة طلبة هندسة الحاسوب (ElCoM)', url:'https://elcom-team.com/'},
+    {icon:'🐙', title:'GitHub', desc:'مشاريعك وأكوادك ومحفظة أعمالك', url:'https://github.com/'},
+    {icon:'📘', title:'MDN Web Docs', desc:'مرجع HTML وCSS وJavaScript', url:'https://developer.mozilla.org/'},
+    {icon:'💻', title:'GeeksforGeeks', desc:'خوارزميات وهياكل بيانات ومقابلات', url:'https://www.geeksforgeeks.org/'},
+    {icon:'🧮', title:'Wolfram Alpha', desc:'حل رياضيات وتفاضل وجبر خطي', url:'https://www.wolframalpha.com/'},
+    {icon:'🎬', title:'Coursera', desc:'مساقات جامعية عالمية', url:'https://www.coursera.org/'}
   ],
   apps: [
-    {icon:'📱', title:'تطبيق MyHU (iPhone)',  desc:'التطبيق الرسمي',                url:'https://apps.apple.com/us/app/myhu/id1520645609'},
-    {icon:'🤖', title:'تطبيق MyHU (Android)', desc:'التطبيق الرسمي',                url:'https://play.google.com/store/apps/details?id=com.hash.myhu'},
     {icon:'📧', title:'Outlook الجامعي',       desc:'البريد الإلكتروني',              url:'https://outlook.office.com/mail/'},
     {icon:'💬', title:'Microsoft Teams',       desc:'المحاضرات والاجتماعات',          url:'https://teams.microsoft.com/'},
-    {icon:'📖', title:'LMS HU',                desc:'منصة التعلم الإلكتروني',         url:'https://lms.hu.edu.jo/my/'},
     {icon:'📁', title:'OneDrive',              desc:'الملفات السحابية',               url:'https://onedrive.live.com/'}
   ],
   support: [

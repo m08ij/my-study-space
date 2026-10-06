@@ -849,6 +849,7 @@
     bind('btnPrintTt', window.printTimetable);
     bind('btnAddCourse', window.addMyCourse);
     bind('btnImportPlan', window.importFromPlan);
+    bind('btnUploadHub', function(){ window.openUploadHub(); });
     bind('btnAddTask', window.addTask);
     bind('btnAddExam', window.addExam);
     bind('btnAddAtt', window.addAttendanceCourse);

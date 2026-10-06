@@ -967,3 +967,92 @@ body:has(.settings-menu.show) .fab-main,body:has(.settings-menu.show) .fab-menu,
 .ex-empty-list{display:flex;flex-direction:column;gap:var(--sp-1)}
 .ex-empty-row{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3);padding:var(--sp-1) var(--sp-2);border-radius:var(--r-md)}
 .ex-empty-row:hover{background:var(--bg2)}
+
+/* ---------- رفع الملفات: سحب وإفلات + قائمة الدفعة + نافذة «رفع ملفات» ---------- */
+.cf-drop-hint{font-size:var(--fs-2xs);color:var(--muted2);text-align:center;margin-top:var(--sp-1)}
+@media (hover:none){.cf-drop-hint{display:none}}
+[data-course-card].cf-drop,.hub-sec.cf-drop{outline:2px dashed var(--accent);outline-offset:-2px;background:var(--grad-soft);position:relative}
+[data-course-card].cf-drop::after,.hub-sec.cf-drop::after{content:"📥 أفلت الملفات لرفعها لهذه المادة";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--bg) 82%,transparent);color:var(--accent);font-weight:800;font-size:var(--fs-base);border-radius:inherit;pointer-events:none}
+.cf-queue{display:flex;flex-direction:column;gap:4px;margin-top:var(--sp-2)}
+.cf-queue:empty{display:none}
+.cf-q{display:flex;align-items:center;gap:8px;padding:5px 9px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md);font-size:var(--fs-xs)}
+.cf-q-n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cf-q-m{color:var(--muted2);font-size:var(--fs-2xs);flex-shrink:0}
+.cf-q[data-s="ok"] .cf-q-m{color:var(--green)}
+.cf-q[data-s="err"]{border-color:var(--red)}.cf-q[data-s="err"] .cf-q-m{color:var(--red)}
+.cf-q[data-s="skip"]{opacity:.65}
+.cf-q[data-s="run"]{border-color:var(--accent)}
+.uh-drop{display:flex;flex-direction:column;align-items:center;gap:6px;padding:28px 16px;border:2px dashed var(--border2);border-radius:var(--r-lg);background:var(--card2);cursor:pointer;text-align:center;transition:var(--dur-2)}
+.uh-drop:hover,.uh-drop:focus-visible,.uh-drop.over{border-color:var(--accent);background:var(--grad-soft);outline:none}
+.uh-drop .uh-ic{font-size:2.2rem;line-height:1}
+.uh-drop small{color:var(--muted);font-size:var(--fs-xs)}
+
+/* ---------- المساعد: مؤشر الكتابة، نسخ، فاصل المحادثة السابقة، أزرار التأكيد ---------- */
+.ai-msg{position:relative;white-space:normal}
+.ai-msg code{background:var(--bg2);border-radius:4px;padding:0 4px;font-size:.92em}
+.ai-typing{display:flex;gap:4px;align-items:center;padding:12px 14px}
+.ai-typing span{width:6px;height:6px;border-radius:50%;background:var(--muted);animation:aiDot 1s infinite ease-in-out}
+.ai-typing span:nth-child(2){animation-delay:.15s}.ai-typing span:nth-child(3){animation-delay:.3s}
+@keyframes aiDot{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-3px)}}
+@media (prefers-reduced-motion:reduce){.ai-typing span{animation:none;opacity:.6}}
+.ai-copy{position:absolute;top:4px;inset-inline-start:4px;border:0;background:transparent;color:var(--muted2);cursor:pointer;font-size:12px;line-height:1;padding:3px 5px;border-radius:6px;opacity:0;transition:opacity var(--dur-2)}
+.ai-msg:hover .ai-copy,.ai-copy:focus-visible{opacity:1}
+.ai-copy:hover{color:var(--accent)}
+@media (hover:none){.ai-copy{opacity:.5}}
+.ai-sep{align-self:center;font-size:var(--fs-2xs);color:var(--muted2);padding:2px 10px;border-top:1px dashed var(--border);margin:4px 0}
+.ai-act.ok{background:var(--grad);color:var(--on-accent);border-color:transparent}
+.ai-act.no{border-color:var(--border2);color:var(--muted);background:transparent}
+.ai-act:disabled{opacity:.5;cursor:default}
+
+/* ================= v114: لمسة UX/UI — حذف هادئ، شارات ثانوية، تنبيهات أعلى، ثيمات أعمق، حركة أنعم ================= */
+/* 1) زر حذف المادة: أيقونة هادئة، والأحمر فقط عند التحويم/التركيز */
+.hub-card-actions .unified-course-btn.added{background:transparent;color:var(--muted);box-shadow:none;border:1px solid transparent;width:34px;height:34px;font-size:var(--fs-base);font-weight:400}
+.hub-card-actions .unified-course-btn.added:hover,.hub-card-actions .unified-course-btn.added:focus-visible{background:color-mix(in srgb,var(--red) 14%,transparent);color:var(--red);border-color:var(--red);transform:none;box-shadow:none}
+/* 2) شارات المادة: الأساسية (حضور/مهام/امتحان) أوضح من الثانوية (علامة/ملفات) */
+.hub-stat.sec{font-weight:500;color:var(--muted);background:transparent;border-style:dashed}
+.hub-stat[data-zero="1"] [data-files-badge]{display:none}
+.hub-stat[data-zero="1"]::after{content:"بلا ملفات"}
+/* 5) التنبيهات أعلى الشاشة: ما تغطي الزر العائم ولا بطاقات الصفحة */
+.toast-container{bottom:auto;top:76px}
+@media(max-width:900px){.toast-container{bottom:auto;top:calc(env(safe-area-inset-top,0px) + 68px)}}
+@keyframes toastDrop{from{opacity:0;transform:translateY(-14px) scale(.96)}to{opacity:1;transform:none}}
+.toast-container .toast:not(.out){animation:toastDrop .42s cubic-bezier(.22,1,.36,1)}
+
+/* ---- ثيمات: عمق وهوية ---- */
+:root{accent-color:var(--accent)}
+::selection{background:color-mix(in srgb,var(--accent) 32%,transparent);color:var(--text)}
+html{scrollbar-color:var(--border2) transparent}
+/* الثيمات الداكنة: لمعة علوية رقيقة تعطي سطح البطاقة عمقاً */
+:root:not([data-theme="ivory"]):not([data-theme="sky"]) .card{background-image:linear-gradient(180deg,rgba(255,255,255,.035),transparent 46%);box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+:root:not([data-theme="ivory"]):not([data-theme="sky"]) .card:hover{box-shadow:inset 0 1px 0 rgba(255,255,255,.07),var(--sh-lg)}
+[data-theme="graphite"] .card{background-image:none;box-shadow:none}
+/* الفاتحة: ظل أنعم وحد علوي ملوّن خفيف عند التحويم */
+[data-theme="ivory"] .card,[data-theme="sky"] .card{box-shadow:0 1px 2px rgba(40,50,80,.06)}
+[data-theme="ivory"] .card:hover,[data-theme="sky"] .card:hover{border-color:color-mix(in srgb,var(--accent) 45%,var(--border))}
+/* هوية لكل ثيم */
+[data-theme="cyberpunk"] .nav-item.active{box-shadow:inset 0 0 0 1px var(--glow),0 0 18px var(--glow)}
+[data-theme="cyberpunk"] .page-title{text-shadow:0 0 18px var(--glow)}
+[data-theme="royal"] .card{background-image:linear-gradient(160deg,rgba(167,139,250,.07),transparent 55%)}
+[data-theme="emerald"] .card:hover,[data-theme="ember"] .card:hover{border-color:color-mix(in srgb,var(--accent) 50%,var(--border2))}
+[data-theme="midnight"] body::after{opacity:calc(var(--blob-opacity,.35)*1.25)}
+[data-theme="ivory"] .page-title,[data-theme="sky"] .page-title{letter-spacing:0}
+.page-title+.page-sub{opacity:.95}
+
+/* ---- حركة أنعم ---- */
+@keyframes cardRise{from{opacity:0;transform:translateY(14px) scale(.985)}to{opacity:1;transform:none}}
+.hub-card,.myday-tile,.stat{animation:cardRise .5s cubic-bezier(.22,1,.36,1) both}
+.hub-card:nth-child(2),.stat:nth-child(2){animation-delay:.05s}
+.hub-card:nth-child(3),.stat:nth-child(3){animation-delay:.1s}
+.hub-card:nth-child(4),.stat:nth-child(4){animation-delay:.15s}
+.hub-card:nth-child(n+5),.stat:nth-child(n+5){animation-delay:.2s}
+.btn{transition:transform var(--dur-1) cubic-bezier(.22,1,.36,1),box-shadow var(--dur-2) ease,background var(--dur-2) ease,border-color var(--dur-2) ease,color var(--dur-2) ease}
+.btn:hover{transform:translateY(-1px)}
+.btn:active{transform:translateY(0) scale(.97)}
+.nav-item.active{transition:background var(--dur-2) ease,box-shadow var(--dur-2) ease,color var(--dur-2) ease,transform var(--dur-1) ease}
+.task input[type="checkbox"],.task .check{transition:transform .25s cubic-bezier(.34,1.56,.64,1)}
+.task input[type="checkbox"]:checked,.task .check.done{transform:scale(1.12)}
+.ai-panel.show{animation:aiPanelIn .32s cubic-bezier(.22,1,.36,1)}
+@keyframes aiPanelIn{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}
+.ai-msg{animation:aiMsgIn .28s cubic-bezier(.22,1,.36,1)}
+@keyframes aiMsgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.hub-card,.myday-tile,.stat,.ai-msg,.ai-panel.show,.toast-container .toast:not(.out){animation:none!important}.btn:hover,.btn:active{transform:none}}

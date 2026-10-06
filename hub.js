@@ -446,7 +446,7 @@
     if(!els.length) return;
     if(!window.SB || !window.SB.listCourseFilesMulti){ els.forEach(function(n){ n.textContent = '—'; }); return; }
     window.SB.listCourseFilesMulti(foldersOf(c)).then(function(files){
-      document.querySelectorAll('[data-files-badge="' + c.id + '"]').forEach(function(n){ n.textContent = files === null ? '—' : String(files.length); });
+      document.querySelectorAll('[data-files-badge="' + c.id + '"]').forEach(function(n){ n.textContent = files === null ? '—' : String(files.length); if(n.parentNode && n.parentNode.classList) n.parentNode.setAttribute('data-zero', files && !files.length ? '1' : '0'); });
     }, function(){});
   }
 
@@ -497,18 +497,18 @@
       var apc = ap === null ? '' : ap >= 85 ? 'ok' : ap >= 75 ? 'warn' : 'bad';
       html += '<div class="card hub-card" data-course-card="' + esc(c.id) + '" tabindex="0" role="button" aria-label="فتح مادة ' + esc(c.name) + '">' +
         '<div class="hub-card-head"><div class="hub-card-title"><b>' + esc(c.name) + '</b>' + (c.code ? '<small>' + esc(c.code) + '</small>' : '') + '</div>' +
-          '<div class="hub-card-actions"><button type="button" class="btn btn-sm btn-ghost" data-edit-course="' + esc(c.id) + '" title="تعديل المادة" aria-label="تعديل ' + esc(c.name) + '">✏️</button>' +
+          '<div class="hub-card-actions"><button type="button" class="btn btn-sm btn-ghost" data-card-upload="' + esc(c.id) + '" title="رفع ملفات لهذه المادة" aria-label="رفع ملفات إلى ' + esc(c.name) + '">📤</button><input type="file" multiple hidden data-card-file="' + esc(c.id) + '" tabindex="-1" aria-hidden="true"><button type="button" class="btn btn-sm btn-ghost" data-edit-course="' + esc(c.id) + '" title="تعديل المادة" aria-label="تعديل ' + esc(c.name) + '">✏️</button>' +
           '<button type="button" class="unified-course-btn added" data-course-name="' + esc(c.name) + '" title="حذف المادة" aria-label="حذف ' + esc(c.name) + '">🗑</button></div></div>' +
         '<div class="hub-chips"><span class="badge">' + (c.hours || 3) + ' ساعات</span>' +
           (c.instructor ? '<span class="badge">👤 ' + esc(c.instructor) + '</span>' : '') +
           ((c.room || place) ? '<span class="badge">📍 ' + esc(place || c.room) + '</span>' : '') + '</div>' +
         (cx.sched.length ? '<div class="hub-sched">🗓 ' + schedLine(cx.sched) + '</div>' : '<div class="hub-sched none">🗓 لا محاضرات بالجدول</div>') +
         '<div class="hub-stats">' +
-          '<span class="hub-stat ' + apc + '" title="الحضور">✅ ' + (ap === null ? '—' : ap + '%') + '</span>' +
-          '<span class="hub-stat" title="العلامة حتى الآن">📊 ' + (gp === null ? '—' : gp + '%') + '</span>' +
+          '<span class="hub-stat ' + apc + '" title="الحضور">✅ ' + (ap === null ? 'بلا حضور' : ap + '%') + '</span>' +
+          '<span class="hub-stat sec" title="العلامة حتى الآن">📊 ' + (gp === null ? 'بلا علامات' : gp + '%') + '</span>' +
           '<span class="hub-stat ' + (cx.overdue ? 'bad' : (cx.pending ? 'warn' : '')) + '" title="مهام متبقية">📝 ' + cx.pending + (cx.overdue ? ' (' + cx.overdue + ' متأخرة)' : '') + '</span>' +
           (cx.exam ? '<span class="hub-stat ' + (daysFromToday(cx.exam.dt) <= 3 ? 'warn' : '') + '" title="' + esc(cx.exam.e.name || 'امتحان') + '">⏳ ' + dayWord(daysFromToday(cx.exam.dt)) + '</span>' : '') +
-          '<span class="hub-stat" title="ملفات المادة">📎 <span data-files-badge="' + esc(c.id) + '">…</span></span>' +
+          '<span class="hub-stat sec" title="ملفات المادة">📎 <span data-files-badge="' + esc(c.id) + '">…</span></span>' +
         '</div>' +
         '<div class="hub-open">فتح المادة ‹</div></div>';
     });
@@ -521,6 +521,13 @@
     });
     grid.querySelectorAll('[data-edit-course]').forEach(function(b){
       b.addEventListener('click', function(e){ e.stopPropagation(); window.editCourseDialog(b.getAttribute('data-edit-course')); });
+    });
+    /* رفع مباشر من البطاقة: زر 📤 يفتح اختيار الملفات (عدة ملفات) + السحب والإفلات على البطاقة — بدون فتح نافذة المادة */
+    grid.querySelectorAll('[data-card-upload]').forEach(function(b){
+      var cid = b.getAttribute('data-card-upload'), inp = grid.querySelector('[data-card-file="' + cid + '"]'), card = b.closest('[data-course-card]');
+      b.addEventListener('click', function(e){ e.stopPropagation(); if(inp) inp.click(); });
+      if(inp){ inp.addEventListener('click', function(e){ e.stopPropagation(); }); inp.addEventListener('change', function(){ var arr = Array.prototype.slice.call(inp.files || []); inp.value = ''; if(arr.length && window.handleCourseFiles) window.handleCourseFiles(cid, arr); }); }
+      if(card && window.bindCourseDrop) window.bindCourseDrop(card, cid);
     });
     grid.querySelectorAll('.unified-course-btn').forEach(function(b){
       b.addEventListener('click', function(e){ e.stopPropagation(); window.confirmRemoveCourse(b.getAttribute('data-course-name')); });
@@ -555,6 +562,7 @@
   window.Hub = window.Hub || {};
   window.Hub.openCourse = openCourse;
   window.Hub.renderCourses = renderCourses;
+  window.Hub.refreshFiles = function(id){ var c = findCourse(id); if(c) loadFileBadge(c); };
 
   function refreshActiveCourse(){
     if(activeCourse && !activeCourse.sheet.closed) renderCourseSheet();
@@ -600,7 +608,8 @@
     h += '<section class="hub-sec" id="hs-files"><h4>📎 الملفات <span class="muted" data-files-count="' + esc(id) + '">—</span></h4>' +
       '<div class="course-files-list" data-files-list="' + esc(id) + '"><div class="hub-empty">جاري التحميل…</div></div>' +
       '<button type="button" class="upload-course-btn" data-upload-course="' + esc(id) + '">📤 رفع ملف</button>' +
-      '<input type="file" style="display:none" data-file-input="' + esc(id) + '">' +
+      '<div class="cf-drop-hint">أو اسحب الملفات وأفلتها هنا</div>' +
+      '<input type="file" multiple style="display:none" data-file-input="' + esc(id) + '">' +
       '<div class="upload-progress-bar" data-upload-progress="' + esc(id) + '"><div class="inner"></div></div></section>';
 
     /* المهام */
@@ -678,14 +687,7 @@
     on('[data-act="addgrade"]', function(){ addGradeFor(name); });
     on('[data-act="addnote"]', function(){ addNoteFor(name); });
     /* رفع الملفات: نفس منطق الرفع الحالي */
-    on('[data-upload-course]', function(){ var inp = b.querySelector('[data-file-input="' + id + '"]'); if(inp) inp.click(); });
-    b.querySelectorAll('[data-file-input]').forEach(function(inp){
-      inp.addEventListener('change', function(e){
-        var f = e.target.files[0]; if(!f) return;
-        window.handleCourseFileUpload(inp.getAttribute('data-file-input'), f);
-        inp.value = '';
-      });
-    });
+    window.bindCourseUpload(b, id, b.querySelector('#hs-files'));
   }
 
   function addTaskFor(name){

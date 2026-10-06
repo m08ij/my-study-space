@@ -2,14 +2,13 @@
    ai-context.js — طبقة سياق للمساعد المحلي (بدون أي خدمة خارجية)
    - تقرأ بيانات المستخدم الموجودة محلياً فقط، ولا ترسل شيئاً لأي مكان
    - كل جواب يذكر مصدر الأرقام والافتراضات، ويصرّح عند نقص البيانات
-   - الإجراءات المقترحة أزرار تنقّل/فتح فقط؛ المساعد لا ينفّذ تعديلاً على بياناتك
+   - الإجراءات هنا أزرار تنقّل/فتح فقط؛ إضافة المهام/الامتحانات/المصاريف تتم بـai.js وبعد زر تأكيد منك
    ============================================================ */
 (function(){
   'use strict';
   if(window._aiCtxLoaded) return;
   window._aiCtxLoaded = true;
 
-  var pendingActions = [];
   function money(n){ return Math.round(n).toLocaleString('en-US') + ' د'; }
   function sp(){ return window.space || {}; }
   function todayStr(){ return window.today ? window.today() : new Date().toISOString().slice(0, 10); }
@@ -19,7 +18,8 @@
     return Math.round((new Date(+a[1], +a[2] - 1, +a[3]) - new Date(+b[1], +b[2] - 1, +b[3])) / 86400000);
   }
   function go(tab, label){ return { label: label, run: function(){ if(window.switchTab) window.switchTab(tab); } }; }
-  function reply(text, actions){ pendingActions = actions || []; return text; }
+  /* الإجراءات تُخزَّن بمحرك ai.js (aiSetActions/aiTakeActions) ليقرأها الـUI من مكان واحد */
+  function reply(text, actions){ window.aiSetActions(actions || []); return text; }
 
   var PAGE_NAMES = { dashboard: 'لوحة التحكم', timetable: 'الجدول', courses: 'موادي', tasks: 'المهام', exams: 'الامتحانات', attendance: 'الحضور', timer: 'بومودورو', flashcards: 'البطاقات', budget: 'الميزانية', notes: 'الملاحظات', gradecalc: 'علاماتي', plan: 'الخطة', hulinks: 'روابط الجامعة' };
   function currentPage(){
@@ -113,7 +113,7 @@
   var prev = window.aiRespond;
   window.aiRespond = function(text){
     var t = String(text || '').trim(), lower = t.toLowerCase();
-    pendingActions = [];
+    window.aiSetActions([]);
     try{
       if(/(كم|مدة|لأي)\s*.*(يكفي|يكفيني|ينفد|بيكفي)|يكفيني|ينفد|تحليل.*(ميزاني|مصاريف)|حلل.*(ميزاني|مصاريف|وضعي)/.test(lower)) return budgetAnswer('runway');
       if(/(وفّر|وفر|توفير|اوفر|أوفر|خطة.*(توفير|ادخار)|ادخار)/.test(lower)) return budgetAnswer('save');
@@ -124,18 +124,21 @@
     }catch(e){ console.warn('ai-context', e); }
     return prev ? prev.apply(this, arguments) : 'ما فهمت قصدك.';
   };
-  window.aiTakeActions = function(){ var a = pendingActions; pendingActions = []; return a; };
 
   /* ---------- اقتراحات حسب الصفحة ---------- */
   var SUGG = {
-    budget: ['💰 حلل ميزانيتي', '📉 خطة توفير', '⏳ كم يكفيني رصيدي؟'],
-    tasks: ['📝 لخّص مهامي', '⏳ امتحاناتي', '📋 خططني يومي'],
-    exams: ['⏳ امتحاناتي', '📝 لخّص مهامي', '💡 نصيحة'],
-    dashboard: ['📋 خططني يومي', '📝 لخّص مهامي', '💰 حلل ميزانيتي']
+    budget: ['💰 حلل ميزانيتي', '💸 كم صرفت هالشهر؟', '📉 خطة توفير'],
+    tasks: ['📝 لخّص مهامي', '📋 خططلي يومي', '➕ ضيف مهمة'],
+    exams: ['⏳ امتحاناتي', '🎯 خطة مراجعة', '🗓 شو عندي هالأسبوع؟'],
+    attendance: ['✅ حضوري', '💡 كم أقدر أغيب؟', '📌 شو الوضع؟'],
+    gradecalc: ['📊 معدلي', '🎯 شو لازم أجيب بنهائي؟', '🎯 كيف أوصل معدل 3.5؟'],
+    timetable: ['📅 شو عندي اليوم؟', '🎓 محاضرتي الجاية', '🗓 جدولي الأسبوع'],
+    flashcards: ['🃏 كم بطاقة مستحقة؟', '📋 خططلي يومي', '💡 اشرح التكرار المتباعد'],
+    dashboard: ['📋 خططلي يومي', '📌 شو الوضع؟', '📅 شو عندي اليوم؟']
   };
   function refreshSuggestions(){
     var sugg = document.getElementById('aiSuggestions'); if(!sugg) return;
-    var list = SUGG[currentPage()] || ['📍 ساعدني هنا', '📝 لخّص مهامي', '💰 حلل ميزانيتي'];
+    var list = SUGG[currentPage()] || ['📍 ساعدني هنا', '📝 لخّص مهامي', '📌 شو الوضع؟'];
     sugg.innerHTML = list.concat(['💡 نصيحة']).map(function(s){ return '<button class="ai-suggestion">' + s + '</button>'; }).join('');
     sugg.querySelectorAll('.ai-suggestion').forEach(function(b){
       b.addEventListener('click', function(){
@@ -153,7 +156,7 @@
     var head = document.querySelector('#aiPanel .ai-header'), close = document.getElementById('aiClose');
     if(!head || !close || document.getElementById('aiClear')) return;
     var b = document.createElement('button'); b.type = 'button'; b.id = 'aiClear'; b.className = 'ai-close'; b.title = 'مسح المحادثة'; b.setAttribute('aria-label', 'مسح المحادثة'); b.textContent = '🗑';
-    b.addEventListener('click', function(){ var m = document.getElementById('aiMessages'); if(m){ m.innerHTML = ''; var d = document.createElement('div'); d.className = 'ai-msg bot'; d.textContent = 'تم مسح المحادثة. كيف بقدر أساعدك؟'; m.appendChild(d); } pendingActions = []; });
+    b.addEventListener('click', function(){ var m = document.getElementById('aiMessages'); if(m){ m.innerHTML = ''; var d = document.createElement('div'); d.className = 'ai-msg bot'; d.textContent = 'تم مسح المحادثة. كيف بقدر أساعدك؟'; m.appendChild(d); } window.aiSetActions([]); if(window.aiClearHistory) window.aiClearHistory(); });
     head.insertBefore(b, close);
   }
   function init(){

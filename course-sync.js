@@ -676,8 +676,9 @@
           '<div class="course-files-list" data-files-list="' + c.id + '">' +
             '<div class="u-empty is-loading">جاري التحميل...</div>' +
           '</div>' +
-          '<button class="upload-course-btn" data-upload-course="' + c.id + '">📤 رفع ملف</button>' +
-          '<input type="file" style="display:none" data-file-input="' + c.id + '">' +
+          '<button type="button" class="upload-course-btn" data-upload-course="' + c.id + '">📤 رفع ملف</button>' +
+          '<div class="cf-drop-hint">أو اسحب الملفات وأفلتها على هذه البطاقة</div>' +
+          '<input type="file" multiple style="display:none" data-file-input="' + c.id + '">' +
           '<div class="upload-progress-bar" data-upload-progress="' + c.id + '"><div class="inner"></div></div>' +
         '</div>' +
       '</div>';
@@ -699,18 +700,9 @@
       b.addEventListener('click', function(e){ e.stopPropagation(); window.editCourseDialog(b.dataset.editCourse); });
     });
 
-    g.querySelectorAll('[data-upload-course]').forEach(function(b){
-      b.addEventListener('click', function(){
-        var inp = g.querySelector('[data-file-input="' + b.dataset.uploadCourse + '"]');
-        if(inp) inp.click();
-      });
-    });
-    g.querySelectorAll('[data-file-input]').forEach(function(inp){
-      inp.addEventListener('change', function(e){
-        var f = e.target.files[0]; if(!f) return;
-        window.handleCourseFileUpload(inp.dataset.fileInput, f);
-        inp.value = '';
-      });
+    /* رفع: زر + اختيار عدة ملفات + سحب وإفلات على البطاقة (المنطق بـ features.js) */
+    g.querySelectorAll('[data-course-card]').forEach(function(card){
+      window.bindCourseUpload(card, card.getAttribute('data-course-card'), card);
     });
 
     /* ملفات المادة تُحمَّل عند ظهور الكرت فقط (بدل طلب لكل المواد دفعة واحدة وهي مخفية) */
