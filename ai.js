@@ -834,6 +834,21 @@
     return done('💸 **مصروفك ' + label + ': ' + money(sum) + '** (' + sel.length + ' معاملة)\n' + top.map(function(k){ return '• ' + catLabel(k) + ': ' + money(cats[k]); }).join('\n') + '\n📎 من معاملاتك المسجّلة فقط.', [go('budget', 'افتح الميزانية')]);
   }
 
+  /* --- جدول المذاكرة (من daily.js StudyPlan) --- */
+  function hStudyTable(c){
+    if(!/(?:^|\s)(?:ال)?جدول(?:ي)? (?:ال)?(?:مذاكر|مراجع|دراس)|اوقات (?:ال)?(?:مذاكر|مراجع)|متي ادرس|شو (?:بدي )?ادرس (?:اليوم|بكره|هالاسبوع)|خطه (?:ال)?اسبوع/.test(c.n) || !window.StudyPlan) return null;
+    var p = window.StudyPlan.build(), t = todayStr(), want = c.date ? [c.date] : [t, addDays(t, 1)];
+    if(!p.courses) return done('ما عندك مواد مسجّلة (أو كلها منجزة) لأوزّع عليها مذاكرة.', [go('courses', 'افتح موادي')]);
+    var L = ['📚 **جدول مذاكرتك المقترح:**'], any = false;
+    p.days.filter(function(d){ return want.indexOf(d.date) > -1; }).forEach(function(d){
+      L.push('', '📅 ' + shortDate(d.date) + (d.off ? ' — يوم راحة' : ''));
+      d.items.forEach(function(it){ any = true; L.push('• \u2066' + it.start + '–' + it.end + '\u2069 ' + it.course + ' — ' + it.reason); });
+      if(!d.off && !d.items.length) L.push('• ما في فراغ كافي بالجدول');
+    });
+    L.push('', '📎 موزّع على فراغاتك بين المحاضرات، والأقرب امتحاناً أولاً. الأسبوع كامل بصفحة الجدول.');
+    return done(L.join('\n'), [go('timetable', 'افتح جدول المذاكرة')]);
+  }
+
   /* --- نصيحة مبنية على وضعك + «شو الوضع» --- */
   function statusFacts(){
     var open = openTasks(), late = open.filter(function(t){ return t.due && diff(t.due) < 0; }), ex = upcomingExams()[0], F = [];
@@ -945,7 +960,7 @@
   function route(raw, noFollow){
     if(mem.pending && !noFollow) mem.pending.age = (mem.pending.age || 0) + 1;     /* يُحسب عمر السؤال المعلّق بعدد الرسائل */
     var c = ctxOf(raw), r = null, i;
-    var chain = [hPending, hCalc, hSmall, hNavStrict, hSpend, hDone, hAdd, hNextLec, hDayPlan, hStudyPlan, hAgenda, hExams, hTasks, hAttendance, hGrades, hCards, hStudy, hSpendQ, hAdvice, hFaq, hCourses, hNav, hKnow, hTime];
+    var chain = [hPending, hCalc, hSmall, hNavStrict, hSpend, hDone, hAdd, hNextLec, hStudyTable, hDayPlan, hStudyPlan, hAgenda, hExams, hTasks, hAttendance, hGrades, hCards, hStudy, hSpendQ, hAdvice, hFaq, hCourses, hNav, hKnow, hTime];
     if(!noFollow) chain.splice(1, 0, hFollow);
     for(i = 0; i < chain.length; i++){
       try{ r = chain[i](c); }catch(e){ console.warn('ai handler', chain[i].name, e); r = null; }

@@ -78,6 +78,8 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
           <div class="sm-title">البيانات</div>
           <button class="settings-item" id="syncCodeBtn" type="button" role="menuitem"><span class="si-ic" aria-hidden="true">☁️</span><span class="si-tx"><b>المزامنة السحابية</b><small id="syncMenuSub">—</small></span><span class="si-go" aria-hidden="true">‹</span></button>
           <button class="settings-item" id="calSyncBtn" type="button" role="menuitem"><span class="si-ic" aria-hidden="true">📅</span><span class="si-tx"><b>التقويم</b><small>تصدير واستيراد ‎.ics</small></span><span class="si-go" aria-hidden="true">‹</span></button>
+          <button class="settings-item" id="exportBackupBtn" type="button" role="menuitem"><span class="si-ic" aria-hidden="true">💾</span><span class="si-tx"><b>تصدير نسخة احتياطية</b><small>ملف JSON تنزّله بنفسك</small></span></button>
+          <button class="settings-item" id="importBackupBtn" type="button" role="menuitem"><span class="si-ic" aria-hidden="true">📥</span><span class="si-tx"><b>استيراد نسخة احتياطية</b><small>من ملف JSON</small></span></button>
           <button class="settings-item" id="restorePrevBtn" type="button" role="menuitem" style="display:none"><span class="si-ic" aria-hidden="true">🕘</span><span class="si-tx"><b>استرجاع نسخة سابقة</b><small>من آخر نسخ تلقائية</small></span><span class="si-go" aria-hidden="true">‹</span></button>
         </div>
         <div class="sm-group" role="group" aria-label="النظام">
@@ -215,6 +217,8 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
       <button class="btn" id="btnAddCourse">+ مادة</button>
       <button class="btn btn-ghost" id="btnImportPlan">📥 استيراد من الخطة</button>
       <button class="btn btn-ghost" id="btnUploadHub" type="button">📤 رفع ملفات</button>
+      <button class="btn btn-ghost" id="btnCloseSem" type="button">📦 إغلاق الفصل</button>
+      <button class="btn btn-ghost" id="btnSemArchive" type="button">🗂 أرشيف الفصول</button>
     </div>
     <div class="grid grid-2" id="myCoursesGrid"></div>
   </section>
@@ -487,13 +491,13 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <!-- الملفات الأساسية (الترتيب مهم جداً!) -->
-<script src="app.bundle.js?v=115"></script>
+<script src="app.bundle.js?v=116"></script>
 <script>
 /* حماية من خلط الإصدارات (HTML جديد + سكربتات قديمة من كاش الـ Service Worker): هذا السكربت داخل الـ HTML نفسه فيأتي دائماً بأحدث نسخة.
    1) إن لم يطابق window.APP_BUILD رقم BUILD هنا → يمسح كاش التطبيق ويعيد التحميل مرة واحدة (حارس sessionStorage يمنع التكرار).
    2) أقسام اللوحة المتقدمة (تحليلات/LMS/إحصائيات) تُنقل إلى خانتها الثابتة إذا أضافتها سكربتات قديمة بمكان آخر. */
 (function(){
-  var BUILD = '115';
+  var BUILD = '116';
   var SLOTS = { insightsSection: 'slotInsights', lmsWidget: 'slotLms', enhancedStatsSection: 'slotEnhanced' };
   function heal(){
     var dash = document.getElementById('dashboard'); if(!dash) return;

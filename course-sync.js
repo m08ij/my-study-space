@@ -246,7 +246,7 @@
 
     save();
     syncAllUI();
-    if(snap && snap.courses.length && window.toastUndo){
+    if(snap && snap.courses.length && window.toastUndo && !opts.silent){
       window.toastUndo('🗑 حُذفت "' + name + '"', function(){
         var s = space(); if(!Array.isArray(s.courses)) s.courses = [];
         snap.courses.forEach(function(c){ if(!s.courses.some(function(x){ return x.id === c.id; })) s.courses.push(c); });
@@ -263,7 +263,7 @@
         if(snap.notes.length && window.S) window.S.set('notes', window.notes);
         save(); syncAllUI(); toast('↩️ رجعت "' + name + '" بكل بياناتها', 'success', 2200);
       }, 10000);
-    } else toast('🗑 حُذفت "' + name + '"', 'success', 2200);
+    } else if(!opts.silent) toast('🗑 حُذفت "' + name + '"', 'success', 2200);
     return count;
   };
 
@@ -386,12 +386,17 @@
   /* ============================================================
      UI Sync — call every render function
      ============================================================ */
+  /* تحديث الواجهة: كان يرسم 7 شاشات مع كل إضافة/حذف (بطيء مع مواد كثيرة). الآن نرسم الشاشة الظاهرة + موادي فقط؛ باقي الشاشات تُرسم عند فتحها (switchTab يرسم التبويب الهدف دائماً). */
+  var VIEW_SEC = { renderDashboard: 'dashboard', renderAttendance: 'attendance', renderGradeCalc: 'gradecalc', renderPlan: 'plan', renderTimetable: 'timetable', renderExams: 'exams' };
   function syncAllUI(){
+    var act = document.querySelector('.section.active'), cur = act && act.id;
     ['renderDashboard','renderCourses','renderAttendance',
      'renderGradeCalc','renderPlan','renderTimetable','renderExams']
       .forEach(function(fn){
+        if(cur && VIEW_SEC[fn] && VIEW_SEC[fn] !== cur) return;
         try{ if(window[fn]) window[fn](); }catch(e){}
       });
+    try{ if(window.Hub && window.Hub.refreshActive) window.Hub.refreshActive(); }catch(e){}   /* نافذة المادة المفتوحة تتحدّث دائماً */
     setTimeout(refreshAllUnifiedButtons, 80);
   }
   window.syncAllUI = syncAllUI;
@@ -892,6 +897,111 @@
   };
 
   /* ============================================================
+     منجزة بنقرة + أرشيف الفصول
+     ============================================================ */
+  function gradeKeys(){ return Object.keys(window.GRADES || {}); }
+  function gradeLabelOf(k){ return String(k).split(' ')[0]; }
+  function curHours(name){ var c = (space().courses || []).filter(function(x){ return x.name === name; })[0], db = (window.COURSES_DB || {})[name]; return (c && parseInt(c.hours, 10)) || (db && db.h) || 3; }
+  /* تعليم مادة منجزة (+ علامتها اختيارياً → صف بحاسبة المعدل التراكمي مع علامة auto لنقدر نرجّعه) */
+  window.markCourseCompleted = function(name, gradeKey, opts){
+    opts = opts || {}; var sp = space();
+    if(!Array.isArray(sp.completedCourses)) sp.completedCourses = [];
+    if(sp.completedCourses.indexOf(name) < 0) sp.completedCourses.push(name);
+    (sp.courses || []).forEach(function(c){ if(c.name === name) c.completed = true; });
+    if(gradeKey && window.GRADES && window.GRADES[gradeKey] !== undefined){
+      if(!sp.courseResults) sp.courseResults = {};
+      var h = curHours(name); sp.courseResults[name] = { grade: gradeKey, hours: h, ts: Date.now() };
+      var rows = Array.isArray(window.gpaRows) ? window.gpaRows : (window.gpaRows = []), row = rows.filter(function(r){ return r && r.name === name; })[0];
+      if(row){ row.hrs = h; row.grade = gradeKey; row.auto = true; }
+      else if(rows.length === 1 && !rows[0].name){ rows[0] = { name: name, hrs: h, grade: gradeKey, auto: true }; }
+      else rows.push({ name: name, hrs: h, grade: gradeKey, auto: true });
+      if(window.S) window.S.set('gpaRows', rows);
+      try{ if(window.renderGpa) window.renderGpa(); }catch(e){}
+    }
+    if(!opts.silent){ save(); syncAllUI(); toast('✅ «' + name + '» صارت منجزة' + (gradeKey ? ' (' + gradeLabelOf(gradeKey) + ')' : ''), 'success', 2200); }
+    return true;
+  };
+  window.unmarkCourseCompleted = function(name){
+    var sp = space();
+    sp.completedCourses = (sp.completedCourses || []).filter(function(n){ return n !== name; });
+    (sp.courses || []).forEach(function(c){ if(c.name === name) c.completed = false; });
+    if(sp.courseResults) delete sp.courseResults[name];
+    if(Array.isArray(window.gpaRows)){
+      window.gpaRows = window.gpaRows.filter(function(r){ return !(r && r.name === name && r.auto); });
+      if(!window.gpaRows.length) window.gpaRows = [{ name: '', hrs: 3, grade: 'A (90-100)' }];
+      if(window.S) window.S.set('gpaRows', window.gpaRows);
+      try{ if(window.renderGpa) window.renderGpa(); }catch(e){}
+    }
+    save(); syncAllUI(); toast('↩️ أُلغي إنجاز «' + name + '»', 'info', 2000);
+  };
+  function askCompleted(name){
+    window.showModal('✅ علّم «' + name + '» منجزة', [
+      { key: 'grade', label: 'العلامة (اختياري — بتدخل حاسبة المعدل التراكمي)', type: 'select', options: [{ v: '', l: 'بدون علامة' }].concat(gradeKeys().map(function(k){ return { v: k, l: k }; })) }
+    ], { grade: '' }, function(d){ window.markCourseCompleted(name, d.grade); return true; }, null, { saveLabel: 'تعليم' });
+  }
+
+  function gpaOf(rows){
+    var pts = 0, hrs = 0; rows.forEach(function(r){ if(r.grade && window.GRADES && window.GRADES[r.grade] !== undefined){ pts += window.GRADES[r.grade] * r.hours; hrs += r.hours; } });
+    return hrs ? Math.round(pts / hrs * 100) / 100 : null;
+  }
+  window.semesterArchive = function(){ var sp = space(); return Array.isArray(sp.semesterArchive) ? sp.semesterArchive : []; };
+  /* إغلاق الفصل: يحفظ علامات المواد بالأرشيف، يعلّمها منجزة، وينظّف الفصل (مواد/حضور/علامات/جدول/امتحاناتها). المهام تبقى. تراجع كامل 15 ثانية. */
+  window.closeSemester = function(){
+    var sp = space(); if(!(sp.courses || []).length){ toast('ما عندك مواد مسجّلة لتقفل فصلها', 'info', 2200); return; }
+    var rep = (window.Progress && window.Progress.report) ? window.Progress.report() : { rows: [] };
+    var rows = sp.courses.map(function(c){
+      var r = rep.rows.filter(function(x){ return x.name === c.name; })[0], letter = r && r.letter ? r.letter.label : '';
+      var key = letter ? (gradeKeys().filter(function(k){ return gradeLabelOf(k) === letter; })[0] || '') : '';
+      var a = (sp.attendance || {})[c.name] || {}, tot = (a.present || 0) + (a.absent || 0), g = (sp.grades || []).filter(function(x){ return x.name === c.name; })[0];
+      return { name: c.name, code: c.code || '', hours: curHours(c.name), grade: key, pct: r ? Math.round(r.cur * 10) / 10 : null, att: tot ? Math.round((a.present || 0) / tot * 100) : null, items: g ? JSON.parse(JSON.stringify(g.items || [])) : [] };
+    });
+    window.showModal('📦 إغلاق الفصل', [{ key: 'name', label: 'اسم الفصل' }], { name: 'الفصل ' + (sp.currentSemester || 1) }, function(data){
+      var nm = String(data.name || '').trim(); if(!nm){ toast('أدخل اسماً للفصل', 'warn'); return false; }
+      var g = gpaOf(rows), withG = rows.filter(function(r){ return r.grade; }).length;
+      var msg = 'إغلاق «' + nm + '» (' + rows.length + ' مادة، ' + rows.reduce(function(s, r){ return s + r.hours; }, 0) + ' ساعة): ' + rows.map(function(r){ return r.name + (r.grade ? ' (' + gradeLabelOf(r.grade) + ')' : ''); }).join('، ') + '.\n' +
+        'بتنحفظ بالأرشيف وبتتعلّم منجزة' + (withG ? ' (المواد اللي إلها علامات بتدخل المعدل التراكمي' + (g !== null ? '، معدل الفصل ' + g.toFixed(2) : '') + ')' : '') + '، وبتنحذف من موادي والحضور والجدول والعلامات وامتحاناتها. مهامك بتبقى. بتقدر تتراجع 15 ثانية.';
+      setTimeout(function(){ window.customConfirm(msg, function(){ doCloseSemester(nm, rows, g); }, { title: 'إغلاق الفصل', icon: '📦', okLabel: 'أغلق الفصل', danger: false }); }, 60);
+      return true;
+    }, null, { saveLabel: 'متابعة' });
+  };
+  function doCloseSemester(name, rows, gpa){
+    var sp = space(), cp = function(x){ return JSON.parse(JSON.stringify(x === undefined ? null : x)); };
+    var KEYS = ['courses', 'attendance', 'grades', 'timetable', 'exams', 'tasks', 'completedCourses', 'courseResults', 'semesterArchive', 'currentSemester'];
+    var snap = { sp: {}, gpaRows: cp(window.gpaRows), notes: (window.notes || []).map(function(n){ return n ? n.course : null; }), nNotes: (window.notes || []).length };
+    KEYS.forEach(function(k){ snap.sp[k] = cp(sp[k]); });
+    if(!Array.isArray(sp.semesterArchive)) sp.semesterArchive = [];
+    sp.semesterArchive.unshift({ id: window.uid ? window.uid() : Date.now().toString(36), name: name, closedAt: new Date().toISOString(), courses: rows, gpa: gpa, hours: rows.reduce(function(s, r){ return s + r.hours; }, 0), semNo: sp.currentSemester || 1 });
+    rows.forEach(function(r){ window.markCourseCompleted(r.name, r.grade, { silent: true }); window.removeCourseEverywhere(r.name, { noUndo: true, silent: true }); });
+    sp.currentSemester = Math.min(10, (sp.currentSemester || 1) + 1);
+    save(); syncAllUI();
+    var undo = function(){
+      var s = space(); KEYS.forEach(function(k){ if(snap.sp[k] === null) delete s[k]; else s[k] = snap.sp[k]; });
+      window.gpaRows = snap.gpaRows || [{ name: '', hrs: 3, grade: 'A (90-100)' }]; if(window.S) window.S.set('gpaRows', window.gpaRows);
+      if((window.notes || []).length === snap.nNotes){ window.notes.forEach(function(n, i){ if(n) n.course = snap.notes[i] || ''; }); if(window.S) window.S.set('notes', window.notes); }
+      save(); syncAllUI(); toast('↩️ رجع الفصل كما كان', 'success', 2200);
+    };
+    if(window.toastUndo) window.toastUndo('📦 أُغلق «' + name + '» — ' + rows.length + ' مواد بالأرشيف', undo, 15000); else toast('📦 أُغلق «' + name + '»', 'success', 2500);
+  }
+  window.openSemesterArchive = function(){
+    var list = window.semesterArchive();
+    document.querySelectorAll('.modal-backdrop').forEach(function(m){ m.remove(); });
+    var bd = document.createElement('div'); bd.className = 'modal-backdrop show'; bd._trap = true;
+    var body = !list.length ? '<p style="color:var(--muted)">ما في فصول مؤرشفة لسا. لما تخلّص فصلك اضغط «📦 إغلاق الفصل» بصفحة موادي.</p>' : list.map(function(s, i){
+      return '<div class="arch-card"><div class="arch-head"><b>' + esc(s.name) + '</b><span>' + esc(new Date(s.closedAt).toLocaleDateString('ar-JO')) + '</span></div>' +
+        '<div class="arch-meta">' + s.hours + ' ساعة' + (s.gpa !== null && s.gpa !== undefined ? ' · معدل الفصل <b>' + Number(s.gpa).toFixed(2) + '</b>' : '') + '</div>' +
+        '<ul>' + s.courses.map(function(c){ return '<li>' + esc(c.name) + ' — ' + (c.grade ? '<b>' + esc(gradeLabelOf(c.grade)) + '</b>' : '—') + (c.pct !== null && c.pct !== undefined ? ' (' + c.pct + '%)' : '') + (c.att !== null && c.att !== undefined ? ' · حضور ' + c.att + '%' : '') + '</li>'; }).join('') + '</ul>' +
+        '<button class="btn btn-sm btn-ghost" data-arch-del="' + i + '">🗑 حذف من الأرشيف</button></div>';
+    }).join('');
+    bd.innerHTML = '<div class="modal arch-modal" role="dialog" aria-modal="true" aria-label="أرشيف الفصول"><h3>🗂 أرشيف الفصول</h3><div class="arch-list">' + body + '</div><div class="modal-actions"><button class="btn btn-sm btn-ghost" id="archClose">إغلاق</button></div></div>';
+    document.body.appendChild(bd);
+    var close = function(){ if(window.dismissOverlay) window.dismissOverlay(bd); else bd.remove(); };
+    bd.querySelector('#archClose').onclick = close; bd.onclick = function(e){ if(e.target === bd) close(); };
+    bd.querySelectorAll('[data-arch-del]').forEach(function(b){ b.onclick = function(){
+      var i = parseInt(b.getAttribute('data-arch-del'), 10), s = list[i]; if(!s) return;
+      window.customConfirm('حذف «' + s.name + '» من الأرشيف؟ (المواد تبقى منجزة ومعدلك التراكمي ما بتأثر)', function(){ space().semesterArchive = list.filter(function(x, j){ return j !== i; }); save(); close(); window.openSemesterArchive(); });
+    }; });
+  };
+  /* ============================================================
      متطلبات سابقة + ساعات الخطة + فحص سلامة البيانات
      ============================================================ */
   window.missingPrereqs = function(name){
@@ -1011,6 +1121,7 @@
         var cCode   = (found && found.info && found.info.code) ? found.info.code : (x.code || '');
         var cHours  = (found && found.info && found.info.h) ? found.info.h : (x.h || 3);
         var added   = isCourseAdded(cName);
+        var isDone  = !!(window.getCompletedCourses && window.getCompletedCourses()[cName]), res = (space().courseResults || {})[cName];
 
         coursesHtml +=
           '<div class="plan-course-row" style="display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--border);font-size:var(--fs-sm)">' +
@@ -1031,6 +1142,7 @@
                 ? '<span style="font-size:var(--fs-2xs);padding:1px 7px;border-radius:var(--r-sm);background:rgba(52,211,153,.15);color:var(--green)">مختبر</span>'
                 : '') +
             '</div>' +
+            (isDone ? '<button type="button" class="plan-done-chip" data-undone="' + esc(cName) + '" title="إلغاء الإنجاز">✅ منجزة' + (res && res.grade ? ' · ' + esc(gradeLabelOf(res.grade)) : '') + ' ↩</button>' : '<button type="button" class="plan-done-btn" data-done="' + esc(cName) + '" title="علّمها منجزة" aria-label="علّم ' + esc(cName) + ' منجزة">✓</button>') +
             '<span style="color:var(--accent);font-weight:700;font-size:var(--fs-sm);white-space:nowrap;flex-shrink:0">' + x.h + ' س</span>' +
           '</div>';
       });
@@ -1070,6 +1182,8 @@
         window.S.set('openSems', arr);
       });
 
+      el.querySelectorAll('[data-done]').forEach(function(b){ b.addEventListener('click', function(e){ e.stopPropagation(); askCompleted(b.getAttribute('data-done')); }); });
+      el.querySelectorAll('[data-undone]').forEach(function(b){ b.addEventListener('click', function(e){ e.stopPropagation(); var nm = b.getAttribute('data-undone'); window.customConfirm('إلغاء إنجاز «' + nm + '»؟ (بينشال من المعدل التراكمي لو كانت علامتها مضافة من هون)', function(){ window.unmarkCourseCompleted(nm); }); }); });
       /* Wire buttons */
       el.querySelectorAll('.unified-course-btn').forEach(function(btn){
         btn.addEventListener('click', function(e){
@@ -1098,6 +1212,9 @@
      ============================================================ */
   function init(){
     injectCSS();
+    [['exportBackupBtn', function(){ window.downloadBackup(false); }], ['importBackupBtn', function(){ window.restoreFromFile(); }], ['btnCloseSem', function(){ window.closeSemester(); }], ['btnSemArchive', function(){ window.openSemesterArchive(); }]].forEach(function(x){
+      var b = document.getElementById(x[0]); if(b && !b._bound){ b._bound = true; b.addEventListener('click', function(){ if(window.closeSettingsMenu) window.closeSettingsMenu(); x[1](); }); }
+    });
     var ib = document.getElementById('integrityBtn');
     if(ib && !ib._bound){ ib._bound = true; ib.addEventListener('click', function(){ if(window.closeSettingsMenu) window.closeSettingsMenu(); window.openIntegrityCheck(); }); }
 

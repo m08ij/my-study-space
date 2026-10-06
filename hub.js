@@ -562,6 +562,7 @@
   window.Hub = window.Hub || {};
   window.Hub.openCourse = openCourse;
   window.Hub.renderCourses = renderCourses;
+  window.Hub.refreshActive = function(){ refreshActiveCourse(); };
   window.Hub.refreshFiles = function(id){ var c = findCourse(id); if(c) loadFileBadge(c); };
 
   function refreshActiveCourse(){

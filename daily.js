@@ -431,3 +431,128 @@
   window.Daily = { todayData: todayData, gap: gap, suggestBetween: suggestBetween, calmExam: calmExam, peak: peak, peakLine: peakLine, render: renderDaily, setTodayMode: setTodayMode,
     fitAccent: fitAccent, ratio: ratio, hex2rgb: hex2rgb, limitList: limitList, examDT: examDT };
 })();
+
+/* ============================================================
+   جدول المذاكرة الأسبوعي المقترح — يوزّع جلسات المراجعة على فراغاتك بين المحاضرات حسب قرب الامتحانات والمهام.
+   يُحسب من البيانات كل مرة (فيتحدّث لحاله مع أي تغيير بالجدول/الامتحانات/المهام). إعداداته محلية (ss_study_plan) ولا تدخل المزامنة.
+   ============================================================ */
+(function(){
+  'use strict';
+  var KEY = 'ss_study_plan';
+  function sp(){ return window.space || {}; }
+  function pad(n){ return n < 10 ? '0' + n : '' + n; }
+  function ymd(d){ return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function toD(s){ var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(s || '')); return m ? new Date(+m[1], +m[2] - 1, +m[3]) : null; }
+  function mins(t){ var p = String(t || '').split(':'), h = parseInt(p[0], 10), m = parseInt(p[1], 10) || 0; return isNaN(h) ? null : h * 60 + m; }
+  function hhmm(m){ return pad(Math.floor(m / 60)) + ':' + pad(m % 60); }
+  function cfg(){
+    var c = {}; try{ c = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; }catch(e){}
+    return { on: c.on !== false, from: c.from || '08:00', to: c.to || '21:00', len: Math.min(120, Math.max(20, +c.len || 50)), perDay: Math.min(8, Math.max(1, +c.perDay || 3)), off: Array.isArray(c.off) ? c.off : ['Fri'] };
+  }
+  function saveCfg(c){ try{ localStorage.setItem(KEY, JSON.stringify(c)); }catch(e){} }
+  function dayDiff(a, b){ return Math.round((toD(a) - toD(b)) / 864e5); }
+
+  /* وزن كل مادة: قرب امتحانها (الأقرب = أثقل) + مهامها المفتوحة + حدّ أدنى للمراجعة العامة */
+  function demand(today){
+    var done = window.getCompletedCourses ? window.getCompletedCourses() : {}, out = [];
+    (sp().courses || []).forEach(function(c){
+      if(!c || !c.name || c.completed === true || done[c.name]) return;
+      var w = 1, reason = 'مراجعة عامة', cut = null, urgent = false;
+      (sp().exams || []).forEach(function(e){
+        if(e.course !== c.name || !e.date) return;
+        var d = dayDiff(e.date, today); if(d < 0 || d > 30) return;
+        w += 30 / Math.max(1, d); if(cut === null || e.date < cut){ cut = e.date; reason = (e.name || 'امتحان') + ' ' + (d === 0 ? 'اليوم' : d === 1 ? 'بكرة' : 'بعد ' + d + ' يوم'); urgent = d <= 3; }
+      });
+      var tk = (sp().tasks || []).filter(function(t){ return !t.done && t.course === c.name; });
+      tk.forEach(function(t){ w += 1.5; if(t.due && dayDiff(t.due, today) <= 3) w += 1.5; });
+      if(tk.length && cut === null) reason = tk.length + ' مهمة مفتوحة';
+      out.push({ name: c.name, w: w, cut: cut, reason: reason, urgent: urgent, n: 0 });
+    });
+    return out;
+  }
+  function busyOn(date, DE){
+    var d = toD(date), key = DE[d.getDay()], tt = sp().timetable || {}, out = [];
+    Object.keys(tt).forEach(function(k){
+      var i = k.indexOf('-'); if(i < 0 || k.slice(0, i) !== key || !tt[k]) return;
+      var s = mins(k.slice(i + 1)); if(s === null) return; var e = mins(tt[k].end); if(e === null || e <= s) e = s + 60;
+      out.push([s - 10, e + 10]);
+    });
+    (sp().exams || []).forEach(function(x){ if(x.date === date){ var s = mins(x.time); if(s !== null) out.push([s - 30, s + 150]); } });
+    return out.sort(function(a, b){ return a[0] - b[0]; });
+  }
+  function build(){
+    var c = cfg(), today = window.today ? window.today() : ymd(new Date()), DE = window.DAYS_EN || ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], now = new Date();
+    var dem = demand(today), days = [], i;
+    for(i = 0; i < 7; i++){
+      var d = new Date(toD(today).getTime()); d.setDate(d.getDate() + i); var date = ymd(d), dk = DE[d.getDay()];
+      var day = { date: date, dow: d.getDay(), items: [], off: c.off.indexOf(dk) > -1 };
+      if(!day.off && dem.length){
+        var from = mins(c.from), to = mins(c.to);
+        if(i === 0){ var nowM = Math.ceil((now.getHours() * 60 + now.getMinutes() + 15) / 15) * 15; from = Math.max(from, nowM); }
+        var busy = busyOn(date, DE), gaps = [], cur = from;
+        busy.forEach(function(b){ if(b[0] > cur) gaps.push([cur, Math.min(b[0], to)]); cur = Math.max(cur, b[1]); });
+        if(cur < to) gaps.push([cur, to]);
+        var placed = 0, last = null;
+        gaps.forEach(function(g){
+          var t = g[0];
+          while(placed < c.perDay && t + c.len <= g[1]){
+            var cand = dem.filter(function(x){ return !x.cut || date < x.cut; }); if(!cand.length) break;
+            cand.sort(function(a, b){ return (b.w / (b.n + 1)) - (a.w / (a.n + 1)); });
+            var pick = (cand[0].name === last && cand.length > 1) ? cand[1] : cand[0];
+            pick.n++; last = pick.name; placed++;
+            day.items.push({ start: hhmm(t), end: hhmm(t + c.len), course: pick.name, reason: pick.reason, urgent: pick.urgent });
+            t += c.len + 10;
+          }
+        });
+      }
+      days.push(day);
+    }
+    return { cfg: c, days: days, courses: dem.length };
+  }
+  function dayName(dow){ return (window.DAYS_AR || ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'])[dow]; }
+  function esc(s){ return window.esc ? window.esc(s) : String(s == null ? '' : s); }
+  function render(){
+    var sec = document.getElementById('timetable'); if(!sec) return;
+    var card = document.getElementById('studyPlanCard');
+    if(!card){ card = document.createElement('div'); card.id = 'studyPlanCard'; card.className = 'card sp-card'; var wrap = sec.querySelector('.timetable-wrap'); if(wrap && wrap.parentNode) wrap.parentNode.insertBefore(card, wrap.nextSibling); else sec.appendChild(card); }
+    var plan = build(), c = plan.cfg, today = window.today ? window.today() : ymd(new Date());
+    var h = '<div class="sp-head"><h3>📚 جدول المذاكرة المقترح</h3><div style="display:flex;gap:6px"><button type="button" class="btn btn-sm btn-ghost" id="spToggle">' + (c.on ? 'إخفاء' : 'إظهار') + '</button><button type="button" class="btn btn-sm btn-ghost" id="spCfg" aria-label="إعدادات جدول المذاكرة">⚙️</button></div></div>';
+    if(!c.on){ card.innerHTML = h; bind(card); return; }
+    h += '<div class="sp-sub">بيوزّع جلسات ' + c.len + ' دقيقة على فراغاتك بين المحاضرات (أقصى ' + c.perDay + ' باليوم)، والأقرب امتحاناً أولاً. بيتحدّث لحاله مع أي تغيير.</div>';
+    if(!plan.courses) h += '<div class="sp-none">ما عندك مواد مسجّلة (أو كلها منجزة) — أضف موادك من «موادي» وبيطلع لك جدول.</div>';
+    else plan.days.forEach(function(d){
+      h += '<div class="sp-day' + (d.date === today ? ' today' : '') + '"><b>' + dayName(d.dow) + ' ' + toD(d.date).getDate() + '/' + (toD(d.date).getMonth() + 1) + '</b><div class="sp-items">' +
+        (d.off ? '<span class="sp-none">يوم راحة</span>' : d.items.length ? d.items.map(function(it){ return '<span class="sp-item' + (it.urgent ? ' urgent' : '') + '"><bdi dir="ltr">' + it.start + '–' + it.end + '</bdi> ' + esc(it.course) + '<small>' + esc(it.reason) + '</small></span>'; }).join('') : '<span class="sp-none">ما في فراغ كافي</span>') + '</div></div>';
+    });
+    h += '<div class="sp-sub" style="margin-top:8px">📎 اقتراح مبني على جدولك وامتحاناتك ومهامك المسجّلة فقط؛ ما بعرف صعوبة المواد ولا جاهزيتك.</div>';
+    card.innerHTML = h; bind(card);
+  }
+  function bind(card){
+    var t = card.querySelector('#spToggle'), g = card.querySelector('#spCfg');
+    if(t) t.onclick = function(){ var c = cfg(); c.on = !c.on; saveCfg(c); render(); };
+    if(g) g.onclick = function(){
+      var c = cfg();
+      window.showModal('⚙️ إعدادات جدول المذاكرة', [
+        { key: 'from', label: 'من الساعة', type: 'time' }, { key: 'to', label: 'إلى الساعة', type: 'time' },
+        { key: 'len', label: 'مدة الجلسة (دقيقة)', type: 'number' }, { key: 'perDay', label: 'أقصى جلسات باليوم', type: 'number' },
+        { key: 'off', label: 'أيام الراحة', type: 'select', options: [{ v: 'Fri', l: 'الجمعة' }, { v: 'Fri,Sat', l: 'الجمعة والسبت' }, { v: '', l: 'لا يوجد' }] }
+      ], { from: c.from, to: c.to, len: c.len, perDay: c.perDay, off: c.off.join(',') }, function(d){
+        var f = mins(d.from), to = mins(d.to);
+        if(f === null || to === null || to - f < 30){ window.toast('الوقت غير صحيح: لازم تكون النهاية بعد البداية بنص ساعة على الأقل', 'warn', 3000); return { field: 'to' }; }
+        var len = parseInt(d.len, 10), per = parseInt(d.perDay, 10);
+        if(!(len >= 20 && len <= 120)){ window.toast('مدة الجلسة بين 20 و120 دقيقة', 'warn', 2500); return { field: 'len' }; }
+        if(!(per >= 1 && per <= 8)){ window.toast('عدد الجلسات بين 1 و8', 'warn', 2500); return { field: 'perDay' }; }
+        saveCfg({ on: true, from: hhmm(f), to: hhmm(to), len: len, perDay: per, off: d.off ? d.off.split(',') : [] }); render(); return true;
+      });
+    };
+  }
+  window.StudyPlan = { build: build, render: render, config: cfg };
+  function hook(){
+    if(typeof window.renderTimetable === 'function' && !window._spWrapped){
+      window._spWrapped = true; var orig = window.renderTimetable;
+      window.renderTimetable = function(){ var r = orig.apply(this, arguments); try{ render(); }catch(e){ console.warn('studyplan', e); } return r; };
+    }
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', hook); else hook();
+  setTimeout(hook, 600);
+})();

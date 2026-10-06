@@ -1074,3 +1074,26 @@ html{scrollbar-color:var(--border2) transparent}
 .plan-chip em{font-style:normal;color:var(--accent);margin-inline-start:2px}
 .plan-chip.has-cur{border-color:color-mix(in srgb,var(--accent) 45%,var(--border))}
 .plan-hint{font-size:var(--fs-2xs);color:var(--muted2);line-height:1.6}
+/* ===== v116: منجزة بنقرة، أرشيف الفصول، جدول المذاكرة ===== */
+.plan-done-btn{width:30px;height:30px;border-radius:var(--r-md);border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;font-family:inherit;font-size:var(--fs-sm);flex-shrink:0;transition:all var(--dur-2) ease}
+.plan-done-btn:hover,.plan-done-btn:focus-visible{border-color:var(--green);color:var(--green);background:color-mix(in srgb,var(--green) 12%,transparent)}
+.plan-done-chip{font-family:inherit;font-size:var(--fs-2xs);font-weight:700;padding:3px 10px;border-radius:var(--r-pill);border:1px solid var(--green);background:color-mix(in srgb,var(--green) 12%,transparent);color:var(--green);cursor:pointer;white-space:nowrap;flex-shrink:0}
+.plan-done-chip:hover{background:color-mix(in srgb,var(--green) 22%,transparent)}
+.arch-modal{max-width:560px}
+.arch-list{display:flex;flex-direction:column;gap:10px;max-height:58vh;overflow:auto;margin-bottom:12px}
+.arch-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md);padding:12px 14px}
+.arch-head{display:flex;justify-content:space-between;gap:10px;margin-bottom:4px}
+.arch-head span,.arch-meta{color:var(--muted);font-size:var(--fs-xs)}
+.arch-card ul{margin:8px 0;padding-inline-start:18px;font-size:var(--fs-sm);line-height:1.8}
+.sp-card{margin-top:16px}
+.sp-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.sp-head h3{margin:0}
+.sp-sub{color:var(--muted);font-size:var(--fs-xs);margin-bottom:10px}
+.sp-day{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-top:1px solid var(--border)}
+.sp-day>b{min-width:92px;font-size:var(--fs-sm)}
+.sp-day.today>b{color:var(--accent)}
+.sp-items{display:flex;flex-wrap:wrap;gap:6px}
+.sp-item{font-size:var(--fs-xs);padding:4px 10px;border-radius:var(--r-md);background:var(--grad-soft);border:1px solid var(--glow);color:var(--text)}
+.sp-item small{color:var(--muted);margin-inline-start:4px}
+.sp-item.urgent{border-color:var(--amber)}
+.sp-none{color:var(--muted2);font-size:var(--fs-xs)}
