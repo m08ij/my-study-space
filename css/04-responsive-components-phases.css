@@ -1128,3 +1128,14 @@ html{scrollbar-color:var(--border2) transparent}
 /* v117: أزرار الحذف هادئة بكل القوائم (الأحمر عند التحويم فقط) */
 .task-actions .btn-danger,.att-card .unified-course-btn.added,.gt-card .unified-course-btn.added{background:transparent;color:var(--muted);border:1px solid transparent;box-shadow:none}
 .task-actions .btn-danger:hover,.task-actions .btn-danger:focus-visible,.att-card .unified-course-btn.added:hover,.gt-card .unified-course-btn.added:hover{background:color-mix(in srgb,var(--red) 14%,transparent);color:var(--red);border-color:var(--red);transform:none;box-shadow:none}
+
+/* ===== v118: وضع الخصوصية + تلميحات ===== */
+html.privacy #budget :is(#budgetSummary,#budgetPlan,#budgetList,#budgetCats),
+html.privacy [data-dsec="budget"] #dashBudget,html.privacy #dashBudget,
+html.privacy [data-dsec="qspend"] .qs-total,html.privacy #qsTotal,
+html.privacy #gradecalc :is(#gradeTrackerList,#gpaBody,#gpaVal,#gpaHrs,#gpaGrade,#ncResult,#whatIfResult,#gcForecast,#gpaScen),
+html.privacy #insightsSection,html.privacy #enhancedStatsSection :is(.donut-wrap,.stats-hero),
+html.privacy .hub-stat.sec[title="العلامة حتى الآن"],
+html.privacy .dash-term .gpa,html.privacy .pg-kpis,html.privacy .pg-rows{filter:blur(9px);transition:filter .25s ease;user-select:none}
+html.privacy :is(#budgetSummary,#budgetPlan,#budgetList,#budgetCats,#dashBudget,#gradeTrackerList,#gpaBody,#gpaVal,#insightsSection,.hub-stat.sec[title="العلامة حتى الآن"],.pg-kpis,.pg-rows):active{filter:none}
+.cp-hint{font-size:var(--fs-2xs);color:var(--muted);margin-top:6px;line-height:1.6}

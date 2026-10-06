@@ -365,4 +365,31 @@
   var _enhance = enhance;
   enhance = function(){ _enhance(); renderExamMode(); };
   window.UX = { enhance: function(){ enhance(); }, renderExamMode: renderExamMode, maybeNag: maybeNag, maybeMorning: maybeMorning, morningData: morningData };
-})();
+
+  /* ============================================================
+     وضع الخصوصية: يغبّش العلامات والمعدل والميزانية بنقرة وحدة (لو حدا جنبك). محلي فقط (ss_privacy) ولا يدخل المزامنة.
+     ============================================================ */
+  (function(){
+    var KEY = 'ss_privacy';
+    function isOn(){ try{ return localStorage.getItem(KEY) === '1'; }catch(e){ return false; } }
+    function paint(on){
+      document.documentElement.classList.toggle('privacy', !!on);
+      var b = document.getElementById('privacyBtn'); if(!b) return;
+      b.setAttribute('aria-checked', on ? 'true' : 'false');
+      var t = b.querySelector('.pv-t'); if(t) t.textContent = on ? 'مفعّل — الأرقام الحساسة مغبّشة' : 'الأرقام ظاهرة';
+    }
+    function set(on, quiet){
+      try{ localStorage.setItem(KEY, on ? '1' : '0'); }catch(e){}
+      paint(on);
+      if(!quiet && window.toast) window.toast(on ? '🙈 وضع الخصوصية شغّال — العلامات والميزانية مغبّشة (اضغط على الرقم مطولاً لإظهاره)' : '👀 رجعت الأرقام ظاهرة', 'info', 3200);
+    }
+    window.PrivacyMode = { isOn: isOn, set: set, toggle: function(){ set(!isOn()); } };
+    paint(isOn());
+    function bind(){
+      var b = document.getElementById('privacyBtn'); if(!b || b._pv) return; b._pv = true;
+      b.addEventListener('click', function(){ if(window.closeSettingsMenu) window.closeSettingsMenu(); window.PrivacyMode.toggle(); });
+      paint(isOn());
+    }
+    if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind); else bind();
+    setTimeout(bind, 400);
+  })();})();

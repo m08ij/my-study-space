@@ -1278,7 +1278,7 @@
     else if(perm === 'denied') txt.textContent = 'محظورة من المتصفح';
     else if(perm === 'unsupported') txt.textContent = 'غير مدعومة بهذا المتصفح';
     else txt.textContent = 'اضغط للتفعيل';
-    var nb = document.getElementById('notifBtn'); if(nb) nb.setAttribute('aria-checked', perm === 'granted' ? 'true' : 'false');
+    var nb = document.getElementById('notifBtn'); if(nb) nb.setAttribute('data-perm', perm);
   };
 
   /* ============================================================

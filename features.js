@@ -971,8 +971,8 @@
 
   window.addMyCourse = function(){
     window.showModal('إضافة مادة', [
-      {key:'name', label:'اسم المادة'},
-      {key:'code', label:'رقم المادة'},
+      {key:'name', label:'اسم المادة', placeholder:'اكتب الاسم… أو اكتفِ برقم المادة تحت'},
+      {key:'code', label:'رقم المادة (بيعبّي الاسم والساعات لحاله)', placeholder:'مثال: 0110102101'},
       {key:'hours', label:'الساعات', type:'number'},
       {key:'instructor', label:'الدكتور'},
       {key:'room', label:'القاعة'}

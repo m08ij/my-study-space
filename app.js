@@ -1443,7 +1443,7 @@
   function dashIsCollapsed(id){
     var p = dashPrefs();
     if(p[id] !== undefined) return !!p[id];
-    if(id === 'lmsWidget') return true; /* روابط LMS طويلة: مطوية افتراضياً */
+    if(id === 'lmsWidget' || id === 'insightsSection' || id === 'enhancedStatsSection') return true; /* LMS + الإحصائيات/التحليلات المتقدمة (تكرر أرقام الملخص الأسبوعي): مطوية افتراضياً — النقر على العنوان يفتحها وتُحفظ حالتك */
     return !!(window.matchMedia && window.matchMedia('(max-width:600px)').matches);
   }
   function dashApply(){
