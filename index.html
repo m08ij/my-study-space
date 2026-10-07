@@ -23,6 +23,15 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
 
 <div class="debug-panel" id="debugPanel"></div>
 
+<div class="boot-skel" id="bootSkel" aria-hidden="true">
+  <div class="bs-top"><span class="bs-dot"></span><span class="bs-brand"></span><span class="bs-pill"></span></div>
+  <div class="bs-body">
+    <div class="bs-hero"></div>
+    <div class="bs-row"><div class="bs-card"></div><div class="bs-card"></div><div class="bs-card"></div></div>
+    <div class="bs-list"><span></span><span></span><span></span></div>
+  </div>
+</div>
+
 <div class="welcome-overlay" id="welcomeOverlay" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle" aria-describedby="welcomeSub">
   <div class="welcome-bg" aria-hidden="true"></div>
   <div class="welcome-shell">
@@ -495,13 +504,28 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <!-- الملفات الأساسية (الترتيب مهم جداً!) -->
-<script src="app.bundle.js?v=119"></script>
+<script src="app.bundle.js?v=120"></script>
+<script>
+/* إخفاء الهيكل الرمادي بعد أول رسم للتطبيق (مع مؤقّت أمان كي لا يعلق أبداً) */
+(function(){
+  var done = false;
+  function hide(){
+    if(done) return; done = true;
+    var el = document.getElementById('bootSkel'); if(!el) return;
+    el.className += ' bs-out';
+    setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); }, 350);
+  }
+  function soon(){ var raf = window.requestAnimationFrame || function(f){ setTimeout(f, 16); }; raf(function(){ raf(hide); }); }
+  if(document.readyState === 'complete') soon(); else window.addEventListener('load', soon);
+  setTimeout(hide, 8000);
+})();
+</script>
 <script>
 /* حماية من خلط الإصدارات (HTML جديد + سكربتات قديمة من كاش الـ Service Worker): هذا السكربت داخل الـ HTML نفسه فيأتي دائماً بأحدث نسخة.
    1) إن لم يطابق window.APP_BUILD رقم BUILD هنا → يمسح كاش التطبيق ويعيد التحميل مرة واحدة (حارس sessionStorage يمنع التكرار).
    2) أقسام اللوحة المتقدمة (تحليلات/LMS/إحصائيات) تُنقل إلى خانتها الثابتة إذا أضافتها سكربتات قديمة بمكان آخر. */
 (function(){
-  var BUILD = '119';
+  var BUILD = '120';
   var SLOTS = { insightsSection: 'slotInsights', lmsWidget: 'slotLms', enhancedStatsSection: 'slotEnhanced' };
   function heal(){
     var dash = document.getElementById('dashboard'); if(!dash) return;
