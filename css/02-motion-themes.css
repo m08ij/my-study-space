@@ -96,31 +96,6 @@
   to{opacity:1;transform:translateY(0) scale(1)}
 }
 
-/* ============ Plan Add Button (fix) ============ */
-.plan-add-btn{
-  width:32px;height:32px;border-radius:var(--r-md);
-  background:var(--grad);color:var(--on-accent);
-  border:none;cursor:pointer;font-family:inherit;
-  font-size:var(--fs-lg);font-weight:900;line-height:1;
-  display:flex;align-items:center;justify-content:center;
-  flex-shrink:0;transition:all var(--dur-2) cubic-bezier(.34,1.56,.64,1);
-  padding:0;
-}
-.plan-add-btn:hover{transform:scale(1.12);box-shadow:var(--sh-glow-sm)}
-.plan-add-btn:active{transform:scale(.94)}
-.plan-add-btn.added{
-  background:var(--green) !important;
-  color:var(--on-accent) !important;cursor:default !important;
-  box-shadow:var(--sh-sm) !important;
-  animation:planAddedPop .5s cubic-bezier(.34,1.56,.64,1);
-}
-.plan-add-btn.added:hover{transform:none}
-.plan-add-btn:disabled{opacity:1}
-@keyframes planAddedPop{
-  0%{transform:scale(.6);opacity:.5}
-  60%{transform:scale(1.2);opacity:1}
-  100%{transform:scale(1);opacity:1}
-}
 
 /* ============ Enhanced Stats ============ */
 .stats-hero{

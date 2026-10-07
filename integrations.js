@@ -1354,12 +1354,6 @@
     }
   }
   window._checkLectures = checkLectures;   /* للاختبارات */
-  window.testLectureReminder = function(){
-    var first = null;
-    Object.keys(space().timetable || {}).forEach(function(k){ if(!first) first = { key: k, cls: space().timetable[k] }; });
-    if(!first){ toast('ما عندك محاضرات', 'warn'); return; }
-    showLectureReminder(first.cls, 15, 'اليوم');
-  };
 
   /* ============================================================
      مركز التنبيهات (مجاني، بدون سيرفر): تفضيلات محلية + منبّه كل دقيقة + ملف تقويم بتنبيهات للحالة اللي يكون فيها التطبيق مسكّر

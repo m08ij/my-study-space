@@ -3,7 +3,6 @@
    ============================================================ */
 /* الشبكات لا تتجاوز عرض الحاوية مهما صغر (min(…,100%) بدل حد أدنى ثابت 280/220/170) */
 .grid-2{grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr))}
-.grid-3{grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr))}
 .grid-4{grid-template-columns:repeat(auto-fit,minmax(min(170px,100%),1fr))}
 .stat{min-width:0}
 .stat > div:last-child{min-width:0;overflow-wrap:anywhere}
@@ -30,7 +29,7 @@
   .chip,.tt-chip,.hub-chip{min-height:38px;display:inline-flex;align-items:center}
   .task-check{position:relative}
   .task-check::after{content:'';position:absolute;inset:-12px}
-  .plan-add-btn,.unified-course-btn{min-width:38px;min-height:38px}
+  .unified-course-btn{min-width:38px;min-height:38px}
   .section input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]),.section select{min-height:40px}
 }
 /* الشاشات العريضة: القائمة الجانبية ثابتة على حافة الشاشة اليمنى والمحتوى ملاصق لها بمسافة طبيعية، وعرضه محدود لراحة القراءة؛ الفائض يبقى على يسار المحتوى */
@@ -581,7 +580,6 @@
 .settings-item:hover{background:var(--card2)}
 .settings-item:hover > span:first-child{background:var(--grad-soft);border-color:var(--accent)}
 .settings-item:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
-.settings-divider{height:1px;margin:6px var(--sp-1);background:var(--border)}
 
 .sync-modal{max-width:440px;padding:22px}
 .sync-head{display:flex;align-items:center;gap:var(--sp-3);margin-bottom:var(--sp-4)}
@@ -721,7 +719,6 @@
 @media (prefers-reduced-motion:reduce){.form-group input.is-invalid,.form-group select.is-invalid,.form-group textarea.is-invalid{animation:none}}
 /* UX: تحذير ناعم (تاريخ ماضٍ) + زر تراجع داخل toast */
 .form-group input.is-warn,.form-group select.is-warn,.form-group textarea.is-warn{border-color:var(--amber);box-shadow:0 0 0 3px color-mix(in srgb,var(--amber) 22%,transparent)}
-.toast-undo-wrap{display:flex;align-items:center;gap:var(--sp-3)}
 .toast-undo{background:transparent;border:1px solid var(--accent);color:var(--accent);border-radius:var(--r-md);padding:var(--sp-1) var(--sp-3);font:inherit;font-size:var(--fs-sm);font-weight:700;cursor:pointer}
 .toast-undo:hover{background:var(--accent);color:var(--on-accent)}
 
@@ -894,7 +891,6 @@ html[data-density="compact"] main{padding-top:var(--sp-4)}
 .toast .t-bar{position:absolute;inset:auto 0 0 0;height:3px;background:var(--tc,var(--accent));opacity:.75;transform-origin:right center;animation:toastBar var(--tdur,3s) linear forwards}
 .toast.paused .t-bar{animation-play-state:paused}
 @keyframes toastBar{from{transform:scaleX(1)}to{transform:scaleX(0)}}
-.toast-undo-wrap{display:flex}
 .toast .toast-undo{flex:0 0 auto}
 @media (prefers-reduced-motion:reduce){.toast .t-bar{animation:none;transform:scaleX(.0001)}}
 
@@ -1132,10 +1128,9 @@ html{scrollbar-color:var(--border2) transparent}
 /* ===== v118: وضع الخصوصية + تلميحات ===== */
 html.privacy #budget :is(#budgetSummary,#budgetPlan,#budgetList,#budgetCats),
 html.privacy [data-dsec="budget"] #dashBudget,html.privacy #dashBudget,
-html.privacy [data-dsec="qspend"] .qs-total,html.privacy #qsTotal,
+html.privacy #qsTotal,
 html.privacy #gradecalc :is(#gradeTrackerList,#gpaBody,#gpaVal,#gpaHrs,#gpaGrade,#ncResult,#whatIfResult,#gcForecast,#gpaScen),
 html.privacy #insightsSection,html.privacy #enhancedStatsSection :is(.donut-wrap,.stats-hero),
 html.privacy .hub-stat.sec[title="العلامة حتى الآن"],
 html.privacy .dash-term .gpa,html.privacy .pg-kpis,html.privacy .pg-rows{filter:blur(9px);transition:filter .25s ease;user-select:none}
 html.privacy :is(#budgetSummary,#budgetPlan,#budgetList,#budgetCats,#dashBudget,#gradeTrackerList,#gpaBody,#gpaVal,#insightsSection,.hub-stat.sec[title="العلامة حتى الآن"],.pg-kpis,.pg-rows):active{filter:none}
-.cp-hint{font-size:var(--fs-2xs);color:var(--muted);margin-top:6px;line-height:1.6}

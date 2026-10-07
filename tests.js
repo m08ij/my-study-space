@@ -76,7 +76,5 @@
     return { pass: pass, fail: fail, results: results };
   };
 
-  window.testQuick = function(){ return window.testAll(); };
-
   console.log('🧪 tests.js v4 — اكتب testAll()');
 })();

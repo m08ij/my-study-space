@@ -305,7 +305,6 @@
     var lt = parseInt(window.S.get('ss_space_ts', 0), 10) || 0;
     return (lt && serverMs !== null && lt > serverMs + 2000) ? 'keep-local' : 'apply';
   }
-  window._decideSync = decideSync;
 
   /* تعديل من جهازين: نحفظ النسختين احتياطياً ثم المستخدم يقرر — لا شيء يُستبدل تلقائياً */
   window.handleSyncConflict = async function(){
