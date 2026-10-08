@@ -1,13 +1,17 @@
 /* ============================================================
    ocr-import.js — استيراد الجدول من صورة (تجريبي)
-   - الصورة تُرسَل لخدمة تحليل محلية على جهازك (tools/ocr-lab/server.js، محرّك OCR مدمج بويندوز)، والنتيجة تُعبّئ نافذة «إضافة جدول»
-     (openSmartTimetable) للمعاينة قبل الحفظ؛ الإضافة اليدوية تبقى كما هي، ولا يُحفظ شيء قبل ضغطك «حفظ الكل».
-   - المحرّك لا يعمل داخل المتصفح (يحتاج Windows)، فالميزة تظهر فقط على localhost أو بعد تفعيلها بـ ?ocr=1 (تُلغى بـ ?ocr=0).
-   - لا إرسال لأي جهة خارجية: العنوان الافتراضي 127.0.0.1، ويتغيّر من localStorage.ocr_endpoint.
+   محرّكان لقراءة الصورة، والنتيجة (بعد التحقق بـocr-parse.js) تُعبّئ نافذة «إضافة جدول» (openSmartTimetable) للمعاينة قبل الحفظ:
+   1) Gemini (Google AI Studio، طبقة مجانية بدون بطاقة): مفتاح API تضعه بالإعدادات؛ يعمل من أي جهاز بدون أي خدمة. الصورة تُرسَل لـGoogle
+      (والطبقة المجانية يستعملها Google لتحسين منتجاته). الحد المجاني: ~20 طلب/يوم لكل نموذج.
+   2) خدمة محلية على جهازك (tools/ocr-lab/server.js، محرّك Windows OCR): بدون مفتاح؛ الصورة لا تغادر جهازك.
+   الإضافة اليدوية تبقى كما هي، ولا يُحفظ شيء قبل ضغطك «حفظ الكل». الميزة تظهر على localhost، أو بعد تفعيلها من ⚙️ الإعدادات (أو ?ocr=1).
+   المفتاح يُحفظ بـlocalStorage على هذا المتصفح فقط (ocr_gemini)، ولا يدخل الكود ولا المزامنة، ويُرسَل لـGoogle فقط (بترويسة x-goog-api-key).
    ============================================================ */
 (function(){
   'use strict';
   var DEFAULT_ENDPOINT = 'http://127.0.0.1:8780/ocr';
+  var GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/models/';
+  var DEFAULT_MODEL = 'gemini-flash-latest';                 /* اسم مستعار يتبع أحدث نموذج مجاني (الأسماء الثابتة تُسحب: 2.5 أُوقف للمستخدمين الجدد) */
   var TIMEOUT_MS = 180000;
   var MAX_BYTES = 12 * 1024 * 1024;
 
@@ -23,14 +27,17 @@
   }catch(e){}
 
   function isLocalHost(h){ return h === 'localhost' || h === '127.0.0.1' || h === '[::1]' || h === '::1' || /\.localhost$/.test(h || ''); }
-  function enabledFor(hostname, flag){ return !!flag || isLocalHost(hostname); }
-  function enabled(){ return enabledFor(window.location.hostname, lget('ocr_lab') === '1'); }
+  function gkey(){ return (lget('ocr_gemini') || '').trim(); }
+  function gmodel(){ return (lget('ocr_gmodel') || '').trim() || DEFAULT_MODEL; }
+  function engine(){ return gkey() ? 'gemini' : 'local'; }
+  function enabledFor(hostname, flag, hasKey){ return !!flag || !!hasKey || isLocalHost(hostname); }
+  function enabled(){ return enabledFor(window.location.hostname, lget('ocr_lab') === '1', !!gkey()); }
   function endpoint(){ return lget('ocr_endpoint') || DEFAULT_ENDPOINT; }
 
   function tt(msg, type, dur){ if(typeof window.toast === 'function') window.toast(msg, type || 'info', dur); }
   function el(tag, cls, text){ var e = document.createElement(tag); if(cls) e.className = cls; if(text != null) e.textContent = text; return e; }
 
-  /* ---------- تحويل نتيجة الخدمة إلى صفوف نافذة «إضافة جدول» ---------- */
+  /* ---------- تحويل الصفوف المحلَّلة إلى صفوف نافذة «إضافة جدول» ---------- */
   function lookup(row){
     var found = typeof window.findCourseByCode === 'function' ? window.findCourseByCode(row.code) : null;
     if(found && found.name) return found;
@@ -54,7 +61,7 @@
     });
   }
 
-  /* ---------- واجهة: شاشة انتظار وحوار أخطاء ---------- */
+  /* ---------- واجهة: شاشة انتظار وحوارات ---------- */
   var overlay = null, ctrl = null;
   function closeOverlay(){ if(overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay); overlay = null; }
   function showBusy(onCancel){
@@ -64,54 +71,90 @@
     var box = el('div', 'ocri-box');
     box.appendChild(el('div', 'ocri-spin'));
     box.appendChild(el('div', 'ocri-title', 'جاري تحليل الصورة…'));
-    box.appendChild(el('div', 'ocri-sub', 'بياخد حوالي نصف دقيقة (تكبير وقراءة بمحرّكين)، لا تسكّر الصفحة'));
+    box.appendChild(el('div', 'ocri-sub', engine() === 'gemini'
+      ? 'الصورة بتنرسل لـGemini (Google) وبترجع خلال 10–20 ثانية'
+      : 'بياخد حوالي نصف دقيقة (تكبير وقراءة بمحرّكين)، لا تسكّر الصفحة'));
     var cancel = el('button', 'ocri-btn', 'إلغاء'); cancel.type = 'button';
     cancel.addEventListener('click', function(){ if(onCancel) onCancel(); closeOverlay(); });
     box.appendChild(cancel);
     overlay.appendChild(box); document.body.appendChild(overlay);
   }
-  function showError(title, lines, cmd){
+  function showError(title, lines, cmd, withSettings){
     closeOverlay();
     overlay = el('div', 'ocri-overlay');
     var box = el('div', 'ocri-box');
     box.appendChild(el('div', 'ocri-title', title));
     (lines || []).forEach(function(t){ box.appendChild(el('div', 'ocri-sub', t)); });
     if(cmd){ var pre = el('code', 'ocri-cmd', cmd); pre.setAttribute('dir', 'ltr'); box.appendChild(pre); }
+    var row = el('div', 'ocri-actions');
+    if(withSettings){ var st = el('button', 'ocri-btn ghost', 'إعدادات الاستيراد'); st.type = 'button'; st.addEventListener('click', openSettings); row.appendChild(st); }
     var ok = el('button', 'ocri-btn', 'تمام'); ok.type = 'button';
-    ok.addEventListener('click', closeOverlay); box.appendChild(ok);
+    ok.addEventListener('click', closeOverlay); row.appendChild(ok);
+    box.appendChild(row);
     overlay.appendChild(box); document.body.appendChild(overlay);
     ok.focus();
   }
 
-  /* ---------- التحليل ---------- */
-  function analyze(file){
+  /* ---------- القراءة: Gemini (من المتصفح مباشرة) ---------- */
+  function fileToBase64(file){
     return new Promise(function(resolve, reject){
-      var aborted = false, timer = null;
-      var useAbort = typeof AbortController === 'function';
+      var fr = new FileReader();
+      fr.onload = function(){ var s = String(fr.result); resolve(s.slice(s.indexOf(',') + 1)); };
+      fr.onerror = function(){ reject(Object.assign(new Error('read'), { code: 'read' })); };
+      fr.readAsDataURL(file);
+    });
+  }
+  function analyzeGemini(file){
+    if(!window.OcrParse || !window.OcrParse.fromStructured) return Promise.reject(Object.assign(new Error('محلّل الجدول غير محمَّل'), { code: 'parser' }));
+    var t0 = Date.now();
+    return fileToBase64(file).then(function(b64){
+      var body = JSON.stringify({
+        contents: [{ parts: [{ text: window.OcrParse.GEMINI_PROMPT }, { inline_data: { mime_type: file.type || 'image/png', data: b64 } }] }],
+        generationConfig: { responseMimeType: 'application/json', responseSchema: window.OcrParse.GEMINI_SCHEMA, temperature: 0 }
+      });
+      return fetchJson(GEMINI_BASE + encodeURIComponent(gmodel()) + ':generateContent', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': gkey() }, body: body }, 'gemini');
+    }).then(function(j){
+      var parts = j && j.candidates && j.candidates[0] && j.candidates[0].content && j.candidates[0].content.parts;
+      var txt = parts ? parts.map(function(p){ return p.text || ''; }).join('') : '';
+      if(!txt){ var why = (j && j.promptFeedback && j.promptFeedback.blockReason) || 'رد فاضي'; throw Object.assign(new Error('Gemini ما رجّع نتيجة (' + why + ')'), { code: 'gemini' }); }
+      var list; try{ list = JSON.parse(txt); }catch(e){ throw Object.assign(new Error('رد Gemini مش JSON صالح'), { code: 'gemini' }); }
+      return { rows: window.OcrParse.fromStructured(Array.isArray(list) ? list : []), seconds: Math.round((Date.now() - t0) / 1000) };
+    });
+  }
+
+  /* طلب مع مهلة وإلغاء؛ يرجّع JSON أو يرمي خطأ برمز: timeout | server | google | unreachable */
+  function fetchJson(url, opts, kind){
+    return new Promise(function(resolve, reject){
+      var timer = null, useAbort = typeof AbortController === 'function';
       ctrl = useAbort ? new AbortController() : null;
-      var opts = { method: 'POST', headers: { 'Content-Type': file.type || 'image/png' }, body: file };
       if(ctrl) opts.signal = ctrl.signal;
-      timer = setTimeout(function(){ aborted = true; if(ctrl) ctrl.abort(); reject(Object.assign(new Error('timeout'), { code: 'timeout' })); }, TIMEOUT_MS);
+      timer = setTimeout(function(){ if(ctrl) ctrl.abort(); reject(Object.assign(new Error('timeout'), { code: 'timeout' })); }, TIMEOUT_MS);
       var p;
-      try{ p = window.fetch(endpoint(), opts); }catch(e){ clearTimeout(timer); reject(Object.assign(e, { code: 'unreachable' })); return; }
+      try{ p = window.fetch(url, opts); }catch(e){ clearTimeout(timer); reject(Object.assign(e, { code: 'unreachable' })); return; }
       p.then(function(r){
         return r.json().then(function(j){
-          if(!r.ok) throw Object.assign(new Error(j && j.error || 'server'), { code: 'server' });
+          if(!r.ok){
+            var msg = (j && (j.error && (j.error.message || j.error) || j.message)) || ('HTTP ' + r.status);
+            throw Object.assign(new Error(String(msg)), { code: kind === 'gemini' ? 'gemini' : 'server', status: r.status });
+          }
           return j;
         }, function(){ throw Object.assign(new Error('bad response'), { code: 'server' }); });
       }).then(function(j){ clearTimeout(timer); resolve(j); }, function(e){
         clearTimeout(timer);
-        if(aborted) return;
         reject(e && e.code ? e : Object.assign(e || new Error('x'), { code: 'unreachable' }));
       });
     });
   }
+  function analyzeLocal(file){
+    return fetchJson(endpoint(), { method: 'POST', headers: { 'Content-Type': file.type || 'image/png' }, body: file }, 'local');
+  }
+  function analyze(file){ return engine() === 'gemini' ? analyzeGemini(file) : analyzeLocal(file); }
 
   function run(file, onRows){
     if(!file){ return; }
     if(!/^image\/(png|jpe?g)$/.test(file.type || '')){ tt('الملف لازم يكون صورة PNG أو JPG', 'warn'); return; }
     if(file.size > MAX_BYTES){ tt('الصورة كبيرة (أكثر من 12 ميجا)، صغّرها وجرّب', 'warn'); return; }
-    var cancelled = false;                                         /* «إلغاء» من المستخدم: لا نُظهر رسالة «الخدمة مش شغّالة» ولا نعبّي الصفوف */
+    var cancelled = false;                                         /* «إلغاء» من المستخدم: لا نُظهر رسالة خطأ ولا نعبّي الصفوف */
     showBusy(function(){ cancelled = true; if(ctrl) ctrl.abort(); });
     var t0 = Date.now();
     analyze(file).then(function(j){
@@ -128,12 +171,23 @@
       onRows(rows, meta);
     }, function(e){
       if(cancelled) return;
-      if(e && e.code === 'timeout') showError('انتهت مهلة التحليل', ['الخدمة ما ردّت خلال 3 دقائق. جرّب صورة أصغر أو أعد المحاولة.']);
-      else if(e && e.code === 'server') showError('الخدمة رجّعت خطأ', [String(e.message || '').slice(0, 200)]);
+      var code = e && e.code, msg = String((e && e.message) || '').slice(0, 220);
+      if(code === 'timeout') showError('انتهت مهلة التحليل', ['الخدمة ما ردّت خلال 3 دقائق. جرّب صورة أصغر أو أعد المحاولة.']);
+      else if(code === 'gemini'){
+        var hint = (e && e.status === 429) || /quota|exceeded|RESOURCE_EXHAUSTED/i.test(msg) ? 'انتهى الحد المجاني (حوالي 20 طلب باليوم لكل نموذج). جرّب بكرة، أو غيّر النموذج من إعدادات الاستيراد.'
+          : /API key not valid|API_KEY_INVALID|API key expired/i.test(msg) ? 'المفتاح غير صالح — انسخه كاملاً من aistudio.google.com/apikey.'
+          : /no longer available|not found|is not supported/i.test(msg) ? 'النموذج غير متاح — اترك خانة النموذج فاضية (الافتراضي gemini-flash-latest).'
+          : /permission|403|location|region/i.test(msg) ? 'Google رفض الطلب (صلاحية/منطقة) — راجع المفتاح من AI Studio.'
+          : 'راجع إعدادات المفتاح.';
+        showError('Gemini رفض الطلب', [hint, msg], null, true);
+      }
+      else if(code === 'parser') showError('محلّل الجدول غير محمَّل', [msg]);
+      else if(code === 'server') showError('الخدمة رجّعت خطأ', [msg]);
+      else if(engine() === 'gemini') showError('تعذّر الاتصال بـGemini', ['تأكد من اتصالك بالإنترنت وأعد المحاولة.'], null, true);
       else showError('خدمة تحليل الصور (التجريبية) مش شغّالة', [
-        'التحليل بيشتغل على جهازك بمحرّك ويندوز، ولازم تشغّل الخدمة أول:',
+        'التحليل بيشتغل على جهازك بمحرّك ويندوز، ولازم تشغّل الخدمة أول، أو ضع مفتاح Gemini المجاني بإعدادات الاستيراد:',
         'ثم أعد المحاولة. (العنوان الحالي: ' + endpoint() + ')'
-      ], 'node tools/ocr-lab/server.js');
+      ], 'node tools/ocr-lab/server.js', true);
     });
   }
 
@@ -170,31 +224,79 @@
     base.parentNode.appendChild(ob);
   }
 
-  /* مفتاح التفعيل بقائمة الإعدادات (يحفظ بـlocalStorage.ocr_lab؛ على localhost الميزة شغّالة دائماً) */
+  /* ---------- حوار الإعدادات: التفعيل + مفتاح Google + عنوان الخدمة المحلية ---------- */
   function paintSwitch(){
     var b = document.getElementById('ocrLabBtn'); if(!b) return;
     var on = enabled(), t = b.querySelector('.ol-t');
     b.setAttribute('aria-checked', on ? 'true' : 'false');
-    if(t) t.textContent = isLocalHost(window.location.hostname) ? 'شغّالة دائماً على localhost' : (on ? 'مفعّل — تحتاج الخدمة المحلية شغّالة' : 'تجريبي — مطفأ');
+    if(t) t.textContent = gkey() ? 'مفعّل — Gemini' : (isLocalHost(window.location.hostname) ? 'شغّالة على localhost — الخدمة المحلية' : (on ? 'مفعّل — الخدمة المحلية' : 'تجريبي — مطفأ (اضغط للإعداد)'));
   }
-  function toggle(){
-    if(isLocalHost(window.location.hostname)){ tt('على localhost الميزة شغّالة دائماً', 'info'); return; }
-    var on = lget('ocr_lab') === '1';
-    if(on) lrm('ocr_lab'); else lset('ocr_lab', '1');
-    paintSwitch(); syncPageButton();
-    if(on) tt('📷 أُطفئ استيراد الجدول من صورة', 'info');
-    else tt('📷 فُعّل. التحليل بيشتغل على جهازك: شغّل الخدمة (node tools/ocr-lab/server.js) ثم افتح «إضافة دفعة» ← «من صورة». لو المتصفح طلب إذن «الشبكة المحلية» اسمح.', 'success', 9000);
+  function openSettings(){
+    closeOverlay();
+    overlay = el('div', 'ocri-overlay');
+    var box = el('div', 'ocri-box ocri-form');
+    box.setAttribute('role', 'dialog'); box.setAttribute('aria-label', 'إعدادات استيراد الجدول من صورة');
+    box.appendChild(el('div', 'ocri-title', '📷 استيراد الجدول من صورة (تجريبي)'));
+    box.appendChild(el('div', 'ocri-sub', 'اختر طريقة القراءة. مع مفتاح Gemini المجاني بيشتغل من أي جهاز بدون أي خدمة؛ بدونه بيستعمل الخدمة المحلية على جهازك.'));
+
+    var cbRow = el('label', 'ocri-check'); var cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = enabled(); cb.id = 'ocriEnable';
+    cbRow.appendChild(cb); cbRow.appendChild(document.createTextNode(' تفعيل الميزة (يظهر زر «📷 من صورة»)'));
+    box.appendChild(cbRow);
+
+    var l1 = el('label', 'ocri-lbl', 'مفتاح Gemini المجاني (اختياري)'); l1.setAttribute('for', 'ocriKey'); box.appendChild(l1);
+    var key = document.createElement('input'); key.type = 'text'; key.id = 'ocriKey'; key.className = 'ocri-in'; key.value = gkey(); key.placeholder = 'AIza… أو AQ.…'; key.autocomplete = 'off'; key.spellcheck = false; key.setAttribute('dir', 'ltr');
+    box.appendChild(key);
+    box.appendChild(el('div', 'ocri-note', 'الصورة بتنرسل لسيرفرات Google وقت التحليل (والطبقة المجانية بيستعملها Google لتحسين منتجاته). المفتاح بيتحفظ على هالمتصفح فقط. الحد المجاني حوالي 20 استيراد باليوم.'));
+
+    var l2 = el('label', 'ocri-lbl', 'عنوان الخدمة المحلية (للمتقدّمين)'); l2.setAttribute('for', 'ocriEp'); box.appendChild(l2);
+    var ep = document.createElement('input'); ep.type = 'text'; ep.id = 'ocriEp'; ep.className = 'ocri-in'; ep.value = lget('ocr_endpoint') || ''; ep.placeholder = DEFAULT_ENDPOINT; ep.autocomplete = 'off'; ep.setAttribute('dir', 'ltr');
+    box.appendChild(ep);
+
+    var det = el('details', 'ocri-how'); det.appendChild(el('summary', null, 'كيف أجيب مفتاح Gemini (مجاني، بدون بطاقة)؟'));
+    var ol = el('ol'); [
+      'ادخل aistudio.google.com/apikey وسجّل بحساب Google.',
+      'اضغط «Create API key» (إنشاء مفتاح) وانسخه.',
+      'الصقه هنا واضغط حفظ. ما بينطلب منك بطاقة دفع.',
+      'لا تشارك المفتاح مع أحد؛ لو تسرّب احذفه من نفس الصفحة وسوّ غيره.'
+    ].forEach(function(s){ ol.appendChild(el('li', null, s)); });
+    det.appendChild(ol); box.appendChild(det);
+
+    var l3 = el('label', 'ocri-lbl', 'النموذج (اتركه فاضي للافتراضي)'); l3.setAttribute('for', 'ocriModel'); box.appendChild(l3);
+    var mdl = document.createElement('input'); mdl.type = 'text'; mdl.id = 'ocriModel'; mdl.className = 'ocri-in'; mdl.value = lget('ocr_gmodel') || ''; mdl.placeholder = DEFAULT_MODEL; mdl.autocomplete = 'off'; mdl.setAttribute('dir', 'ltr');
+    box.appendChild(mdl);
+
+    var row = el('div', 'ocri-actions');
+    var save = el('button', 'ocri-btn', 'حفظ'); save.type = 'button';
+    var cancel = el('button', 'ocri-btn ghost', 'إلغاء'); cancel.type = 'button';
+    cancel.addEventListener('click', closeOverlay);
+    save.addEventListener('click', function(){
+      var k = key.value.trim();
+      if(k && !/^[A-Za-z0-9_.\-]{20,}$/.test(k)){ tt('شكل المفتاح غير صحيح — انسخه كاملاً من لوحة Google', 'warn'); key.focus(); return; }
+      var e = ep.value.trim();
+      if(e && !/^https?:\/\/[^\s]+$/.test(e)){ tt('عنوان الخدمة لازم يبدأ بـ http:// أو https://', 'warn'); ep.focus(); return; }
+      var mv = mdl.value.trim();
+      if(mv && !/^[A-Za-z0-9._\-]{3,60}$/.test(mv)){ tt('اسم النموذج غير صحيح', 'warn'); mdl.focus(); return; }
+      if(k) lset('ocr_gemini', k); else lrm('ocr_gemini');
+      if(mv) lset('ocr_gmodel', mv); else lrm('ocr_gmodel');
+      if(e && e !== DEFAULT_ENDPOINT) lset('ocr_endpoint', e); else lrm('ocr_endpoint');
+      if(cb.checked || k) lset('ocr_lab', '1'); else lrm('ocr_lab');
+      closeOverlay(); paintSwitch(); syncPageButton();
+      tt(k ? '📷 فُعّل استيراد الجدول بـ Gemini' : (enabled() ? '📷 فُعّل استيراد الجدول (الخدمة المحلية)' : '📷 أُطفئ استيراد الجدول من صورة'), 'success', 4500);
+    });
+    row.appendChild(save); row.appendChild(cancel); box.appendChild(row);
+    overlay.appendChild(box); document.body.appendChild(overlay);
+    key.focus();
   }
   function bind(){
-    var b = document.getElementById('ocrLabBtn'); if(!b || b._ol) { paintSwitch(); return; } b._ol = true;
-    b.addEventListener('click', function(){ if(window.closeSettingsMenu) window.closeSettingsMenu(); toggle(); });
+    var b = document.getElementById('ocrLabBtn'); if(!b || b._ol){ paintSwitch(); return; } b._ol = true;
+    b.addEventListener('click', function(){ if(window.closeSettingsMenu) window.closeSettingsMenu(); openSettings(); });
     paintSwitch();
   }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind); else bind();
   setTimeout(bind, 400);
 
   window.OcrImport = {
-    enabled: enabled, enabledFor: enabledFor, endpoint: endpoint, toSttRows: toSttRows,
-    run: run, pick: pick, start: start, summary: summary, syncPageButton: syncPageButton, toggle: toggle
+    enabled: enabled, enabledFor: enabledFor, endpoint: endpoint, engine: engine, toSttRows: toSttRows,
+    run: run, pick: pick, start: start, summary: summary, syncPageButton: syncPageButton, toggle: openSettings, openSettings: openSettings
   };
 })();
