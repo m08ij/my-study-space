@@ -313,12 +313,12 @@ body{transition:background-color var(--dur-3) ease,color var(--dur-3) ease}
 /* ============================================================
    🎛️ توحيد حالات الحقول والأزرار — للثيمات الخمسة الجديدة فقط (obsidian/mocha/coral/graphite/mint)
    ============================================================ */
-[data-theme="obsidian"],[data-theme="mocha"],[data-theme="coral"],[data-theme="graphite"]{color-scheme:dark}
+[data-theme="obsidian"],[data-theme="mocha"],[data-theme="coral"],[data-theme="graphite"],[data-theme="glass"]{color-scheme:dark}
 [data-theme="mint"]{color-scheme:light}
 [data-theme="obsidian"] ::placeholder,[data-theme="mocha"] ::placeholder,[data-theme="coral"] ::placeholder,
-[data-theme="graphite"] ::placeholder,[data-theme="mint"] ::placeholder{color:var(--muted2);opacity:1}
+[data-theme="graphite"] ::placeholder,[data-theme="glass"] ::placeholder,[data-theme="mint"] ::placeholder{color:var(--muted2);opacity:1}
 [data-theme="obsidian"] option,[data-theme="mocha"] option,[data-theme="coral"] option,
-[data-theme="graphite"] option,[data-theme="mint"] option{background:var(--card);color:var(--text)}
+[data-theme="graphite"] option,[data-theme="glass"] option,[data-theme="mint"] option{background:var(--card);color:var(--text)}
 /* تعطيل موحّد (يشمل كل الثيمات لأنه سلوك وليس لون): خافت + مؤشر ممنوع + بدون حركة */
 .btn:disabled,.btn[disabled]{opacity:.5;cursor:not-allowed;transform:none!important;box-shadow:none!important}
 input:disabled,select:disabled,textarea:disabled{opacity:.55;cursor:not-allowed}

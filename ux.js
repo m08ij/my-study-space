@@ -301,7 +301,7 @@
   window.settingsMenuSync = function(){
     var m = document.getElementById('settingsMenu'); if(!m) return;
     if(!smWrap) smWrap = m.parentNode;
-    var open = m.classList.contains('show'), phone = window.innerWidth <= 900;
+    var open = m.classList.contains('show'), phone = true;   /* نافذة كاملة فوق كل شي: تُنقل دائماً لـbody (الشريط العلوي له backdrop-filter يحبس العناصر fixed) */
     if(open && phone && m.parentNode !== document.body) document.body.appendChild(m);
     else if((!open || !phone) && m.parentNode === document.body && smWrap) smWrap.appendChild(m);
     if(open) window.refreshSettingsMenu();
@@ -312,14 +312,15 @@
     m.addEventListener('click', function(e){
       var f = e.target.closest && e.target.closest('[data-fs]');
       if(f){ var v = f.getAttribute('data-fs'); try{ if(v === 'md') localStorage.removeItem('ss_font'); else localStorage.setItem('ss_font', v); }catch(x){} applyFont(v); return; }
-      if(e.target === m && window.innerWidth <= 900 && window.closeSettingsMenu) window.closeSettingsMenu();   /* النقر على الخلفية المعتمة */
+      if((e.target === m || e.target.closest('#smClose')) && window.closeSettingsMenu) window.closeSettingsMenu();   /* النقر على الخلفية المعتمة أو زر ✕ */
     });
     /* سحب المقبض للأسفل يغلق الورقة */
     var y0 = null;
-    m.addEventListener('pointerdown', function(e){ if(window.innerWidth <= 900 && e.target.closest && e.target.closest('.sm-handle')){ y0 = e.clientY; try{ m.setPointerCapture(e.pointerId); }catch(x){} } });
-    m.addEventListener('pointermove', function(e){ if(y0 !== null){ var dy = Math.max(0, e.clientY - y0); m.style.transform = 'translateY(' + dy + 'px)'; } });
-    function endDrag(e){ if(y0 === null) return; var dy = e.clientY - y0; y0 = null; m.style.transform = ''; if(dy > 70 && window.closeSettingsMenu) window.closeSettingsMenu(); }
-    m.addEventListener('pointerup', endDrag); m.addEventListener('pointercancel', function(){ y0 = null; m.style.transform = ''; });
+    var dlg = m.querySelector('.sm-dialog') || m;
+    m.addEventListener('pointerdown', function(e){ if(window.innerWidth <= 760 && e.target.closest && e.target.closest('.sm-handle')){ y0 = e.clientY; try{ m.setPointerCapture(e.pointerId); }catch(x){} } });
+    m.addEventListener('pointermove', function(e){ if(y0 !== null){ var dy = Math.max(0, e.clientY - y0); dlg.style.transform = 'translateY(' + dy + 'px)'; } });
+    function endDrag(e){ if(y0 === null) return; var dy = e.clientY - y0; y0 = null; dlg.style.transform = ''; if(dy > 70 && window.closeSettingsMenu) window.closeSettingsMenu(); }
+    m.addEventListener('pointerup', endDrag); m.addEventListener('pointercancel', function(){ y0 = null; dlg.style.transform = ''; });
     window.addEventListener('resize', function(){ window.settingsMenuSync(); });
     document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && m.classList.contains('show') && window.closeSettingsMenu) window.closeSettingsMenu(); });
     window.refreshSettingsMenu();
@@ -412,10 +413,41 @@
   function initSmTabs(){
     var m = document.getElementById('settingsMenu'); if(!m || m._tabs) return; m._tabs = true;
     setSmTab(lsv('ss_sm_tab') || 'look');
+    var bl = document.getElementById('smBuild'); if(bl) bl.textContent = window.APP_BUILD || '—';
+    function buildSmThemes(){
+      var src = document.getElementById('themeGrid'), dst = document.getElementById('smThemeGrid'); if(!src || !dst) return;
+      if(!src.children.length && window.buildThemePanel) window.buildThemePanel();
+      var cur = root.getAttribute('data-theme') || 'dark';
+      dst.innerHTML = src.innerHTML;
+      var nm = '';
+      [].forEach.call(dst.querySelectorAll('.theme-swatch'), function(sw){ var on = sw.getAttribute('data-theme') === cur; sw.classList.toggle('active', on); sw.setAttribute('aria-pressed', on ? 'true' : 'false'); if(on) nm = sw.getAttribute('title') || ''; });
+      var n = document.getElementById('smThemeName'); if(n) n.textContent = nm;
+    }
+    var smg = document.getElementById('smThemeGrid');
+    if(smg){
+      var pickTheme = function(sw){ if(!sw || !window.applyTheme) return; window.applyTheme(sw.getAttribute('data-theme'), true); if(window.toast) window.toast('🎨 تم تفعيل ثيم «' + (sw.getAttribute('title') || '').replace(/ \(فاتح\)/, '') + '»', 'success', 1600); setTimeout(buildSmThemes, 60); };
+      smg.addEventListener('click', function(e){ pickTheme(e.target.closest && e.target.closest('.theme-swatch')); });
+      smg.addEventListener('keydown', function(e){ if(e.key === 'Enter' || e.key === ' '){ var sw = e.target.closest && e.target.closest('.theme-swatch'); if(sw){ e.preventDefault(); pickTheme(sw); } } });
+    }
+    var wasOpen = false;
+    new MutationObserver(function(){
+      var on = m.classList.contains('show'); if(on === wasOpen) return; wasOpen = on;
+      document.documentElement.classList.toggle('sm-open', on);
+      if(on) buildSmThemes();
+      if(on){ var t = m.querySelector('.sm-tab[aria-selected="true"]'); if(t) setTimeout(function(){ t.focus(); }, 40); }
+      else { var sb = document.getElementById('settingsBtn'); if(sb && (!document.activeElement || document.activeElement === document.body || m.contains(document.activeElement))) sb.focus(); }
+    }).observe(m, { attributes: true, attributeFilter: ['class'] });
+    /* حبس Tab داخل النافذة */
+    m.addEventListener('keydown', function(e){
+      if(e.key !== 'Tab' || !m.classList.contains('show')) return;
+      var f = [].filter.call(m.querySelectorAll('button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])'), function(x){ return !x.disabled && x.offsetParent !== null; });
+      if(!f.length) return; var first = f[0], last = f[f.length - 1];
+      if(e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); } else if(!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
+    });
     m.addEventListener('click', function(e){ var b = e.target.closest && e.target.closest('.sm-tab'); if(b) setSmTab(b.getAttribute('data-sm')); });
     m.addEventListener('keydown', function(e){
-      var b = e.target.closest && e.target.closest('.sm-tab'); if(!b || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight')) return;
-      var i = SM_TABS.indexOf(b.getAttribute('data-sm')), d = e.key === 'ArrowLeft' ? 1 : -1;   /* RTL: السهم الأيسر = التالي */
+      var b = e.target.closest && e.target.closest('.sm-tab'); if(!b || ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].indexOf(e.key) < 0) return;
+      var i = SM_TABS.indexOf(b.getAttribute('data-sm')), d = (e.key === 'ArrowLeft' || e.key === 'ArrowDown') ? 1 : -1;   /* RTL: السهم الأيسر = التالي */
       setSmTab(SM_TABS[(i + d + SM_TABS.length) % SM_TABS.length]);
       var nb = m.querySelector('.sm-tab[aria-selected="true"]'); if(nb) nb.focus();
     });
@@ -461,4 +493,66 @@
       setTimeout(function(){ if(s.parentNode) s.parentNode.removeChild(s); }, 650);
     }, { passive: true });
   }
+})();
+
+
+/* ===== شريط «المحاضرة الجاية» (يظهر أعلى الصفحات ما عدا لوحة التحكم) =====
+   يبيّن الحالية (مع تقدّمها وباقي الوقت) أو التالية (عدّاد تنازلي)، مع المبنى بالخريطة وعدد محاضرات اليوم المتبقية؛
+   الضغط عليه يفتح تفاصيل المحاضرة، وزر 🗺️ يفتح الخريطة، وزر ✕ يخفيه لحد المحاضرة التالية. */
+(function(){
+  function ssGet(k){ try{ return sessionStorage.getItem(k); }catch(e){ return null; } }
+  function ssSet(k, v){ try{ sessionStorage.setItem(k, v); }catch(e){} }
+  function fmtUntil(m){ m = Math.max(0, Math.ceil(m)); if(m < 1) return 'أقل من دقيقة'; if(m < 60) return m + ' د'; var h = Math.floor(m / 60), r = m % 60; return h + ' س' + (r ? ' ' + r + ' د' : ''); }
+  function qesc(s){ return window.esc ? window.esc(s) : String(s); }
+  function hm(m){ m = Math.round(m); return ('0' + Math.floor(m / 60)).slice(-2) + ':' + ('0' + (m % 60)).slice(-2); }
+  var lastKey = '';
+  function updateStrip(){
+    var el = document.getElementById('qStrip'); if(!el) return;
+    var active = document.querySelector('.section.active'), onHome = !active || active.id === 'dashboard';
+    if(onHome || !window.Schedule || !window.Schedule.status){ el.hidden = true; return; }
+    var st = window.Schedule.status(), e = st.current || st.next, later = null;
+    if(!e && st.later) later = st.later.entry;
+    var target = e || later;
+    if(!target){ el.hidden = true; return; }
+    var key = (st.current ? 'n:' : 'u:') + target.key;
+    if(ssGet('ss_qs_off') === target.key){ el.hidden = true; return; }
+    var hue = window.courseHue ? window.courseHue(target.name) : 200, r = (window.CampusMap && window.CampusMap.resolve) ? window.CampusMap.resolve(target) : null;
+    var place = r && r.b ? r.b.n + (r.fl ? ' · ط' + r.fl : '') : (target.room || '');
+    var lead, when, pct = null;
+    if(st.current){
+      lead = '<span class="qs-live"></span>الآن';
+      when = target.hasEnd ? 'باقي ' + fmtUntil(target.end - st.nowMin) : 'بدأت قبل ' + fmtUntil(st.nowMin - target.start);
+      if(target.hasEnd) pct = Math.min(100, Math.max(0, (st.nowMin - target.start) / (target.end - target.start) * 100));
+    } else if(st.next){
+      lead = '⏭ التالية'; when = 'بعد ' + fmtUntil(target.start - st.nowMin) + ' · ' + hm(target.start);
+    } else {
+      lead = '📅 القادمة'; when = (st.later.daysAhead === 1 ? 'بكرة' : (window.DAYS_AR || [])[target.dayIdx] || '') + ' ' + hm(target.start);
+    }
+    var left = st.today ? st.today.filter(function(x){ return x.state !== 'done' && x.key !== target.key; }).length : 0;
+    el.style.setProperty('--ch', hue); el.hidden = false; el.setAttribute('data-state', st.current ? 'now' : 'next');
+    var sig = key + '|' + when + '|' + left + '|' + (pct === null ? '' : Math.round(pct));
+    if(el._sig === sig) return; el._sig = sig;
+    el.innerHTML = '<button type="button" class="qs-main" data-qs="go" data-k="' + qesc(target.key) + '" aria-label="تفاصيل ' + qesc(target.name) + '"><span class="qs-lead">' + lead + '</span><b class="qs-name">' + qesc(target.name) + '</b><span class="qs-when">' + when + '</span>' +
+      (left ? '<span class="qs-left">+' + left + ' اليوم</span>' : '') + (place ? '<span class="qs-place">📍 ' + qesc(place) + '</span>' : '') +
+      (pct !== null ? '<i class="qs-bar" style="width:' + pct.toFixed(1) + '%"></i>' : '') + '</button>' +
+      (r && r.b ? '<button type="button" class="qs-btn" data-qs="map" data-b="' + r.b.id + '" aria-label="عرض ' + qesc(r.b.n) + ' على الخريطة" title="على الخريطة">🗺️</button>' : '') +
+      '<button type="button" class="qs-btn qs-x" data-qs="hide" data-k="' + qesc(target.key) + '" aria-label="إخفاء الشريط" title="إخفاء">✕</button>';
+  }
+  function bindStrip(){
+    var el = document.getElementById('qStrip'); if(!el || el._qs) return; el._qs = true;
+    el.addEventListener('click', function(e){
+      var b = e.target.closest && e.target.closest('[data-qs]'); if(!b) return;
+      var a = b.getAttribute('data-qs');
+      if(a === 'map' && window.switchTab){ window.switchTab('campus'); if(window.CampusMap) window.CampusMap.select(b.getAttribute('data-b'), true); }
+      else if(a === 'hide'){ ssSet('ss_qs_off', b.getAttribute('data-k')); el.hidden = true; }
+      else if(a === 'go'){ var k = b.getAttribute('data-k'); if(window.showClassDetails) window.showClassDetails(k); else if(window.switchTab) window.switchTab('timetable'); }
+    });
+    setInterval(updateStrip, 15000);
+    document.addEventListener('visibilitychange', updateStrip);
+    new MutationObserver(updateStrip).observe(document.querySelector('main') || document.body, { attributes: true, attributeFilter: ['class'], subtree: true });
+    updateStrip();
+  }
+  function init(){ bindStrip(); }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+  setTimeout(init, 600); setTimeout(updateStrip, 1500);
 })();

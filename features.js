@@ -96,6 +96,7 @@
     {id:'royal', name:'ملكي', colors:['#0f0524','#a78bfa','#fbbf24']},
     {id:'cyberpunk', name:'سايبربانك', colors:['#0a0014','#22d3ee','#ec4899']},
     {id:'midnight', name:'منتصف الليل', colors:['#050914','#0ea5e9','#8b5cf6']},
+    {id:'glass', name:'زجاج', colors:['#0a0f24','#6ee7f9','#b4a0ff']},
     {id:'mint', name:'نعناع', light:true, colors:['#f1f6f2','#237a52','#a8701a']}
   ];
   window.THEMES = THEMES;

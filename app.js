@@ -1006,6 +1006,16 @@
     });
     ttHueMap = map;
   }
+  /* لون المادة (نفس لون الجدول) لاستعماله بأي مكان */
+  var hueSig = '';
+  window.courseHue = function(name){
+    var sp = window.space || {}, names = [];
+    Object.keys(sp.timetable || {}).forEach(function(k){ var n = sp.timetable[k] && sp.timetable[k].name; if(n && names.indexOf(n) < 0) names.push(n); });
+    (sp.courses || []).forEach(function(c){ if(c && c.name && names.indexOf(c.name) < 0) names.push(c.name); });
+    var sig = names.slice().sort().join('|');
+    if(sig !== hueSig){ hueSig = sig; ttAssignHues(names); }
+    return ttHue(name);
+  };
   function ttHue(name){ var n = String(name || ''); return ttHueMap[n] !== undefined ? ttHueMap[n] : ttHash(n); }
   function ttPad(t){
     var m = ttMin(t); if(m === null) return '';
@@ -1156,8 +1166,7 @@
     var times = Object.keys(usedTimes).sort(function(a, b){ return ttMin(a) - ttMin(b); });
     if(!times.length) times = ['08:00','09:00','10:00','11:00','12:00'];
     var conf = window.getTimetableConflicts();
-    var hueNames = []; Object.keys(tt).forEach(function(k){ var nm = tt[k] && tt[k].name; if(nm && hueNames.indexOf(nm) < 0) hueNames.push(nm); });
-    ttAssignHues(hueNames);
+    window.courseHue('');   /* يحدّث خريطة الألوان من الجدول + موادي */
 
     function entryAt(day, time){
       var k = day + '-' + time;

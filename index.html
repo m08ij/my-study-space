@@ -69,39 +69,53 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
     <button class="icon-btn" id="serverStatus" title="جاري الفحص...">⏳</button>
     <div class="settings-wrap">
       <button class="icon-btn" id="settingsBtn" title="الإعدادات">⚙️</button>
-      <div class="settings-menu" id="settingsMenu" data-sm="look" role="menu" aria-label="الإعدادات">
+      <div class="settings-menu" id="settingsMenu" data-sm="look" role="dialog" aria-modal="true" aria-labelledby="smTitle">
+       <div class="sm-dialog">
         <div class="sm-handle" aria-hidden="true"></div>
-        <div class="sm-tabs" role="tablist" aria-label="أقسام الإعدادات"><button type="button" class="sm-tab" role="tab" data-sm="look" aria-selected="true"><span aria-hidden="true">🎨</span>المظهر</button><button type="button" class="sm-tab" role="tab" data-sm="work" aria-selected="false"><span aria-hidden="true">🎯</span>العمل</button><button type="button" class="sm-tab" role="tab" data-sm="data" aria-selected="false"><span aria-hidden="true">💾</span>البيانات</button><button type="button" class="sm-tab" role="tab" data-sm="sys" aria-selected="false"><span aria-hidden="true">🧰</span>النظام</button></div>
+        <header class="sm-head"><div class="sm-ttl"><span class="sm-ttl-ic" aria-hidden="true">⚙️</span><div><b id="smTitle">الإعدادات</b><small>تحكّم بالمظهر والبيانات والنظام</small></div></div><button type="button" class="sm-close" id="smClose" aria-label="إغلاق الإعدادات">✕</button></header>
+        <div class="sm-main">
+        <div class="sm-tabs" role="tablist" aria-label="أقسام الإعدادات" aria-orientation="vertical">
+          <button type="button" class="sm-tab" role="tab" data-sm="look" aria-selected="true"><span class="sm-ti" aria-hidden="true">🎨</span><span class="sm-tt"><b>المظهر</b><small>الثيم والخط والوضع البسيط</small></span></button>
+          <button type="button" class="sm-tab" role="tab" data-sm="work" aria-selected="false"><span class="sm-ti" aria-hidden="true">🎯</span><span class="sm-tt"><b>العمل</b><small>التركيز والخصوصية والإشعارات</small></span></button>
+          <button type="button" class="sm-tab" role="tab" data-sm="data" aria-selected="false"><span class="sm-ti" aria-hidden="true">💾</span><span class="sm-tt"><b>البيانات</b><small>المزامنة والنسخ والتقويم</small></span></button>
+          <button type="button" class="sm-tab" role="tab" data-sm="sys" aria-selected="false"><span class="sm-ti" aria-hidden="true">🧰</span><span class="sm-tt"><b>النظام</b><small>التثبيت والفحص والجولة</small></span></button>
+        </div>
+        <div class="sm-panels">
         <div class="sm-group" data-g="look" role="group" aria-label="المظهر">
-          <div class="sm-title">المظهر</div>
-          <button class="settings-item" id="simpleBtn" type="button" role="menuitemcheckbox" aria-checked="false"><span class="si-ic" aria-hidden="true">🧘</span><span class="si-tx"><b>الوضع البسيط</b><small class="sp-t">كل الميزات ظاهرة</small></span><span class="si-sw" aria-hidden="true"></span></button>
-          <button class="settings-item" id="themeBtn" type="button" role="menuitem"><span class="si-ic" aria-hidden="true">🎨</span><span class="si-tx"><b>الثيمات</b><small id="themeSub">—</small></span><span class="si-go" aria-hidden="true">‹</span></button>
-          <button class="settings-item" id="densityBtn" type="button" role="menuitemcheckbox" aria-checked="false"><span class="si-ic" aria-hidden="true">📏</span><span class="si-tx"><b>كثافة العرض</b><small class="db-t">مريحة</small></span><span class="si-sw" aria-hidden="true"></span></button>
+          <div class="sm-title"><b>المظهر</b><small>الثيم وحجم الخط والكثافة، والوضع البسيط لإخفاء الميزات الثانوية</small></div>
+          <div class="sm-themes" id="smThemes"><div class="sm-th-h"><b>🎨 الثيم</b><small id="smThemeName"></small></div><div class="theme-grid" id="smThemeGrid"></div></div>
+          <button class="settings-item" id="themeBtn" type="button"><span class="si-ic" aria-hidden="true">🎨</span><span class="si-tx"><b>الثيمات</b><small id="themeSub">—</small></span><span class="si-go" aria-hidden="true">‹</span></button>
+          <button class="settings-item" id="simpleBtn" type="button" role="switch" aria-checked="false"><span class="si-ic" aria-hidden="true">🧘</span><span class="si-tx"><b>الوضع البسيط</b><small class="sp-t">كل الميزات ظاهرة</small></span><span class="si-sw" aria-hidden="true"></span></button>
+          <button class="settings-item" id="densityBtn" type="button" role="switch" aria-checked="false"><span class="si-ic" aria-hidden="true">📏</span><span class="si-tx"><b>كثافة العرض</b><small class="db-t">مريحة</small></span><span class="si-sw" aria-hidden="true"></span></button>
           <div class="si-row" role="group" aria-label="حجم الخط"><span class="si-ic" aria-hidden="true">🔤</span><span class="si-tx"><b>حجم الخط</b><small id="fontSub">عادي</small></span><span class="si-seg"><button type="button" data-fs="sm" aria-pressed="false" aria-label="خط صغير">أ</button><button type="button" data-fs="md" aria-pressed="true" aria-label="خط عادي">أ</button><button type="button" data-fs="lg" aria-pressed="false" aria-label="خط كبير">أ</button></span></div>
         </div>
         <div class="sm-group" data-g="work" role="group" aria-label="وضع العمل">
-          <div class="sm-title">وضع العمل</div>
-          <button class="settings-item" id="todayBtn" type="button" role="menuitemcheckbox" aria-checked="false"><span class="si-ic" aria-hidden="true">🎯</span><span class="si-tx"><b>اليوم فقط</b><small class="tb-t">اللوحة الكاملة</small></span><span class="si-sw" aria-hidden="true"></span></button>
-          <button class="settings-item" id="privacyBtn" type="button" role="menuitemcheckbox" aria-checked="false"><span class="si-ic" aria-hidden="true">🙈</span><span class="si-tx"><b>وضع الخصوصية</b><small class="pv-t">الأرقام ظاهرة</small></span><span class="si-sw" aria-hidden="true"></span></button>
-          <button class="settings-item" id="ocrLabBtn" type="button" role="menuitemcheckbox" aria-checked="false"><span class="si-ic" aria-hidden="true">📷</span><span class="si-tx"><b>استيراد الجدول من صورة</b><small class="ol-t">تجريبي — مطفأ</small></span><span class="si-sw" aria-hidden="true"></span></button>
-          <button class="settings-item" id="notifBtn" type="button" role="menuitem"><span class="si-ic" aria-hidden="true">🔔</span><span class="si-tx"><b>الإشعارات</b><small id="notifBtnText">اضغط للتفعيل</small></span><span class="si-go" aria-hidden="true">‹</span></button>
-          <button class="settings-item" id="cmdkBtn" type="button" role="menuitem"><span class="si-ic" aria-hidden="true">⌘</span><span class="si-tx"><b>لوحة الأوامر</b><small>بحث وتنقل سريع</small></span><kbd class="si-kbd" dir="ltr">Alt+K</kbd></button>
+          <div class="sm-title"><b>وضع العمل</b><small>تركيز، خصوصية، استيراد من صورة، إشعارات، لوحة الأوامر</small></div>
+          <button class="settings-item" id="todayBtn" type="button" role="switch" aria-checked="false"><span class="si-ic" aria-hidden="true">🎯</span><span class="si-tx"><b>اليوم فقط</b><small class="tb-t">اللوحة الكاملة</small></span><span class="si-sw" aria-hidden="true"></span></button>
+          <button class="settings-item" id="privacyBtn" type="button" role="switch" aria-checked="false"><span class="si-ic" aria-hidden="true">🙈</span><span class="si-tx"><b>وضع الخصوصية</b><small class="pv-t">الأرقام ظاهرة</small></span><span class="si-sw" aria-hidden="true"></span></button>
+          <button class="settings-item" id="ocrLabBtn" type="button" role="switch" aria-checked="false"><span class="si-ic" aria-hidden="true">📷</span><span class="si-tx"><b>استيراد الجدول من صورة</b><small class="ol-t">تجريبي — مطفأ</small></span><span class="si-sw" aria-hidden="true"></span></button>
+          <button class="settings-item" id="notifBtn" type="button"><span class="si-ic" aria-hidden="true">🔔</span><span class="si-tx"><b>الإشعارات</b><small id="notifBtnText">اضغط للتفعيل</small></span><span class="si-go" aria-hidden="true">‹</span></button>
+          <button class="settings-item" id="cmdkBtn" type="button"><span class="si-ic" aria-hidden="true">⌘</span><span class="si-tx"><b>لوحة الأوامر</b><small>بحث وتنقل سريع</small></span><kbd class="si-kbd" dir="ltr">Alt+K</kbd></button>
         </div>
         <div class="sm-group" data-g="data" role="group" aria-label="البيانات">
-          <div class="sm-title">البيانات</div>
-          <button class="settings-item" id="syncCodeBtn" type="button" role="menuitem"><span class="si-ic" aria-hidden="true">☁️</span><span class="si-tx"><b>المزامنة السحابية</b><small id="syncMenuSub">—</small></span><span class="si-go" aria-hidden="true">‹</span></button>
-          <button class="settings-item" id="calSyncBtn" type="button" role="menuitem"><span class="si-ic" aria-hidden="true">📅</span><span class="si-tx"><b>التقويم</b><small>تصدير واستيراد ‎.ics</small></span><span class="si-go" aria-hidden="true">‹</span></button>
-          <button class="settings-item" id="exportBackupBtn" type="button" role="menuitem"><span class="si-ic" aria-hidden="true">💾</span><span class="si-tx"><b>تصدير نسخة احتياطية</b><small>ملف JSON تنزّله بنفسك</small></span></button>
-          <button class="settings-item" id="importBackupBtn" type="button" role="menuitem"><span class="si-ic" aria-hidden="true">📥</span><span class="si-tx"><b>استيراد نسخة احتياطية</b><small>من ملف JSON</small></span></button>
-          <button class="settings-item" id="restorePrevBtn" type="button" role="menuitem" style="display:none"><span class="si-ic" aria-hidden="true">🕘</span><span class="si-tx"><b>استرجاع نسخة سابقة</b><small>من آخر نسخ تلقائية</small></span><span class="si-go" aria-hidden="true">‹</span></button>
+          <div class="sm-title"><b>البيانات</b><small>مزامنة سحابية اختيارية ونسخ احتياطي بيدك</small></div>
+          <button class="settings-item" id="syncCodeBtn" type="button"><span class="si-ic" aria-hidden="true">☁️</span><span class="si-tx"><b>المزامنة السحابية</b><small id="syncMenuSub">—</small></span><span class="si-go" aria-hidden="true">‹</span></button>
+          <button class="settings-item" id="calSyncBtn" type="button"><span class="si-ic" aria-hidden="true">📅</span><span class="si-tx"><b>التقويم</b><small>تصدير واستيراد ‎.ics</small></span><span class="si-go" aria-hidden="true">‹</span></button>
+          <button class="settings-item" id="exportBackupBtn" type="button"><span class="si-ic" aria-hidden="true">💾</span><span class="si-tx"><b>تصدير نسخة احتياطية</b><small>ملف JSON تنزّله بنفسك</small></span></button>
+          <button class="settings-item" id="importBackupBtn" type="button"><span class="si-ic" aria-hidden="true">📥</span><span class="si-tx"><b>استيراد نسخة احتياطية</b><small>من ملف JSON</small></span></button>
+          <button class="settings-item" id="restorePrevBtn" type="button" style="display:none"><span class="si-ic" aria-hidden="true">🕘</span><span class="si-tx"><b>استرجاع نسخة سابقة</b><small>من آخر نسخ تلقائية</small></span><span class="si-go" aria-hidden="true">‹</span></button>
         </div>
         <div class="sm-group" data-g="sys" role="group" aria-label="النظام">
-          <div class="sm-title">النظام</div>
-          <button class="settings-item" id="pwaInstallBtn" type="button" role="menuitem" style="display:none"><span class="si-ic" aria-hidden="true">📲</span><span class="si-tx"><b>تثبيت التطبيق</b><small>أيقونة على شاشتك</small></span><span class="si-go" aria-hidden="true">‹</span></button>
-          <button class="settings-item" id="integrityBtn" type="button" role="menuitem"><span class="si-ic" aria-hidden="true">🧰</span><span class="si-tx"><b>فحص سلامة البيانات</b><small>مواد، جدول، حضور، علامات</small></span></button>
-          <button class="settings-item" id="diagBtn" type="button" role="menuitem"><span class="si-ic" aria-hidden="true">🩺</span><span class="si-tx"><b>سجل الأخطاء</b><small>تشخيص المشاكل</small></span></button>
-          <button class="settings-item" id="onbBtn" type="button" role="menuitem"><span class="si-ic" aria-hidden="true">🎓</span><span class="si-tx"><b>جولة تعريفية</b><small>تعرّف على الموقع</small></span><span class="si-go" aria-hidden="true">‹</span></button>
+          <div class="sm-title"><b>النظام</b><small>تثبيت التطبيق، فحص السلامة، سجل الأخطاء، الجولة</small></div>
+          <button class="settings-item" id="pwaInstallBtn" type="button" style="display:none"><span class="si-ic" aria-hidden="true">📲</span><span class="si-tx"><b>تثبيت التطبيق</b><small>أيقونة على شاشتك</small></span><span class="si-go" aria-hidden="true">‹</span></button>
+          <button class="settings-item" id="integrityBtn" type="button"><span class="si-ic" aria-hidden="true">🧰</span><span class="si-tx"><b>فحص سلامة البيانات</b><small>مواد، جدول، حضور، علامات</small></span></button>
+          <button class="settings-item" id="diagBtn" type="button"><span class="si-ic" aria-hidden="true">🩺</span><span class="si-tx"><b>سجل الأخطاء</b><small>تشخيص المشاكل</small></span></button>
+          <button class="settings-item" id="onbBtn" type="button"><span class="si-ic" aria-hidden="true">🎓</span><span class="si-tx"><b>جولة تعريفية</b><small>تعرّف على الموقع</small></span><span class="si-go" aria-hidden="true">‹</span></button>
         </div>
+        </div>
+        </div>
+        <footer class="sm-foot"><span>📚 مساحتي الدراسية</span><span>الإصدار <bdi dir="ltr" id="smBuild">—</bdi></span><span class="sm-keys">Esc للإغلاق</span></footer>
+       </div>
       </div>
     </div>
   </div>
@@ -135,6 +149,7 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
 </aside>
 
 <main>
+  <div class="qstrip" id="qStrip" hidden></div>
   <section id="dashboard" class="section active">
     <div class="page-head">
       <h2 class="page-title">📊 لوحة التحكم</h2>
@@ -516,7 +531,7 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <!-- الملفات الأساسية (الترتيب مهم جداً!) -->
-<script src="app.bundle.js?v=125"></script>
+<script src="app.bundle.js?v=126"></script>
 <script>
 /* إخفاء الهيكل الرمادي بعد أول رسم للتطبيق (مع مؤقّت أمان كي لا يعلق أبداً) */
 (function(){
@@ -537,7 +552,7 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
    1) إن لم يطابق window.APP_BUILD رقم BUILD هنا → يمسح كاش التطبيق ويعيد التحميل مرة واحدة (حارس sessionStorage يمنع التكرار).
    2) أقسام اللوحة المتقدمة (تحليلات/LMS/إحصائيات) تُنقل إلى خانتها الثابتة إذا أضافتها سكربتات قديمة بمكان آخر. */
 (function(){
-  var BUILD = '125';
+  var BUILD = '126';
   var SLOTS = { insightsSection: 'slotInsights', lmsWidget: 'slotLms', enhancedStatsSection: 'slotEnhanced' };
   function heal(){
     var dash = document.getElementById('dashboard'); if(!dash) return;
