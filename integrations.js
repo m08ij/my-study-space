@@ -1193,14 +1193,7 @@
 
     var btn = document.getElementById('btnOpenSmartTimetable');
     if(btn) btn.addEventListener('click', function(){ openSmartModal(); });
-    if(btn && window.OcrImport && window.OcrImport.enabled()){
-      var ob = document.createElement('button');
-      ob.type = 'button'; ob.className = 'btn'; ob.id = 'btnOcrTimetable';
-      ob.style.cssText = 'margin-top:10px;width:100%;max-width:420px;justify-content:center';
-      ob.textContent = '📷 من صورة جدول (تجريبي)';
-      ob.addEventListener('click', function(){ window.OcrImport.start(); });
-      btn.parentNode.appendChild(ob);
-    }
+    if(window.OcrImport && window.OcrImport.syncPageButton) window.OcrImport.syncPageButton();
 
     var sub = document.querySelector('#timetable .page-sub');
     if(sub) sub.textContent = 'أضف موادك بشكل تفاعلي ذكي';

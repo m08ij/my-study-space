@@ -81,6 +81,7 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
           <div class="sm-title">وضع العمل</div>
           <button class="settings-item" id="todayBtn" type="button" role="menuitemcheckbox" aria-checked="false"><span class="si-ic" aria-hidden="true">🎯</span><span class="si-tx"><b>اليوم فقط</b><small class="tb-t">اللوحة الكاملة</small></span><span class="si-sw" aria-hidden="true"></span></button>
           <button class="settings-item" id="privacyBtn" type="button" role="menuitemcheckbox" aria-checked="false"><span class="si-ic" aria-hidden="true">🙈</span><span class="si-tx"><b>وضع الخصوصية</b><small class="pv-t">الأرقام ظاهرة</small></span><span class="si-sw" aria-hidden="true"></span></button>
+          <button class="settings-item" id="ocrLabBtn" type="button" role="menuitemcheckbox" aria-checked="false"><span class="si-ic" aria-hidden="true">📷</span><span class="si-tx"><b>استيراد الجدول من صورة</b><small class="ol-t">تجريبي — مطفأ</small></span><span class="si-sw" aria-hidden="true"></span></button>
           <button class="settings-item" id="notifBtn" type="button" role="menuitem"><span class="si-ic" aria-hidden="true">🔔</span><span class="si-tx"><b>الإشعارات</b><small id="notifBtnText">اضغط للتفعيل</small></span><span class="si-go" aria-hidden="true">‹</span></button>
           <button class="settings-item" id="cmdkBtn" type="button" role="menuitem"><span class="si-ic" aria-hidden="true">⌘</span><span class="si-tx"><b>لوحة الأوامر</b><small>بحث وتنقل سريع</small></span><kbd class="si-kbd" dir="ltr">Alt+K</kbd></button>
         </div>
@@ -504,7 +505,7 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <!-- الملفات الأساسية (الترتيب مهم جداً!) -->
-<script src="app.bundle.js?v=121"></script>
+<script src="app.bundle.js?v=122"></script>
 <script>
 /* إخفاء الهيكل الرمادي بعد أول رسم للتطبيق (مع مؤقّت أمان كي لا يعلق أبداً) */
 (function(){
@@ -525,7 +526,7 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
    1) إن لم يطابق window.APP_BUILD رقم BUILD هنا → يمسح كاش التطبيق ويعيد التحميل مرة واحدة (حارس sessionStorage يمنع التكرار).
    2) أقسام اللوحة المتقدمة (تحليلات/LMS/إحصائيات) تُنقل إلى خانتها الثابتة إذا أضافتها سكربتات قديمة بمكان آخر. */
 (function(){
-  var BUILD = '121';
+  var BUILD = '122';
   var SLOTS = { insightsSection: 'slotInsights', lmsWidget: 'slotLms', enhancedStatsSection: 'slotEnhanced' };
   function heal(){
     var dash = document.getElementById('dashboard'); if(!dash) return;

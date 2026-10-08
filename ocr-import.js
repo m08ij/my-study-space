@@ -159,8 +159,42 @@
     tt(s + ' (راجعها قبل الحفظ)', meta.review ? 'warn' : 'success', 6000);
   }
 
+  /* زر صفحة الجدول: يُضاف/يُزال حسب التفعيل، بدون إعادة تحميل */
+  function syncPageButton(){
+    var base = document.getElementById('btnOpenSmartTimetable'), ex = document.getElementById('btnOcrTimetable');
+    if(!enabled()){ if(ex && ex.parentNode) ex.parentNode.removeChild(ex); return; }
+    if(!base || ex) return;
+    var ob = el('button', 'btn', '📷 من صورة جدول (تجريبي)'); ob.type = 'button'; ob.id = 'btnOcrTimetable';
+    ob.style.cssText = 'margin-top:10px;width:100%;max-width:420px;justify-content:center';
+    ob.addEventListener('click', start);
+    base.parentNode.appendChild(ob);
+  }
+
+  /* مفتاح التفعيل بقائمة الإعدادات (يحفظ بـlocalStorage.ocr_lab؛ على localhost الميزة شغّالة دائماً) */
+  function paintSwitch(){
+    var b = document.getElementById('ocrLabBtn'); if(!b) return;
+    var on = enabled(), t = b.querySelector('.ol-t');
+    b.setAttribute('aria-checked', on ? 'true' : 'false');
+    if(t) t.textContent = isLocalHost(window.location.hostname) ? 'شغّالة دائماً على localhost' : (on ? 'مفعّل — تحتاج الخدمة المحلية شغّالة' : 'تجريبي — مطفأ');
+  }
+  function toggle(){
+    if(isLocalHost(window.location.hostname)){ tt('على localhost الميزة شغّالة دائماً', 'info'); return; }
+    var on = lget('ocr_lab') === '1';
+    if(on) lrm('ocr_lab'); else lset('ocr_lab', '1');
+    paintSwitch(); syncPageButton();
+    if(on) tt('📷 أُطفئ استيراد الجدول من صورة', 'info');
+    else tt('📷 فُعّل. التحليل بيشتغل على جهازك: شغّل الخدمة (node tools/ocr-lab/server.js) ثم افتح «إضافة دفعة» ← «من صورة». لو المتصفح طلب إذن «الشبكة المحلية» اسمح.', 'success', 9000);
+  }
+  function bind(){
+    var b = document.getElementById('ocrLabBtn'); if(!b || b._ol) { paintSwitch(); return; } b._ol = true;
+    b.addEventListener('click', function(){ if(window.closeSettingsMenu) window.closeSettingsMenu(); toggle(); });
+    paintSwitch();
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind); else bind();
+  setTimeout(bind, 400);
+
   window.OcrImport = {
     enabled: enabled, enabledFor: enabledFor, endpoint: endpoint, toSttRows: toSttRows,
-    run: run, pick: pick, start: start, summary: summary
+    run: run, pick: pick, start: start, summary: summary, syncPageButton: syncPageButton, toggle: toggle
   };
 })();
