@@ -43,7 +43,7 @@
 .myday-line{display:flex;justify-content:space-between;font-size:var(--fs-sm);margin-top:var(--sp-1)}
 
 /* ---- الجدول التفاعلي ---- */
-.tt-date{display:block;font-size:var(--fs-2xs);font-weight:600;opacity:.85;line-height:1.2}
+.tt-date{display:block;font-size:var(--fs-2xs);font-weight:600;opacity:.95;line-height:1.2}
 .tt-exam{display:block;font-size:var(--fs-2xs);margin-top:2px;font-weight:700}
 .class-block.tt-next{border-style:dashed;border-color:var(--accent)}
 .class-block .tt-badge{align-self:flex-start;font-size:var(--fs-2xs);padding:0 7px;border-radius:var(--r-sm);margin-top:3px;font-weight:700;line-height:1.6}
@@ -265,7 +265,7 @@ button.hub-li:hover{border-color:var(--accent)}
 .cf-tools input:focus,.cf-tools select:focus{outline:none;border-color:var(--accent);box-shadow:var(--ring)}
 .upload-course-btn:disabled{opacity:.6;cursor:progress}
 /* تباين شارات الأنواع بالثيمات الفاتحة */
-[data-theme="ivory"] .badge.assignment,[data-theme="sky"] .badge.assignment{background:rgba(120,120,120,.10)}
+[data-theme="mint"] .badge.assignment{background:rgba(120,120,120,.10)}
 
 /* ============ مقبض سحب المهام + زر الأدوات الجانبية أقل تطفلاً ============ */
 .task-handle{cursor:grab;touch-action:none;background:transparent;border:0;color:var(--muted);font-size:var(--fs-lg);padding:var(--sp-1) var(--sp-2);border-radius:var(--r-sm);font-family:inherit;min-height:34px}
@@ -385,8 +385,7 @@ main{padding-left:max(24px,env(safe-area-inset-left))}
 #btnExamPlan{margin-inline-start:var(--sp-2)}
 /* خروج النوافذ المنبثقة (نسخة شبحية تتلاشى؛ تُنشأ من dismissOverlay في core.js) */
 .modal-ghost{position:fixed;inset:0;z-index:499;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.7);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);pointer-events:none;animation:ghostOut .15s ease forwards}
-[data-theme="ivory"] .modal-ghost,[data-theme="sky"] .modal-ghost{background:rgba(35,28,20,.42)}
-[data-theme="sky"] .modal-ghost{background:rgba(20,30,60,.42)}
+[data-theme="mint"] .modal-ghost{background:rgba(20,40,30,.42)}
 .mg-box{background:var(--card);border:1px solid var(--border);border-radius:var(--r-xl);padding:26px;max-width:520px;width:100%;box-shadow:var(--shadow-lg);max-height:90vh;overflow:hidden;position:relative;animation:ghostBoxOut .15s ease forwards}
 .mg-box::before{content:'';position:absolute;top:0;right:0;left:0;height:3px;background:var(--grad)}
 .mg-box h3{font-size:var(--fs-lg);margin-bottom:14px;color:var(--accent)}

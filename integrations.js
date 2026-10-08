@@ -490,6 +490,7 @@
     header.className = 'stt-header';
     header.innerHTML =
       '<h3>✨ إضافة جدول — دفعة واحدة</h3>' +
+      (window.OcrImport && window.OcrImport.enabled() ? '<button class="stt-ocr-btn" type="button" data-ocr="pick" title="تحليل صورة جدول التسجيل وتعبئة الصفوف (تجريبي)">📷 من صورة</button>' : '') +
       '<button class="stt-close" type="button" title="إغلاق">×</button>';
     modal.appendChild(header);
 
@@ -663,6 +664,16 @@
       matchEl.className = 'stt-match';
       matchEl.dataset.match = '1';
       nameCell.appendChild(matchEl);
+      if(row._ocr){
+        /* صف جاء من تحليل صورة: لون حسب الثقة + سبب مختصر (textContent فقط: النص جاي من OCR) */
+        el.classList.add('ocr-' + row._ocr.confidence);
+        var note = document.createElement('div');
+        note.className = 'stt-ocr-note';
+        var why = (row._ocr.reasons || []).join(' · ');
+        note.textContent = (row._ocr.confidence === 'review' ? '⚠ راجع هالصف: ' : row._ocr.confidence === 'medium' ? '📷 تأكّد: ' : '📷 من الصورة') + (row._ocr.confidence === 'high' ? '' : why);
+        note.title = (why ? why + ' | ' : '') + (row._ocr.printedCode ? 'الرقم المطبوع: ' + row._ocr.printedCode : '');
+        nameCell.appendChild(note);
+      }
       el.appendChild(nameCell);
 
       var days = document.createElement('div');
@@ -735,6 +746,8 @@
     function renderRows(){
       rowsWrap.innerHTML = '';
       state.rows.forEach(function(row, idx){ rowsWrap.appendChild(buildRowEl(row, idx)); });
+      /* updateRowStatus يبحث عن الصف داخل rowsWrap، فلا يجده أثناء البناء: نحدّث الحالة بعد إضافة الصفوف (تلوين «مطابق/جاهز» وعبارة الساعات للصفوف المعبّأة مسبقاً كالمسوّدة والتحليل من صورة) */
+      state.rows.forEach(function(row, idx){ updateRowStatus(idx); });
       updateFooter();
     }
 
@@ -852,7 +865,26 @@
 
     header.addEventListener('click', function(e){
       if(e.target.closest('.stt-close')) close();
+      else if(e.target.closest('[data-ocr="pick"]') && window.OcrImport) window.OcrImport.pick(applyOcrRows);
     });
+
+    /* صفوف جاءت من تحليل صورة: تُضاف فوق صفوفك اليدوية (الفارغة فقط تُستبدل)، ولا يُحفظ شيء قبل «حفظ الكل» */
+    function rowIsBlank(r){ return !r.name && !r.code && !(r.days && r.days.length) && !r.timeFrom && !r.timeTo && !r.room; }
+    function applyOcrRows(rows, meta){
+      state.rows = state.rows.filter(function(r){ return !rowIsBlank(r); }).concat(rows);
+      while(state.rows.length < MIN_ROWS) state.rows.push(sttEmptyRow());
+      renderRows(); scheduleDraftSave();
+      rowsWrap.scrollTop = 0;
+      if(window.OcrImport) window.OcrImport.summary(meta);
+    }
+    /* سحب صورة وإفلاتها فوق النافذة */
+    if(window.OcrImport && window.OcrImport.enabled()){
+      backdrop.addEventListener('dragover', function(e){ if(e.dataTransfer && Array.prototype.indexOf.call(e.dataTransfer.types || [], 'Files') > -1) e.preventDefault(); });
+      backdrop.addEventListener('drop', function(e){
+        var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+        if(f && /^image\//.test(f.type)){ e.preventDefault(); window.OcrImport.run(f, applyOcrRows); }
+      });
+    }
 
     footer.addEventListener('click', function(e){
       var btn = e.target.closest('[data-action]'); if(!btn) return;
@@ -1161,6 +1193,14 @@
 
     var btn = document.getElementById('btnOpenSmartTimetable');
     if(btn) btn.addEventListener('click', function(){ openSmartModal(); });
+    if(btn && window.OcrImport && window.OcrImport.enabled()){
+      var ob = document.createElement('button');
+      ob.type = 'button'; ob.className = 'btn'; ob.id = 'btnOcrTimetable';
+      ob.style.cssText = 'margin-top:10px;width:100%;max-width:420px;justify-content:center';
+      ob.textContent = '📷 من صورة جدول (تجريبي)';
+      ob.addEventListener('click', function(){ window.OcrImport.start(); });
+      btn.parentNode.appendChild(ob);
+    }
 
     var sub = document.querySelector('#timetable .page-sub');
     if(sub) sub.textContent = 'أضف موادك بشكل تفاعلي ذكي';

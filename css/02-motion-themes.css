@@ -300,11 +300,10 @@ body{transition:background-color var(--dur-3) ease,color var(--dur-3) ease}
 .theme-panel.show .theme-swatch:nth-child(3n){animation-delay:.06s}
 
 /* الثيمات الفاتحة (عاج / سماء): ظلال وخلفية نوافذ أخف */
-[data-theme="ivory"] .modal-backdrop,[data-theme="sky"] .modal-backdrop{background:rgba(35,28,20,.42)}
-[data-theme="sky"] .modal-backdrop{background:rgba(20,30,60,.42)}
-[data-theme="ivory"] .card:hover,[data-theme="sky"] .card:hover{box-shadow:var(--shadow-lg)}
-[data-theme="ivory"] .icon-btn:hover,[data-theme="sky"] .icon-btn:hover{box-shadow:var(--shadow)}
-[data-theme="ivory"] .toast,[data-theme="sky"] .toast{box-shadow:var(--shadow)}
+[data-theme="mint"] .modal-backdrop{background:rgba(20,40,30,.42)}
+[data-theme="mint"] .card:hover{box-shadow:var(--shadow-lg)}
+[data-theme="mint"] .icon-btn:hover{box-shadow:var(--shadow)}
+[data-theme="mint"] .toast{box-shadow:var(--shadow)}
 
 @media (prefers-reduced-motion: reduce){
   html.theme-fading *,html.theme-fading *::before,html.theme-fading *::after{transition:none!important}
@@ -312,14 +311,14 @@ body{transition:background-color var(--dur-3) ease,color var(--dur-3) ease}
 }
 
 /* ============================================================
-   🎛️ توحيد حالات الحقول والأزرار — للثيمات الخمسة الجديدة فقط (ivory/emerald/ember/graphite/sky)
+   🎛️ توحيد حالات الحقول والأزرار — للثيمات الخمسة الجديدة فقط (obsidian/mocha/coral/graphite/mint)
    ============================================================ */
-[data-theme="emerald"],[data-theme="ember"],[data-theme="graphite"]{color-scheme:dark}
-[data-theme="ivory"],[data-theme="sky"]{color-scheme:light}
-[data-theme="ivory"] ::placeholder,[data-theme="emerald"] ::placeholder,[data-theme="ember"] ::placeholder,
-[data-theme="graphite"] ::placeholder,[data-theme="sky"] ::placeholder{color:var(--muted2);opacity:1}
-[data-theme="ivory"] option,[data-theme="emerald"] option,[data-theme="ember"] option,
-[data-theme="graphite"] option,[data-theme="sky"] option{background:var(--card);color:var(--text)}
+[data-theme="obsidian"],[data-theme="mocha"],[data-theme="coral"],[data-theme="graphite"]{color-scheme:dark}
+[data-theme="mint"]{color-scheme:light}
+[data-theme="obsidian"] ::placeholder,[data-theme="mocha"] ::placeholder,[data-theme="coral"] ::placeholder,
+[data-theme="graphite"] ::placeholder,[data-theme="mint"] ::placeholder{color:var(--muted2);opacity:1}
+[data-theme="obsidian"] option,[data-theme="mocha"] option,[data-theme="coral"] option,
+[data-theme="graphite"] option,[data-theme="mint"] option{background:var(--card);color:var(--text)}
 /* تعطيل موحّد (يشمل كل الثيمات لأنه سلوك وليس لون): خافت + مؤشر ممنوع + بدون حركة */
 .btn:disabled,.btn[disabled]{opacity:.5;cursor:not-allowed;transform:none!important;box-shadow:none!important}
 input:disabled,select:disabled,textarea:disabled{opacity:.55;cursor:not-allowed}

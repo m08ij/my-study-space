@@ -40,10 +40,10 @@
 }@media (max-width:300px){.btn{white-space:normal;text-align:center}.tt-chip,.hub-chip,.chip{white-space:nowrap}}
 
 /* شارات الأنواع بالثيمات الفاتحة: خلفية محايدة فاتحة ليبقى التباين ≥ 4.5 لكل الأنواع */
-[data-theme="ivory"] .badge.exam,[data-theme="sky"] .badge.exam,[data-theme="ivory"] .badge.assignment,[data-theme="sky"] .badge.assignment,[data-theme="ivory"] .badge.quiz,[data-theme="sky"] .badge.quiz,[data-theme="ivory"] .badge.project,[data-theme="sky"] .badge.project,[data-theme="ivory"] .badge.task,[data-theme="sky"] .badge.task{background:rgba(120,120,120,.09)}
+[data-theme="mint"] .badge.exam,[data-theme="mint"] .badge.assignment,[data-theme="mint"] .badge.quiz,[data-theme="mint"] .badge.project,[data-theme="mint"] .badge.task{background:rgba(120,120,120,.09)}
 
-[data-theme="ivory"] .badge.project,[data-theme="sky"] .badge.project{color:#0b5326}
-[data-theme="ivory"] .badge.quiz,[data-theme="sky"] .badge.quiz{color:#7a4a04}
+[data-theme="mint"] .badge.project{color:#0b5326}
+[data-theme="mint"] .badge.quiz{color:#7a4a04}
 
 /* شارة نوع المهمة تحمل الصنف task أيضاً فكانت ترث تنسيق بطاقة المهمة (flex/هامش/حدّ): نعيدها شارة عادية */
 .task-meta .badge.task{display:block;margin:0;border:0;padding:2px var(--sp-2);gap:0;border-radius:var(--r-sm);background:var(--bg2);transform:none;box-shadow:none;animation:none;transition:none}
@@ -530,13 +530,12 @@
 /* --- شخصية الثيمات: الحواف والإضاءة (تعمل عبر توكنز الحواف فتشمل كل المكوّنات) --- */
 [data-theme="graphite"]{--r-md:8px;--r-lg:10px;--r-xl:14px}
 [data-theme="graphite"] .card{box-shadow:none}
-[data-theme="ivory"]{--r-md:12px;--r-lg:16px;--r-xl:22px}
-[data-theme="sky"]{--r-md:12px;--r-lg:16px;--r-xl:22px}
+[data-theme="mint"]{--r-md:12px;--r-lg:16px;--r-xl:22px}
 [data-theme="cyberpunk"]{--r-md:6px;--r-lg:8px;--r-xl:12px}
 [data-theme="cyberpunk"] .nav-item.active,[data-theme="cyberpunk"] .card:hover{border-color:var(--accent-2);box-shadow:0 0 0 1px var(--accent-2),var(--sh-glow-sm)}
-[data-theme="ember"] .sidebar,[data-theme="emerald"] .sidebar,[data-theme="royal"] .sidebar{border-left-color:var(--border2)}
-[data-theme="ivory"] .sidebar,[data-theme="sky"] .sidebar{background:var(--card);box-shadow:inset -1px 0 0 var(--border)}
-[data-theme="ivory"] .nav-item .ic,[data-theme="sky"] .nav-item .ic{background:var(--bg2)}
+[data-theme="coral"] .sidebar,[data-theme="mocha"] .sidebar,[data-theme="obsidian"] .sidebar,[data-theme="royal"] .sidebar{border-left-color:var(--border2)}
+[data-theme="mint"] .sidebar{background:var(--card);box-shadow:inset -1px 0 0 var(--border)}
+[data-theme="mint"] .nav-item .ic{background:var(--bg2)}
 
 @media (prefers-reduced-motion:reduce){
   .section.tab-play .stat .v,.section.tab-play .wk-tile b,.section.tab-play .myday-num,.section.tab-play .bp-kpi b,.section.tab-play .task,.section.tab-play .budget-item,.section.tab-play .bp-cat,.section.tab-play .hub-card,.section.tab-play .sc-progress-fill::after,.section.tab-play .att-fill::after,.task.urgent,.badge.urgent,.empty .ic{animation:none}
@@ -544,8 +543,8 @@
 @media (max-width:900px){.sidebar{padding-bottom:110px}}
 
 /* الثيمات الفاتحة: حدود وتوهج أخف للأزرار العائمة */
-[data-theme="ivory"] .ai-fab,[data-theme="sky"] .ai-fab,[data-theme="ivory"] .fab-main,[data-theme="sky"] .fab-main{box-shadow:var(--sh-md)}
-[data-theme="ivory"] .ai-fab::after,[data-theme="sky"] .ai-fab::after{border-width:1px;opacity:.35}
+[data-theme="mint"] .ai-fab,[data-theme="mint"] .fab-main{box-shadow:var(--sh-md)}
+[data-theme="mint"] .ai-fab::after{border-width:1px;opacity:.35}
 
 /* ============================================================
    توقع التقدم الأكاديمي، ربط التركيز، أهداف الادخار، مزامنة Moodle/Outlook
@@ -1019,19 +1018,19 @@ body:has(.settings-menu.show) .fab-main,body:has(.settings-menu.show) .fab-menu,
 ::selection{background:color-mix(in srgb,var(--accent) 32%,transparent);color:var(--text)}
 html{scrollbar-color:var(--border2) transparent}
 /* الثيمات الداكنة: لمعة علوية رقيقة تعطي سطح البطاقة عمقاً */
-:root:not([data-theme="ivory"]):not([data-theme="sky"]) .card{background-image:linear-gradient(180deg,rgba(255,255,255,.035),transparent 46%);box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
-:root:not([data-theme="ivory"]):not([data-theme="sky"]) .card:hover{box-shadow:inset 0 1px 0 rgba(255,255,255,.07),var(--sh-lg)}
+:root:not([data-theme="mint"]) .card{background-image:linear-gradient(180deg,rgba(255,255,255,.035),transparent 46%);box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+:root:not([data-theme="mint"]) .card:hover{box-shadow:inset 0 1px 0 rgba(255,255,255,.07),var(--sh-lg)}
 [data-theme="graphite"] .card{background-image:none;box-shadow:none}
 /* الفاتحة: ظل أنعم وحد علوي ملوّن خفيف عند التحويم */
-[data-theme="ivory"] .card,[data-theme="sky"] .card{box-shadow:0 1px 2px rgba(40,50,80,.06)}
-[data-theme="ivory"] .card:hover,[data-theme="sky"] .card:hover{border-color:color-mix(in srgb,var(--accent) 45%,var(--border))}
+[data-theme="mint"] .card{box-shadow:0 1px 2px rgba(40,50,80,.06)}
+[data-theme="mint"] .card:hover{border-color:color-mix(in srgb,var(--accent) 45%,var(--border))}
 /* هوية لكل ثيم */
 [data-theme="cyberpunk"] .nav-item.active{box-shadow:inset 0 0 0 1px var(--glow),0 0 18px var(--glow)}
 [data-theme="cyberpunk"] .page-title{text-shadow:0 0 18px var(--glow)}
 [data-theme="royal"] .card{background-image:linear-gradient(160deg,rgba(167,139,250,.07),transparent 55%)}
-[data-theme="emerald"] .card:hover,[data-theme="ember"] .card:hover{border-color:color-mix(in srgb,var(--accent) 50%,var(--border2))}
+[data-theme="mocha"] .card:hover,[data-theme="obsidian"] .card:hover,[data-theme="coral"] .card:hover{border-color:color-mix(in srgb,var(--accent) 50%,var(--border2))}
 [data-theme="midnight"] body::after{opacity:calc(var(--blob-opacity,.35)*1.25)}
-[data-theme="ivory"] .page-title,[data-theme="sky"] .page-title{letter-spacing:0}
+[data-theme="mint"] .page-title{letter-spacing:0}
 .page-title+.page-sub{opacity:.95}
 
 /* ---- حركة أنعم ---- */
@@ -1151,3 +1150,30 @@ html.is-new .boot-skel{display:none}
 .bs-list span{height:44px;border-radius:var(--radius)}
 @keyframes bsShimmer{from{background-position:100% 0}to{background-position:-120% 0}}
 @media (prefers-reduced-motion:reduce){.bs-dot,.bs-brand,.bs-pill,.bs-hero,.bs-card,.bs-list span{animation:none}.boot-skel{transition:none}}
+
+/* ===== استيراد الجدول من صورة (تجريبي): زر النافذة، تلوين الصفوف حسب ثقة التحليل، وشاشة الانتظار ===== */
+.stt-ocr-btn{margin-inline-start:auto;margin-inline-end:10px;background:var(--card2);border:1px solid var(--border);color:var(--text);border-radius:var(--r-md);padding:7px 14px;font:inherit;font-size:var(--fs-sm);font-weight:700;cursor:pointer;white-space:nowrap}
+.stt-ocr-btn:hover{border-color:var(--accent);color:var(--accent)}
+.stt-row.ocr-medium{border-color:rgba(251,191,36,.55);background:linear-gradient(135deg,rgba(251,191,36,.07),transparent)}
+.stt-row.ocr-review{border-color:rgba(248,113,113,.6);background:linear-gradient(135deg,rgba(248,113,113,.09),transparent)}
+.stt-ocr-note{font-size:var(--fs-2xs);color:var(--muted);line-height:1.35;padding:0 var(--sp-1);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;white-space:normal}
+.stt-row.ocr-medium .stt-ocr-note{color:var(--amber)}
+.stt-row.ocr-review .stt-ocr-note{color:var(--red);font-weight:700}
+.ocri-overlay{position:fixed;inset:0;z-index:10050;background:rgba(5,8,16,.62);display:flex;align-items:center;justify-content:center;padding:16px}
+.ocri-box{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px 26px;max-width:440px;width:100%;text-align:center;box-shadow:var(--shadow-lg)}
+.ocri-title{font-weight:800;font-size:var(--fs-md);margin-bottom:6px}
+.ocri-sub{color:var(--muted);font-size:var(--fs-sm);line-height:1.7;margin-bottom:8px}
+.ocri-cmd{display:block;margin:10px 0 14px;padding:9px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-md);font-size:var(--fs-sm);user-select:all;direction:ltr;text-align:left}
+.ocri-btn{margin-top:8px;background:var(--grad);color:var(--on-accent);border:0;border-radius:var(--r-md);padding:8px 22px;font:inherit;font-weight:800;cursor:pointer}
+.ocri-spin{width:30px;height:30px;margin:0 auto 12px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:ocriSpin .9s linear infinite}
+@keyframes ocriSpin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.ocri-spin{animation:none}}
+
+/* قائمة «⋯ المزيد» بالجوال: شريط سفلي بعرض الشاشة (كانت تطلع ~55px خارج الحافة وتنقطع أزرارها) */
+@media (max-width:560px){
+  .more-menu[open] .more-pop{position:fixed;inset-inline:12px;top:auto;bottom:calc(76px + env(safe-area-inset-bottom,0px));min-width:0;z-index:450;box-shadow:var(--sh-lg),0 0 0 100vmax rgba(5,8,16,.45)}
+}
+@media (max-width:560px){
+  body:has(.more-menu[open]) :is(.fab-main,.ai-fab){visibility:hidden}
+}
+[data-theme="mint"] .task-meta .badge.task{color:var(--text)}

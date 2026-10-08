@@ -89,19 +89,19 @@
      ============================================================ */
   var THEMES = [
     {id:'dark', name:'داكن', colors:['#0b0f1a','#22d3ee','#a78bfa']},
-    {id:'ivory', name:'عاج', light:true, colors:['#f6f1e9','#0f766e','#c2410c']},
-    {id:'emerald', name:'زمرد', colors:['#07120e','#34d399','#e5c07b']},
-    {id:'ember', name:'جمر', colors:['#120e0c','#fb923c','#fb7185']},
+    {id:'obsidian', name:'أوبسيديان', colors:['#0a0a0d','#d9b46a','#d08f72']},
+    {id:'mocha', name:'موكا', colors:['#16120f','#a8c9a0','#e0c9a6']},
+    {id:'coral', name:'مرجان', colors:['#0b1a21','#ff9a85','#7fd6c8']},
     {id:'graphite', name:'جرافيت', colors:['#0d0f12','#a3e635','#2dd4bf']},
     {id:'royal', name:'ملكي', colors:['#0f0524','#a78bfa','#fbbf24']},
     {id:'cyberpunk', name:'سايبربانك', colors:['#0a0014','#22d3ee','#ec4899']},
     {id:'midnight', name:'منتصف الليل', colors:['#050914','#0ea5e9','#8b5cf6']},
-    {id:'sky', name:'سماء', light:true, colors:['#eef3fb','#4338ca','#0369a1']}
+    {id:'mint', name:'نعناع', light:true, colors:['#f1f6f2','#237a52','#a8701a']}
   ];
   window.THEMES = THEMES;
 
   /* ترحيل الثيمات المستبدلة: من اختار ثيماً قديماً (محلياً أو من السحابة) ينتقل لأقرب بديل داكن */
-  var LEGACY_THEMES = { dracula: 'graphite', sakura: 'ember', nord: 'graphite', ocean: 'midnight', aurora: 'emerald' };
+  var LEGACY_THEMES = { dracula: 'graphite', sakura: 'coral', nord: 'graphite', ocean: 'midnight', aurora: 'mocha', ivory: 'mint', sky: 'mint', emerald: 'mocha', ember: 'coral', sunset: 'obsidian', lavender: 'mint', burgundy: 'mocha' };
   function resolveTheme(t){
     if(LEGACY_THEMES[t]) t = LEGACY_THEMES[t];
     return THEMES.some(function(x){ return x.id === t; }) ? t : 'dark';
