@@ -69,15 +69,17 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
     <button class="icon-btn" id="serverStatus" title="جاري الفحص...">⏳</button>
     <div class="settings-wrap">
       <button class="icon-btn" id="settingsBtn" title="الإعدادات">⚙️</button>
-      <div class="settings-menu" id="settingsMenu" role="menu" aria-label="الإعدادات">
+      <div class="settings-menu" id="settingsMenu" data-sm="look" role="menu" aria-label="الإعدادات">
         <div class="sm-handle" aria-hidden="true"></div>
-        <div class="sm-group" role="group" aria-label="المظهر">
+        <div class="sm-tabs" role="tablist" aria-label="أقسام الإعدادات"><button type="button" class="sm-tab" role="tab" data-sm="look" aria-selected="true"><span aria-hidden="true">🎨</span>المظهر</button><button type="button" class="sm-tab" role="tab" data-sm="work" aria-selected="false"><span aria-hidden="true">🎯</span>العمل</button><button type="button" class="sm-tab" role="tab" data-sm="data" aria-selected="false"><span aria-hidden="true">💾</span>البيانات</button><button type="button" class="sm-tab" role="tab" data-sm="sys" aria-selected="false"><span aria-hidden="true">🧰</span>النظام</button></div>
+        <div class="sm-group" data-g="look" role="group" aria-label="المظهر">
           <div class="sm-title">المظهر</div>
+          <button class="settings-item" id="simpleBtn" type="button" role="menuitemcheckbox" aria-checked="false"><span class="si-ic" aria-hidden="true">🧘</span><span class="si-tx"><b>الوضع البسيط</b><small class="sp-t">كل الميزات ظاهرة</small></span><span class="si-sw" aria-hidden="true"></span></button>
           <button class="settings-item" id="themeBtn" type="button" role="menuitem"><span class="si-ic" aria-hidden="true">🎨</span><span class="si-tx"><b>الثيمات</b><small id="themeSub">—</small></span><span class="si-go" aria-hidden="true">‹</span></button>
           <button class="settings-item" id="densityBtn" type="button" role="menuitemcheckbox" aria-checked="false"><span class="si-ic" aria-hidden="true">📏</span><span class="si-tx"><b>كثافة العرض</b><small class="db-t">مريحة</small></span><span class="si-sw" aria-hidden="true"></span></button>
           <div class="si-row" role="group" aria-label="حجم الخط"><span class="si-ic" aria-hidden="true">🔤</span><span class="si-tx"><b>حجم الخط</b><small id="fontSub">عادي</small></span><span class="si-seg"><button type="button" data-fs="sm" aria-pressed="false" aria-label="خط صغير">أ</button><button type="button" data-fs="md" aria-pressed="true" aria-label="خط عادي">أ</button><button type="button" data-fs="lg" aria-pressed="false" aria-label="خط كبير">أ</button></span></div>
         </div>
-        <div class="sm-group" role="group" aria-label="وضع العمل">
+        <div class="sm-group" data-g="work" role="group" aria-label="وضع العمل">
           <div class="sm-title">وضع العمل</div>
           <button class="settings-item" id="todayBtn" type="button" role="menuitemcheckbox" aria-checked="false"><span class="si-ic" aria-hidden="true">🎯</span><span class="si-tx"><b>اليوم فقط</b><small class="tb-t">اللوحة الكاملة</small></span><span class="si-sw" aria-hidden="true"></span></button>
           <button class="settings-item" id="privacyBtn" type="button" role="menuitemcheckbox" aria-checked="false"><span class="si-ic" aria-hidden="true">🙈</span><span class="si-tx"><b>وضع الخصوصية</b><small class="pv-t">الأرقام ظاهرة</small></span><span class="si-sw" aria-hidden="true"></span></button>
@@ -85,7 +87,7 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
           <button class="settings-item" id="notifBtn" type="button" role="menuitem"><span class="si-ic" aria-hidden="true">🔔</span><span class="si-tx"><b>الإشعارات</b><small id="notifBtnText">اضغط للتفعيل</small></span><span class="si-go" aria-hidden="true">‹</span></button>
           <button class="settings-item" id="cmdkBtn" type="button" role="menuitem"><span class="si-ic" aria-hidden="true">⌘</span><span class="si-tx"><b>لوحة الأوامر</b><small>بحث وتنقل سريع</small></span><kbd class="si-kbd" dir="ltr">Alt+K</kbd></button>
         </div>
-        <div class="sm-group" role="group" aria-label="البيانات">
+        <div class="sm-group" data-g="data" role="group" aria-label="البيانات">
           <div class="sm-title">البيانات</div>
           <button class="settings-item" id="syncCodeBtn" type="button" role="menuitem"><span class="si-ic" aria-hidden="true">☁️</span><span class="si-tx"><b>المزامنة السحابية</b><small id="syncMenuSub">—</small></span><span class="si-go" aria-hidden="true">‹</span></button>
           <button class="settings-item" id="calSyncBtn" type="button" role="menuitem"><span class="si-ic" aria-hidden="true">📅</span><span class="si-tx"><b>التقويم</b><small>تصدير واستيراد ‎.ics</small></span><span class="si-go" aria-hidden="true">‹</span></button>
@@ -93,7 +95,7 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
           <button class="settings-item" id="importBackupBtn" type="button" role="menuitem"><span class="si-ic" aria-hidden="true">📥</span><span class="si-tx"><b>استيراد نسخة احتياطية</b><small>من ملف JSON</small></span></button>
           <button class="settings-item" id="restorePrevBtn" type="button" role="menuitem" style="display:none"><span class="si-ic" aria-hidden="true">🕘</span><span class="si-tx"><b>استرجاع نسخة سابقة</b><small>من آخر نسخ تلقائية</small></span><span class="si-go" aria-hidden="true">‹</span></button>
         </div>
-        <div class="sm-group" role="group" aria-label="النظام">
+        <div class="sm-group" data-g="sys" role="group" aria-label="النظام">
           <div class="sm-title">النظام</div>
           <button class="settings-item" id="pwaInstallBtn" type="button" role="menuitem" style="display:none"><span class="si-ic" aria-hidden="true">📲</span><span class="si-tx"><b>تثبيت التطبيق</b><small>أيقونة على شاشتك</small></span><span class="si-go" aria-hidden="true">‹</span></button>
           <button class="settings-item" id="integrityBtn" type="button" role="menuitem"><span class="si-ic" aria-hidden="true">🧰</span><span class="si-tx"><b>فحص سلامة البيانات</b><small>مواد، جدول، حضور، علامات</small></span></button>
@@ -128,6 +130,7 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
   <div class="nav-item" data-tab="notes"><span class="ic"><svg class="ico" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg></span><span class="label">ملاحظاتي</span></div>
   <div class="nav-item" data-tab="plan"><span class="ic"><svg class="ico" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14"/></svg></span><span class="label">الخطة والمواد</span></div>
   <div class="nav-section">الجامعة</div>
+  <div class="nav-item" data-tab="campus"><span class="ic"><svg class="ico" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></svg></span><span class="label">خريطة الجامعة</span></div>
   <div class="nav-item" data-tab="hulinks"><span class="ic"><svg class="ico" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 9l10-5 10 5-10 5-10-5z"/><path d="M6 11.5V16c0 1.4 2.7 3 6 3s6-1.6 6-3v-4.5M22 9v6"/></svg></span><span class="label">روابط الجامعة</span></div>
 </aside>
 
@@ -441,6 +444,14 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
     </div>
   </section>
 
+  <section id="campus" class="section">
+    <div class="page-head">
+      <h2 class="page-title">🗺️ خريطة الجامعة</h2>
+      <p class="page-sub">اعرف وين محاضراتك على الخريطة، وابحث عن أي مبنى أو مختبر</p>
+    </div>
+    <div id="campusRoot"></div>
+  </section>
+
   <section id="hulinks" class="section">
     <div class="page-head">
       <h2 class="page-title">🎓 روابط الجامعة الهاشمية</h2>
@@ -505,7 +516,7 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <!-- الملفات الأساسية (الترتيب مهم جداً!) -->
-<script src="app.bundle.js?v=123"></script>
+<script src="app.bundle.js?v=124"></script>
 <script>
 /* إخفاء الهيكل الرمادي بعد أول رسم للتطبيق (مع مؤقّت أمان كي لا يعلق أبداً) */
 (function(){
@@ -526,7 +537,7 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
    1) إن لم يطابق window.APP_BUILD رقم BUILD هنا → يمسح كاش التطبيق ويعيد التحميل مرة واحدة (حارس sessionStorage يمنع التكرار).
    2) أقسام اللوحة المتقدمة (تحليلات/LMS/إحصائيات) تُنقل إلى خانتها الثابتة إذا أضافتها سكربتات قديمة بمكان آخر. */
 (function(){
-  var BUILD = '123';
+  var BUILD = '124';
   var SLOTS = { insightsSection: 'slotInsights', lmsWidget: 'slotLms', enhancedStatsSection: 'slotEnhanced' };
   function heal(){
     var dash = document.getElementById('dashboard'); if(!dash) return;

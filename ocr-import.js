@@ -28,6 +28,11 @@
 
   function isLocalHost(h){ return h === 'localhost' || h === '127.0.0.1' || h === '[::1]' || h === '::1' || /\.localhost$/.test(h || ''); }
   function gkey(){ return (lget('ocr_gemini') || '').trim(); }
+  var MODEL_PRESETS = [
+    { id: 'gemini-flash-latest', label: 'تلقائي (الأحدث)', note: 'الافتراضي' },
+    { id: 'gemini-3.5-flash', label: 'Flash 3.5', note: 'الأدق بالقياس' },
+    { id: 'gemini-flash-lite-latest', label: 'Flash Lite', note: 'أخف وأسرع، حصته مستقلة' }
+  ];
   function gmodel(){ return (lget('ocr_gmodel') || '').trim() || DEFAULT_MODEL; }
   function engine(){ return gkey() ? 'gemini' : 'local'; }
   function enabledFor(hostname, flag, hasKey){ return !!flag || !!hasKey || isLocalHost(hostname); }
@@ -104,6 +109,7 @@
       fr.readAsDataURL(file);
     });
   }
+  var retryMs = 5000;
   function analyzeGemini(file){
     if(!window.OcrParse || !window.OcrParse.fromStructured) return Promise.reject(Object.assign(new Error('محلّل الجدول غير محمَّل'), { code: 'parser' }));
     var t0 = Date.now();
@@ -112,7 +118,15 @@
         contents: [{ parts: [{ text: window.OcrParse.GEMINI_PROMPT }, { inline_data: { mime_type: file.type || 'image/png', data: b64 } }] }],
         generationConfig: { responseMimeType: 'application/json', responseSchema: window.OcrParse.GEMINI_SCHEMA, temperature: 0 }
       });
-      return fetchJson(GEMINI_BASE + encodeURIComponent(gmodel()) + ':generateContent', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': gkey() }, body: body }, 'gemini');
+      /* 503 = Google مشغول (الطلب ما انعالج ولا يستهلك الحصة): نعيد تلقائياً مرتين بفاصل، غيره ما نعيد */
+      var tries = 0;
+      function go(){
+        return fetchJson(GEMINI_BASE + encodeURIComponent(gmodel()) + ':generateContent', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': gkey() }, body: body }, 'gemini').catch(function(e){
+          if(e && e.status === 503 && tries < 2 && !(ctrl && ctrl.signal.aborted)){ tries++; return new Promise(function(r){ setTimeout(r, retryMs); }).then(function(){ return (ctrl && ctrl.signal.aborted) ? Promise.reject(e) : go(); }); }
+          throw e;
+        });
+      }
+      return go();
     }).then(function(j){
       var parts = j && j.candidates && j.candidates[0] && j.candidates[0].content && j.candidates[0].content.parts;
       var txt = parts ? parts.map(function(p){ return p.text || ''; }).join('') : '';
@@ -174,7 +188,8 @@
       var code = e && e.code, msg = String((e && e.message) || '').slice(0, 220);
       if(code === 'timeout') showError('انتهت مهلة التحليل', ['الخدمة ما ردّت خلال 3 دقائق. جرّب صورة أصغر أو أعد المحاولة.']);
       else if(code === 'gemini'){
-        var hint = (e && e.status === 429) || /quota|exceeded|RESOURCE_EXHAUSTED/i.test(msg) ? 'انتهى الحد المجاني (حوالي 20 طلب باليوم لكل نموذج). جرّب بكرة، أو غيّر النموذج من إعدادات الاستيراد.'
+        var hint = (e && e.status === 503) || /high demand|overloaded|UNAVAILABLE/i.test(msg) ? 'Google مشغول هسا (ضغط مؤقت) وجرّبت 3 مرات. الحصة ما انصرفت — أعد المحاولة بعد دقيقة أو دقيقتين.'
+          : (e && e.status === 429) || /quota|exceeded|RESOURCE_EXHAUSTED/i.test(msg) ? 'انتهى الحد المجاني (حوالي 20 طلب باليوم لكل نموذج). جرّب بكرة، أو غيّر النموذج من إعدادات الاستيراد.'
           : /API key not valid|API_KEY_INVALID|API key expired/i.test(msg) ? 'المفتاح غير صالح — انسخه كاملاً من aistudio.google.com/apikey.'
           : /no longer available|not found|is not supported/i.test(msg) ? 'النموذج غير متاح — اترك خانة النموذج فاضية (الافتراضي gemini-flash-latest).'
           : /permission|403|location|region/i.test(msg) ? 'Google رفض الطلب (صلاحية/منطقة) — راجع المفتاح من AI Studio.'
@@ -263,7 +278,17 @@
 
     var l3 = el('label', 'ocri-lbl', 'النموذج (اتركه فاضي للافتراضي)'); l3.setAttribute('for', 'ocriModel'); box.appendChild(l3);
     var mdl = document.createElement('input'); mdl.type = 'text'; mdl.id = 'ocriModel'; mdl.className = 'ocri-in'; mdl.value = lget('ocr_gmodel') || ''; mdl.placeholder = DEFAULT_MODEL; mdl.autocomplete = 'off'; mdl.setAttribute('dir', 'ltr');
-    box.appendChild(mdl);
+    /* ثلاث خيارات جاهزة: لكل نموذج حصة يومية مستقلة، فلو خلصت حصة بدّل للثاني */
+    var chips = el('div', 'ocri-chips'); chips.setAttribute('role', 'group'); chips.setAttribute('aria-label', 'نماذج جاهزة');
+    MODEL_PRESETS.forEach(function(p){
+      var c = el('button', 'ocri-chip', p.label); c.type = 'button'; c.title = p.id + ' — ' + p.note; c.setAttribute('data-model', p.id);
+      c.addEventListener('click', function(){ mdl.value = p.id === DEFAULT_MODEL ? '' : p.id; paintChips(); });
+      chips.appendChild(c);
+    });
+    function paintChips(){ var cur = mdl.value.trim() || DEFAULT_MODEL; [].forEach.call(chips.children, function(c){ c.setAttribute('aria-pressed', c.getAttribute('data-model') === cur ? 'true' : 'false'); }); }
+    mdl.addEventListener('input', paintChips); paintChips();
+    box.appendChild(chips); box.appendChild(mdl);
+    box.appendChild(el('div', 'ocri-note', 'لكل نموذج حصة مجانية يومية مستقلة (~20 طلب). إذا انتهت حصة نموذج بدّل لغيره وكمّل. النتائج متقاربة؛ راجع الصفوف الملوّنة قبل الحفظ.'));
 
     var row = el('div', 'ocri-actions');
     var save = el('button', 'ocri-btn', 'حفظ'); save.type = 'button';
@@ -297,6 +322,7 @@
 
   window.OcrImport = {
     enabled: enabled, enabledFor: enabledFor, endpoint: endpoint, engine: engine, toSttRows: toSttRows,
-    run: run, pick: pick, start: start, summary: summary, syncPageButton: syncPageButton, toggle: openSettings, openSettings: openSettings
+    run: run, pick: pick, start: start, summary: summary, syncPageButton: syncPageButton, toggle: openSettings, openSettings: openSettings,
+    _setRetryMs: function(n){ retryMs = n; }
   };
 })();

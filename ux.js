@@ -393,3 +393,72 @@
     if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind); else bind();
     setTimeout(bind, 400);
   })();})();
+
+
+/* ===== إعدادات بتبويبات + الوضع البسيط + لمسات تفاعلية ===== */
+(function(){
+  function lsv(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+  function lss(k, v){ try{ localStorage.setItem(k, v); }catch(e){} }
+  var root = document.documentElement;
+
+  /* --- تبويبات قائمة الإعدادات --- */
+  var SM_TABS = ['look', 'work', 'data', 'sys'];
+  function setSmTab(name){
+    var m = document.getElementById('settingsMenu'); if(!m) return;
+    if(SM_TABS.indexOf(name) < 0) name = 'look';
+    m.setAttribute('data-sm', name); lss('ss_sm_tab', name);
+    m.querySelectorAll('.sm-tab').forEach(function(b){ var on = b.getAttribute('data-sm') === name; b.setAttribute('aria-selected', on ? 'true' : 'false'); b.tabIndex = on ? 0 : -1; });
+  }
+  function initSmTabs(){
+    var m = document.getElementById('settingsMenu'); if(!m || m._tabs) return; m._tabs = true;
+    setSmTab(lsv('ss_sm_tab') || 'look');
+    m.addEventListener('click', function(e){ var b = e.target.closest && e.target.closest('.sm-tab'); if(b) setSmTab(b.getAttribute('data-sm')); });
+    m.addEventListener('keydown', function(e){
+      var b = e.target.closest && e.target.closest('.sm-tab'); if(!b || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight')) return;
+      var i = SM_TABS.indexOf(b.getAttribute('data-sm')), d = e.key === 'ArrowLeft' ? 1 : -1;   /* RTL: السهم الأيسر = التالي */
+      setSmTab(SM_TABS[(i + d + SM_TABS.length) % SM_TABS.length]);
+      var nb = m.querySelector('.sm-tab[aria-selected="true"]'); if(nb) nb.focus();
+    });
+  }
+
+  /* --- الوضع البسيط: يخفي التبويبات والبطاقات الثانوية فقط (لا يحذف أي بيانات) --- */
+  var SIMPLE_TABS = ['dashboard', 'timetable', 'courses', 'tasks', 'exams'];
+  function isSimple(){ return lsv('ss_simple') === '1'; }
+  function paintSimple(){
+    var on = isSimple();
+    root.classList.toggle('simple', on);
+    var b = document.getElementById('simpleBtn');
+    if(b){ b.setAttribute('aria-checked', on ? 'true' : 'false'); var t = b.querySelector('.sp-t'); if(t) t.textContent = on ? 'مفعّل — الأساسيات فقط' : 'كل الميزات ظاهرة'; }
+    /* لو كان التبويب المفتوح مخفياً بالوضع البسيط نرجع للوحة */
+    if(on){
+      var cur = document.querySelector('.section.active');
+      if(cur && SIMPLE_TABS.indexOf(cur.id) < 0 && window.switchTab) window.switchTab('dashboard');
+    }
+  }
+  function setSimple(on, quiet){
+    lss('ss_simple', on ? '1' : '0'); paintSimple();
+    if(!quiet && window.toast) window.toast(on ? '🧘 الوضع البسيط — الأساسيات فقط (من ⚙️ ← المظهر ترجع للكامل)' : '🧰 رجعت كل الميزات', 'info', 2200);
+  }
+  window.SimpleMode = { isOn: isSimple, set: setSimple, toggle: function(){ setSimple(!isSimple()); } };
+  paintSimple();
+  function bindSimple(){
+    initSmTabs();
+    var b = document.getElementById('simpleBtn');
+    if(b && !b._sp){ b._sp = true; b.addEventListener('click', function(){ if(window.closeSettingsMenu) window.closeSettingsMenu(); window.SimpleMode.toggle(); }); }
+    paintSimple();
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bindSimple); else bindSimple();
+  setTimeout(bindSimple, 400);
+
+  /* --- تموّج عند الضغط على الأزرار (يُلغى مع «تقليل الحركة») --- */
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(!reduce){
+    document.addEventListener('pointerdown', function(e){
+      var h = e.target.closest && e.target.closest('.btn, .sm-tab'); if(!h || h.disabled) return;
+      var r = h.getBoundingClientRect(), d = Math.max(r.width, r.height) * 1.6, s = document.createElement('span');
+      s.className = 'ripple'; s.style.cssText = 'width:' + d + 'px;height:' + d + 'px;left:' + (e.clientX - r.left - d / 2) + 'px;top:' + (e.clientY - r.top - d / 2) + 'px';
+      h.classList.add('rip-host'); h.appendChild(s);
+      setTimeout(function(){ if(s.parentNode) s.parentNode.removeChild(s); }, 650);
+    }, { passive: true });
+  }
+})();

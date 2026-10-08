@@ -173,7 +173,7 @@
       budget: window.renderBudget, courses: window.renderCourses, tasks: window.renderTasks,
       notes: window.renderNotes, flashcards: window.renderDecks,
       attendance: window.renderAttendance, timetable: window.renderTimetable,
-      plan: window.renderPlan, hulinks: window.renderHuLinks, gradecalc: window.renderGradeCalc
+      plan: window.renderPlan, campus: window.renderCampus, hulinks: window.renderHuLinks, gradecalc: window.renderGradeCalc
     };
     if(fns[tab]){ try{ fns[tab](); }catch(e){ console.error('Render error:', tab, e); } }
     if(tab === 'gradecalc'){ try{ window.renderGpa(); }catch(e){} }
@@ -993,6 +993,20 @@
     var p = String(t || '').split(':'), h = parseInt(p[0], 10), m = parseInt(p[1], 10) || 0;
     return isNaN(h) ? null : h * 60 + m;
   }
+  /* لون ثابت لكل مادة (من الاسم) — يميّز المواد بصرياً بالجدول */
+  var ttHueMap = {};
+  function ttHash(n){ var h = 2166136261; for(var i = 0; i < n.length; i++){ h ^= n.charCodeAt(i); h = (h * 16777619) >>> 0; } return h % 360; }
+  /* مواد الجدول الحالي تأخذ ألواناً متباعدة (≥ 28°) وثابتة: الترتيب أبجدي فلا يتغيّر اللون بترتيب الإدخال */
+  function ttAssignHues(names){
+    var used = [], map = {};
+    names.slice().sort().forEach(function(n){
+      var h = ttHash(n), guard = 0;
+      while(guard++ < 13 && used.some(function(u){ var d = Math.abs(u - h) % 360; return Math.min(d, 360 - d) < 28; })) h = (h + 47) % 360;
+      used.push(h); map[n] = h;
+    });
+    ttHueMap = map;
+  }
+  function ttHue(name){ var n = String(name || ''); return ttHueMap[n] !== undefined ? ttHueMap[n] : ttHash(n); }
   function ttPad(t){
     var m = ttMin(t); if(m === null) return '';
     return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
@@ -1142,6 +1156,8 @@
     var times = Object.keys(usedTimes).sort(function(a, b){ return ttMin(a) - ttMin(b); });
     if(!times.length) times = ['08:00','09:00','10:00','11:00','12:00'];
     var conf = window.getTimetableConflicts();
+    var hueNames = []; Object.keys(tt).forEach(function(k){ var nm = tt[k] && tt[k].name; if(nm && hueNames.indexOf(nm) < 0) hueNames.push(nm); });
+    ttAssignHues(hueNames);
 
     function entryAt(day, time){
       var k = day + '-' + time;
@@ -1199,7 +1215,7 @@
       var isNowRow = isThisWeek && days.indexOf(todayKey) > -1 && Math.abs(rowMin - nowMin) <= 15;
       html += '<tr><td class="time-col"' + (isNowRow ? ' style="color:var(--red)"' : '') + '>' + time + '</td>';
       days.forEach(function(day){
-        var tdStyle = (day === todayKey && isThisWeek) ? 'background:linear-gradient(180deg,rgba(34,211,238,.06),transparent)' : '';
+        var tdCls = (day === todayKey && isThisWeek) ? ' class="tt-today-col"' : '';
         var en = entryAt(day, time);
         if(en){
           var cls = en.cls, e = ttMin(cls.end), hasEnd = e !== null && e > rowMin;
@@ -1208,7 +1224,7 @@
           var isBad = !!conf.keys[en.key];
           var place = (cls.building ? cls.building + (cls.room ? ' · ' : '') : '') + (cls.room || '');
           var tip = cls.name + ' — ' + time + (hasEnd ? '–' + ttPad(cls.end) + ' (' + ttDur(e - rowMin) + ')' : '') + (place ? ' — ' + place : '') + (cls.instructor ? ' — ' + cls.instructor : '') + (isBad ? ' — ⚠️ تعارض' : '');
-          html += '<td style="' + tdStyle + '"><div class="class-block' + (isBad ? ' tt-conflict' : '') + (isNow ? ' tt-now' : '') + (isNext ? ' tt-next' : '') + '" data-edit="' + window.esc(en.key) + '" tabindex="0" role="button" title="' + window.esc(tip) + '">' +
+          html += '<td' + tdCls + '><div style="--h:' + ttHue(cls.name) + '" class="class-block' + (isBad ? ' tt-conflict' : '') + (isNow ? ' tt-now' : '') + (isNext ? ' tt-next' : '') + '" data-edit="' + window.esc(en.key) + '" tabindex="0" role="button" title="' + window.esc(tip) + '">' +
             '<span class="name">' + window.esc(cls.name) + '</span>' +
             (hasEnd ? '<span class="tt-time"><bdi dir="ltr">' + time + '–' + ttPad(cls.end) + '</bdi> · ' + ttDur(e - rowMin) + '</span>' : '') +
             (place ? '<span class="room">📍 ' + window.esc(place) + '</span>' : '') +
@@ -1216,7 +1232,7 @@
             (isNow ? '<span class="tt-badge now">الآن</span>' : (isNext ? '<span class="tt-badge next">التالية</span>' : '')) +
             '</div></td>';
         } else {
-          html += '<td style="' + tdStyle + '"><div class="cell-empty" data-add="' + day + '-' + time + '">+</div></td>';
+          html += '<td' + tdCls + '><div class="cell-empty" data-add="' + day + '-' + time + '">+</div></td>';
         }
       });
       html += '</tr>';

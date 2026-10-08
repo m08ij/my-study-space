@@ -21,7 +21,7 @@
   /* الإجراءات تُخزَّن بمحرك ai.js (aiSetActions/aiTakeActions) ليقرأها الـUI من مكان واحد */
   function reply(text, actions){ window.aiSetActions(actions || []); return text; }
 
-  var PAGE_NAMES = { dashboard: 'لوحة التحكم', timetable: 'الجدول', courses: 'موادي', tasks: 'المهام', exams: 'الامتحانات', attendance: 'الحضور', timer: 'بومودورو', flashcards: 'البطاقات', budget: 'الميزانية', notes: 'الملاحظات', gradecalc: 'علاماتي', plan: 'الخطة', hulinks: 'روابط الجامعة' };
+  var PAGE_NAMES = { dashboard: 'لوحة التحكم', timetable: 'الجدول', courses: 'موادي', tasks: 'المهام', exams: 'الامتحانات', attendance: 'الحضور', timer: 'بومودورو', flashcards: 'البطاقات', budget: 'الميزانية', notes: 'الملاحظات', gradecalc: 'علاماتي', plan: 'الخطة', campus: 'خريطة الجامعة', hulinks: 'روابط الجامعة' };
   function currentPage(){
     var el = document.querySelector('.section.active');
     return el && el.id ? el.id : 'dashboard';
