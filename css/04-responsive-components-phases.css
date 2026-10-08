@@ -1343,3 +1343,7 @@ html.simple .ai-fab,html.simple .fab-menu{display:none}
 .cm-key{display:flex;flex-direction:column;gap:6px;padding:4px 8px 8px;font-size:var(--fs-xs);color:var(--muted)}
 @media (max-width:1150px){.cm-wrap{grid-template-columns:1fr}.cm-svg{max-height:74vh}.cm-panel{max-height:none}.cm-hint{display:none}}
 @media (prefers-reduced-motion:reduce){.cm-pin-in,.cm-b.sel rect,.cm-route,.cm-live,.cm-pin .cm-pulse{animation:none!important}}
+
+/* إصلاح: البطاقة تتمدّد مع محتواها بدل ما تنقص (كان الاسم والقاعة ينقصّوا) */
+.timetable td{height:auto}
+.timetable .class-block{height:auto;min-height:64px;overflow:visible;justify-content:flex-start}
