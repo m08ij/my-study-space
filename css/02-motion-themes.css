@@ -300,10 +300,10 @@ body{transition:background-color var(--dur-3) ease,color var(--dur-3) ease}
 .theme-panel.show .theme-swatch:nth-child(3n){animation-delay:.06s}
 
 /* الثيمات الفاتحة (عاج / سماء): ظلال وخلفية نوافذ أخف */
-[data-theme="mint"] .modal-backdrop{background:rgba(20,40,30,.42)}
-[data-theme="mint"] .card:hover{box-shadow:var(--shadow-lg)}
-[data-theme="mint"] .icon-btn:hover{box-shadow:var(--shadow)}
-[data-theme="mint"] .toast{box-shadow:var(--shadow)}
+[data-theme="glass-light"] .modal-backdrop{background:rgba(20,40,30,.42)}
+[data-theme="glass-light"] .card:hover{box-shadow:var(--shadow-lg)}
+[data-theme="glass-light"] .icon-btn:hover{box-shadow:var(--shadow)}
+[data-theme="glass-light"] .toast{box-shadow:var(--shadow)}
 
 @media (prefers-reduced-motion: reduce){
   html.theme-fading *,html.theme-fading *::before,html.theme-fading *::after{transition:none!important}
@@ -311,14 +311,14 @@ body{transition:background-color var(--dur-3) ease,color var(--dur-3) ease}
 }
 
 /* ============================================================
-   🎛️ توحيد حالات الحقول والأزرار — للثيمات الخمسة الجديدة فقط (obsidian/mocha/coral/graphite/mint)
+   🎛️ توحيد حالات الحقول والأزرار — للثيمات الخمسة الجديدة فقط (obsidian/mocha/coral/graphite/glass-light)
    ============================================================ */
 [data-theme="obsidian"],[data-theme="mocha"],[data-theme="coral"],[data-theme="graphite"],[data-theme="glass"]{color-scheme:dark}
-[data-theme="mint"]{color-scheme:light}
+[data-theme="glass-light"]{color-scheme:light}
 [data-theme="obsidian"] ::placeholder,[data-theme="mocha"] ::placeholder,[data-theme="coral"] ::placeholder,
-[data-theme="graphite"] ::placeholder,[data-theme="glass"] ::placeholder,[data-theme="mint"] ::placeholder{color:var(--muted2);opacity:1}
+[data-theme="graphite"] ::placeholder,[data-theme="glass"] ::placeholder,[data-theme="glass-light"] ::placeholder{color:var(--muted2);opacity:1}
 [data-theme="obsidian"] option,[data-theme="mocha"] option,[data-theme="coral"] option,
-[data-theme="graphite"] option,[data-theme="glass"] option,[data-theme="mint"] option{background:var(--card);color:var(--text)}
+[data-theme="graphite"] option,[data-theme="glass"] option,[data-theme="glass-light"] option{background:var(--card);color:var(--text)}
 /* تعطيل موحّد (يشمل كل الثيمات لأنه سلوك وليس لون): خافت + مؤشر ممنوع + بدون حركة */
 .btn:disabled,.btn[disabled]{opacity:.5;cursor:not-allowed;transform:none!important;box-shadow:none!important}
 input:disabled,select:disabled,textarea:disabled{opacity:.55;cursor:not-allowed}
