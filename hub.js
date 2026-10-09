@@ -594,7 +594,7 @@
       '<div class="hub-chips">' + (c.code ? '<span class="badge mono">' + esc(c.code) + '</span>' : '') + '<span class="badge">' + (c.hours || 3) + ' ساعات</span>' +
         (c.instructor ? '<span class="badge">👤 ' + esc(c.instructor) + '</span>' : '') + (c.room ? '<span class="badge">📍 ' + esc(c.room) + '</span>' : '') + '</div>' +
       '<div class="hub-actions inline"><button type="button" class="btn btn-sm" data-act="focus">⏱️ جلسة تركيز</button><button type="button" class="btn btn-sm btn-ghost" data-act="edit">✏️ تعديل</button><button type="button" class="btn btn-sm btn-danger" data-act="delete">🗑 حذف</button></div></div>';
-    h += '<nav class="hub-secnav" aria-label="أقسام المادة">' + [['sched','🗓 الجدول'],['files','📎 الملفات'],['tasks','📝 المهام'],['exams','⏳ الامتحانات'],['grades','📊 العلامات'],['att','✅ الحضور'],['notes','📔 ملاحظات']]
+    h += '<nav class="hub-secnav" aria-label="أقسام المادة">' + [['sched','🗓 الجدول'],['plan','🧾 الخطة'],['files','📎 الملفات'],['tasks','📝 المهام'],['exams','⏳ الامتحانات'],['grades','📊 العلامات'],['att','✅ الحضور'],['notes','📔 ملاحظات']]
       .map(function(s){ return '<button type="button" class="hub-chip" data-jump="' + s[0] + '">' + s[1] + '</button>'; }).join('') + '</nav>';
 
     /* الجدول */
@@ -604,6 +604,9 @@
     }).join('') + '</div>';
     else h += '<div class="hub-empty">ما في محاضرات لهذه المادة بالجدول. <button type="button" class="hub-link" data-act="addclass">إضافة محاضرة</button></div>';
     h += '</section>';
+
+    /* خطة المادة + الكتاب (syllabus.js) */
+    if(window.Syllabus && window.Syllabus.sectionHtml) h += window.Syllabus.sectionHtml(c);
 
     /* الملفات (نفس السمات التي تستخدمها دوال الرفع/التحميل الحالية) */
     h += '<section class="hub-sec" id="hs-files"><h4>📎 الملفات <span class="muted" data-files-count="' + esc(id) + '">—</span></h4>' +
@@ -689,6 +692,7 @@
     on('[data-act="addnote"]', function(){ addNoteFor(name); });
     /* رفع الملفات: نفس منطق الرفع الحالي */
     window.bindCourseUpload(b, id, b.querySelector('#hs-files'));
+    if(window.Syllabus && window.Syllabus.bindSection) window.Syllabus.bindSection(b, c);
   }
 
   function addTaskFor(name){

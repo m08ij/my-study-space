@@ -1513,3 +1513,22 @@ html.sm-open{overflow:hidden}
   .sm-foot{position:sticky;bottom:0;padding:8px 14px calc(8px + env(safe-area-inset-bottom,0px));font-size:.7rem;justify-content:space-between}
 }
 @media (max-width:360px){#smThemeGrid{grid-template-columns:repeat(3,minmax(0,1fr))}#settingsMenu .sm-tab .sm-tt b{font-size:.64rem}}
+
+/* ===== خطة المادة + الكتاب (syllabus.js) ===== */
+.sy-box.sy-wide{width:min(620px,94vw);max-height:88vh;overflow:auto;text-align:start}
+.sy-info{display:flex;flex-direction:column;gap:6px;margin:6px 0 10px;padding:10px 12px;border-radius:var(--r-md);background:var(--bg2);border:1px solid var(--border);font-size:var(--fs-sm)}
+.sy-row{display:flex;gap:10px}.sy-row b{flex:none;min-width:64px;color:var(--muted)}
+.sy-warn{margin:8px 0;padding:8px 12px;border-radius:var(--r-md);background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.4);font-size:var(--fs-sm);line-height:1.7}
+.sy-week{margin:var(--sp-2) 0;padding:12px 14px;border-radius:var(--r-lg);background:var(--grad-soft);border:1px solid var(--glow)}
+.sy-week.done{text-align:center}
+.sy-week-h{font-weight:800;margin-bottom:6px}
+.sy-topics{list-style:none;display:flex;flex-direction:column;gap:6px;padding:0}
+.sy-topics li{display:flex;align-items:center;gap:8px;font-size:var(--fs-sm)}
+.sy-topics li span{flex:1;min-width:0}
+.sy-start{max-width:180px;margin:0 8px}
+.sy-att{margin:var(--sp-2) 0;font-size:var(--fs-sm);line-height:1.8}
+.sy-grade{display:flex;flex-wrap:wrap;gap:6px;margin:var(--sp-2) 0}
+.sy-all ol{padding-inline-start:20px;line-height:1.9;font-size:var(--fs-sm)}
+.sy-all li.cur{color:var(--accent);font-weight:700}
+.sy-bk{margin-top:var(--sp-2);font-size:var(--fs-xs)}
+.sy-sec .warn{color:var(--amber)}.sy-sec .bad{color:var(--red)}
