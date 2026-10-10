@@ -59,6 +59,12 @@
       }
       if(prefs.tasks !== false){
         var due = (space.tasks || []).filter(function(t){ return t && !t.done && t.due === dY; });
+        /* تذكير مساء اليوم السابق للتسليم (٨ م) — يُعطَّل بـprefs.tasksEve=false */
+        if(prefs.tasksEve !== false){
+          var tmr = ymd(new Date(day.getFullYear(), day.getMonth(), day.getDate() + 1));
+          var dueTmr = (space.tasks || []).filter(function(t){ return t && !t.done && t.due === tmr; });
+          if(dueTmr.length) add(dY + '|tasksEve', '⏰ بكرة تسليم ' + dueTmr.length + ' ' + (dueTmr.length === 1 ? 'مهمة' : 'مهام'), dueTmr.slice(0, 3).map(function(t){ return t.title; }).join(' • '), atMin(day, 20 * 60));
+        }
         if(due.length){ var tm = toMin(prefs.tasksAt); if(tm === null) tm = 8 * 60; add(dY + '|tasks', '📝 عندك ' + due.length + ' ' + (due.length === 1 ? 'مهمة' : 'مهام') + ' اليوم', due.slice(0, 3).map(function(t){ return t.title; }).join(' • '), atMin(day, tm)); }
       }
     }

@@ -551,6 +551,20 @@
       (window.space.tasks || []).forEach(function(t){ if(t.title) idx.push({name: t.title, type:'مهمة', tab:'tasks'}); });
       (window.space.exams || []).forEach(function(e){ if(e.name) idx.push({name: e.name, type:'امتحان', tab:'exams'}); });
       (window.notes || []).forEach(function(n){ var nm = n && (n.title || String(n.body || '').slice(0, 40)); if(nm) idx.push({name: nm, type:'ملاحظة', tab:'notes'}); });
+      /* محتوى المواد: مواضيع خطة المادة + عناوين المذاكرة + ملفات المادة (تفتح ورقة المادة) */
+      (window.space.courses || []).forEach(function(c){
+        var weeks = c.syllabus && c.syllabus.weeks || [];
+        weeks.forEach(function(w){ (w.topics || []).forEach(function(t){ if(t && t.title) idx.push({name: t.title, type:'موضوع · ' + c.name, tab:'courses', courseId: c.id}); }); });
+        Object.keys(c.study || {}).forEach(function(k){ var s = c.study[k]; (s && s.flashcards || []).forEach(function(f){ idx.push({name: f.q, type:'مذاكرة · ' + c.name, tab:'courses', courseId: c.id}); }); (s && s.definitions || []).forEach(function(f){ idx.push({name: f.term, type:'مذاكرة · ' + c.name, tab:'courses', courseId: c.id}); }); });
+      });
+      /* مجموعات البطاقات وأسئلتها */
+      (window.space.decks || []).forEach(function(d){
+        if(d.name) idx.push({name: d.name, type:'بطاقات', tab:'flashcards', deckId: d.id});
+        (d.cards || []).forEach(function(cd){ if(cd && cd.q) idx.push({name: cd.q, type:'بطاقة · ' + (d.name || ''), tab:'flashcards', deckId: d.id}); });
+      });
+      /* مباني الحرم */
+      var CM = window.CampusMap;
+      if(CM && CM.buildings) CM.buildings.forEach(function(b){ idx.push({name: b.n, type:'مبنى', tab:'campus', bld: b.id, extra: (b.k || []).join(' ') + ' ' + (b.ab || '')}); });
       (window.SEMESTERS || []).forEach(function(s){
         s.courses.forEach(function(c){ if(!mine[c.n]) idx.push({name: c.n, type:'الخطة', tab:'plan'}); });
       });
@@ -567,17 +581,25 @@
       window.switchTab(x.tab);
       /* مادتك: نفتح صفحة المادة مباشرة (ملفات/مهام/امتحانات/علامات/حضور) */
       if(x.courseId && window.Hub && window.Hub.openCourse) window.Hub.openCourse(x.courseId);
+      if(x.bld && window.CampusMap && window.CampusMap.select) setTimeout(function(){ try{ window.CampusMap.select(x.bld, true); }catch(e){} }, 200);
+      if(x.deckId && window.openDeck) setTimeout(function(){ try{ window.openDeck(x.deckId); }catch(e){} }, 150);
     }
+    /* تطبيع عربي (تشكيل/همزات/ة-ه/ى-ي) ليلقى البحث «اداره» و«إدارة» بنفس الوقت */
+    function nz(s){ return String(s == null ? '' : s).toLowerCase().replace(/[ً-ْـ]/g, '').replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').replace(/\s+/g, ' ').trim(); }
     function setActive(i){
       activeI = i;
       res.querySelectorAll('.search-item').forEach(function(el, k){ el.classList.toggle('active', k === i); });
       var el = res.querySelectorAll('.search-item')[i]; if(el && el.scrollIntoView) el.scrollIntoView({ block: 'nearest' });
     }
     inp.addEventListener('input', function(){
-      var q = inp.value.trim().toLowerCase();
+      var q = nz(inp.value);
       if(!q){ res.classList.remove('show'); current = []; activeI = -1; return; }
       var idx = buildIndex();
-      var m = idx.filter(function(x){ return String(x.name || '').toLowerCase().indexOf(q) > -1; }).slice(0,10);
+      /* عناصرك أولاً بترتيبها؛ داخل نفس النوع الأقرب (يبدأ بالكلمة) قبل غيره. المطابقة بالنص المطبّع */
+      var hits = [], first = {};
+      idx.forEach(function(x, i){ if(first[x.type] === undefined) first[x.type] = i; });
+      idx.forEach(function(x, i){ var p = nz(x.name).indexOf(q); if(p < 0 && x.extra && nz(x.extra).indexOf(q) > -1) p = 99; if(p > -1) hits.push({x: x, i: i, k: first[x.type] * 2 + (p === 0 ? 0 : 1)}); });
+      var m = hits.sort(function(a, b){ return (a.k - b.k) || (a.i - b.i); }).slice(0, 12).map(function(h){ return h.x; });
       current = m; activeI = -1;
       if(!m.length) res.innerHTML = '<div style="padding:16px;text-align:center;color:var(--muted);font-size:var(--fs-sm)">لا نتائج</div>';
       else {

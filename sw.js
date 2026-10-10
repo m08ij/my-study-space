@@ -1,10 +1,10 @@
 /* ============================================================
    sw.js — شبكة أولاً + كاش احتياطي (v90)
    ============================================================ */
-var CACHE_NAME = 'ss-cache-v132';
+var CACHE_NAME = 'ss-cache-v133';
 var NET_WAIT_MS = 3500;   /* أقصى انتظار للشبكة قبل خدمة النسخة المخزّنة */
 var URLS_TO_CACHE = [
-  './', './index.html', './app.css', './app.bundle.js?v=132', './app.bundle.css?v=132', './manifest.json', './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png', './icons/apple-touch-icon.png'
+  './', './index.html', './app.css', './app.bundle.js?v=133', './app.bundle.css?v=133', './manifest.json', './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png', './icons/apple-touch-icon.png'
 ];
 self.addEventListener('install', function(e){
   e.waitUntil(
