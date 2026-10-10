@@ -1574,7 +1574,7 @@ html.sm-open{overflow:hidden}
 .cm-b:hover .cm-ext,.cm-b:focus-visible .cm-ext,.cm-b.hit .cm-ext,.cm-b.sel .cm-ext{stroke:none}
 .cm-b.sel{transform:translateY(-2px)}
 .cm-ic{pointer-events:none;opacity:.95}
-.cm-svg.zfar .cm-small .cm-t,.cm-svg.zfar .cm-small .cm-ic{opacity:0}
+.cm-t-out{fill:var(--text);stroke:var(--bg2);stroke-width:3px;paint-order:stroke;stroke-linejoin:round;font-weight:700}
 .cm-t,.cm-ic{transition:opacity .25s ease}
 .cm-path{fill:none;stroke:var(--accent);color:var(--accent);stroke-width:4;stroke-dasharray:9 7;stroke-linecap:round;stroke-linejoin:round;animation:cmDash 1s linear infinite;pointer-events:none}
 .cm-stop{pointer-events:none}
@@ -1606,3 +1606,24 @@ html.sm-open{overflow:hidden}
 .cm-dir-res{margin:var(--sp-2) 4px;padding:8px 12px;border-radius:var(--r-md);background:var(--grad-soft);border:1px solid var(--glow);font-size:var(--fs-sm)}
 @media (max-width:560px){.cm-layers{position:static;max-width:none;justify-content:flex-start;padding:2px 2px 8px}.cm-dir{grid-template-columns:1fr}.cm-swap{justify-self:center}.cm-tab{font-size:.68rem}}
 @media (prefers-reduced-motion:reduce){.cm-path,.cm-b.sel .cm-face{animation:none!important}}
+
+/* ===== خريطة الجامعة: شكل نظيف مثل الخريطة الرسمية (تسطيح: بلا ظلال/أيقونات/عشب) ===== */
+.cm-svg{--cm-ground:var(--card);--cm-road:#2f9d8f}
+.cm-ground{fill:var(--cm-ground)!important}
+.cm-grass,.cm-ext,.cm-roof,.cm-ic{display:none!important}
+.cm-roads.out path,.cm-roads.out circle{stroke:var(--cm-road);stroke-opacity:1;stroke-width:10}
+.cm-roads.out circle{fill:var(--cm-road)}
+.cm-roads:not(.out) path,.cm-roads:not(.out) circle{stroke:var(--cm-ground);stroke-opacity:1;stroke-width:6}
+.cm-roads:not(.out) circle{fill:var(--cm-ground)}
+.cm-b .cm-face{stroke:rgba(0,0,0,.18);stroke-width:1}
+.cm-b .cm-t{font-weight:700;stroke:none;paint-order:normal}
+.cm-park rect{fill:#2b3a67;stroke:none}
+.cm-park text{fill:#fff}
+.cm-gate circle{r:5;stroke-width:2.5}
+.cm-gate text{font-size:10px;font-weight:800;stroke:var(--cm-ground);stroke-width:3.5px}
+.cm-layers{position:static;max-width:none;justify-content:flex-start;padding:2px 4px 8px}
+.cm-zoom{inset-inline-start:10px;top:10px}
+.cm-zoom button{width:34px;height:34px;font-size:1rem}
+.cm-hint{display:none}
+[data-theme="glass"] .cm-ground,[data-theme="glass-light"] .cm-ground{fill:var(--cm-ground)!important}
+.cm-zoom{top:auto!important;bottom:12px;inset-inline-start:10px}

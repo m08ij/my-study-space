@@ -28,24 +28,24 @@
     { id: 'itfield', n: 'ملعب IT', f: 'it', x: 205, y: 553, w: 74, h: 48, r: -30, k: ['ملعب it'] },
     { id: 'pe', n: 'الرياضة', f: 'pe', x: 62, y: 530, w: 64, h: 40, r: -30, k: ['الرياضه', 'التربيه البدنيه'] },
     { id: 'pefield', n: 'ملعب الرياضة', f: 'pe', x: 125, y: 488, w: 74, h: 48, r: -30, k: ['ملعب الرياضه'] },
-    { id: 'activity', n: 'النشاط الرياضي', f: 'util', x: 198, y: 504, w: 46, h: 38, r: -40, k: ['النشاط الرياضي'] },
+    { id: 'activity', n: 'النشاط الرياضي', s: 'النشاط الرياضي', f: 'util', x: 192, y: 500, w: 54, h: 42, r: -40, k: ['النشاط الرياضي'] },
     { id: 'risala', n: 'الرسالة', f: 'util', x: 254, y: 504, w: 58, h: 24, k: ['الرساله'] },
     { id: 'dean', n: 'العمادة', f: 'util', x: 322, y: 483, w: 62, h: 70, k: ['العماده', 'عماده القبول'] },
     { id: 'rest', n: 'المطاعم', f: 'util', x: 418, y: 483, w: 72, h: 70, k: ['المطاعم'] },
     { id: 'lib', n: 'المكتبة', f: 'util', x: 425, y: 402, w: 80, h: 58, k: ['المكتبه'] },
     { id: 'reg', n: 'القبول والتسجيل', f: 'util', x: 362, y: 335, w: 24, h: 92, k: ['القبول والتسجيل', 'القبول'] },
     { id: 'eco', n: 'الاقتصاد', f: 'eco', x: 425, y: 327, w: 62, h: 50, k: ['الاقتصاد', 'العلوم الاداريه'] },
-    { id: 'grad', n: 'الدراسات العليا', f: 'grad', x: 336, y: 292, w: 40, h: 36, k: ['الدراسات العليا'] },
-    { id: 'bank', n: 'بنك القاهرة', f: 'util', x: 340, y: 248, w: 32, h: 36, k: ['بنك'] },
-    { id: 'h4', n: 'الحارث الرابع', f: 'util', x: 318, y: 192, w: 74, h: 36, k: ['الحارث'] },
-    { id: 'tour', n: 'السياحة والتراث', f: 'tour', x: 262, y: 188, w: 42, h: 26, r: -25, k: ['السياحه', 'التراث'] },
-    { id: 'health', n: 'المركز الصحي', f: 'util', x: 546, y: 190, w: 34, h: 38, k: ['المركز الصحي', 'عياده'] },
-    { id: 'ahs', n: 'العلوم الطبية التطبيقية', f: 'alh', x: 427, y: 192, w: 98, h: 24, k: ['العلوم الطبيه التطبيقيه', 'الطبيه التطبيقيه'] },
+    { id: 'grad', n: 'الدراسات العليا', f: 'grad', x: 330, y: 290, w: 54, h: 36, k: ['الدراسات العليا'] },
+    { id: 'bank', n: 'بنك القاهرة', s: 'بنك القاهرة', f: 'util', x: 334, y: 246, w: 46, h: 36, k: ['بنك'] },
+    { id: 'h4', n: 'الحارث الرابع', s: 'الحارث الرابع', f: 'util', x: 318, y: 192, w: 74, h: 36, k: ['الحارث'] },
+    { id: 'tour', n: 'السياحة والتراث', s: 'السياحة والتراث', f: 'tour', x: 252, y: 184, w: 60, h: 32, r: -25, k: ['السياحه', 'التراث'] },
+    { id: 'health', n: 'المركز الصحي', s: 'المركز الصحي', f: 'util', x: 544, y: 188, w: 48, h: 40, k: ['المركز الصحي', 'عياده'] },
+    { id: 'ahs', n: 'العلوم الطبية التطبيقية', s: 'الطبية التطبيقية', f: 'alh', x: 427, y: 190, w: 98, h: 26, k: ['العلوم الطبيه التطبيقيه', 'الطبيه التطبيقيه'] },
     { id: 'nurs', n: 'التمريض', f: 'nurs', x: 427, y: 228, w: 98, h: 36, k: ['التمريض'] },
     { id: 'med', n: 'الطب', f: 'med', x: 427, y: 272, w: 98, h: 32, k: ['الطب', 'كليه الطب'] },
     { id: 'pharm', n: 'الصيدلة', f: 'pharm', x: 625, y: 175, w: 85, h: 153, k: ['الصيدله'] },
-    { id: 'qr', n: 'كلية الملكة رانيا للطفولة', f: 'qr', x: 472, y: 92, w: 118, h: 60, k: ['رانيا', 'الطفوله'] },
-    { id: 'mosque', n: 'المسجد', f: 'util', x: 420, y: 84, w: 36, h: 26, r: 18, k: ['المسجد'] },
+    { id: 'qr', n: 'كلية الملكة رانيا للطفولة', s: 'الملكة رانيا للطفولة', f: 'qr', x: 472, y: 92, w: 118, h: 60, k: ['رانيا', 'الطفوله'] },
+    { id: 'mosque', n: 'المسجد', f: 'util', x: 416, y: 82, w: 46, h: 28, r: 18, k: ['المسجد'] },
     { id: 'math', n: 'الرياضيات', f: 'sci', x: 428, y: 570, w: 62, h: 48, k: ['الرياضيات'] },
     { id: 'sdean', n: 'عمادة العلوم', f: 'sdean', x: 503, y: 570, w: 58, h: 48, k: ['عماده العلوم'] },
     { id: 'res', n: 'الموارد', f: 'nat', x: 425, y: 718, w: 36, h: 52, k: ['الموارد'] },
@@ -53,9 +53,9 @@
     { id: 'bio', n: 'الأحياء', f: 'sci', x: 514, y: 718, w: 36, h: 52, k: ['الاحياء', 'علم الحياه'] },
     { id: 'chem', n: 'الكيمياء', f: 'sci', x: 558, y: 718, w: 36, h: 52, k: ['الكيمياء'] },
     { id: 'nursery', n: 'المشاتل', f: 'util', x: 441, y: 785, w: 136, h: 42, k: ['المشاتل'] },
-    { id: 'busz', n: 'مجمع باصات الزرقاء', f: 'util', x: 300, y: 38, w: 86, h: 86, k: ['باصات الزرقاء'] },
-    { id: 'busa', n: 'مجمع باصات عمان', f: 'util', x: 325, y: 897, w: 82, h: 105, k: ['باصات عمان'] },
-    { id: 'busm', n: 'مجمع باصات مأدبا', f: 'util', x: 22, y: 285, w: 78, h: 38, r: -35, k: ['باصات مادبا', 'مادبا'] }
+    { id: 'busz', n: 'مجمع باصات الزرقاء', s: 'باصات الزرقاء', f: 'util', x: 300, y: 38, w: 86, h: 86, k: ['باصات الزرقاء'] },
+    { id: 'busa', n: 'مجمع باصات عمان', s: 'باصات عمان', f: 'util', x: 325, y: 897, w: 82, h: 105, k: ['باصات عمان'] },
+    { id: 'busm', n: 'مجمع باصات مأدبا', s: 'باصات مأدبا', f: 'util', x: 22, y: 285, w: 78, h: 38, r: -35, k: ['باصات مادبا', 'مادبا'] }
   ];
   var PARK = [[150, 130, 44, 44, -30], [558, 247, 38, 38, 0], [673, 402, 40, 40, 0], [28, 420, 76, 62, 38], [255, 430, 38, 38, 0], [525, 520, 34, 34, 0], [432, 897, 76, 104, 0]];
   var GATES = [
@@ -139,8 +139,10 @@
   var root = null, svg = null;
 
   /* ---------- الرسم ---------- */
+  /* أين يُكتب اسم المبنى الصغير خارجه (t فوق، l يسار، r يمين، الافتراضي تحت) حتى لا يغطّي جيرانه */
+  var OUT_SIDE = { ahs: 't', grad: 'l', bank: 'l', health: 'r' };
   function labelFor(b){
-    var words = b.n.split(' '), vertical = b.h >= b.w * 1.8, bw = vertical ? b.h : b.w, bh = vertical ? b.w : b.h;
+    var words = (b.s || b.n).split(' '), vertical = b.h >= b.w * 1.35, bw = vertical ? b.h : b.w, bh = vertical ? b.w : b.h;
     var best = null;
     for(var lines = 1; lines <= Math.min(3, words.length); lines++){
       var per = Math.ceil(words.length / lines), rows = [];
@@ -149,7 +151,7 @@
       var fs = Math.min(15, (bh - 6) / (rows.length * 1.25), (bw - 8) / (maxLen * .58));
       if(!best || fs > best.fs) best = { fs: fs, rows: rows };
     }
-    var fs2 = Math.max(6.5, best.fs);
+    var fs2 = Math.max(9, Math.min(13, best.fs));
     var tspans = best.rows.map(function(r, i){ return '<tspan x="0" dy="' + (i === 0 ? (-(best.rows.length - 1) * .62).toFixed(2) : 1.25) + 'em">' + esc(r) + '</tspan>'; }).join('');
     return '<text class="cm-t" font-size="' + fs2.toFixed(1) + '" text-anchor="middle" dominant-baseline="central" transform="translate(' + b.cx + ' ' + b.cy + ')' + (vertical ? ' rotate(-90)' : '') + '">' + tspans + '</text>';
   }
@@ -172,7 +174,6 @@
       '<marker id="cmArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>';
     h += '<rect class="cm-ground" x="-80" y="-60" width="' + (W + 160) + '" height="' + (H + 120) + '" rx="26"/>';
     /* الشوارع */
-    h += '<g class="cm-grass"><ellipse cx="120" cy="395" rx="62" ry="40"/><ellipse cx="640" cy="560" rx="52" ry="90"/><ellipse cx="300" cy="715" rx="48" ry="26"/><ellipse cx="520" cy="470" rx="26" ry="30"/><ellipse cx="560" cy="130" rx="40" ry="18"/></g>';
     var roadsD = '<path d="M406 160V856"/><path d="M406 172H586Q610 172 610 196V836Q610 860 586 860H406"/>' +
       '<path d="M406 166Q196 166 160 232L22 430Q4 470 26 522L160 740Q228 860 406 860"/>' +
       '<path d="M400 38H696Q722 38 722 64V490H612"/><path d="M400 38H238Q204 38 176 82L150 130"/>' +
@@ -200,9 +201,8 @@
       var txtCol = LIGHT_FILL[b.f] ? '#13203a' : '#ffffff';
       var small = Math.min(b.w, b.h) < 42, ic = ICONS[b.id] && Math.min(b.w, b.h) >= 30 && b.w * b.h >= 1800 ? '<text class="cm-ic" x="' + (b.x + b.w - 11) + '" y="' + (b.y + 12) + '" text-anchor="middle" font-size="11">' + ICONS[b.id] + '</text>' : '';
       h += '<g class="' + cls + (small ? ' cm-small' : '') + '" data-b="' + b.id + '" role="button" tabindex="0" aria-label="' + esc(b.n + ' — ' + FAC[b.f][0]) + '"><title>' + esc(b.n) + '</title><g' + rot + '>' +
-        '<rect class="cm-ext" x="' + b.x + '" y="' + (b.y + 5) + '" width="' + b.w + '" height="' + b.h + '" rx="7"/>' +
-        '<rect class="cm-face" x="' + b.x + '" y="' + b.y + '" width="' + b.w + '" height="' + b.h + '" rx="7" fill="' + col + '" filter="url(#cmShadow)"/>' +
-        '<rect class="cm-roof" x="' + b.x + '" y="' + b.y + '" width="' + b.w + '" height="' + b.h + '" rx="7" fill="url(#cmRoof)" pointer-events="none"/>' + ic +
+                '<rect class="cm-face" x="' + b.x + '" y="' + b.y + '" width="' + b.w + '" height="' + b.h + '" rx="6" fill="' + col + '"/>' +
+        '' +
         '<g fill="' + txtCol + '">' + labelFor(b) + '</g></g></g>';
     });
     /* بوابات */
@@ -215,7 +215,7 @@
     var nextId = status.next && resolve(status.next).b ? resolve(status.next).b.id : null;
     Object.keys(perB).forEach(function(id, i){
       var b = byId[id], n = perB[id].length, cl = 'cm-pin' + (id === nowId ? ' now' : (id === nextId ? ' next' : ''));
-      h += '<g class="' + cl + '" data-pin="' + id + '" transform="translate(' + b.cx + ' ' + pinY(b) + ')"><g class="cm-pin-in" style="animation-delay:' + (i * 60) + 'ms">' +
+      h += '<g class="' + cl + '" data-pin="' + id + '" transform="translate(' + b.cx + ' ' + pinY(b) + ') scale(.85)"><g class="cm-pin-in" style="animation-delay:' + (i * 60) + 'ms">' +
         '<circle class="cm-pulse" r="14" cy="-26"/><path d="M0 0C-8-11-14-17-14-26a14 14 0 1 1 28 0C14-17 8-11 0 0z"/><text y="-22" text-anchor="middle" font-size="13" font-weight="800">' + n + '</text></g></g>';
     });
     if(st.route && st.route.ids && st.route.ids.length > 1){
