@@ -12,10 +12,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="مساحتي">
-<link rel="stylesheet" href="css/01-base.css">
-<link rel="stylesheet" href="css/02-motion-themes.css">
-<link rel="stylesheet" href="css/03-hub-dashboard-welcome.css">
-<link rel="stylesheet" href="css/04-responsive-components-phases.css">
+<link rel="stylesheet" href="app.bundle.css?v=132">
 <script>/* مستخدم جديد: تظهر شاشة الترحيب من أول رسم (بدون وميض اللوحة خلفها)، ويزيل app.js الصنف عند اكتمال الدخول */
 try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement.classList.add("is-new"); }catch(e){}</script>
 </head>
@@ -91,6 +88,7 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
         </div>
         <div class="sm-group" data-g="work" role="group" aria-label="وضع العمل">
           <div class="sm-title"><b>وضع العمل</b><small>تركيز، خصوصية، استيراد من صورة، إشعارات، لوحة الأوامر</small></div>
+          <button class="settings-item native-only" id="widgetBtn" type="button"><span class="si-ic" aria-hidden="true">📱</span><span class="si-tx"><b>ودجتات الشاشة الرئيسية</b><small>أضف المحاضرة الجاية أو جدول اليوم لتلفونك</small></span><span class="si-go" aria-hidden="true">‹</span></button>
           <button class="settings-item" id="glanceBtn" type="button"><span class="si-ic" aria-hidden="true">📱</span><span class="si-tx"><b>شاشة «الآن»</b><small>المحاضرة الجاية بنظرة سريعة للتلفون</small></span><span class="si-go" aria-hidden="true">‹</span></button>
           <button class="settings-item" id="todayBtn" type="button" role="switch" aria-checked="false"><span class="si-ic" aria-hidden="true">🎯</span><span class="si-tx"><b>اليوم فقط</b><small class="tb-t">اللوحة الكاملة</small></span><span class="si-sw" aria-hidden="true"></span></button>
           <button class="settings-item" id="privacyBtn" type="button" role="switch" aria-checked="false"><span class="si-ic" aria-hidden="true">🙈</span><span class="si-tx"><b>وضع الخصوصية</b><small class="pv-t">الأرقام ظاهرة</small></span><span class="si-sw" aria-hidden="true"></span></button>
@@ -108,6 +106,7 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
         </div>
         <div class="sm-group" data-g="sys" role="group" aria-label="النظام">
           <div class="sm-title"><b>النظام</b><small>تثبيت التطبيق، فحص السلامة، سجل الأخطاء، الجولة</small></div>
+          <button class="settings-item native-only" id="updateBtn" type="button"><span class="si-ic" aria-hidden="true">🔄</span><span class="si-tx"><b>فحص تحديثات التطبيق</b><small id="updateSub">اضغط للفحص</small></span><span class="si-go" aria-hidden="true">‹</span></button>
           <button class="settings-item" id="pwaInstallBtn" type="button" style="display:none"><span class="si-ic" aria-hidden="true">📲</span><span class="si-tx"><b>تثبيت التطبيق</b><small>أيقونة على شاشتك</small></span><span class="si-go" aria-hidden="true">‹</span></button>
           <button class="settings-item" id="integrityBtn" type="button"><span class="si-ic" aria-hidden="true">🧰</span><span class="si-tx"><b>فحص سلامة البيانات</b><small>مواد، جدول، حضور، علامات</small></span></button>
           <button class="settings-item" id="diagBtn" type="button"><span class="si-ic" aria-hidden="true">🩺</span><span class="si-tx"><b>سجل الأخطاء</b><small>تشخيص المشاكل</small></span></button>
@@ -529,10 +528,9 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
 <div class="toast-container" id="toastContainer" role="status" aria-live="polite"></div>
 
 <!-- مكتبات خارجية -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.bundle.js?v=132"></script>
 
 <!-- الملفات الأساسية (الترتيب مهم جداً!) -->
-<script src="app.bundle.js?v=131"></script>
 <script>
 /* إخفاء الهيكل الرمادي بعد أول رسم للتطبيق (مع مؤقّت أمان كي لا يعلق أبداً) */
 (function(){
@@ -553,7 +551,7 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
    1) إن لم يطابق window.APP_BUILD رقم BUILD هنا → يمسح كاش التطبيق ويعيد التحميل مرة واحدة (حارس sessionStorage يمنع التكرار).
    2) أقسام اللوحة المتقدمة (تحليلات/LMS/إحصائيات) تُنقل إلى خانتها الثابتة إذا أضافتها سكربتات قديمة بمكان آخر. */
 (function(){
-  var BUILD = '131';
+  var BUILD = '132';
   var SLOTS = { insightsSection: 'slotInsights', lmsWidget: 'slotLms', enhancedStatsSection: 'slotEnhanced' };
   function heal(){
     var dash = document.getElementById('dashboard'); if(!dash) return;

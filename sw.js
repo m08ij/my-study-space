@@ -1,11 +1,10 @@
 /* ============================================================
    sw.js — شبكة أولاً + كاش احتياطي (v90)
    ============================================================ */
-var CACHE_NAME = 'ss-cache-v131';
+var CACHE_NAME = 'ss-cache-v132';
 var NET_WAIT_MS = 3500;   /* أقصى انتظار للشبكة قبل خدمة النسخة المخزّنة */
 var URLS_TO_CACHE = [
-  './', './index.html', './app.css', './css/01-base.css', './css/02-motion-themes.css', './css/03-hub-dashboard-welcome.css', './css/04-responsive-components-phases.css',
-  './app.bundle.js?v=131', './manifest.json', './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png', './icons/apple-touch-icon.png'
+  './', './index.html', './app.css', './app.bundle.js?v=132', './app.bundle.css?v=132', './manifest.json', './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png', './icons/apple-touch-icon.png'
 ];
 self.addEventListener('install', function(e){
   e.waitUntil(
@@ -31,6 +30,7 @@ self.addEventListener('fetch', function(e){
   var url = e.request.url;
   if(url.indexOf('supabase.co') > -1) return;
   if(url.indexOf('cdn.jsdelivr.net') > -1) return;
+  if(/\/apk\//.test(url)) return;                 /* ملفات تحديث التطبيق (APK + version.json): دائماً من الشبكة وبدون كاش */
   if(url.indexOf('api.qrserver.com') > -1) return;
   if(url.indexOf('open-meteo.com') > -1) return;
   if(url.indexOf('aladhan.com') > -1) return;

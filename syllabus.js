@@ -477,12 +477,54 @@
       refresh();
     }).catch(function(e){ if(!cancelled) fail('ما قدرت أجهّز الكتاب', (e && e.message) || 'خطأ بقراءة الـPDF'); });
   }
+  /* على اللمس/التطبيق نستعمل قارئنا؛ على الكمبيوتر عارض المتصفح (أسرع ويدعم #page=) */
+  function wantReader(){
+    try{ if(W.NativeApp && W.NativeApp.isNative && W.NativeApp.isNative()) return true; return !!(W.matchMedia && W.matchMedia('(pointer:coarse)').matches && W.innerWidth < 900); }catch(e){ return false; }
+  }
+  var rd = null;
+  function closeReader(){ if(rd){ try{ if(rd.pdf && rd.pdf.destroy) rd.pdf.destroy(); }catch(e){} if(rd.el && rd.el.parentNode) rd.el.parentNode.removeChild(rd.el); d.documentElement.classList.remove('rd-open'); rd = null; } }
+  function openReader(c, blob, page){
+    closeReader();
+    var el2 = el('div', 'rd-overlay'); el2.setAttribute('role', 'dialog'); el2.setAttribute('aria-modal', 'true'); el2.setAttribute('aria-label', 'قارئ الكتاب');
+    var secs = Object.keys(c.book.sections || {}).sort(function(a, b){ return c.book.sections[a][0] - c.book.sections[b][0]; });
+    el2.innerHTML = '<div class="rd-bar"><button type="button" class="rd-b" data-rd="close" aria-label="إغلاق">✕</button>' +
+      '<select class="rd-sec" aria-label="انتقل لقسم"><option value="">القسم…</option>' + secs.map(function(k){ return '<option value="' + esc(k) + '">' + esc(k) + '</option>'; }).join('') + '</select>' +
+      '<button type="button" class="rd-b" data-rd="prev" aria-label="السابقة">‹</button><input class="rd-pg" type="number" min="1" inputmode="numeric" aria-label="رقم الصفحة"><span class="rd-of"></span><button type="button" class="rd-b" data-rd="next" aria-label="التالية">›</button>' +
+      '<button type="button" class="rd-b" data-rd="zout" aria-label="تصغير">−</button><button type="button" class="rd-b" data-rd="zin" aria-label="تكبير">＋</button></div>' +
+      '<div class="rd-view"><canvas class="rd-cv"></canvas><div class="rd-msg">جاري التحميل…</div></div>';
+    d.body.appendChild(el2); d.documentElement.classList.add('rd-open');
+    rd = { el: el2, pdf: null, page: page || 1, zoom: 1, busy: false, want: null };
+    var cv = el2.querySelector('.rd-cv'), msg = el2.querySelector('.rd-msg'), pg = el2.querySelector('.rd-pg'), of = el2.querySelector('.rd-of'), view = el2.querySelector('.rd-view');
+    function draw(){
+      if(!rd || !rd.pdf) return; if(rd.busy){ rd.want = true; return; } rd.busy = true; rd.want = null;
+      var n = Math.min(Math.max(1, rd.page), rd.pdf.numPages); rd.page = n; pg.value = n; of.textContent = '/ ' + rd.pdf.numPages; msg.style.display = 'block'; msg.textContent = 'جاري رسم الصفحة…';
+      rd.pdf.getPage(n).then(function(p){
+        var base = p.getViewport({ scale: 1 }), cssW = Math.max(200, (view.clientWidth - 12) * rd.zoom), dpr = Math.min(2, W.devicePixelRatio || 1), sc = cssW / base.width * dpr, vp = p.getViewport({ scale: sc });
+        cv.width = Math.floor(vp.width); cv.height = Math.floor(vp.height); cv.style.width = Math.floor(vp.width / dpr) + 'px'; cv.style.height = Math.floor(vp.height / dpr) + 'px';
+        return p.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise;
+      }).then(function(){ msg.style.display = 'none'; view.scrollTop = 0; }, function(){ msg.textContent = 'تعذّر رسم الصفحة'; }).then(function(){ if(rd){ rd.busy = false; if(rd.want) draw(); } });
+    }
+    el2.addEventListener('click', function(e){
+      var b = e.target.closest && e.target.closest('[data-rd]'); if(!b || !rd) return; var a = b.getAttribute('data-rd');
+      if(a === 'close') closeReader(); else if(a === 'prev'){ rd.page--; draw(); } else if(a === 'next'){ rd.page++; draw(); }
+      else if(a === 'zin'){ rd.zoom = Math.min(3, rd.zoom + 0.25); draw(); } else if(a === 'zout'){ rd.zoom = Math.max(0.6, rd.zoom - 0.25); draw(); }
+    });
+    pg.addEventListener('change', function(){ var v = parseInt(pg.value, 10); if(v > 0 && rd){ rd.page = v; draw(); } });
+    el2.querySelector('.rd-sec').addEventListener('change', function(e){ var r = c.book.sections[e.target.value]; if(r && rd){ rd.page = r[0] + (c.book.offset || 0); draw(); } e.target.value = ''; });
+    el2.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeReader(); else if(e.key === 'ArrowLeft'){ rd.page++; draw(); } else if(e.key === 'ArrowRight'){ rd.page--; draw(); } });
+    /* سحب أفقي للتنقل بين الصفحات (على اللمس) */
+    var x0 = null; view.addEventListener('touchstart', function(e){ x0 = e.touches.length === 1 ? e.touches[0].clientX : null; }, { passive: true });
+    view.addEventListener('touchend', function(e){ if(x0 === null || !rd) return; var dx = e.changedTouches[0].clientX - x0; x0 = null; if(Math.abs(dx) > 90 && rd.zoom <= 1){ rd.page += dx < 0 ? 1 : -1; draw(); } }, { passive: true });
+    loadPdfJs().then(function(lib){ return fileBuf(blob).then(function(buf){ return lib.getDocument({ data: buf }).promise; }); }).then(function(pdf){ if(!rd){ try{ pdf.destroy(); }catch(e){} return; } rd.pdf = pdf; draw(); pg.focus(); }).catch(function(e){ msg.textContent = (e && e.message) || 'تعذّر فتح الكتاب'; });
+    return el2;
+  }
   function openBook(course, section){
     var c = courseById(course.id); if(!c || !c.book) return;
     bookGet(c.id).then(function(blob){
       if(!blob){ toast('ملف الكتاب مش موجود على هالجهاز — اربطه من جديد (الكتب ما بتتزامن)', 'warn', 6000); return; }
       var page = 1, r = section && c.book.sections && c.book.sections[section];
       if(r) page = r[0] + (c.book.offset || 0);
+      if(wantReader()){ openReader(c, blob, page); return; }
       var url = W.URL.createObjectURL(blob) + '#page=' + page;
       var w = W.open(url, '_blank', 'noopener'); if(!w) toast('المتصفح منع فتح النافذة — اسمح بالنوافذ المنبثقة', 'warn');
       setTimeout(function(){ try{ W.URL.revokeObjectURL(url.split('#')[0]); }catch(e){} }, 120000);
@@ -699,5 +741,5 @@
     });
   }
 
-  return Object.assign(pure, { examButtons: examButtons, addReviewTasks: addReviewTasks, studySection: studySection, showStudy: showStudy, addFlashcards: addFlashcards, upcomingExams: upcomingExams, weekBrief: weekBrief, sectionHtml: sectionHtml, bindSection: bindSection, startImport: startImport, importPlan: importPlan, attachBook: attachBook, openBook: openBook, askOffset: askOffset, addReadingTasks: addReadingTasks, loadPdfJs: loadPdfJs, _preview: preview, _setRefresh: function(f){ refresh = f; } });
+  return Object.assign(pure, { examButtons: examButtons, addReviewTasks: addReviewTasks, studySection: studySection, showStudy: showStudy, addFlashcards: addFlashcards, upcomingExams: upcomingExams, weekBrief: weekBrief, sectionHtml: sectionHtml, bindSection: bindSection, startImport: startImport, importPlan: importPlan, attachBook: attachBook, openBook: openBook, openReader: openReader, closeReader: closeReader, wantReader: wantReader, askOffset: askOffset, addReadingTasks: addReadingTasks, loadPdfJs: loadPdfJs, _preview: preview, _setRefresh: function(f){ refresh = f; } });
 });

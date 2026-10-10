@@ -1,0 +1,12 @@
+{
+  "versionCode": 5,
+  "versionName": "1.4",
+  "url": "apk/StudySpace.apk",
+  "sha256": "bfe6374021ada2d85b0a6e59b89016c17aa157ec649c5babca3dcf2beb00c536",
+  "size": 3298901,
+  "notes": [
+    "إصلاح: ودجت «المحاضرة الجاية» و«جدول اليوم» (Can't load widget)",
+    "ودجات أندرويد + إشعارات + تحديث من داخل التطبيق"
+  ],
+  "date": "2026-10-10"
+}

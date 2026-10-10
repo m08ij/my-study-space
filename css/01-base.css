@@ -36,9 +36,10 @@
 html,body{height:100%}
 html{scroll-behavior:smooth}
 body{font-family:'Segoe UI','Tahoma',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.7;overflow-x:hidden;min-height:100vh;position:relative}
-body::before,body::after{content:'';position:fixed;border-radius:50%;pointer-events:none;z-index:0;filter:blur(120px);opacity:var(--blob-opacity,.35);transition:opacity var(--dur-3)}
-body::before{width:500px;height:500px;top:-200px;right:-100px;background:radial-gradient(circle,var(--accent),transparent 70%)}
-body::after{width:600px;height:600px;bottom:-250px;left:-150px;background:radial-gradient(circle,var(--accent-2),transparent 70%)}
+/* البقع الملوّنة: تدرّج شعاعي ناعم بدل filter:blur(120px) (الأخير يكلّف GPU كثير، خصوصاً على التلفون) */
+body::before,body::after{content:'';position:fixed;border-radius:50%;pointer-events:none;z-index:0;opacity:var(--blob-opacity,.35);transition:opacity var(--dur-3);contain:strict}
+body::before{width:700px;height:700px;top:-300px;right:-200px;background:radial-gradient(circle,var(--accent),transparent 68%)}
+body::after{width:800px;height:800px;bottom:-380px;left:-280px;background:radial-gradient(circle,var(--accent-2),transparent 68%)}
 ::-webkit-scrollbar{width:10px;height:10px}
 ::-webkit-scrollbar-track{background:var(--bg2)}
 ::-webkit-scrollbar-thumb{background:linear-gradient(180deg,var(--accent),var(--accent-2));border-radius:var(--r-md);border:2px solid var(--bg2)}

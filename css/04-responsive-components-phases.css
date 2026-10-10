@@ -1668,3 +1668,60 @@ html.ga-open{overflow:hidden}
 .ga-chip.ok{color:var(--green)}
 .ga-empty{max-width:560px;margin:60px auto;text-align:center;font-size:1.2rem;line-height:2;color:var(--muted)}
 @media (prefers-reduced-motion:reduce){.ga-overlay{animation:none}}
+
+/* ===== قارئ الكتاب الداخلي (تلفون/تطبيق) ===== */
+html.rd-open{overflow:hidden}
+.rd-overlay{position:fixed;inset:0;z-index:1400;display:flex;flex-direction:column;background:#10141f;animation:smFade .18s ease}
+.rd-bar{display:flex;align-items:center;gap:6px;padding:max(8px,env(safe-area-inset-top)) 8px 8px;background:var(--card);border-bottom:1px solid var(--border);flex-wrap:nowrap;overflow-x:auto}
+.rd-b{flex:none;min-width:40px;height:40px;border-radius:12px;background:var(--card2);border:1px solid var(--border2);color:var(--text);font-size:1.2rem;cursor:pointer}
+.rd-b:active{transform:scale(.94)}
+.rd-sec{flex:none;max-width:90px;height:40px;border-radius:12px;background:var(--bg2);border:1px solid var(--border2);color:var(--text);font:inherit;font-size:var(--fs-sm)}
+.rd-pg{flex:none;width:58px;height:40px;text-align:center;border-radius:12px;background:var(--bg2);border:1px solid var(--border2);color:var(--text);font:inherit}
+.rd-of{flex:none;color:var(--muted);font-size:var(--fs-xs);white-space:nowrap}
+.rd-view{position:relative;flex:1;overflow:auto;-webkit-overflow-scrolling:touch;text-align:center;padding:6px}
+.rd-cv{background:#fff;max-width:none;border-radius:4px;box-shadow:0 4px 20px rgba(0,0,0,.5)}
+.rd-msg{position:absolute;inset-inline:0;top:42%;color:#aab4dc;font-size:var(--fs-sm)}
+@media (prefers-reduced-motion:reduce){.rd-overlay{animation:none}}
+
+/* ===== تطبيق أندرويد: عناصر خاصة بالتطبيق + اختيار الودجت ===== */
+.native-only{display:none!important}
+html.native-app .native-only{display:flex!important}
+.wg-list{display:flex;flex-direction:column;gap:8px;margin:10px 0}
+.wg-opt{display:flex;align-items:center;gap:12px;padding:12px;border-radius:var(--r-md);background:var(--bg2);border:1px solid var(--border);color:var(--text);font:inherit;text-align:start;cursor:pointer}
+.wg-opt:active{transform:scale(.98)}
+.wg-opt:hover{border-color:var(--accent)}
+.wg-ic{font-size:1.6rem}
+.wg-tx{display:flex;flex-direction:column}
+.wg-tx small{color:var(--muted);font-size:var(--fs-xs)}
+
+/* ===== أداء (تلفون/تطبيق): بدون ضبابية خلفية دائمة، وقوائم طويلة بتُرسم عند الحاجة ===== */
+@media (pointer:coarse),(max-width:760px){
+  .topbar,.bn-bar,.sidebar{-webkit-backdrop-filter:none;backdrop-filter:none}
+  .topbar{background:var(--card)}
+  body::before,body::after{opacity:calc(var(--blob-opacity,.35)*.8)}
+}
+.task,.budget-item{content-visibility:auto;contain-intrinsic-size:auto 76px}
+html.native-app *{-webkit-tap-highlight-color:transparent}
+html.native-app{overscroll-behavior:none}
+
+/* ===== تلفون: تخفيف الزحمة (شريط علوي أخف، أزرار عائمة أصغر، اقتباس مضغوط) ===== */
+@media (max-width:560px){
+  .topbar{gap:8px;padding-inline:10px}
+  .topbar .brand-name{display:none}
+  .topbar .search-wrap{flex:1;min-width:0}
+  .topbar .search-wrap input{width:100%}
+  #serverStatus{display:none}
+  .topbar-actions{gap:6px}
+  .fab-main,.ai-fab{width:46px;height:46px;font-size:1.25rem;box-shadow:0 6px 18px rgba(0,0,0,.35)}
+  .ai-fab{opacity:.92}
+  .daily-quote{padding:10px 14px;margin-bottom:var(--sp-3)}
+  .daily-quote .quote-text{font-size:.88rem;line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .daily-quote .quote-author{font-size:.7rem}
+  .page-head{margin-bottom:var(--sp-3)}
+  .page-sub{font-size:var(--fs-xs)}
+}
+
+/* ===== نافذة تحديث التطبيق ===== */
+.up-notes{margin:8px 0;padding-inline-start:20px;line-height:1.9;font-size:var(--fs-sm);text-align:start}
+.up-bar{height:8px;border-radius:99px;background:var(--bg2);border:1px solid var(--border);overflow:hidden;margin:10px 0}
+.up-bar i{display:block;height:100%;width:0;background:var(--grad);border-radius:99px;transition:width .25s ease}
