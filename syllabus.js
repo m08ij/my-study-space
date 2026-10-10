@@ -208,7 +208,60 @@
     return { total: total, max: Math.max(0, Math.ceil(total * pct / 100) - 1), pct: pct };      /* «15% تعني الحرمان»: آخر غياب مسموح هو قبل بلوغ 15% */
   }
 
-  var pure = { SCHEMA: SCHEMA, PROMPT: PROMPT, normalize: normalize, docxToText: docxToText, xmlToText: xmlToText, parseToc: parseToc, printedOf: printedOf, detectOffset: detectOffset, detectOffsetByTitles: detectOffsetByTitles, resolveOffset: resolveOffset, sectionRanges: sectionRanges, weekNumber: weekNumber, weekEntry: weekEntry, absenceLimit: absenceLimit, sectionOf: sectionOf };
+  /* خطة مراجعة لامتحان: كل أقسام الأسابيع قبل أسبوع الامتحان، موزّعة بالتساوي على الأيام من اليوم حتى اليوم السابق للامتحان */
+  function ymdToDate(y){ var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(y || ''); return m ? new Date(+m[1], +m[2] - 1, +m[3]) : null; }
+  function dateToYmd(d){ return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+  function reviewPlan(plan, startYmd, examYmd, todayY){
+    var ex = ymdToDate(examYmd), t0 = ymdToDate(todayY); if(!plan || !ex || !t0 || ex <= t0) return { sections: [], days: [], note: 'الامتحان فات أو اليوم نفسه' };
+    var ew = startYmd ? weekNumber(startYmd, ex) : null, secs = [], seen = {};
+    (plan.weeks || []).forEach(function(w){
+      if(ew !== null && w.from >= ew) return;                                /* أسبوع الامتحان وما بعده ما بيدخل */
+      w.topics.forEach(function(t){ var k = t.section || ('t:' + t.title); if(seen[k]) return; seen[k] = 1; secs.push({ sec: t.section || '', title: t.title, week: w.from }); });
+    });
+    var span = Math.round((ex - t0) / 86400000), n = Math.max(1, Math.min(span, 21)), per = Math.max(1, Math.ceil(secs.length / n)), days = [];
+    for(var i = 0; i < secs.length; i += per){
+      var idx = Math.floor(i / per), day = new Date(t0.getFullYear(), t0.getMonth(), t0.getDate() + Math.min(idx, Math.max(0, span - 1)));
+      days.push({ date: dateToYmd(day), items: secs.slice(i, i + per) });
+    }
+    return { sections: secs, days: days, note: ew === null ? 'ما حدّدت بداية الفصل، فاعتبرت كل أسابيع الخطة' : '' };
+  }
+  /* مذاكرة قسم بـGemini: مخطط ومُدقّق */
+  var STUDY_SCHEMA = { type: 'OBJECT', properties: {
+    summary: { type: 'STRING' }, keyIdeas: { type: 'ARRAY', items: { type: 'STRING' } },
+    formulas: { type: 'ARRAY', items: { type: 'OBJECT', properties: { name: { type: 'STRING' }, expr: { type: 'STRING' }, note: { type: 'STRING' } }, required: ['expr'] } },
+    definitions: { type: 'ARRAY', items: { type: 'OBJECT', properties: { term: { type: 'STRING' }, meaning: { type: 'STRING' } }, required: ['term'] } },
+    flashcards: { type: 'ARRAY', items: { type: 'OBJECT', properties: { q: { type: 'STRING' }, a: { type: 'STRING' } }, required: ['q', 'a'] } },
+    practice: { type: 'ARRAY', items: { type: 'OBJECT', properties: { q: { type: 'STRING' }, hint: { type: 'STRING' } }, required: ['q'] } },
+    mistakes: { type: 'ARRAY', items: { type: 'STRING' } }
+  }, required: ['summary'] };
+  var STUDY_PROMPT = [
+    'أنت مدرّس خصوصي لطالب هندسة أردني. الصور المرفقة صفحات متتالية من كتاب جامعي (إنجليزي) لقسم واحد.',
+    'اكتب كل الشرح بالعربية البسيطة (لهجة بيضاء مفهومة) مع إبقاء المصطلحات والرموز بالإنجليزية. اعتمد على محتوى الصفحات فقط ولا تضف معلومات من عندك؛ إن لم تكن متأكداً من شي اتركه.',
+    'المطلوب JSON: summary (ملخص 5–8 أسطر)، keyIdeas (3–6 أفكار رئيسية)، formulas (القوانين والنظريات: name و expr بنص واضح مثل lim(x→a) f(x) = L أو (f·g)\' = f\'g + fg\' و note شرط الاستعمال)،',
+    'definitions (التعريفات: term و meaning)، flashcards (6–10 بطاقات سؤال/جواب قصيرة للحفظ)، practice (4–6 أسئلة تدريب بمستوى الامتحان مع hint تلميح بدون الحل الكامل)، mistakes (أخطاء شائعة 2–4).',
+    'اكتب المعادلات كنص عادي (بدون LaTeX) بحيث تنقرأ على التلفون.'
+  ].join('\n');
+  function strs(a, n, max){ return (Array.isArray(a) ? a : []).map(function(x){ return str(x, max || 240); }).filter(Boolean).slice(0, n); }
+  function normalizeStudy(raw){
+    raw = raw && typeof raw === 'object' ? raw : {};
+    function objs(a, n, f){ return (Array.isArray(a) ? a : []).map(function(x){ return x && typeof x === 'object' ? f(x) : null; }).filter(Boolean).slice(0, n); }
+    var out = {
+      summary: str(raw.summary, 1400), keyIdeas: strs(raw.keyIdeas, 8, 220),
+      formulas: objs(raw.formulas, 14, function(x){ var e = str(x.expr, 200); return e ? { name: str(x.name, 80), expr: e, note: str(x.note, 160) } : null; }),
+      definitions: objs(raw.definitions, 12, function(x){ var t = str(x.term, 80); return t ? { term: t, meaning: str(x.meaning, 260) } : null; }),
+      flashcards: objs(raw.flashcards, 14, function(x){ var q = str(x.q, 220), a = str(x.a, 300); return q && a ? { q: q, a: a } : null; }),
+      practice: objs(raw.practice, 8, function(x){ var q = str(x.q, 320); return q ? { q: q, hint: str(x.hint, 240) } : null; }),
+      mistakes: strs(raw.mistakes, 5, 220)
+    };
+    return { study: out, empty: !out.summary && !out.flashcards.length };
+  }
+  /* صفحات قسم (مطبوعة من..إلى) -> أجزاء PDF بحجم أقصى 8 صفحات */
+  function chunkPages(range, offset, size){
+    var a = range[0] + (offset || 0), b = range[1] + (offset || 0), out = [], k = size || 8;
+    for(var p = a; p <= b; p += k) out.push([p, Math.min(b, p + k - 1)]);
+    return out;
+  }
+  var pure = { reviewPlan: reviewPlan, STUDY_SCHEMA: STUDY_SCHEMA, STUDY_PROMPT: STUDY_PROMPT, normalizeStudy: normalizeStudy, chunkPages: chunkPages, SCHEMA: SCHEMA, PROMPT: PROMPT, normalize: normalize, docxToText: docxToText, xmlToText: xmlToText, parseToc: parseToc, printedOf: printedOf, detectOffset: detectOffset, detectOffsetByTitles: detectOffsetByTitles, resolveOffset: resolveOffset, sectionRanges: sectionRanges, weekNumber: weekNumber, weekEntry: weekEntry, absenceLimit: absenceLimit, sectionOf: sectionOf };
   if(!W || !W.document) return pure;
 
   /* ==================== واجهة المتصفح ==================== */
@@ -454,6 +507,121 @@
     save(); if(W.renderTasks) W.renderTasks(); toast('➕ أضفت ' + n + ' مهمة قراءة (بآخر كل أسبوع)', 'success', 4000); refresh();
   }
 
+  /* ---- خطة المراجعة لامتحان ---- */
+  function upcomingExams(c){
+    var t = todayYmd();
+    return (sp().exams || []).filter(function(e){ return e.course === c.name && /^\d{4}-\d{2}-\d{2}$/.test(e.date || '') && e.date > t; }).sort(function(a, b){ return a.date < b.date ? -1 : 1; });
+  }
+  function examButtons(c){
+    if(!c.syllabus || !c.syllabus.weeks.length) return '';
+    var ex = upcomingExams(c); if(!ex.length) return '';
+    return '<div class="hub-actions inline sy-review">' + ex.slice(0, 3).map(function(e){ return '<button type="button" class="btn btn-sm btn-ghost" data-sy="review" data-eid="' + esc(e.id || e.name) + '">🧠 خطة مراجعة: ' + esc(e.name) + '</button>'; }).join('') + '</div>';
+  }
+  function addReviewTasks(course, eid){
+    var c = courseById(course.id) || course, ex = upcomingExams(c).filter(function(e){ return String(e.id || e.name) === String(eid); })[0];
+    if(!c.syllabus || !ex){ toast('ما لقيت الامتحان', 'warn'); return; }
+    var rp = reviewPlan(c.syllabus, sp().semesterStart, ex.date, todayYmd());
+    if(!rp.days.length){ toast('ما في أقسام قبل هالامتحان بالخطة', 'info'); return; }
+    openDlg('خطة مراجعة «' + ex.name + '»', function(b){
+      b.classList.add('sy-wide');
+      if(rp.note) b.appendChild(el('div', 'sy-warn', '⚠️ ' + rp.note));
+      b.appendChild(el('div', 'ocri-sub', rp.sections.length + ' قسم موزّعين على ' + rp.days.length + ' يوم قبل ' + ex.date + ':'));
+      var ol = el('ol', 'sy-rev'); rp.days.forEach(function(dy){
+        var pg = dy.items.map(function(i){ return i.sec ? rangeText(c, i.sec) : ''; }).filter(Boolean);
+        ol.appendChild(el('li', null, dy.date + ' — ' + dy.items.map(function(i){ return (i.sec ? i.sec + ' ' : '') + i.title; }).join('، ') + (pg.length ? ' (' + pg.join(' · ') + ')' : '')));
+      }); b.appendChild(ol);
+      var row = el('div', 'ocri-actions'), ok = el('button', 'ocri-btn', '➕ أضفها كمهام'), no = el('button', 'ocri-btn ghost', 'إلغاء'); ok.type = 'button'; no.type = 'button';
+      no.addEventListener('click', closeDlg);
+      ok.addEventListener('click', function(){
+        if(!Array.isArray(sp().tasks)) W.space.tasks = []; var have = {}, n = 0; W.space.tasks.forEach(function(t){ have[t.course + '|' + t.title] = 1; });
+        rp.days.forEach(function(dy){
+          var title = '🧠 مراجعة (' + ex.name + '): ' + dy.items.map(function(i){ return i.sec || i.title.slice(0, 24); }).join('، ');
+          if(have[c.name + '|' + title]) return;
+          W.space.tasks.push({ id: W.uid ? W.uid() : Date.now().toString(36) + n, title: title.slice(0, 140), type: 'task', course: c.name, due: dy.date, done: false }); n++;
+        });
+        save(); if(W.renderTasks) W.renderTasks(); closeDlg(); toast(n ? '➕ أضفت ' + n + ' مهمة مراجعة' : 'المهام موجودة من قبل', n ? 'success' : 'info', 3500); refresh();
+      });
+      row.appendChild(ok); row.appendChild(no); b.appendChild(row);
+    });
+  }
+
+  /* ---- مذاكرة قسم من الكتاب بـGemini (صفحاته كصور) ---- */
+  function stdKey(sec, part){ return sec + (part ? '#' + part : ''); }
+  function renderPageJpeg(pdf, n){
+    return pdf.getPage(n).then(function(pg){
+      var vp = pg.getViewport({ scale: 1.35 }), cv = d.createElement('canvas'); cv.width = Math.floor(vp.width); cv.height = Math.floor(vp.height);
+      return pg.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise.then(function(){ var u = cv.toDataURL('image/jpeg', 0.68); return { inline_data: { mime_type: 'image/jpeg', data: u.slice(u.indexOf(',') + 1) } }; });
+    });
+  }
+  function studySection(course, sec, part, force){
+    var c = courseById(course.id) || course;
+    if(!c.book || !c.book.sections || !c.book.sections[sec]){ toast('اربط الكتاب أول (الفهرس ما فيه القسم ' + sec + ')', 'warn'); return; }
+    if(c.book.offset == null){ toast('اضبط صفحات الكتاب أول', 'warn'); askOffset(c, false); return; }
+    var key = stdKey(sec, part), cached = c.study && c.study[key];
+    if(cached && !force){ showStudy(c, sec, key, cached); return; }
+    var parts = chunkPages(c.book.sections[sec], c.book.offset, 8);
+    if(parts.length > 1 && !part){
+      openDlg('القسم ' + sec + ' طويل (' + parts.length + ' أجزاء)', function(b){
+        b.appendChild(el('div', 'ocri-sub', 'Gemini بياخد جزء واحد بالطلب (حتى 8 صفحات). اختر الجزء:'));
+        var row = el('div', 'ocri-actions sy-parts');
+        parts.forEach(function(p, i){ var bt = el('button', 'ocri-btn' + (c.study && c.study[stdKey(sec, i + 1)] ? ' ghost' : ''), 'جزء ' + (i + 1) + ' (ص PDF ' + p[0] + '–' + p[1] + ')' + (c.study && c.study[stdKey(sec, i + 1)] ? ' ✓' : '')); bt.type = 'button'; bt.addEventListener('click', function(){ closeDlg(); studySection(c, sec, i + 1, false); }); row.appendChild(bt); });
+        b.appendChild(row);
+      }); return;
+    }
+    if(!W.GeminiLab || !W.GeminiLab.ensureKey()) return;
+    var pr = parts[(part || 1) - 1]; if(!pr){ toast('جزء غير موجود', 'warn'); return; }
+    var ac = typeof AbortController === 'function' ? new AbortController() : null;
+    busy('جاري تحضير مذاكرة القسم ' + sec + '…', 'بحوّل ' + (pr[1] - pr[0] + 1) + ' صفحات لصور وببعتها لـGemini (20–60 ثانية). الصور بتروح لـGoogle.', function(){ if(ac) ac.abort(); });
+    bookGet(c.id).then(function(blob){
+      if(!blob) throw Object.assign(new Error('ملف الكتاب مش على هالجهاز — اربطه من جديد'), { code: 'content' });
+      return loadPdfJs().then(function(lib){ return fileBuf(blob).then(function(buf){ return lib.getDocument({ data: buf }).promise; }); });
+    }).then(function(pdf){
+      var ns = []; for(var p = pr[0]; p <= Math.min(pr[1], pdf.numPages); p++) ns.push(p);
+      return Promise.all(ns.map(function(n){ return renderPageJpeg(pdf, n); }));
+    }).then(function(imgs){
+      if(ac && ac.signal.aborted) return null; setBusySub('Gemini يقرأ الصفحات…');
+      var title = (c.book.first && sec === c.book.first.sec ? c.book.first.title : '') || '';
+      return W.GeminiLab.json({ parts: [{ text: STUDY_PROMPT + '\nالقسم: ' + sec + (part ? ' (جزء ' + part + ')' : '') + ' من كتاب ' + ((c.syllabus && c.syllabus.textbook && c.syllabus.textbook.title) || 'المادة') + '.' }].concat(imgs), schema: STUDY_SCHEMA, temperature: 0.2, signal: ac && ac.signal });
+    }).then(function(raw){
+      if(raw === null || (ac && ac.signal.aborted)) return;
+      var r = normalizeStudy(raw);
+      if(r.empty) throw Object.assign(new Error('Gemini ما رجّع مذاكرة مفيدة — جرّب جزءاً ثانياً أو أعد المحاولة'), { code: 'content' });
+      var cc = courseById(course.id); if(!cc) return; cc.study = cc.study || {}; r.study.at = todayYmd(); cc.study[key] = r.study;
+      var keys = Object.keys(cc.study); if(keys.length > 14) keys.sort(function(a, b){ return (cc.study[a].at || '') < (cc.study[b].at || '') ? -1 : 1; }).slice(0, keys.length - 14).forEach(function(k){ delete cc.study[k]; });
+      save(); closeDlg(); refresh(); showStudy(cc, sec, key, r.study);
+    }).catch(function(e){
+      if(ac && ac.signal.aborted) return;
+      fail('ما اشتغلت المذاكرة', e && e.code === 'content' ? e.message : (e && e.code ? W.GeminiLab.explain(e) : (e && e.message) || 'خطأ'), !!(e && e.code === 'gemini'));
+    });
+  }
+  function showStudy(c, sec, key, st){
+    openDlg('🧠 مذاكرة القسم ' + sec, function(b){
+      b.classList.add('sy-wide', 'sy-study');
+      function block(title, items, fn){ if(!items || !items.length) return; var sx = el('div', 'sy-blk'); sx.appendChild(el('h5', null, title)); items.forEach(function(it){ sx.appendChild(fn(it)); }); b.appendChild(sx); }
+      if(st.summary){ var sm = el('div', 'sy-blk'); sm.appendChild(el('h5', null, '📌 الملخص')); sm.appendChild(el('p', null, st.summary)); b.appendChild(sm); }
+      block('💡 أفكار رئيسية', st.keyIdeas, function(t){ return el('div', 'sy-li', '• ' + t); });
+      block('📐 قوانين ونظريات', st.formulas, function(f){ var r = el('div', 'sy-li'); if(f.name) r.appendChild(el('b', null, f.name + ': ')); var cd = el('code', 'ocri-cmd', f.expr); cd.setAttribute('dir', 'ltr'); r.appendChild(cd); if(f.note) r.appendChild(el('small', null, ' — ' + f.note)); return r; });
+      block('📖 تعريفات', st.definitions, function(x){ var r = el('div', 'sy-li'); r.appendChild(el('b', null, x.term + ': ')); r.appendChild(d.createTextNode(x.meaning)); return r; });
+      block('⚠️ أخطاء شائعة', st.mistakes, function(t){ return el('div', 'sy-li', '• ' + t); });
+      block('✍️ أسئلة تدريب', st.practice, function(x){ var r = el('details', 'sy-li'); r.appendChild(el('summary', null, x.q)); if(x.hint) r.appendChild(el('small', null, '💡 تلميح: ' + x.hint)); return r; });
+      block('🃏 بطاقات (' + st.flashcards.length + ')', st.flashcards, function(x){ var r = el('details', 'sy-li'); r.appendChild(el('summary', null, x.q)); r.appendChild(el('small', null, x.a)); return r; });
+      b.appendChild(el('div', 'ocri-note', 'الملخص من توليد Gemini من صفحات الكتاب — راجع الكتاب للتأكد، خصوصاً بالمعادلات. (انحفظ بالمادة، فما بيستهلك حصة مرة ثانية)'));
+      var row = el('div', 'ocri-actions');
+      if(st.flashcards.length){ var ab = el('button', 'ocri-btn', '➕ أضف البطاقات لمجموعة'); ab.type = 'button'; ab.addEventListener('click', function(){ addFlashcards(c, sec, st); }); row.appendChild(ab); }
+      var rb = el('button', 'ocri-btn ghost', '🔄 إعادة توليد'); rb.type = 'button'; rb.addEventListener('click', function(){ closeDlg(); var p = key.indexOf('#') > -1 ? parseInt(key.split('#')[1], 10) : 0; studySection(c, sec, p || undefined, true); });
+      var cl = el('button', 'ocri-btn ghost', 'إغلاق'); cl.type = 'button'; cl.addEventListener('click', closeDlg);
+      row.appendChild(rb); row.appendChild(cl); b.appendChild(row);
+    });
+  }
+  function addFlashcards(c, sec, st){
+    if(!Array.isArray(sp().decks)) W.space.decks = [];
+    var name = c.name + ' — ' + sec, deck = W.space.decks.filter(function(x){ return x.name === name; })[0];
+    if(!deck){ deck = { id: W.uid ? W.uid() : Date.now().toString(36), name: name, cards: [], course: c.name }; W.space.decks.push(deck); }
+    var have = {}; deck.cards.forEach(function(x){ have[x.q] = 1; }); var n = 0;
+    st.flashcards.forEach(function(f){ if(have[f.q]) return; deck.cards.push({ id: W.uid ? W.uid() : Date.now().toString(36) + n, q: f.q, a: f.a }); n++; });
+    save(); if(W.renderDecks) try{ W.renderDecks(); }catch(e){} toast(n ? '🃏 أضفت ' + n + ' بطاقة لمجموعة «' + name + '»' : 'البطاقات موجودة من قبل', n ? 'success' : 'info', 4000);
+  }
+
   /* ---- قسم «خطة المادة» داخل ورقة المادة ---- */
   function sectionHtml(c){
     var p = c.syllabus, h = '<section class="hub-sec sy-sec" id="hs-plan" data-ctabs="plan"><h4>🧾 خطة المادة' + (c.book ? ' <span class="muted">· 📖 الكتاب مربوط</span>' : '') + '</h4>';
@@ -475,7 +643,7 @@
       h += '<div class="sy-week"><div class="sy-week-h">📍 أسبوع ' + wk + ' من ' + last + '</div><ul class="sy-topics">' + cur.topics.map(function(t){
         var rg = t.section ? rangeText(c, t.section) : '';
         return '<li><span>' + (t.section ? '<b class="mono">' + esc(t.section) + '</b> ' : '') + esc(t.title) + '</span>' + (rg ? '<small class="muted">' + esc(rg) + '</small>' : '') +
-          (c.book && t.section ? '<button type="button" class="hub-mini" data-sy="open" data-sec="' + esc(t.section) + '" aria-label="فتح القسم بالكتاب">📖</button>' : '') + '</li>';
+          (c.book && t.section ? '<button type="button" class="hub-mini" data-sy="open" data-sec="' + esc(t.section) + '" aria-label="فتح القسم بالكتاب">📖</button>' + (c.book.sections && c.book.sections[t.section] ? '<button type="button" class="hub-mini" data-sy="study" data-sec="' + esc(t.section) + '" aria-label="مذاكرة القسم بـGemini" title="مذاكرة بـGemini">🧠' + (c.study && (c.study[t.section] || c.study[t.section + '#1']) ? '<i class="sy-done">✓</i>' : '') + '</button>' : '') : '') + '</li>';
       }).join('') + '</ul></div>';
     } else if(wk) h += '<div class="sy-week muted">أسبوع ' + wk + ': ما في بند بالخطة لهالأسبوع (اختبارات أو عطلة).</div>';
     /* الحضور */
@@ -489,9 +657,11 @@
     h += '<details class="ocri-how sy-all"><summary>الخطة الأسبوعية كاملة (' + p.weeks.length + ')</summary><ol>' + p.weeks.map(function(x){
       return '<li' + (wk && wk >= x.from && wk <= x.to ? ' class="cur"' : '') + '><b>أسبوع ' + (x.to > x.from ? x.from + '–' + x.to : x.from) + ':</b> ' + x.topics.map(function(t){
         var link = c.book && t.section && c.book.sections && c.book.sections[t.section] ? ' <button type="button" class="hub-link" data-sy="open" data-sec="' + esc(t.section) + '">' + esc(t.section) + ' · ' + esc(rangeText(c, t.section)) + '</button>' : (t.section ? ' <span class="mono muted">' + esc(t.section) + '</span>' : '');
-        return esc(t.title) + link;
+        var stBtn = c.book && t.section && c.book.sections && c.book.sections[t.section] ? ' <button type="button" class="hub-mini" data-sy="study" data-sec="' + esc(t.section) + '" aria-label="مذاكرة القسم بـGemini" title="مذاكرة بـGemini">🧠' + (c.study && (c.study[t.section] || c.study[t.section + '#1']) ? '<i class="sy-done">✓</i>' : '') + '</button>' : '';
+        return esc(t.title) + link + stBtn;
       }).join('، ') + '</li>';
     }).join('') + '</ol></details>';
+    h += examButtons(c);
     /* الأزرار */
     h += '<div class="hub-actions inline">' +
       (c.book ? '<button type="button" class="btn btn-sm" data-sy="open" data-sec="">📖 فتح الكتاب</button>' : '<button type="button" class="btn btn-sm" data-sy="attach">📖 ربط الكتاب (PDF)</button>') +
@@ -519,6 +689,8 @@
         else if(a === 'attach') pickFile('application/pdf,.pdf', function(f){ attachBook(cur, f); });
         else if(a === 'open') openBook(cur, b.getAttribute('data-sec') || '');
         else if(a === 'tasks') addReadingTasks(cur, cur.syllabus);
+        else if(a === 'study') studySection(cur, b.getAttribute('data-sec'));
+        else if(a === 'review') addReviewTasks(cur, b.getAttribute('data-eid'));
         else if(a === 'setstart'){ var i = rootEl.querySelector('.sy-start'); if(i && /^\d{4}-\d{2}-\d{2}$/.test(i.value)){ W.space.semesterStart = i.value; save(); refresh(); } else toast('اختر تاريخ بداية الفصل', 'warn'); }
         else if(a === 'del'){ if(W.customConfirm) W.customConfirm('حذف خطة المادة من «' + cur.name + '»؟ (الكتاب والمهام ما بينحذفوا)', function(){ delete cur.syllabus; save(); refresh(); }); else { delete cur.syllabus; save(); refresh(); } }
         else if(a === 'unbook'){ bookDel(cur.id).catch(function(){}); delete cur.book; save(); toast('فصلت الكتاب عن المادة', 'info'); refresh(); }
@@ -527,5 +699,5 @@
     });
   }
 
-  return Object.assign(pure, { weekBrief: weekBrief, sectionHtml: sectionHtml, bindSection: bindSection, startImport: startImport, importPlan: importPlan, attachBook: attachBook, openBook: openBook, askOffset: askOffset, addReadingTasks: addReadingTasks, loadPdfJs: loadPdfJs, _preview: preview, _setRefresh: function(f){ refresh = f; } });
+  return Object.assign(pure, { examButtons: examButtons, addReviewTasks: addReviewTasks, studySection: studySection, showStudy: showStudy, addFlashcards: addFlashcards, upcomingExams: upcomingExams, weekBrief: weekBrief, sectionHtml: sectionHtml, bindSection: bindSection, startImport: startImport, importPlan: importPlan, attachBook: attachBook, openBook: openBook, askOffset: askOffset, addReadingTasks: addReadingTasks, loadPdfJs: loadPdfJs, _preview: preview, _setRefresh: function(f){ refresh = f; } });
 });

@@ -1,36 +1,90 @@
 {
-    "name":  "مساحتي الدراسية",
-    "short_name":  "Study Space",
-    "description":  "مساحة دراسية شاملة للطالب الجامعي",
-    "start_url":  "./index.html",
-    "scope":  "./",
-    "display":  "standalone",
-    "background_color":  "#0b0f1a",
-    "theme_color":  "#0b0f1a",
-    "lang":  "ar",
-    "dir":  "rtl",
-    "categories":  [
-                       "education",
-                       "productivity"
-                   ],
-    "icons":  [
-                  {
-                      "src":  "icons/icon-192.png",
-                      "sizes":  "192x192",
-                      "type":  "image/png",
-                      "purpose":  "any"
-                  },
-                  {
-                      "src":  "icons/icon-512.png",
-                      "sizes":  "512x512",
-                      "type":  "image/png",
-                      "purpose":  "any"
-                  },
-                  {
-                      "src":  "icons/icon-maskable-512.png",
-                      "sizes":  "512x512",
-                      "type":  "image/png",
-                      "purpose":  "maskable"
-                  }
-              ]
+  "name": "مساحتي الدراسية",
+  "short_name": "Study Space",
+  "description": "مساحة دراسية شاملة للطالب الجامعي",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0b0f1a",
+  "theme_color": "#0b0f1a",
+  "lang": "ar",
+  "dir": "rtl",
+  "categories": [
+    "education",
+    "productivity"
+  ],
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "محاضرتي الجاية",
+      "short_name": "الآن",
+      "description": "المحاضرة الحالية أو التالية والمبنى ووقت الطلعة",
+      "url": "./index.html?glance=1",
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "إضافة مهمة",
+      "short_name": "مهمة",
+      "description": "أضف مهمة جديدة بسرعة",
+      "url": "./index.html?quick=task",
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "خريطة الجامعة",
+      "short_name": "الخريطة",
+      "description": "وين محاضراتك على الخريطة",
+      "url": "./index.html#campus",
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "الجدول الأسبوعي",
+      "short_name": "الجدول",
+      "description": "جدول محاضراتك",
+      "url": "./index.html#timetable",
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ]
 }

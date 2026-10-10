@@ -685,7 +685,7 @@
         '<button type="button" class="hub-mini" data-exam-edit="' + esc(e.id) + '" aria-label="تعديل الامتحان">✏️</button></div>';
     }).join('') + '</div>';
     else h += '<div class="hub-empty">لا امتحانات مسجّلة لهذه المادة.</div>';
-    h += '<button type="button" class="btn btn-sm" data-act="addexam">+ امتحان</button></section>';
+    h += '<button type="button" class="btn btn-sm" data-act="addexam">+ امتحان</button>' + (window.Syllabus && window.Syllabus.examButtons ? window.Syllabus.examButtons(c) : '') + '</section>';
 
     /* العلامات */
     var gItems = (g && g.items) || [], gt = 0, ge = 0; gItems.forEach(function(it){ gt += parseFloat(it.weight) || 0; ge += parseFloat(it.score) || 0; });
