@@ -569,6 +569,47 @@
     if(activeCourse && !activeCourse.sheet.closed) renderCourseSheet();
   }
 
+  /* أي قسم بأي تبويب (لـscrollTo القادم من أماكن ثانية) */
+  var SEC_TAB = { over: 'over', plan: 'plan', sched: 'plan', files: 'files', tasks: 'work', exams: 'work', grades: 'marks', att: 'marks', notes: 'notes' };
+  function setCourseTab(sheet, tab){
+    if(!activeCourse || !activeCourse.sheet || activeCourse.sheet !== sheet) return;
+    activeCourse.tab = tab; sheet.body.setAttribute('data-ctab', tab);
+    [].forEach.call(sheet.body.querySelectorAll('.hub-ctab'), function(b){ var on = b.getAttribute('data-jump') === tab; b.classList.toggle('active', on); b.setAttribute('aria-selected', on ? 'true' : 'false'); });
+    sheet.body.scrollTop = 0;
+  }
+  /* بطاقات «نظرة»: المحاضرة الجاية، أسبوع الخطة، المهام، الامتحان، الحضور، العلامات + إجراءات سريعة */
+  function overviewHtml(c, x){
+    var st = Schedule.status(), name = c.name, cards = [], today = todayStr();
+    function card(tab, k, v, sub, cls){ cards.push('<button type="button" class="hub-ov-card ' + (cls || '') + '" data-go-tab="' + tab + '"><span class="hub-ov-k">' + k + '</span><b class="hub-ov-v">' + v + '</b>' + (sub ? '<small>' + sub + '</small>' : '') + '</button>'); }
+    /* المحاضرة الجاية */
+    var best = null;
+    x.sched.forEach(function(en){ var d = ((en.dayIdx - st.dayIdx + 7) % 7) * 1440 + en.start - st.nowMin; if(d < 0) d += 10080; if(!best || d < best.d) best = { en: en, d: d }; });
+    if(st.current && st.current.name === name) card('plan', '🗓 المحاضرة', '🔴 جارية الآن', st.current.hasEnd ? 'باقي ' + until(st.current.end - st.nowMin) : '', 'now');
+    else if(best){
+      var en = best.en, place = Schedule.place(en), rb = window.CampusMap && window.CampusMap.resolve ? window.CampusMap.resolve(en) : null;
+      card('plan', '🗓 المحاضرة الجاية', (best.d < 1440 && en.dayIdx === st.dayIdx ? 'اليوم' : DA()[en.dayIdx]) + ' <bdi dir="ltr">' + pad(en.start) + '</bdi>', 'بعد ' + until(best.d) + (place ? ' · ' + esc(place) : ''));
+      if(rb && rb.b) cards.push('<button type="button" class="hub-ov-card map" data-ov-act="map" data-b="' + rb.b.id + '"><span class="hub-ov-k">🗺️ وين</span><b class="hub-ov-v">' + esc(rb.b.n) + '</b><small>' + (rb.fl ? 'الطابق ' + rb.fl + ' · ' : '') + 'اعرضها على الخريطة</small></button>');
+    } else card('plan', '🗓 المحاضرات', '—', 'ما في محاضرات بالجدول');
+    /* أسبوع الخطة */
+    var wb = window.Syllabus && window.Syllabus.weekBrief ? window.Syllabus.weekBrief(c) : null;
+    if(wb) card('plan', '🧾 أسبوع ' + wb.wk + ' من ' + wb.last, esc(wb.first), wb.more ? '+' + wb.more + ' مواضيع أخرى' : (wb.secs ? 'الأقسام ' + esc(wb.secs) : ''));
+    else if(c.syllabus) card('plan', '🧾 خطة المادة', 'محفوظة', 'حدّد بداية الفصل لأعرض أسبوعك');
+    else card('plan', '🧾 خطة المادة', 'ما انرفعت', 'ارفعها لأطلّع الأسابيع والحضور', 'hint');
+    /* المهام */
+    var pend = x.tasks.filter(function(t){ return !t.done; }), late = pend.filter(function(t){ return t.due && t.due < today; });
+    card('work', '📝 المهام', pend.length + ' متبقية', late.length ? '<span class="bad">' + late.length + ' متأخرة</span>' : (pend[0] && pend[0].due ? 'أقرب: ' + esc(pend[0].due) : (pend.length ? '' : 'خالص ✓')), late.length ? 'danger' : '');
+    /* الامتحان */
+    var nx = null; x.exams.forEach(function(e){ var dt = parseExamDate(e); if(dt && dt.getTime() >= Date.now() && (!nx || dt < nx.dt)) nx = { e: e, dt: dt }; });
+    if(nx){ var dd = daysFromToday(nx.dt); card('work', '⏳ أقرب امتحان', dayWord(dd), esc(nx.e.name) + (nx.e.date ? ' · ' + esc(nx.e.date) : ''), dd <= 3 ? 'danger' : ''); }
+    else card('work', '⏳ الامتحانات', '—', 'ما في امتحان قادم');
+    /* الحضور والعلامات */
+    card('marks', '✅ الحضور', x.ap === null ? '—' : x.ap + '%', 'غبت ' + (x.att.absent || 0) + ' مرة', x.ap !== null && x.ap < 75 ? 'danger' : '');
+    var gi = (x.g && x.g.items) || [], gt = 0, ge = 0; gi.forEach(function(it){ gt += parseFloat(it.weight) || 0; ge += parseFloat(it.score) || 0; });
+    card('marks', '📊 العلامات', gt > 0 ? ge + ' / ' + gt : '—', gt > 0 ? Math.round(ge / gt * 100) + '%' : 'ما في علامات بعد');
+    return '<section class="hub-sec hub-over" id="hs-over" data-ctabs="over"><div class="hub-ov-grid">' + cards.join('') + '</div>' +
+      '<div class="hub-ov-actions"><button type="button" class="btn btn-sm" data-ov-act="addtask">+ مهمة</button><button type="button" class="btn btn-sm btn-ghost" data-ov-act="upload">📤 رفع ملف</button><button type="button" class="btn btn-sm btn-ghost" data-ov-act="addnote">📔 ملاحظة</button></div></section>';
+  }
+
   function renderCourseSheet(scrollTo){
     if(!activeCourse) return;
     var sheet = activeCourse.sheet, c = findCourse(activeCourse.id);
@@ -593,23 +634,31 @@
     h += '<div class="hub-course-top">' +
       '<div class="hub-chips">' + (c.code ? '<span class="badge mono">' + esc(c.code) + '</span>' : '') + '<span class="badge">' + (c.hours || 3) + ' ساعات</span>' +
         (c.instructor ? '<span class="badge">👤 ' + esc(c.instructor) + '</span>' : '') + (c.room ? '<span class="badge">📍 ' + esc(c.room) + '</span>' : '') + '</div>' +
-      '<div class="hub-actions inline"><button type="button" class="btn btn-sm" data-act="focus">⏱️ جلسة تركيز</button><button type="button" class="btn btn-sm btn-ghost" data-act="edit">✏️ تعديل</button><button type="button" class="btn btn-sm btn-danger" data-act="delete">🗑 حذف</button></div></div>';
-    h += '<nav class="hub-secnav" aria-label="أقسام المادة">' + [['sched','🗓 الجدول'],['plan','🧾 الخطة'],['files','📎 الملفات'],['tasks','📝 المهام'],['exams','⏳ الامتحانات'],['grades','📊 العلامات'],['att','✅ الحضور'],['notes','📔 ملاحظات']]
-      .map(function(s){ return '<button type="button" class="hub-chip" data-jump="' + s[0] + '">' + s[1] + '</button>'; }).join('') + '</nav>';
+      '<div class="hub-actions inline"><button type="button" class="btn btn-sm" data-act="focus">⏱️ جلسة تركيز</button><button type="button" class="btn btn-sm btn-ghost" data-act="edit">✏️ تعديل</button><button type="button" class="btn btn-sm btn-danger hub-del" data-act="delete" aria-label="حذف المادة" title="حذف المادة">🗑</button></div></div>';
+    var CTABS = [['over', '🏠 نظرة'], ['plan', '🧾 الخطة'], ['files', '📎 الملفات'], ['work', '📝 المهام والامتحانات'], ['marks', '📊 العلامات والحضور'], ['notes', '📔 الملاحظات']];
+    var curTab = (scrollTo && SEC_TAB[scrollTo]) || activeCourse.tab || 'over'; activeCourse.tab = curTab;
+    sheet.body.setAttribute('data-ctab', curTab);
+    h += '<nav class="hub-secnav hub-ctabs" role="tablist" aria-label="أقسام المادة">' + CTABS.map(function(s2){
+      var cnt = s2[0] === 'work' ? (tasks.filter(function(t){ return !t.done; }).length + exams.filter(function(e){ var dt = parseExamDate(e); return dt && dt.getTime() >= Date.now(); }).length) : 0;
+      return '<button type="button" class="hub-chip hub-ctab' + (s2[0] === curTab ? ' active' : '') + '" role="tab" aria-selected="' + (s2[0] === curTab) + '" data-jump="' + s2[0] + '">' + s2[1] + (cnt ? ' <b class="hub-ctab-n">' + cnt + '</b>' : '') + '</button>';
+    }).join('') + '</nav>';
+
+    /* نظرة عامة */
+    h += overviewHtml(c, { sched: sched, tasks: tasks, exams: exams, g: g, att: att, ap: ap });
+
+    /* خطة المادة + الكتاب (syllabus.js) */
+    if(window.Syllabus && window.Syllabus.sectionHtml) h += window.Syllabus.sectionHtml(c);
 
     /* الجدول */
-    h += '<section class="hub-sec" id="hs-sched"><h4>🗓 محاضرات المادة</h4>';
+    h += '<section class="hub-sec" id="hs-sched" data-ctabs="plan"><h4>🗓 محاضرات المادة</h4>';
     if(sched.length) h += '<div class="hub-list">' + sched.map(function(en){
       return '<button type="button" class="hub-li" data-sched-day="' + en.day + '"><span><b>' + DA()[en.dayIdx] + '</b> <bdi dir="ltr">' + pad(en.start) + (en.hasEnd ? '–' + pad(en.end) : '') + '</bdi></span><span class="muted">' + esc(Schedule.place(en) || '') + '</span></button>';
     }).join('') + '</div>';
     else h += '<div class="hub-empty">ما في محاضرات لهذه المادة بالجدول. <button type="button" class="hub-link" data-act="addclass">إضافة محاضرة</button></div>';
     h += '</section>';
 
-    /* خطة المادة + الكتاب (syllabus.js) */
-    if(window.Syllabus && window.Syllabus.sectionHtml) h += window.Syllabus.sectionHtml(c);
-
     /* الملفات (نفس السمات التي تستخدمها دوال الرفع/التحميل الحالية) */
-    h += '<section class="hub-sec" id="hs-files"><h4>📎 الملفات <span class="muted" data-files-count="' + esc(id) + '">—</span></h4>' +
+    h += '<section class="hub-sec" id="hs-files" data-ctabs="files"><h4>📎 الملفات <span class="muted" data-files-count="' + esc(id) + '">—</span></h4>' +
       '<div class="course-files-list" data-files-list="' + esc(id) + '"><div class="hub-empty">جاري التحميل…</div></div>' +
       '<button type="button" class="upload-course-btn" data-upload-course="' + esc(id) + '">📤 رفع ملف</button>' +
       '<div class="cf-drop-hint">أو اسحب الملفات وأفلتها هنا</div>' +
@@ -617,7 +666,7 @@
       '<div class="upload-progress-bar" data-upload-progress="' + esc(id) + '"><div class="inner"></div></div></section>';
 
     /* المهام */
-    h += '<section class="hub-sec" id="hs-tasks"><h4>📝 المهام <span class="muted">' + tasks.filter(function(t){ return !t.done; }).length + ' متبقية</span></h4>';
+    h += '<section class="hub-sec" id="hs-tasks" data-ctabs="work"><h4>📝 المهام <span class="muted">' + tasks.filter(function(t){ return !t.done; }).length + ' متبقية</span></h4>';
     if(tasks.length) h += '<div class="hub-list">' + tasks.slice(0, 10).map(function(t){
       var late = !t.done && t.due && t.due < today;
       return '<div class="hub-li task' + (t.done ? ' done' : '') + '"><button type="button" class="hub-check" data-task-toggle="' + esc(t.id) + '" aria-label="' + (t.done ? 'إلغاء الإكمال' : 'إكمال') + '">' + (t.done ? '☑' : '☐') + '</button>' +
@@ -628,7 +677,7 @@
     h += '<button type="button" class="btn btn-sm" data-act="addtask">+ مهمة</button></section>';
 
     /* الامتحانات */
-    h += '<section class="hub-sec" id="hs-exams"><h4>⏳ الامتحانات</h4>';
+    h += '<section class="hub-sec" id="hs-exams" data-ctabs="work"><h4>⏳ الامتحانات</h4>';
     if(exams.length) h += '<div class="hub-list">' + exams.map(function(e){
       var dt = parseExamDate(e), dd = dt ? daysFromToday(dt) : null, past = dt && dt.getTime() < Date.now();
       return '<div class="hub-li' + (past ? ' done' : '') + '"><span class="hub-li-main">' + esc(e.name) + '<small>' + esc(e.date || '') + (e.time ? ' · ' + esc(e.time) : '') + (e.room ? ' · ' + esc(e.room) : '') + '</small></span>' +
@@ -640,19 +689,19 @@
 
     /* العلامات */
     var gItems = (g && g.items) || [], gt = 0, ge = 0; gItems.forEach(function(it){ gt += parseFloat(it.weight) || 0; ge += parseFloat(it.score) || 0; });
-    h += '<section class="hub-sec" id="hs-grades"><h4>📊 العلامات ' + (gt > 0 ? '<span class="muted">' + ge + ' / ' + gt + ' (' + Math.round(ge / gt * 100) + '%)</span>' : '') + '</h4>';
+    h += '<section class="hub-sec" id="hs-grades" data-ctabs="marks"><h4>📊 العلامات ' + (gt > 0 ? '<span class="muted">' + ge + ' / ' + gt + ' (' + Math.round(ge / gt * 100) + '%)</span>' : '') + '</h4>';
     if(gItems.length) h += '<div class="hub-list">' + gItems.map(function(it, i){
       return '<div class="hub-li"><span class="hub-li-main">' + esc(it.name) + '</span><b>' + esc(it.score) + ' / ' + esc(it.weight) + '</b><button type="button" class="hub-mini" data-grade-del="' + i + '" aria-label="حذف العلامة">✕</button></div>';
     }).join('') + '</div>'; else h += '<div class="hub-empty">ما في علامات مسجّلة بعد.</div>';
     h += '<div class="hub-actions inline"><button type="button" class="btn btn-sm" data-act="addgrade">+ علامة</button><button type="button" class="btn btn-sm btn-ghost" data-act="gradecalc">حاسبة العلامات ‹</button></div></section>';
 
     /* الحضور */
-    h += '<section class="hub-sec" id="hs-att"><h4>✅ الحضور ' + (ap !== null ? '<span class="muted ' + (ap >= 85 ? 'ok' : ap >= 75 ? 'warn' : 'bad') + '">' + ap + '%</span>' : '') + '</h4>' +
+    h += '<section class="hub-sec" id="hs-att" data-ctabs="marks"><h4>✅ الحضور ' + (ap !== null ? '<span class="muted ' + (ap >= 85 ? 'ok' : ap >= 75 ? 'warn' : 'bad') + '">' + ap + '%</span>' : '') + '</h4>' +
       '<div class="hub-rows"><div class="hub-row"><span>حاضر</span><b>' + (att.present || 0) + '</b></div><div class="hub-row"><span>غائب</span><b>' + (att.absent || 0) + '</b></div></div>' +
       '<div class="hub-actions inline"><button type="button" class="btn btn-sm" data-att="present">+ حاضر</button><button type="button" class="btn btn-sm btn-ghost" data-att="absent">+ غائب</button></div></section>';
 
     /* الملاحظات */
-    h += '<section class="hub-sec" id="hs-notes"><h4>📔 ملاحظات المادة</h4>';
+    h += '<section class="hub-sec" id="hs-notes" data-ctabs="notes"><h4>📔 ملاحظات المادة</h4>';
     if(notes.length) h += '<div class="hub-list">' + notes.slice(0, 6).map(function(x){
       return '<button type="button" class="hub-li" data-note-open="1"><span class="hub-li-main">' + esc(x.n.title || '(بدون عنوان)') + '<small>' + esc(String(x.n.body || '').slice(0, 70)) + '</small></span></button>';
     }).join('') + '</div>'; else h += '<div class="hub-empty">لا ملاحظات مرتبطة بهذه المادة.</div>';
@@ -661,7 +710,7 @@
     sheet.body.innerHTML = h;
     bindCourseSheet(sheet, c);
     if(window.loadCourseFilesForCard) window.loadCourseFilesForCard(id);
-    if(scrollTo){ var t = sheet.body.querySelector('#hs-' + scrollTo); if(t) t.scrollIntoView({ block: 'start' }); }
+    if(scrollTo){ var t = sheet.body.querySelector('#hs-' + scrollTo); if(t) t.scrollIntoView({ block: 'start' }); else sheet.body.scrollTop = 0; }
     else sheet.body.scrollTop = scroll;
   }
 
@@ -674,7 +723,14 @@
     on('[data-act="addclass"]', function(){ sheet.close(); if(window.addClassSlot) window.addClassSlot(); });
     on('[data-act="alltasks"]', function(){ sheet.close(); window.switchTab('tasks'); });
     on('[data-act="gradecalc"]', function(){ sheet.close(); window.switchTab('gradecalc'); });
-    on('[data-jump]', function(el){ var t = b.querySelector('#hs-' + el.getAttribute('data-jump')); if(t) t.scrollIntoView({ block: 'start', behavior: 'smooth' }); });
+    on('[data-jump]', function(el){ setCourseTab(sheet, el.getAttribute('data-jump')); });
+    on('[data-go-tab]', function(el){ setCourseTab(sheet, el.getAttribute('data-go-tab')); });
+    on('[data-ov-act]', function(el){
+      var a = el.getAttribute('data-ov-act');
+      if(a === 'addtask') addTaskFor(name); else if(a === 'addnote') addNoteFor(name);
+      else if(a === 'upload'){ setCourseTab(sheet, 'files'); var ub = b.querySelector('[data-upload-course]'); if(ub) ub.click(); }
+      else if(a === 'map' && window.CampusMap){ sheet.close(); window.switchTab('campus'); window.CampusMap.select(el.getAttribute('data-b'), true); }
+    });
     on('[data-sched-day]', function(el){ try{ localStorage.setItem('tt_view', el.getAttribute('data-sched-day')); }catch(e){} sheet.close(); window.switchTab('timetable'); });
     on('[data-task-toggle]', function(el){ window.toggleTask(el.getAttribute('data-task-toggle')); });
     on('[data-task-edit]', function(el){ window.editTask(el.getAttribute('data-task-edit')); });

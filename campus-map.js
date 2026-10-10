@@ -69,6 +69,17 @@
     { n: 'الرازي', b: 'res', fl: 1 }, { n: 'التعليم الإلكتروني', b: 'east', fl: 2 }, { n: 'الطفولة', b: 'qr', fl: 1 },
     { n: 'ابن النفيس', b: 'ahs', fl: 3 }
   ];
+  /* أيقونات المرافق (تظهر على المبنى إن كان كبيراً بما يكفي) */
+  var ICONS = { lib: '📚', mosque: '🕌', rest: '🍽️', health: '➕', busz: '🚌', busa: '🚌', busm: '🚌', bank: '🏦', nursery: '🌱', reg: '📝', pharm: '💊', med: '🩺', nurs: '💉', eng: '⚙️', it: '💻', west: '🏛️', east: '🏛️', hb: '🏛️', dean: '🎓', pe: '🏅', pefield: '⚽', itfield: '⚽', activity: '🏃', chem: '🧪', phys: '⚛️', bio: '🧬', math: '➗', res: '🌿', eco: '📈', qr: '🧒', grad: '🎓', h4: '🏢', tour: '🏺', risala: '🏢', sdean: '🔬', ahs: '🧬' };
+  /* مسافة تقريبية: 1 بكسل ≈ 1.1 متر، ×1.25 التفافات، ومشي ~70 متر بالدقيقة (تقدير مش قياس حقيقي) */
+  var MPP = 1.1, DETOUR = 1.25, WALK = 70;
+  function pointOf(id){
+    if(!id) return null;
+    if(id.indexOf('g:') === 0){ var g = GATES.filter(function(x){ return x.id === id.slice(2); })[0]; return g ? { x: g.x, y: g.y, n: g.n } : null; }
+    var b = byId[id]; return b ? { x: b.cx, y: b.cy, n: b.n } : null;
+  }
+  function walkMeters(a, b){ var p = pointOf(a), q = pointOf(b); if(!p || !q) return 0; return Math.round(Math.hypot(p.x - q.x, p.y - q.y) * MPP * DETOUR); }
+  function walkMinutes(a, b){ return Math.max(1, Math.ceil(walkMeters(a, b) / WALK)); }
   var ABBR = { 'حب': 'hb', 'مغ': 'west', 'غم': 'west', 'مش': 'east', 'شم': 'east' };
 
   var byId = {}; BLD.forEach(function(b){ b.cx = b.x + b.w / 2; b.cy = b.y + b.h / 2; byId[b.id] = b; });
@@ -124,7 +135,7 @@
   function slotText(e){ return dayName(e.dayIdx) + ' ' + hm(e.start) + (e.hasEnd ? '–' + hm(e.end) : ''); }
 
   /* ---------- الحالة ---------- */
-  var st = { sel: null, fac: null, q: '', tab: 'mine', day: 'all', vb: { x: 0, y: 0, w: W, h: H }, anim: null };
+  var st = { sel: null, fac: null, q: '', tab: 'mine', day: 'all', vb: { x: 0, y: 0, w: W, h: H }, anim: null, layers: { pins: true, gates: true, park: true }, route: null, dir: { from: '', to: '' } };
   var root = null, svg = null;
 
   /* ---------- الرسم ---------- */
@@ -156,21 +167,28 @@
   }
   function svgHtml(cs, status){
     var h = '<svg id="cmSvg" class="cm-svg" viewBox="' + [st.vb.x, st.vb.y, st.vb.w, st.vb.h].join(' ') + '" role="group" aria-label="خريطة الجامعة الهاشمية" preserveAspectRatio="xMidYMid meet">';
-    h += '<defs><filter id="cmShadow" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-opacity=".35"/></filter></defs>';
+    h += '<defs><filter id="cmShadow" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-opacity=".35"/></filter>' +
+      '<linearGradient id="cmRoof" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".3"/><stop offset=".55" stop-color="#fff" stop-opacity=".04"/><stop offset="1" stop-color="#000" stop-opacity=".16"/></linearGradient>' +
+      '<marker id="cmArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>';
     h += '<rect class="cm-ground" x="-80" y="-60" width="' + (W + 160) + '" height="' + (H + 120) + '" rx="26"/>';
     /* الشوارع */
-    h += '<g class="cm-roads" fill="none" stroke-linecap="round" stroke-linejoin="round">' +
-      '<path d="M406 160V856"/><path d="M406 172H586Q610 172 610 196V836Q610 860 586 860H406"/>' +
+    h += '<g class="cm-grass"><ellipse cx="120" cy="395" rx="62" ry="40"/><ellipse cx="640" cy="560" rx="52" ry="90"/><ellipse cx="300" cy="715" rx="48" ry="26"/><ellipse cx="520" cy="470" rx="26" ry="30"/><ellipse cx="560" cy="130" rx="40" ry="18"/></g>';
+    var roadsD = '<path d="M406 160V856"/><path d="M406 172H586Q610 172 610 196V836Q610 860 586 860H406"/>' +
       '<path d="M406 166Q196 166 160 232L22 430Q4 470 26 522L160 740Q228 860 406 860"/>' +
       '<path d="M400 38H696Q722 38 722 64V490H612"/><path d="M400 38H238Q204 38 176 82L150 130"/>' +
-      '<path d="M150 232L330 440" /><path d="M90 332L240 470"/><circle cx="406" cy="512" r="20"/><circle cx="96" cy="188" r="18"/><circle cx="168" cy="262" r="22"/><circle cx="332" cy="440" r="17"/>' +
-      '</g>';
+      '<path d="M150 232L330 440" /><path d="M90 332L240 470"/><circle cx="406" cy="512" r="20"/><circle cx="96" cy="188" r="18"/><circle cx="168" cy="262" r="22"/><circle cx="332" cy="440" r="17"/>';
+    h += '<g class="cm-roads out" fill="none" stroke-linecap="round" stroke-linejoin="round">' + roadsD + '</g><g class="cm-roads" fill="none" stroke-linecap="round" stroke-linejoin="round">' + roadsD + '</g>';
     /* مواقف */
-    PARK.forEach(function(p){ h += '<g class="cm-park" transform="translate(' + (p[0] + p[2] / 2) + ' ' + (p[1] + p[3] / 2) + ') rotate(' + p[4] + ')"><rect x="' + (-p[2] / 2) + '" y="' + (-p[3] / 2) + '" width="' + p[2] + '" height="' + p[3] + '" rx="8"/><text text-anchor="middle" dominant-baseline="central" font-size="' + Math.min(p[2], p[3]) * .62 + '">P</text></g>'; });
+    if(st.layers.park) PARK.forEach(function(p){ h += '<g class="cm-park" transform="translate(' + (p[0] + p[2] / 2) + ' ' + (p[1] + p[3] / 2) + ') rotate(' + p[4] + ')"><rect x="' + (-p[2] / 2) + '" y="' + (-p[3] / 2) + '" width="' + p[2] + '" height="' + p[3] + '" rx="8"/><text text-anchor="middle" dominant-baseline="central" font-size="' + Math.min(p[2], p[3]) * .62 + '">P</text></g>'; });
     /* خط أقرب بوابة للمبنى المختار */
     if(st.sel){
       var sb = byId[st.sel], g = nearestGate(sb);
       h += '<line class="cm-route" x1="' + g.x + '" y1="' + g.y + '" x2="' + sb.cx + '" y2="' + sb.cy + '"/><circle class="cm-gate-on" cx="' + g.x + '" cy="' + g.y + '" r="9"/>';
+    }
+    /* مسار: خط متقطع بأسهم + نقاط مرقّمة */
+    if(st.route && st.route.ids && st.route.ids.length > 1){
+      var pts = st.route.ids.map(pointOf).filter(Boolean);
+      h += '<polyline class="cm-path" marker-mid="url(#cmArrow)" marker-end="url(#cmArrow)" points="' + pts.map(function(p){ return p.x + ',' + p.y; }).join(' ') + '"/>';
     }
     /* المباني */
     BLD.forEach(function(b){
@@ -180,16 +198,19 @@
       if(st.q){ if(matches(b, st.q)) cls += ' hit'; else cls += ' dim'; }
       var rot = b.r ? ' transform="rotate(' + b.r + ' ' + b.cx + ' ' + b.cy + ')"' : '';
       var txtCol = LIGHT_FILL[b.f] ? '#13203a' : '#ffffff';
-      h += '<g class="' + cls + '" data-b="' + b.id + '" role="button" tabindex="0" aria-label="' + esc(b.n + ' — ' + FAC[b.f][0]) + '"><title>' + esc(b.n) + '</title><g' + rot + '>' +
-        '<rect x="' + b.x + '" y="' + b.y + '" width="' + b.w + '" height="' + b.h + '" rx="7" fill="' + col + '" filter="url(#cmShadow)"/>' +
+      var small = Math.min(b.w, b.h) < 42, ic = ICONS[b.id] && Math.min(b.w, b.h) >= 30 && b.w * b.h >= 1800 ? '<text class="cm-ic" x="' + (b.x + b.w - 11) + '" y="' + (b.y + 12) + '" text-anchor="middle" font-size="11">' + ICONS[b.id] + '</text>' : '';
+      h += '<g class="' + cls + (small ? ' cm-small' : '') + '" data-b="' + b.id + '" role="button" tabindex="0" aria-label="' + esc(b.n + ' — ' + FAC[b.f][0]) + '"><title>' + esc(b.n) + '</title><g' + rot + '>' +
+        '<rect class="cm-ext" x="' + b.x + '" y="' + (b.y + 5) + '" width="' + b.w + '" height="' + b.h + '" rx="7"/>' +
+        '<rect class="cm-face" x="' + b.x + '" y="' + b.y + '" width="' + b.w + '" height="' + b.h + '" rx="7" fill="' + col + '" filter="url(#cmShadow)"/>' +
+        '<rect class="cm-roof" x="' + b.x + '" y="' + b.y + '" width="' + b.w + '" height="' + b.h + '" rx="7" fill="url(#cmRoof)" pointer-events="none"/>' + ic +
         '<g fill="' + txtCol + '">' + labelFor(b) + '</g></g></g>';
     });
     /* بوابات */
-    GATES.forEach(function(g){
+    if(st.layers.gates) GATES.forEach(function(g){
       h += '<g class="cm-gate" transform="translate(' + g.x + ' ' + g.y + ')"><circle r="7"/><text y="-12" text-anchor="middle" font-size="10.5">' + esc(g.n) + '</text></g>';
     });
     /* دبابيس مواد الجدول */
-    var perB = {}; visibleCourses(cs).forEach(function(c){ if(c.b){ (perB[c.b.id] = perB[c.b.id] || []).push(c); } });
+    var perB = {}; if(st.layers.pins) visibleCourses(cs).forEach(function(c){ if(c.b){ (perB[c.b.id] = perB[c.b.id] || []).push(c); } });
     var nowId = status.current && resolve(status.current).b ? resolve(status.current).b.id : null;
     var nextId = status.next && resolve(status.next).b ? resolve(status.next).b.id : null;
     Object.keys(perB).forEach(function(id, i){
@@ -197,6 +218,10 @@
       h += '<g class="' + cl + '" data-pin="' + id + '" transform="translate(' + b.cx + ' ' + pinY(b) + ')"><g class="cm-pin-in" style="animation-delay:' + (i * 60) + 'ms">' +
         '<circle class="cm-pulse" r="14" cy="-26"/><path d="M0 0C-8-11-14-17-14-26a14 14 0 1 1 28 0C14-17 8-11 0 0z"/><text y="-22" text-anchor="middle" font-size="13" font-weight="800">' + n + '</text></g></g>';
     });
+    if(st.route && st.route.ids && st.route.ids.length > 1){
+      st.route.ids.forEach(function(id, i){ var p = pointOf(id); if(!p) return; var last = i === st.route.ids.length - 1;
+        h += '<g class="cm-stop' + (i === 0 ? ' first' : '') + (last ? ' last' : '') + '" transform="translate(' + p.x + ' ' + p.y + ')"><circle r="11"/><text text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="800">' + (i + 1) + '</text></g>'; });
+    }
     h += '</svg>';
     return h;
   }
@@ -225,6 +250,42 @@
     if(!shown.length) h += '<div class="cm-empty">ما عندك محاضرات اليوم 🎉</div>';
     return h + shown.map(courseRow).join('');
   }
+  function dayStops(status){
+    var out = [];
+    (status.today || []).forEach(function(e){ var r = resolve(e); if(r.remote) return; out.push({ e: e, b: r.b, fl: r.fl }); });
+    return out;
+  }
+  function panelRoute(status){
+    var stops = dayStops(status), h = '<div class="cm-sub">محاضرات اليوم ومشيتك بينها</div>';
+    if(!stops.length) h += '<div class="cm-empty">ما عندك محاضرات حضورية اليوم.</div>';
+    else {
+      stops.forEach(function(s, i){
+        var e = s.e;
+        h += '<div class="cm-stop-row ' + (e.state || '') + '"><span class="cm-stop-n">' + (i + 1) + '</span><div class="cm-stop-b"><b>' + esc(e.name) + '</b><small><bdi dir="ltr">' + hm(e.start) + (e.hasEnd ? '–' + hm(e.end) : '') + '</bdi> · ' + (s.b ? '<button type="button" class="hub-link" data-go="' + s.b.id + '">📍 ' + esc(s.b.n) + (s.fl ? ' · ط' + s.fl : '') + '</button>' : '<span class="warn">بلا موقع — حدّده من «موادي»</span>') + '</small></div></div>';
+        var nx = stops[i + 1];
+        if(nx){
+          var gap = nx.e.start - (e.hasEnd ? e.end : e.start + 60);
+          if(s.b && nx.b && s.b.id !== nx.b.id){
+            var wm = walkMinutes(s.b.id, nx.b.id), cls = gap < wm ? 'bad' : (gap < wm + 3 ? 'warn' : 'ok');
+            h += '<div class="cm-leg-row ' + cls + '">🚶 ~' + wm + ' د مشي (' + walkMeters(s.b.id, nx.b.id) + ' م) · الفاصل ' + gap + ' د ' + (cls === 'bad' ? '— <b>ما بتلحق!</b> اطلع بدري' : cls === 'warn' ? '— ضيّق، لا تتأخر' : '— مريح ✓') + '</div>';
+          } else if(s.b && nx.b) h += '<div class="cm-leg-row ok">نفس المبنى · الفاصل ' + gap + ' د</div>';
+        }
+      });
+      var ids = stops.filter(function(s){ return s.b; }).map(function(s){ return s.b.id; });
+      var on = st.route && st.route.kind === 'day';
+      if(ids.length > 1) h += '<button type="button" class="btn btn-sm' + (on ? '' : ' btn-ghost') + ' cm-route-btn" data-route-day="1">' + (on ? '✕ إخفاء المسار عن الخريطة' : '🧭 اعرض مساري على الخريطة') + '</button>';
+    }
+    /* اتجاهات بين نقطتين */
+    var opts = '<option value="">اختر…</option><optgroup label="البوابات">' + GATES.map(function(g){ return '<option value="g:' + g.id + '">' + esc(g.n) + '</option>'; }).join('') + '</optgroup><optgroup label="المباني">' +
+      BLD.filter(function(b){ return !/باصات/.test(b.n) || true; }).map(function(b){ return '<option value="' + b.id + '">' + esc(b.n) + '</option>'; }).join('') + '</optgroup>';
+    function sel(name, val){ return '<select class="cm-dir-sel" data-dir="' + name + '" aria-label="' + (name === 'from' ? 'من' : 'إلى') + '">' + opts.replace('value="' + val + '"', 'value="' + val + '" selected') + '</select>'; }
+    h += '<div class="cm-sub">اتجاهات بين نقطتين</div><div class="cm-dir"><label>من ' + sel('from', st.dir.from) + '</label><button type="button" class="cm-swap" data-dir-swap aria-label="تبديل">⇅</button><label>إلى ' + sel('to', st.dir.to) + '</label></div>';
+    if(st.dir.from && st.dir.to && st.dir.from !== st.dir.to){
+      var m = walkMeters(st.dir.from, st.dir.to), mi = walkMinutes(st.dir.from, st.dir.to);
+      h += '<div class="cm-dir-res">🚶 حوالي <b>' + mi + ' د</b> مشي (' + m + ' م) — تقدير تقريبي مش قياس حقيقي</div>';
+    }
+    return h;
+  }
   function panelPlaces(){
     var list = BLD.filter(function(b){ return !st.q || matches(b, st.q); });
     var h = list.map(function(b){ return '<button type="button" class="cm-place' + (st.sel === b.id ? ' on' : '') + '" data-go="' + b.id + '"><i style="background:' + FAC[b.f][1] + '"></i><span>' + esc(b.n) + '<small>' + esc(FAC[b.f][0]) + (b.ab ? ' · ' + esc(b.ab) : '') + '</small></span></button>'; }).join('');
@@ -243,7 +304,7 @@
     var h = '<div class="cm-info" style="--fc:' + FAC[b.f][1] + '"><div class="cm-info-h"><span class="cm-dot"></span><div><b>' + esc(b.n) + '</b><small>' + esc(FAC[b.f][0]) + (b.ab ? ' · اختصار ' + esc(b.ab) : '') + '</small></div><button type="button" class="cm-x" data-clear aria-label="إغلاق">✕</button></div>';
     h += '<div class="cm-info-b"><span>🚪 أقرب بوابة: <b>' + esc(g.n) + '</b></span>';
     if(labs.length) h += '<span>🔬 ' + labs.map(function(l){ return esc(l.n) + ' (ط' + l.fl + ')'; }).join('، ') + '</span>';
-    h += '</div>';
+    h += '</div><div class="cm-info-act"><button type="button" class="btn btn-sm btn-ghost" data-dir-to="' + b.id + '">🧭 اتجاهات إلى هنا</button></div>';
     if(mine.length) h += '<div class="cm-info-m"><small>موادك هون</small>' + mine.map(function(c){ return '<div class="cm-mini"><b>' + esc(c.name) + '</b><span>' + esc(c.slots.map(function(e){ return slotText(e) + (e.room ? ' · ' + e.room : ''); }).join(' | ')) + '</span></div>'; }).join('') + '</div>';
     else h += '<div class="cm-info-m"><small>ما عندك مواد بهذا المبنى</small></div>';
     return h + '</div>';
@@ -252,22 +313,24 @@
   function render(){
     root = document.getElementById('campusRoot'); if(!root) return;
     var cs = courses(), status = (window.Schedule && window.Schedule.status) ? window.Schedule.status() : { current: null, next: null };
-    var tabs = [['mine', '🎒 موادي'], ['places', '🏛️ المباني'], ['legend', '🎨 الدليل']];
-    var panel = st.tab === 'mine' ? panelMine(cs) : st.tab === 'places' ? panelPlaces() : panelLegend();
+    var tabs = [['mine', '🎒 موادي'], ['route', '🧭 مساري'], ['places', '🏛️ المباني'], ['legend', '🎨 الدليل']];
+    var panel = st.tab === 'mine' ? panelMine(cs) : st.tab === 'route' ? panelRoute(status) : st.tab === 'places' ? panelPlaces() : panelLegend();
     var nowMsg = '';
     if(status.current && resolve(status.current).b) nowMsg = '<div class="cm-now"><span class="cm-live"></span>محاضرتك الآن: <b>' + esc(status.current.name) + '</b> — ' + esc(resolve(status.current).b.n) + '</div>';
     else if(status.next && resolve(status.next).b) nowMsg = '<div class="cm-now next">⏭️ التالية: <b>' + esc(status.next.name) + '</b> — ' + esc(resolve(status.next).b.n) + ' (' + hm(status.next.start) + ')</div>';
     root.innerHTML =
       '<div class="cm-bar"><div class="cm-search"><span aria-hidden="true">🔎</span><input type="search" id="cmQ" value="' + esc(st.q) + '" placeholder="ابحث عن مبنى أو مختبر (مثلاً: المكتبة، ابن سينا، ح.ب)" autocomplete="off" aria-label="بحث بالخريطة"></div>' + nowMsg + '</div>' +
       '<div class="cm-wrap"><div class="cm-mapcard"><div class="cm-zoom" role="group" aria-label="التحكم بالخريطة"><button type="button" data-z="in" aria-label="تكبير">＋</button><button type="button" data-z="out" aria-label="تصغير">－</button><button type="button" data-z="reset" aria-label="إعادة الضبط">⟲</button></div>' +
+      '<div class="cm-layers" role="group" aria-label="الطبقات"><button type="button" data-layer="pins" aria-pressed="' + st.layers.pins + '">📍 دبابيسي</button><button type="button" data-layer="gates" aria-pressed="' + st.layers.gates + '">🚪 البوابات</button><button type="button" data-layer="park" aria-pressed="' + st.layers.park + '">🅿️ المواقف</button></div>' +
       svgHtml(cs, status) + '<div class="cm-hint">اسحب لتحريك الخريطة · عجلة الماوس أو اقرص للتكبير</div></div>' +
       '<aside class="cm-side">' + infoCard(cs) + '<div class="cm-tabs" role="tablist">' + tabs.map(function(t){ return '<button type="button" role="tab" class="cm-tab" data-tab="' + t[0] + '" aria-selected="' + (st.tab === t[0]) + '">' + t[1] + '</button>'; }).join('') + '</div><div class="cm-panel" role="tabpanel">' + panel + '</div></aside></div>';
-    svg = document.getElementById('cmSvg');
+    svg = document.getElementById('cmSvg'); if(svg) svg.classList.toggle('zfar', st.vb.w > 520);
     bind();
   }
 
   /* ---------- تفاعل ---------- */
-  function applyVb(){ if(svg) svg.setAttribute('viewBox', [st.vb.x, st.vb.y, st.vb.w, st.vb.h].map(function(n){ return +n.toFixed(2); }).join(' ')); }
+  function dirRoute(){ st.route = (st.dir.from && st.dir.to && st.dir.from !== st.dir.to) ? { kind: 'dir', ids: [st.dir.from, st.dir.to] } : null; }
+  function applyVb(){ if(svg) svg.classList.toggle('zfar', st.vb.w > 520); if(svg) svg.setAttribute('viewBox', [st.vb.x, st.vb.y, st.vb.w, st.vb.h].map(function(n){ return +n.toFixed(2); }).join(' ')); }
   function clampVb(){
     st.vb.w = Math.max(150, Math.min(W, st.vb.w)); st.vb.h = st.vb.w * RATIO;
     st.vb.x = Math.max(-40, Math.min(W + 40 - st.vb.w, st.vb.x)); st.vb.y = Math.max(-40, Math.min(H + 40 - st.vb.h, st.vb.y));
@@ -317,6 +380,10 @@
   function bindRoot(){
     root.addEventListener('click', function(e){
       var t = e.target;
+      var ly = t.closest('[data-layer]'); if(ly){ var k2 = ly.getAttribute('data-layer'); st.layers[k2] = !st.layers[k2]; render(); return; }
+      var dt = t.closest('[data-dir-to]'); if(dt){ st.dir.to = dt.getAttribute('data-dir-to'); if(!st.dir.from) st.dir.from = 'g:' + nearestGate(byId[st.dir.to]).id; st.tab = 'route'; st.route = { kind: 'dir', ids: [st.dir.from, st.dir.to] }; render(); return; }
+      if(t.closest('[data-dir-swap]')){ var tmp = st.dir.from; st.dir.from = st.dir.to; st.dir.to = tmp; dirRoute(); render(); return; }
+      var rd = t.closest('[data-route-day]'); if(rd){ if(st.route && st.route.kind === 'day') st.route = null; else { var ids = dayStops((window.Schedule && window.Schedule.status) ? window.Schedule.status() : {}).filter(function(s){ return s.b; }).map(function(s){ return s.b.id; }); st.route = { kind: 'day', ids: ids }; } render(); return; }
       var z = t.closest('[data-z]'); if(z){ var k = z.getAttribute('data-z'); if(k === 'in') zoomBy(.7); else if(k === 'out') zoomBy(1.4); else animateTo({ x: 0, y: 0, w: W }); return; }
       var tb = t.closest('[data-tab]'); if(tb){ st.tab = tb.getAttribute('data-tab'); render(); return; }
       var dy = t.closest('[data-day]'); if(dy){ st.day = dy.getAttribute('data-day'); render(); return; }
@@ -327,6 +394,7 @@
       var pin = t.closest('[data-pin]'); if(pin){ select(pin.getAttribute('data-pin'), true); }
     });
     root.addEventListener('change', function(e){
+      var dsel = e.target.closest && e.target.closest('[data-dir]'); if(dsel){ st.dir[dsel.getAttribute('data-dir')] = dsel.value; dirRoute(); render(); return; }
       var a = e.target.closest && e.target.closest('[data-assign]'); if(!a || !a.value) return;
       assign(a.getAttribute('data-assign'), a.value);
     });
@@ -377,5 +445,5 @@
   }
 
   window.renderCampus = render;
-  window.CampusMap = { render: render, resolve: resolve, courses: courses, select: select, assign: assign, buildings: BLD, labs: LABS, norm: norm, state: st };
+  window.CampusMap = { walkMinutes: walkMinutes, walkMeters: walkMeters, dayStops: dayStops, render: render, resolve: resolve, courses: courses, select: select, assign: assign, buildings: BLD, labs: LABS, norm: norm, state: st };
 })();

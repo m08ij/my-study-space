@@ -120,40 +120,65 @@
   }
 
   /* ==================== (2) فهرس الكتاب: محتويات -> قسم/صفحة، وإزاحة الصفحة المطبوعة ==================== */
-  /* يقبل صيغتين: "1.1 Four Ways ... 10" بسطر واحد، أو رقم القسم بسطر ثم "العنوان   الصفحة" بالسطر التالي */
+  /* المحتويات: نطبّع النص لسطر واحد ثم نقطّعه عند رموز الأقسام (1.1، 2.3…) فتصلح كل الصيغ: رقم القسم بسطر مستقل، أو كل شي بسطر،
+     أو نقاط الوصل، أو عدّة أقسام بنفس السطر (pdf.js بيدمج الأسطر أحياناً). العنوان = حتى أول رقم صفحة مستقل بعد 6 أحرف على الأقل */
   function parseToc(text){
-    var lines = String(text || '').split(/\r?\n/).map(function(l){ return l.replace(/\s+$/, '').replace(/^\s+/, ''); }), out = [], seen = {};
-    function push(sec, title, page){ page = parseInt(page, 10); if(!sec || !page || page > 3000 || seen[sec]) return; seen[sec] = 1; out.push({ sec: sec, title: title.replace(/[\s.·…]+$/, '').trim(), page: page }); }
-    for(var i = 0; i < lines.length; i++){
-      var l = lines[i], m;
-      if((m = /^(\d{1,2}\.\d{1,2})\s+(.+?)[\s.·…]{2,}(\d{1,4})$/.exec(l)) || (m = /^(\d{1,2}\.\d{1,2})\s+(.+?)\s{2,}(\d{1,4})$/.exec(l))){ push(m[1], m[2], m[3]); continue; }
-      if(/^\d{1,2}\.\d{1,2}$/.test(l)){
-        for(var j = i + 1; j < Math.min(lines.length, i + 4); j++){
-          var t = lines[j]; if(!t) continue;
-          var mm = /^(.+?)[\s.·…]{2,}(\d{1,4})$/.exec(t) || /^(.{4,}?)\s(\d{1,4})$/.exec(t);
-          if(mm){ push(l, mm[1], mm[2]); i = j; }
-          break;
-        }
-      }
-    }
+    var t = String(text || '').replace(/[.·…]{2,}/g, ' ').replace(/\s+/g, ' ');
+    var re = /(?:^|\s)(\d{1,2}\.\d{1,2})\s+(?=[A-Za-z])/g, marks = [], m;
+    while((m = re.exec(t))){ marks.push({ sec: m[1], at: m.index + m[0].length }); re.lastIndex = m.index + m[0].length; }
+    var out = [], seen = {}, prev = 0;
+    marks.forEach(function(mk, i){
+      var seg = t.slice(mk.at, i + 1 < marks.length ? marks[i + 1].at - 0 : t.length);
+      var nm = /^(.{5,}?)\s(\d{1,4})(?=\s|$)/.exec(seg);                       /* العنوان ثم أول رقم مستقل */
+      if(!nm) return;
+      var title = nm[1].replace(/\s+\d{1,2}\.\d{1,2}$/, '').trim(), page = parseInt(nm[2], 10);
+      if(seen[mk.sec] || !page || page > 3000 || page < prev) return;           /* صفحات المحتويات تصاعدية؛ الشاذ يُهمَل */
+      seen[mk.sec] = 1; prev = page; out.push({ sec: mk.sec, title: title, page: page });
+    });
     return out.sort(function(a, b){ return a.page - b.page; });
   }
-  /* رقم الصفحة المطبوع من أول أسطر نص الصفحة: سطر أرقام فقط، أو ترويسة بحروف كبيرة ينتهي برقم */
+  /* رقم الصفحة المطبوع من أول نص الصفحة (يدعم الصيغتين: أسطر منفصلة أو سطر واحد):
+     «36 CHAPTER 1 …» و«10 ¤ CHAPTER 1 …» (الرقم بالبداية) أو «SECTION 1.2 MATH MODELS … ¤ 35» (الرقم بآخر الترويسة) */
   function printedOf(text){
-    var lines = String(text || '').split(/\r?\n/).slice(0, 4).map(function(l){ return l.trim(); });
-    for(var i = 0; i < lines.length; i++){
-      var l = lines[i], m;
-      if((m = /^(\d{1,4})$/.exec(l))) return parseInt(m[1], 10);
-      if((m = /^[A-Z][A-Z0-9 :,'’&\-]{5,}?\s{2,}(\d{1,4})$/.exec(l))) return parseInt(m[1], 10);
-    }
+    var h = String(text || '').replace(/\s+/g, ' ').trim().slice(0, 220), m;
+    if(/^\d{1,4}$/.test(h)) return parseInt(h, 10);
+    if((m = /^(\d{1,4}) ?[¤•|·]? ?(?:CHAPTER|SECTION|[A-Z]{4,})/.exec(h))) return parseInt(m[1], 10);
+    if((m = /^(?:SECTION \d{1,2}\.\d{1,2} )?[A-Z][A-Z0-9 :,'’&\-]{9,}? ?[¤•|·]? ?(\d{1,4})(?= |$)(?! [A-Z]{2,})/.exec(h))) return parseInt(m[1], 10);
     return null;
   }
-  /* pages: [{ index: ترتيب الصفحة بالـPDF من 1, text }] -> الإزاحة (index - printed) الأكثر تكراراً (3 صفحات على الأقل) */
+  function mode(votes, minVotes){
+    var best = null, bc = 0, tot = 0;
+    Object.keys(votes).forEach(function(k){ tot += votes[k]; if(votes[k] > bc){ bc = votes[k]; best = parseInt(k, 10); } });
+    return bc >= minVotes ? { offset: best, votes: bc, total: tot } : null;
+  }
+  /* (أ) من أرقام الصفحات المطبوعة: pages = [{ index (ترتيب PDF من 1), text }] -> الإزاحة الأكثر تكراراً */
   function detectOffset(pages){
     var votes = {};
     (pages || []).forEach(function(p){ var pr = printedOf(p.text); if(pr !== null && p.index > pr){ var o = p.index - pr; votes[o] = (votes[o] || 0) + 1; } });
-    var best = null, bc = 0; Object.keys(votes).forEach(function(k){ if(votes[k] > bc){ bc = votes[k]; best = parseInt(k, 10); } });
-    return bc >= 3 ? { offset: best, votes: bc } : null;
+    return mode(votes, 3);
+  }
+  /* (ب) من عناوين الأقسام: أول صفحة (بعد المحتويات) يظهر بأعلاها عنوان القسم = صفحة بدايته؛ كل قسم يصوّت بأول ظهور فقط
+     (الترويسات الجارية بصفحات القسم اللاحقة تعطي قيماً أكبر متفرقة فلا تفوز) */
+  function nk(s){ return String(s || '').toUpperCase().replace(/[^A-Z0-9]+/g, ' ').trim(); }
+  function detectOffsetByTitles(pages, toc, minIndex){
+    var votes = {}, sorted = (pages || []).filter(function(p){ return p.index > (minIndex || 12); }).sort(function(a, b){ return a.index - b.index; });
+    (toc || []).forEach(function(e){
+      var key = nk(e.title); if(key.length < 12) return;
+      for(var i = 0; i < sorted.length; i++){
+        if(nk(sorted[i].text.slice(0, 420)).indexOf(key) > -1){
+          var o = sorted[i].index - e.page; if(o >= 0 && o < 400) votes[o] = (votes[o] || 0) + 1; return;
+        }
+      }
+    });
+    return mode(votes, 3);
+  }
+  /* الإزاحة النهائية: نفضّل الأكثر دعماً؛ والتصويتان لو اتفقتا فأفضل */
+  function resolveOffset(pages, toc, minIndex){
+    var a = detectOffset(pages), b = detectOffsetByTitles(pages, toc, minIndex);
+    if(a && b) return (a.offset === b.offset || a.votes >= b.votes) ? { offset: a.offset, votes: a.votes, by: 'printed' } : { offset: b.offset, votes: b.votes, by: 'titles' };
+    if(a) return { offset: a.offset, votes: a.votes, by: 'printed' };
+    if(b) return { offset: b.offset, votes: b.votes, by: 'titles' };
+    return null;
   }
   /* قسم -> [من, إلى] بالصفحة المطبوعة (النهاية = بداية القسم التالي - 1) */
   function sectionRanges(toc, lastPage){
@@ -183,7 +208,7 @@
     return { total: total, max: Math.max(0, Math.ceil(total * pct / 100) - 1), pct: pct };      /* «15% تعني الحرمان»: آخر غياب مسموح هو قبل بلوغ 15% */
   }
 
-  var pure = { SCHEMA: SCHEMA, PROMPT: PROMPT, normalize: normalize, docxToText: docxToText, xmlToText: xmlToText, parseToc: parseToc, printedOf: printedOf, detectOffset: detectOffset, sectionRanges: sectionRanges, weekNumber: weekNumber, weekEntry: weekEntry, absenceLimit: absenceLimit, sectionOf: sectionOf };
+  var pure = { SCHEMA: SCHEMA, PROMPT: PROMPT, normalize: normalize, docxToText: docxToText, xmlToText: xmlToText, parseToc: parseToc, printedOf: printedOf, detectOffset: detectOffset, detectOffsetByTitles: detectOffsetByTitles, resolveOffset: resolveOffset, sectionRanges: sectionRanges, weekNumber: weekNumber, weekEntry: weekEntry, absenceLimit: absenceLimit, sectionOf: sectionOf };
   if(!W || !W.document) return pure;
 
   /* ==================== واجهة المتصفح ==================== */
@@ -339,33 +364,63 @@
   function norm(s){ return String(s || '').toLowerCase().replace(/[^a-z0-9؀-ۿ]+/g, ''); }
 
   /* ---- ربط الكتاب ---- */
+  function setBusySub(text){ var s = dlg && dlg.querySelector('.ocri-sub'); if(s) s.textContent = text; }
+  /* سؤال المستخدم عن الإزاحة عند فشل الكشف التلقائي: يكتب رقم صفحة PDF (حسب عارض المتصفح) لأول قسم بالفهرس */
+  function askOffset(course, firstRun){
+    var c = courseById(course.id); if(!c || !c.book) return;
+    var first = c.book.first || (function(){ var k = Object.keys(c.book.sections || {}).sort(function(a, b){ return c.book.sections[a][0] - c.book.sections[b][0]; })[0]; return k ? { sec: k, page: c.book.sections[k][0] } : null; })();
+    if(!first){ toast('ما في فهرس أقسام لهالكتاب — الإزاحة مش مطلوبة', 'info'); return; }
+    openDlg('ضبط صفحات الكتاب', function(b){
+      b.classList.add('sy-wide');
+      b.appendChild(el('div', 'ocri-sub', (firstRun ? 'ما قدرت أعرف تلقائياً كيف ترقيم صفحات هالكتاب. ' : '') + 'افتح الكتاب (زر تحت) وروح على أول صفحة من القسم ' + first.sec + (first.title ? ' «' + first.title + '»' : '') + ' — ورقمها بالكتاب المطبوع ' + first.page + '. اكتب رقم الصفحة اللي بيعرضه عارض الـPDF (شريط الصفحات) هناك:'));
+      var openB = el('button', 'ocri-btn ghost', '📖 فتح الكتاب'); openB.type = 'button'; openB.addEventListener('click', function(){ openBook(c, ''); });
+      var inp = el('input', 'ocri-in'); inp.type = 'number'; inp.min = '1'; inp.setAttribute('aria-label', 'رقم الصفحة بعارض الـPDF'); inp.placeholder = 'مثلاً ' + (first.page + 26); if(c.book.offset != null) inp.value = String(first.page + c.book.offset);
+      var note = el('div', 'ocri-note', c.book.offset != null ? 'الإزاحة الحالية: ' + c.book.offset : 'بدون ضبط، «فتح القسم» بيفتح الكتاب من أول صفحة.');
+      var row = el('div', 'ocri-actions'), ok = el('button', 'ocri-btn', 'حفظ'), no = el('button', 'ocri-btn ghost', 'لاحقاً');
+      ok.type = 'button'; no.type = 'button'; no.addEventListener('click', closeDlg);
+      ok.addEventListener('click', function(){
+        var v = parseInt(inp.value, 10), off = v - first.page;
+        if(!isFinite(v) || off < 0 || off > 500){ toast('رقم الصفحة غير منطقي (لازم ≥ ' + first.page + ')', 'warn'); inp.focus(); return; }
+        var cc = courseById(course.id); if(cc && cc.book){ cc.book.offset = off; save(); } closeDlg(); toast('✅ انضبطت صفحات الكتاب (إزاحة ' + off + ')', 'success', 3500); refresh();
+      });
+      b.appendChild(openB); b.appendChild(inp); b.appendChild(note); row.appendChild(ok); row.appendChild(no); b.appendChild(row); setTimeout(function(){ inp.focus(); }, 0);
+    });
+  }
   function attachBook(course, file){
     if(!file) return;
     if(!/pdf$/.test(file.type || '') && !/\.pdf$/i.test(file.name || '')){ toast('ارفع الكتاب بصيغة PDF', 'warn'); return; }
     var cancelled = false;
-    busy('جاري تجهيز الكتاب…', 'بقرأ فهرس الكتاب من أول صفحاته (الملف ما بيطلع من جهازك)', function(){ cancelled = true; });
-    var pdfRef = null, idx = { toc: [], offset: null, pages: 0 };
+    busy('جاري تجهيز الكتاب…', 'بقرأ فهرس الكتاب (الملف ما بيطلع من جهازك)', function(){ cancelled = true; });
+    var pdfRef = null, idx = { toc: [], offset: null, pages: 0, by: '' };
     loadPdfJs().then(function(lib){ return fileBuf(file).then(function(buf){ return lib.getDocument({ data: buf }).promise; }); }).then(function(pdf){
       pdfRef = pdf; idx.pages = pdf.numPages;
-      var front = []; for(var i = 1; i <= Math.min(12, pdf.numPages); i++) front.push(pageText(pdf, i));
+      var front = []; for(var i = 1; i <= Math.min(14, pdf.numPages); i++) front.push(pageText(pdf, i));
       return Promise.all(front);
     }).then(function(texts){
       idx.toc = parseToc(texts.join('\n'));
-      var sample = [], from = Math.min(Math.max(20, 1), idx.pages), to = Math.min(idx.pages, 90);
-      for(var i = from; i <= to; i += 3) sample.push(i);
-      return Promise.all(sample.map(function(n){ return pageText(pdfRef, n).then(function(t){ return { index: n, text: t.slice(0, 300) }; }); }));
+      if(cancelled) return null;
+      setBusySub('بحدّد ترقيم الصفحات…');
+      /* كل صفحات أول الكتاب (13…200) بأول 420 حرفاً: تكفي للكشف من الأرقام المطبوعة أو من عناوين الأقسام */
+      var to = Math.min(idx.pages, 200), pages = [], n = 13, BATCH = 12;
+      function next(){
+        if(cancelled || n > to) return Promise.resolve(pages);
+        var batch = []; for(var k = 0; k < BATCH && n <= to; k++, n++) batch.push(n);
+        return Promise.all(batch.map(function(p){ return pageText(pdfRef, p).then(function(t){ pages.push({ index: p, text: t.replace(/\s+/g, ' ').slice(0, 420) }); }); })).then(function(){ setBusySub('بحدّد ترقيم الصفحات… ' + Math.min(n - 1, to) + ' / ' + to); return next(); });
+      }
+      return next();
     }).then(function(pages){
-      var o = detectOffset(pages); idx.offset = o ? o.offset : null;
+      if(cancelled || !pages) return null;
+      var r = resolveOffset(pages, idx.toc, 12); idx.offset = r ? r.offset : null; idx.by = r ? r.by : '';
       return bookPut(course.id, file);
-    }).then(function(){
-      if(cancelled) return;
+    }).then(function(done){
+      if(cancelled || done === null) return;
       var c = courseById(course.id); if(!c) return;
       var ranges = sectionRanges(idx.toc, idx.pages ? Math.max(0, idx.pages - (idx.offset || 0)) : 0);
-      c.book = { name: String(file.name || 'book.pdf').slice(0, 120), size: file.size, pages: idx.pages, offset: idx.offset, sections: ranges, linkedAt: todayYmd() };
+      c.book = { name: String(file.name || 'book.pdf').slice(0, 120), size: file.size, pages: idx.pages, offset: idx.offset, sections: ranges, linkedAt: todayYmd(), first: idx.toc[0] ? { sec: idx.toc[0].sec, title: idx.toc[0].title.slice(0, 80), page: idx.toc[0].page } : null };
       save(); closeDlg();
       if(!idx.toc.length) toast('ربطت الكتاب لكن ما قدرت أبني فهرس الأقسام — بتفتحه من أول صفحة', 'warn', 6000);
-      else if(idx.offset === null) toast('ربطت الكتاب (' + idx.toc.length + ' قسم). ما قدرت أحدّد إزاحة الصفحات — عدّلها يدوياً من «ضبط الإزاحة»', 'warn', 7000);
-      else toast('📖 ربطت الكتاب: ' + idx.toc.length + ' قسم، إزاحة الصفحات ' + idx.offset, 'success', 4500);
+      else if(idx.offset === null){ refresh(); askOffset(c, true); return; }
+      else toast('📖 ربطت الكتاب: ' + idx.toc.length + ' قسم، وصفحاته انضبطت تلقائياً', 'success', 4500);
       refresh();
     }).catch(function(e){ if(!cancelled) fail('ما قدرت أجهّز الكتاب', (e && e.message) || 'خطأ بقراءة الـPDF'); });
   }
@@ -401,7 +456,7 @@
 
   /* ---- قسم «خطة المادة» داخل ورقة المادة ---- */
   function sectionHtml(c){
-    var p = c.syllabus, h = '<section class="hub-sec sy-sec" id="hs-plan"><h4>🧾 خطة المادة' + (c.book ? ' <span class="muted">· 📖 الكتاب مربوط</span>' : '') + '</h4>';
+    var p = c.syllabus, h = '<section class="hub-sec sy-sec" id="hs-plan" data-ctabs="plan"><h4>🧾 خطة المادة' + (c.book ? ' <span class="muted">· 📖 الكتاب مربوط</span>' : '') + '</h4>';
     if(!p){
       h += '<div class="hub-empty">ارفع خطة المادة اللي نزّلها الدكتور (Word أو PDF أو صورة) وبطلّع الموقع الأسابيع والكتاب والتقييم وحدّ الغياب لحاله.</div>' +
         '<div class="hub-actions inline"><button type="button" class="btn btn-sm" data-sy="import">📎 استيراد الخطة</button></div></section>';
@@ -440,12 +495,20 @@
     /* الأزرار */
     h += '<div class="hub-actions inline">' +
       (c.book ? '<button type="button" class="btn btn-sm" data-sy="open" data-sec="">📖 فتح الكتاب</button>' : '<button type="button" class="btn btn-sm" data-sy="attach">📖 ربط الكتاب (PDF)</button>') +
-      '<button type="button" class="btn btn-sm btn-ghost" data-sy="tasks">➕ مهام القراءة</button>' +
-      '<button type="button" class="btn btn-sm btn-ghost" data-sy="import">🔄 إعادة استيراد</button>' +
-      (c.book ? '<button type="button" class="btn btn-sm btn-ghost" data-sy="offset">ضبط الإزاحة</button><button type="button" class="btn btn-sm btn-ghost" data-sy="unbook">فصل الكتاب</button>' : '') +
-      '<button type="button" class="btn btn-sm btn-ghost" data-sy="del">🗑 حذف الخطة</button></div>';
+      '<button type="button" class="btn btn-sm btn-ghost" data-sy="tasks">➕ مهام القراءة</button></div>' +
+      '<details class="sy-more"><summary>⚙️ إدارة الخطة والكتاب</summary><div class="hub-actions inline">' +
+      '<button type="button" class="btn btn-sm btn-ghost" data-sy="import">🔄 إعادة استيراد الخطة</button>' +
+      (c.book ? '<button type="button" class="btn btn-sm btn-ghost" data-sy="offset">ضبط صفحات الكتاب</button><button type="button" class="btn btn-sm btn-ghost" data-sy="unbook">فصل الكتاب</button>' : '') +
+      '<button type="button" class="btn btn-sm btn-ghost" data-sy="del">🗑 حذف الخطة</button></div></details>';
     if(c.book) h += '<div class="muted sy-bk">📘 ' + esc(c.book.name) + ' · ' + c.book.pages + ' صفحة · ' + Object.keys(c.book.sections || {}).length + ' قسم بالفهرس' + (c.book.offset == null ? ' · <span class="warn">الإزاحة غير محدّدة</span>' : ' · إزاحة ' + c.book.offset) + ' · الملف على هالجهاز فقط</div>';
     return h + '</section>';
+  }
+  function weekBrief(c){
+    var p = c && c.syllabus, start = sp().semesterStart; if(!p || !start || !p.weeks.length) return null;
+    var wk = weekNumber(start), last = p.weeks[p.weeks.length - 1].to; if(!wk || wk < 1 || wk > last) return null;
+    var e = weekEntry(p, wk); if(!e) return null;
+    var secs = []; e.topics.forEach(function(t){ if(t.section && secs.indexOf(t.section) < 0) secs.push(t.section); });
+    return { wk: wk, last: last, first: e.topics[0].title, more: e.topics.length - 1, secs: secs.join('، ') };
   }
   var refresh = function(){ if(W.Hub && W.Hub.refreshActive) W.Hub.refreshActive(); };
   function bindSection(rootEl, c){
@@ -459,15 +522,10 @@
         else if(a === 'setstart'){ var i = rootEl.querySelector('.sy-start'); if(i && /^\d{4}-\d{2}-\d{2}$/.test(i.value)){ W.space.semesterStart = i.value; save(); refresh(); } else toast('اختر تاريخ بداية الفصل', 'warn'); }
         else if(a === 'del'){ if(W.customConfirm) W.customConfirm('حذف خطة المادة من «' + cur.name + '»؟ (الكتاب والمهام ما بينحذفوا)', function(){ delete cur.syllabus; save(); refresh(); }); else { delete cur.syllabus; save(); refresh(); } }
         else if(a === 'unbook'){ bookDel(cur.id).catch(function(){}); delete cur.book; save(); toast('فصلت الكتاب عن المادة', 'info'); refresh(); }
-        else if(a === 'offset' && W.showModal){
-          W.showModal('إزاحة صفحات الكتاب', [{ key: 'offset', label: 'الفرق بين ترتيب الصفحة بملف PDF ورقمها المطبوع (مثلاً 26)', type: 'number' }], { offset: cur.book.offset == null ? 0 : cur.book.offset }, function(data){
-            var o = parseInt(data.offset, 10); if(!isFinite(o) || o < 0 || o > 500){ toast('أدخل رقماً من 0 إلى 500', 'warn'); return false; }
-            cur.book.offset = o; save(); refresh(); return true;
-          });
-        }
+        else if(a === 'offset') askOffset(cur, false);
       });
     });
   }
 
-  return Object.assign(pure, { sectionHtml: sectionHtml, bindSection: bindSection, startImport: startImport, importPlan: importPlan, attachBook: attachBook, openBook: openBook, addReadingTasks: addReadingTasks, loadPdfJs: loadPdfJs, _preview: preview, _setRefresh: function(f){ refresh = f; } });
+  return Object.assign(pure, { weekBrief: weekBrief, sectionHtml: sectionHtml, bindSection: bindSection, startImport: startImport, importPlan: importPlan, attachBook: attachBook, openBook: openBook, askOffset: askOffset, addReadingTasks: addReadingTasks, loadPdfJs: loadPdfJs, _preview: preview, _setRefresh: function(f){ refresh = f; } });
 });
