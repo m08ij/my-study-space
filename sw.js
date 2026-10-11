@@ -1,11 +1,11 @@
 /* ============================================================
    sw.js — شبكة أولاً + كاش احتياطي (v90)
    ============================================================ */
-var CACHE_NAME = 'ss-cache-v137';
+var CACHE_NAME = 'ss-cache-v138';
 var NET_WAIT_MS = 3500;   /* أقصى انتظار للشبكة قبل خدمة النسخة المخزّنة */
 var URLS_TO_CACHE = [
   './', './index.html', './app.css', './vendor-supabase.js', './fonts/tajawal-arabic-400.woff2', './fonts/tajawal-arabic-500.woff2', './fonts/tajawal-arabic-700.woff2', './fonts/tajawal-latin-400.woff2', './fonts/tajawal-latin-500.woff2', './fonts/tajawal-latin-700.woff2',
-  './app.bundle.js?v=137', './app.bundle.css?v=137', './manifest.json', './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png', './icons/apple-touch-icon.png'
+  './app.bundle.js?v=138', './app.bundle.css?v=138', './manifest.json', './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png', './icons/apple-touch-icon.png'
 ];
 self.addEventListener('install', function(e){
   e.waitUntil(

@@ -80,6 +80,45 @@
   }
   function walkMeters(a, b){ var p = pointOf(a), q = pointOf(b); if(!p || !q) return 0; return Math.round(Math.hypot(p.x - q.x, p.y - q.y) * MPP * DETOUR); }
   function walkMinutes(a, b){ return Math.max(1, Math.ceil(walkMeters(a, b) / WALK)); }
+  /* ===== «وين أروح؟»: موقعك بالخريطة =====
+     الخريطة مرسومة تقريبياً (بدون إحداثيات GPS حقيقية للمباني)، فنتعلّم المطابقة من المستخدم نفسه: كل مرة يقرأ الجهاز GPS ويختار المستخدم مبناه
+     نحفظ نقطة معايرة {lat,lon,x,y}. من نقطتين مختلفتين فأكثر نحسب دوران وإزاحة (المقياس ثابت MPP) فيصير الـGPS يحدّد المبنى لحاله.
+     بدون GPS أو معايرة: نخمّن من الجدول (مبنى المحاضرة الحالية/السابقة) ونسأل مرة واحدة. تقريبي؛ يُصحَّح بنقرة. */
+  var CAL_KEY = 'ss_cm_calib', CAL_MAX = 8;
+  function geoLocal(lat, lon, lat0, lon0){ return { e: (lon - lon0) * Math.cos(lat0 * Math.PI / 180) * 111320, n: (lat - lat0) * 110574 }; }
+  function fitCalib(pts){
+    if(!pts || !pts.length) return null;
+    var lat0 = pts[0].lat, lon0 = pts[0].lon;
+    var G = pts.map(function(q){ return geoLocal(q.lat, q.lon, lat0, lon0); }), M = pts.map(function(q){ return { e: q.x * MPP, n: -q.y * MPP }; });
+    var n = pts.length, gc = { e: 0, n: 0 }, mc = { e: 0, n: 0 };
+    G.forEach(function(g){ gc.e += g.e / n; gc.n += g.n / n; }); M.forEach(function(m){ mc.e += m.e / n; mc.n += m.n / n; });
+    var spread = 0; for(var i = 0; i < n; i++) for(var j = i + 1; j < n; j++) spread = Math.max(spread, Math.hypot(M[i].e - M[j].e, M[i].n - M[j].n));
+    var th = 0;   /* نقطة وحيدة أو نقاط متقاربة: نفترض أن الخريطة شمالها لفوق */
+    if(n >= 2 && spread >= 50){
+      var a = 0, b = 0; for(var k = 0; k < n; k++){ var me = M[k].e - mc.e, mn = M[k].n - mc.n, ge = G[k].e - gc.e, gn = G[k].n - gc.n; a += me * ge + mn * gn; b += me * gn - mn * ge; }
+      th = Math.atan2(b, a);
+    }
+    var c = Math.cos(th), s = Math.sin(th), tx = gc.e - (c * mc.e - s * mc.n), ty = gc.n - (s * mc.e + c * mc.n), err = 0;
+    for(var q = 0; q < n; q++){ var px = c * M[q].e - s * M[q].n + tx, py = s * M[q].e + c * M[q].n + ty; err += Math.hypot(px - G[q].e, py - G[q].n) / n; }
+    return { lat0: lat0, lon0: lon0, th: th, tx: tx, ty: ty, err: Math.round(err), n: n, ok: n >= 2 && spread >= 50 };
+  }
+  function geoToMap(fit, lat, lon){
+    var g = geoLocal(lat, lon, fit.lat0, fit.lon0), c = Math.cos(fit.th), s = Math.sin(fit.th), de = g.e - fit.tx, dn = g.n - fit.ty;
+    return { x: (c * de + s * dn) / MPP, y: -(-s * de + c * dn) / MPP };
+  }
+  function nearestBld(x, y){
+    var best = null, bd = 1e9;
+    BLD.forEach(function(b){ var dx = Math.max(Math.abs(x - b.cx) - b.w / 2, 0), dy = Math.max(Math.abs(y - b.cy) - b.h / 2, 0), d = Math.hypot(dx, dy); if(d < bd){ bd = d; best = b; } });
+    return best ? { b: best, m: Math.round(bd * MPP) } : null;
+  }
+  function loadCal(){ try{ var a = JSON.parse(localStorage.getItem(CAL_KEY) || '[]'); return Array.isArray(a) ? a.filter(function(q){ return q && isFinite(q.lat) && isFinite(q.lon) && isFinite(q.x) && isFinite(q.y); }) : []; }catch(e){ return []; } }
+  function addCal(lat, lon, id){
+    var p = pointOf(id); if(!p) return;
+    var a = loadCal().filter(function(q){ return Math.hypot(q.x - p.x, q.y - p.y) > 25 || Date.now() - q.t > 3600000; });   /* نفس المكان خلال ساعة: نستبدل القديم */
+    a.push({ lat: lat, lon: lon, x: Math.round(p.x), y: Math.round(p.y), t: Date.now() }); if(a.length > CAL_MAX) a = a.slice(-CAL_MAX);
+    try{ localStorage.setItem(CAL_KEY, JSON.stringify(a)); }catch(e){}
+  }
+
   var ABBR = { 'حب': 'hb', 'مغ': 'west', 'غم': 'west', 'مش': 'east', 'شم': 'east' };
 
   var byId = {}; BLD.forEach(function(b){ b.cx = b.x + b.w / 2; b.cy = b.y + b.h / 2; byId[b.id] = b; });
@@ -135,7 +174,7 @@
   function slotText(e){ return dayName(e.dayIdx) + ' ' + hm(e.start) + (e.hasEnd ? '–' + hm(e.end) : ''); }
 
   /* ---------- الحالة ---------- */
-  var st = { sel: null, fac: null, q: '', tab: 'mine', day: 'all', vb: { x: 0, y: 0, w: W, h: H }, anim: null, layers: { pins: true, gates: true, park: true }, route: null, dir: { from: '', to: '' } };
+  var st = { sel: null, fac: null, q: '', tab: 'mine', day: 'all', vb: { x: 0, y: 0, w: W, h: H }, anim: null, layers: { pins: true, gates: true, park: true }, route: null, dir: { from: '', to: '' }, guide: { step: 'idle', here: '', how: '', dest: '', fix: null } };
   var root = null, svg = null;
 
   /* ---------- الرسم ---------- */
@@ -310,6 +349,90 @@
     return h + '</div>';
   }
 
+  /* ---------- «وين أروح؟» ---------- */
+  function lectureTarget(status, hereId){
+    var c = status.current, nx = status.next, cb = c ? resolve(c) : null, nb = nx ? resolve(nx) : null;
+    if(c && cb.b && cb.b.id !== hereId) return { e: c, b: cb.b, fl: cb.fl, kind: 'now' };
+    if(c && cb.b && cb.b.id === hereId && !(nx && nb.b)) return { e: c, b: cb.b, fl: cb.fl, kind: 'here' };
+    if(nx && nb.b) return { e: nx, b: nb.b, fl: nb.fl, kind: 'next' };
+    var l = status.later && status.later.entry, lb = l ? resolve(l) : null;
+    if(l && lb.b) return { e: l, b: lb.b, fl: lb.fl, kind: 'later', days: status.later.daysAhead };
+    return null;
+  }
+  function scheduleGuess(status){
+    var c = status.current && resolve(status.current); if(c && c.b) return { id: c.b.id, why: 'محاضرتك الحالية «' + status.current.name + '»' };
+    var done = (status.today || []).filter(function(e){ return e.state === 'done' && status.nowMin - e.end <= 45 && resolve(e).b; }).sort(function(a, b){ return b.end - a.end; })[0];
+    if(done) return { id: resolve(done).b.id, why: 'آخر محاضرة «' + done.name + '»' };
+    return null;
+  }
+  function guideSelOpts(sel){
+    return '<option value="">اختر مكانك…</option><optgroup label="المباني">' + BLD.map(function(b){ return '<option value="' + b.id + '"' + (b.id === sel ? ' selected' : '') + '>' + esc(b.n) + '</option>'; }).join('') +
+      '</optgroup><optgroup label="البوابات">' + GATES.map(function(g){ return '<option value="g:' + g.id + '">' + esc(g.n) + '</option>'; }).join('') + '</optgroup>';
+  }
+  function nameOf(id){ var p = pointOf(id); return p ? p.n : ''; }
+  function guideHtml(status){
+    var g = st.guide, h = '<div class="cm-guide" role="region" aria-label="وين أروح؟">';
+    if(g.step === 'idle'){
+      h += '<button type="button" class="cm-guide-btn" data-g="go"><span class="cm-guide-ic" aria-hidden="true">📍</span><span class="cm-guide-tx"><b>وين أروح؟</b><small>اضغط وبقول لك وين محاضرتك الجاية وكم بتمشي</small></span></button>';
+    } else if(g.step === 'locating'){
+      h += '<div class="cm-guide-msg"><span class="cm-live"></span> بحدّد مكانك…</div>';
+    } else if(g.step === 'ask'){
+      var guess = scheduleGuess(status), chips = '';
+      if(g.fix && g.fix.near) chips += '<button type="button" class="cm-chip" data-g-here="' + g.fix.near.id + '">🛰️ ' + esc(g.fix.near.n) + ' (حسب الـGPS)</button>';
+      if(guess && (!g.fix || !g.fix.near || guess.id !== g.fix.near.id)) chips += '<button type="button" class="cm-chip" data-g-here="' + guess.id + '">' + esc(nameOf(guess.id)) + ' — ' + esc(guess.why) + '</button>';
+      h += '<div class="cm-guide-card"><b>وين أنت هسا؟</b>' + (g.fix ? '<small>' + (g.fix.near ? 'الـGPS مش متأكد، ' : 'ما قدرت أطابق الـGPS بالخريطة بعد، ') + 'اختر مبناك مرة وبتعلّم منها.</small>' : '<small>اختر مبناك وبحسب لك الطريق.</small>') +
+        (chips ? '<div class="cm-chips">' + chips + '</div>' : '') + '<select class="cm-dir-sel" data-g-sel aria-label="مكاني الحالي">' + guideSelOpts('') + '</select></div>';
+    } else if(g.step === 'result'){
+      var tg = lectureTarget(status, g.here), pickDest = g.destManual === ' ', destId = pickDest ? '' : (g.destManual || (tg && tg.b.id)), body = '';
+      if(!destId){
+        body = (pickDest ? '<b>لوين بدك تروح؟</b>' : '<b>ما عندك محاضرة قادمة بالجدول 🌴</b><small>لوين بدك تروح؟</small>') + '<select class="cm-dir-sel" data-g-dest aria-label="وجهتي">' + guideSelOpts('').replace('اختر مكانك…', 'اختر وجهتك…') + '</select>';
+      } else if(destId === g.here){
+        body = '<b>✅ أنت بنفس المبنى</b><small>' + esc(nameOf(destId)) + (tg && tg.fl ? ' — الطابق ' + tg.fl : '') + (tg ? ' · «' + esc(tg.e.name) + '»' : '') + '</small>';
+      } else {
+        var mi = walkMinutes(g.here, destId), m = walkMeters(g.here, destId), msg = '';
+        if(tg && !g.destManual){
+          var left = tg.kind === 'now' ? -(status.nowMin - tg.e.start) : (tg.e.start - status.nowMin);
+          if(tg.kind === 'later') msg = '⏰ «' + esc(tg.e.name) + '» ' + (tg.days === 1 ? 'بكرة' : dayName(tg.e.dayIdx)) + ' ' + hm(tg.e.start);
+          else if(tg.kind === 'now') msg = '⚠️ «' + esc(tg.e.name) + '» بدأت من ' + Math.max(1, Math.round(status.nowMin - tg.e.start)) + ' د — اطلع هسا';
+          else msg = '⏰ «' + esc(tg.e.name) + '» الساعة ' + hm(tg.e.start) + ' — باقي ' + Math.round(left) + ' د · ' + (left < mi ? '<b>ما بتلحق، اطلع هسا!</b>' : left < mi + 5 ? 'ضيّق، لا تتأخر' : 'مريح ✓');
+        }
+        body = '<b>🧭 من ' + esc(nameOf(g.here)) + ' إلى ' + esc(nameOf(destId)) + '</b><span class="cm-guide-walk">🚶 حوالي <b>' + mi + ' د</b> (' + m + ' م)' + (tg && tg.fl && !g.destManual ? ' · الطابق ' + tg.fl : '') + '</span>' + (msg ? '<small>' + msg + '</small>' : '') +
+          '<small class="cm-guide-note">تقدير تقريبي مش قياس حقيقي</small>';
+      }
+      h += '<div class="cm-guide-card result">' + body + '<div class="cm-guide-acts">' + (destId && destId !== g.here ? '<button type="button" class="btn btn-sm" data-g="route">🧭 اعرض المسار</button>' : '') +
+        '<button type="button" class="btn btn-sm btn-ghost" data-g="redo">📍 غيّر مكاني</button>' + (destId ? '<button type="button" class="btn btn-sm btn-ghost" data-g="dest">🎯 وجهة ثانية</button>' : '') + '<button type="button" class="btn btn-sm btn-ghost" data-g="close" aria-label="إغلاق">✕</button></div></div>';
+    }
+    return h + '</div>';
+  }
+  function guideStart(){
+    st.guide = { step: 'locating', here: '', how: '', dest: '', fix: null }; render();
+    var status = (window.Schedule && window.Schedule.status) ? window.Schedule.status() : { today: [] };
+    function done(fix){
+      st.guide.fix = fix || null;
+      var near = null;
+      if(fix){ var fit = fitCalib(loadCal()); if(fit && fit.ok && fit.err <= 80){ var xy = geoToMap(fit, fix.lat, fix.lon), nb = nearestBld(xy.x, xy.y); if(nb && nb.m <= 120) near = { id: nb.b.id, n: nb.b.n, m: nb.m }; fix.near = near; fix.cal = true; } }
+      if(near && near.m <= 45){ pickHere(near.id, true); return; }   /* GPS معايَر وقريب من مبنى: بدون سؤال */
+      st.guide.step = 'ask'; render();
+    }
+    if(!navigator.geolocation){ done(null); return; }
+    var finished = false, t = setTimeout(function(){ if(!finished){ finished = true; done(null); } }, 7500);
+    try{
+      navigator.geolocation.getCurrentPosition(function(p){ if(finished) return; finished = true; clearTimeout(t); done({ lat: p.coords.latitude, lon: p.coords.longitude, acc: Math.round(p.coords.accuracy || 0) }); },
+        function(){ if(finished) return; finished = true; clearTimeout(t); done(null); }, { enableHighAccuracy: true, timeout: 7000, maximumAge: 30000 });
+    }catch(e){ finished = true; clearTimeout(t); done(null); }
+  }
+  function pickHere(id, auto){
+    var g = st.guide; g.here = id; g.how = auto ? 'gps' : 'user'; g.step = 'result'; g.destManual = '';
+    if(!auto && g.fix && isFinite(g.fix.lat)) addCal(g.fix.lat, g.fix.lon, id);   /* اختيار المستخدم + قراءة GPS = نقطة معايرة */
+    render();
+  }
+  function guideRoute(){
+    var g = st.guide, status = (window.Schedule && window.Schedule.status) ? window.Schedule.status() : { today: [] }, tg = lectureTarget(status, g.here), to = g.destManual || (tg && tg.b.id);
+    if(!to || to === g.here) return;
+    st.dir.from = g.here; st.dir.to = to; st.route = { kind: 'dir', ids: [g.here, to] }; st.tab = 'route'; render();
+    var a = pointOf(g.here), b = pointOf(to); if(a && b){ var w = Math.max(240, Math.abs(a.x - b.x) * 1.8 + 120); animateTo({ x: (a.x + b.x) / 2 - w / 2, y: (a.y + b.y) / 2 - w * H / W / 2, w: w }); }
+  }
+
   function render(){
     root = document.getElementById('campusRoot'); if(!root) return;
     var cs = courses(), status = (window.Schedule && window.Schedule.status) ? window.Schedule.status() : { current: null, next: null };
@@ -318,7 +441,7 @@
     var nowMsg = '';
     if(status.current && resolve(status.current).b) nowMsg = '<div class="cm-now"><span class="cm-live"></span>محاضرتك الآن: <b>' + esc(status.current.name) + '</b> — ' + esc(resolve(status.current).b.n) + '</div>';
     else if(status.next && resolve(status.next).b) nowMsg = '<div class="cm-now next">⏭️ التالية: <b>' + esc(status.next.name) + '</b> — ' + esc(resolve(status.next).b.n) + ' (' + hm(status.next.start) + ')</div>';
-    root.innerHTML =
+    root.innerHTML = guideHtml(status) +
       '<div class="cm-bar"><div class="cm-search"><span aria-hidden="true">🔎</span><input type="search" id="cmQ" value="' + esc(st.q) + '" placeholder="ابحث عن مبنى أو مختبر (مثلاً: المكتبة، ابن سينا، ح.ب)" autocomplete="off" aria-label="بحث بالخريطة"></div>' + nowMsg + '</div>' +
       '<div class="cm-wrap"><div class="cm-mapcard"><div class="cm-zoom" role="group" aria-label="التحكم بالخريطة"><button type="button" data-z="in" aria-label="تكبير">＋</button><button type="button" data-z="out" aria-label="تصغير">－</button><button type="button" data-z="reset" aria-label="إعادة الضبط">⟲</button></div>' +
       '<div class="cm-layers" role="group" aria-label="الطبقات"><button type="button" data-layer="pins" aria-pressed="' + st.layers.pins + '">📍 دبابيسي</button><button type="button" data-layer="gates" aria-pressed="' + st.layers.gates + '">🚪 البوابات</button><button type="button" data-layer="park" aria-pressed="' + st.layers.park + '">🅿️ المواقف</button></div>' +
@@ -380,6 +503,15 @@
   function bindRoot(){
     root.addEventListener('click', function(e){
       var t = e.target;
+      var gb = t.closest('[data-g]'); if(gb){
+        var ga = gb.getAttribute('data-g');
+        if(ga === 'go' || ga === 'redo') guideStart();
+        else if(ga === 'route') guideRoute();
+        else if(ga === 'dest'){ st.guide.destManual = ' '; st.guide.step = 'result'; render(); }
+        else if(ga === 'close'){ st.guide = { step: 'idle', here: '', how: '', dest: '', fix: null }; render(); }
+        return;
+      }
+      var gh = t.closest('[data-g-here]'); if(gh){ pickHere(gh.getAttribute('data-g-here'), false); return; }
       var ly = t.closest('[data-layer]'); if(ly){ var k2 = ly.getAttribute('data-layer'); st.layers[k2] = !st.layers[k2]; render(); return; }
       var dt = t.closest('[data-dir-to]'); if(dt){ st.dir.to = dt.getAttribute('data-dir-to'); if(!st.dir.from) st.dir.from = 'g:' + nearestGate(byId[st.dir.to]).id; st.tab = 'route'; st.route = { kind: 'dir', ids: [st.dir.from, st.dir.to] }; render(); return; }
       if(t.closest('[data-dir-swap]')){ var tmp = st.dir.from; st.dir.from = st.dir.to; st.dir.to = tmp; dirRoute(); render(); return; }
@@ -394,6 +526,8 @@
       var pin = t.closest('[data-pin]'); if(pin){ select(pin.getAttribute('data-pin'), true); }
     });
     root.addEventListener('change', function(e){
+      var gs = e.target.closest && e.target.closest('[data-g-sel]'); if(gs){ if(gs.value) pickHere(gs.value, false); return; }
+      var gd = e.target.closest && e.target.closest('[data-g-dest]'); if(gd){ st.guide.destManual = gd.value || ''; render(); if(gd.value) guideRoute(); return; }
       var dsel = e.target.closest && e.target.closest('[data-dir]'); if(dsel){ st.dir[dsel.getAttribute('data-dir')] = dsel.value; dirRoute(); render(); return; }
       var a = e.target.closest && e.target.closest('[data-assign]'); if(!a || !a.value) return;
       assign(a.getAttribute('data-assign'), a.value);
@@ -445,5 +579,5 @@
   }
 
   window.renderCampus = render;
-  window.CampusMap = { walkMinutes: walkMinutes, walkMeters: walkMeters, dayStops: dayStops, render: render, resolve: resolve, courses: courses, select: select, assign: assign, buildings: BLD, labs: LABS, norm: norm, state: st };
+  window.CampusMap = { calib: { fit: fitCalib, toMap: geoToMap, nearest: nearestBld, load: loadCal, add: addCal, geoLocal: geoLocal }, guide: { start: guideStart, state: function(){ return st.guide; }, target: lectureTarget, guess: scheduleGuess }, walkMinutes: walkMinutes, walkMeters: walkMeters, dayStops: dayStops, render: render, resolve: resolve, courses: courses, select: select, assign: assign, buildings: BLD, labs: LABS, norm: norm, state: st };
 })();

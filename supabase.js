@@ -17,7 +17,7 @@
   function genCode(){
     var chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
     var out = '';
-    for(var i = 0; i < 6; i++){ out += chars.charAt(Math.floor(Math.random() * chars.length)); }
+    for(var i = 0; i < 12; i++){ out += chars.charAt(Math.floor(Math.random() * chars.length)); }
     return out;
   }
   function ensureCode(){

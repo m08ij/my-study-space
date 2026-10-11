@@ -41,3 +41,21 @@ html,body,button,input,select,textarea{font-family:var(--font-ui)}
   .em-chip,.class-block .room,.tt-badge,.tt-time,.bi-amount .date,.hub-card-title small,.cm-tab,.cm-course-main small,.bp-f small,.exam-countdown .lbl,.sem-head>div,.plan-course-row>div>span{font-size:max(10.8px,.68rem)}
 }
 .sp-item small{font-size:max(11px,.7rem)}
+
+/* ---- الخريطة: «وين أروح؟» ---- */
+.cm-guide{margin-bottom:var(--sp-3)}
+.cm-guide-btn{display:flex;align-items:center;gap:12px;width:100%;min-height:64px;padding:12px 16px;border-radius:var(--r-lg);border:1px solid var(--accent);background:var(--grad-soft);color:var(--text);font:inherit;text-align:start;cursor:pointer;transition:transform .15s var(--ease)}
+.cm-guide-btn:active{transform:scale(.99)}
+.cm-guide-ic{font-size:1.6rem}
+.cm-guide-tx{display:flex;flex-direction:column;gap:2px}
+.cm-guide-tx b{font-size:var(--fs-base);color:var(--accent)}
+.cm-guide-tx small{color:var(--muted);font-size:var(--fs-xs)}
+.cm-guide-msg{display:flex;align-items:center;gap:8px;min-height:64px;padding:0 16px;border-radius:var(--r-lg);border:1px dashed var(--border2);color:var(--muted)}
+.cm-guide-card{display:flex;flex-direction:column;gap:8px;padding:14px 16px;border-radius:var(--r-lg);border:1px solid var(--border);background:var(--card)}
+.cm-guide-card.result{border-color:var(--accent)}
+.cm-guide-card small{color:var(--muted);line-height:1.6}
+.cm-guide-walk{font-size:var(--fs-sm)}
+.cm-guide-note{font-size:var(--fs-2xs)}
+.cm-guide .cm-chips{display:flex;flex-wrap:wrap;gap:6px}
+.cm-guide .cm-chip{min-height:40px;padding:6px 12px;border-radius:99px;border:1px solid var(--border2);background:var(--card2);color:var(--text);font:inherit;font-size:var(--fs-sm);cursor:pointer}
+.cm-guide-acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}

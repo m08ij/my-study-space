@@ -444,7 +444,7 @@
         ['timetable','attendance','profile'].forEach(function(k){
           if(!clean[k] || typeof clean[k] !== 'object' || Array.isArray(clean[k])) clean[k] = dSpace[k] || {};
         });
-        window.space = clean;
+        window.space = window.migrateSpace ? window.migrateSpace(clean) : clean;
         window.S.set('space', window.space);
       }
       if(Array.isArray(data.notes)){ window.notes = data.notes; window.S.set('notes', window.notes); }
@@ -473,7 +473,7 @@
   window.loadAllData = function(){
     try{
       var raw = window.S.get('space', null);
-      if(raw && typeof raw === 'object' && !Array.isArray(raw)) window.space = Object.assign({}, window.defaultSpace, raw);
+      if(raw && typeof raw === 'object' && !Array.isArray(raw)){ window.space = Object.assign({}, window.defaultSpace, raw); if(window.migrateSpace) window.migrateSpace(window.space); }
       else { window.space = Object.assign({}, window.defaultSpace); if(raw !== null) window.dataCorrupted = true; }
     }catch(e){ window.dataCorrupted = true; window.space = Object.assign({}, window.defaultSpace); }
     if(!Array.isArray(window.space.grades)) window.space.grades = [];
