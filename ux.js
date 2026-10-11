@@ -310,7 +310,8 @@
     var m = document.getElementById('settingsMenu'); if(!m || m._smInit) return; m._smInit = true;
     applyFont(lsv('ss_font'));
     m.addEventListener('click', function(e){
-      var f = e.target.closest && e.target.closest('[data-fs]');
+      /* ملاحظة: <html> نفسه يحمل data-fs عند الخط الصغير/الكبير، فـclosest('[data-fs]') بدون تحديد الزر كان يلتقط html لأي نقرة داخل القائمة ويبلع كل الأزرار (إغلاق ✕ وغيرها) */
+      var f = e.target.closest && e.target.closest('button[data-fs]');
       if(f){ var v = f.getAttribute('data-fs'); try{ if(v === 'md') localStorage.removeItem('ss_font'); else localStorage.setItem('ss_font', v); }catch(x){} applyFont(v); return; }
       if((e.target === m || e.target.closest('#smClose')) && window.closeSettingsMenu) window.closeSettingsMenu();   /* النقر على الخلفية المعتمة أو زر ✕ */
     });
@@ -542,4 +543,20 @@
   function init(){ bindStrip(); bindHuFold(); }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
   setTimeout(init, 600); setTimeout(updateStrip, 1500);
+})();
+
+/* ===== لمس: اهتزاز خفيف عند إنجاز مهمة / تسجيل حضور (يحترم «تقليل الحركة»؛ يعمل حيث يدعم الجهاز navigator.vibrate) ===== */
+(function(){
+  function reduced(){ try{ return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){ return false; } }
+  function haptic(p){ try{ if(!reduced() && navigator.vibrate) navigator.vibrate(p); }catch(e){} }
+  function wrapOnce(name, after){
+    var o = window[name]; if(typeof o !== 'function' || o._hp) return;
+    var n = function(){ var r = o.apply(this, arguments); try{ after.apply(null, arguments); }catch(e){} return r; }; n._hp = true; window[name] = n;
+  }
+  function init(){
+    wrapOnce('toggleTask', function(id){ var t = ((window.space || {}).tasks || []).filter(function(x){ return x.id === id; })[0]; haptic(t && t.done ? [14] : [6]); });
+    wrapOnce('markAttendance', function(n, type){ haptic(type === 'present' ? [10, 40, 10] : [30]); });
+  }
+  window.Haptic = haptic;
+  setTimeout(init, 900); setTimeout(init, 3000);
 })();

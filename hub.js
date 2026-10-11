@@ -241,8 +241,22 @@
       '<span class="myday-tile-ic">🏁</span><span class="myday-lbl strong">إنجاز اليوم</span>' +
       (lines ? '<span class="myday-lines">' + lines + '</span>' : '<span class="myday-note">ما في إنجاز مسجّل بعد اليوم — ابدأ جلسة تركيز أو أنجز مهمة.</span>') + '</button>';
 
+    /* --- إجراء رئيسي واحد حسب الوقت: «حضرت» أثناء/قرب المحاضرة، وإلا «ابدأ جلسة تركيز» (مع خطة مراجعة لو امتحان قريب) --- */
+    var cta = '', TL = window.TodayLogic;
+    if(TL && sp().timetable && Object.keys(sp().timetable).length){
+      var tg = TL.attendTarget(st);
+      if(tg){
+        var akey = tg.name + '|' + TL.lecStartMs(tg), adone = TL.attKeys().indexOf(akey) > -1, pl = TL.placeOf(tg);
+        cta = adone ? '<span class="myday-done">✔ سُجّل حضورك — ' + esc(tg.name) + '</span>' : '<button type="button" class="btn" data-myday-act="attend" data-n="' + esc(tg.name) + '" data-key="' + esc(akey) + '">✓ حضرت — ' + esc(tg.name) + '</button>';
+        if(pl.bid) cta += '<button type="button" class="btn btn-ghost" data-myday-act="map" data-b="' + esc(pl.bid) + '">🗺️ الخريطة</button>';
+      }
+    }
+    if(!cta){
+      cta = '<button type="button" class="btn" data-go="timer">▶ ابدأ جلسة تركيز</button>';
+      if(upcoming.length && daysFromToday(upcoming[0].dt) <= 7 && window.openExamPlan) cta += '<button type="button" class="btn btn-ghost" data-myday-act="plan">🧠 خطة مراجعة</button>';
+    }
     var dateLabel = DA()[st.dayIdx] + ' ' + now.getDate() + '/' + (now.getMonth() + 1);
-    var html = '<div class="myday-head"><h3>🧭 يومي الجامعي</h3><span class="myday-date">' + dateLabel + '</span></div>' + hero + '<div class="myday-grid">' + tiles + '</div>';
+    var html = '<div class="myday-head"><h3>🧭 يومي الجامعي</h3><span class="myday-date">' + dateLabel + '</span></div>' + hero + '<div class="myday-cta">' + cta + '</div><div class="myday-grid">' + tiles + '</div>';
     if(html === myDayLast) return;
     myDayLast = html;
     el.innerHTML = html;
@@ -268,6 +282,9 @@
     });
     var add = el.querySelector('[data-myday-act="addclass"]');
     if(add) add.addEventListener('click', function(e){ e.stopPropagation(); if(window.openSmartTimetable) window.openSmartTimetable(); });
+    el.querySelectorAll('[data-myday-act="attend"]').forEach(function(b){ b.addEventListener('click', function(e){ e.stopPropagation(); if(window.TodayLogic && window.TodayLogic.markPresent(b.getAttribute('data-n'), b.getAttribute('data-key'))){ myDayLast = ''; renderMyDay(); } }); });
+    el.querySelectorAll('[data-myday-act="map"]').forEach(function(b){ b.addEventListener('click', function(e){ e.stopPropagation(); if(window.switchTab) window.switchTab('campus'); if(window.CampusMap) window.CampusMap.select(b.getAttribute('data-b'), true); }); });
+    el.querySelectorAll('[data-myday-act="plan"]').forEach(function(b){ b.addEventListener('click', function(e){ e.stopPropagation(); if(window.openExamPlan) window.openExamPlan(); }); });
   }
   /* تحديث تلقائي: كل 20 ثانية والصفحة ظاهرة، وعند العودة للتبويب، وبعد أي تغيير بيانات (renderDashboard) */
   setInterval(function(){

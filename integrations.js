@@ -1209,7 +1209,7 @@
      Bottom Nav
      ============================================================ */
   var BN_TABS = [
-    { id: 'dashboard',  icon: '📊', label: 'الرئيسية' },
+    { id: 'dashboard',  icon: '📊', label: 'اليوم' },
     { id: 'timetable',  icon: '📅', label: 'الجدول' },
     { id: 'courses',    icon: '📚', label: 'موادي' },
     { id: 'tasks',      icon: '📝', label: 'المهام' },

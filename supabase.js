@@ -38,6 +38,8 @@
     if(client) return client;
     if(!CFG.url || !CFG.anonKey || CFG.url.indexOf('YOUR-') > -1) return null;
     if(typeof window.supabase === 'undefined' || !window.supabase.createClient) return null;
+    /* أمان التطوير: عند التشغيل محلياً (localhost/127.0.0.1) لا نتصل بسحابة الإنتاج بالمكتبة الحقيقية إلا مع ?cloud=1 (كل تجربة بملف تعريف جديد كانت تنشئ صفاً وهمياً بجدول spaces). المحاكيات بالاختبارات لا تُحجب. */
+    try{ if(window.supabase.SupabaseClient && /^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]cloud=1/.test(location.search)){ console.log('☁️ Supabase معطّل محلياً (أضف ?cloud=1 لتفعيله)'); return null; } }catch(e){}
     try{
       /* ترويسة x-space-code برمز المستخدم الحالي مع كل طلب: سياسات التخزين (supabase/04-storage-own-folder.sql) تقصر القراءة/الحذف/الرفع على مجلد رمزه فقط.
          تُقرأ وقت الطلب لا وقت الإنشاء، فتتبع تغيير الرمز. لا أثر لها إن لم تُفعَّل السياسات. */
@@ -342,22 +344,38 @@
     bd.onclick = function(e){ if(e.target === bd) bd.remove(); };
   }
 
+  /* مكتبة supabase-js (vendor-supabase.js) تُحمَّل عند أول استعمال فعلي بدل ما تكون ضمن الحزمة الأولى. إن وُجد رمز مزامنة نبدأ التحميل مباشرة بعد الإقلاع حتى تجهز قبل أول مزامنة. */
+  var libPromise = null;
+  function libReady(){
+    if(typeof window.supabase !== 'undefined' && window.supabase && window.supabase.createClient) return Promise.resolve(true);
+    if(libPromise) return libPromise;
+    libPromise = new Promise(function(resolve){
+      try{
+        var s = document.createElement('script'); s.src = 'vendor-supabase.js?v=' + (window.APP_BUILD || '1'); s.async = true;
+        s.onload = function(){ resolve(true); }; s.onerror = function(){ libPromise = null; resolve(false); };   /* بدون إنترنت/ملف: نكمل (init يرجّع null) ونعيد المحاولة لاحقاً */
+        document.head.appendChild(s);
+      }catch(e){ libPromise = null; resolve(false); }
+    });
+    return libPromise;
+  }
+  function lazyApi(fn){ return function(){ var a = arguments, self = this; return libReady().then(function(){ return fn.apply(self, a); }); }; }
   var api = window.SB = {
     setUseRpc: function(v){ CFG.useRpc = !!v; rpcMissing = false; try{ sessionStorage.removeItem('ss_rpc_missing'); }catch(e){} },   /* يُفعَّل بعد تشغيل supabase/02a-create-rpc.sql */
     rpcMode: function(){ return CFG.useRpc ? (rpcMissing ? 'fallback' : 'rpc') : 'table'; },
     lastLoadStatus: null,
-    init: init, load: load, save: save, peekUpdatedAt: peekUpdatedAt,
+    init: init, load: lazyApi(load), save: lazyApi(save), peekUpdatedAt: lazyApi(peekUpdatedAt), libReady: libReady,
     getCode: getCode, setCode: setCode,
-    listCourseFiles: listCourseFiles,
-    listCourseFilesMulti: listCourseFilesMulti,
-    uploadCourseFile: uploadCourseFile,
+    listCourseFiles: lazyApi(listCourseFiles),
+    listCourseFilesMulti: lazyApi(listCourseFilesMulti),
+    uploadCourseFile: lazyApi(uploadCourseFile),
     displayFileName: displayFileName,
     storedFileName: storedFileName,
-    deleteCourseFile: deleteCourseFile,
+    deleteCourseFile: lazyApi(deleteCourseFile),
     formatFileSize: formatFileSize,
     getFileIcon: getFileIcon,
     showSyncPanel: showSyncPanel
   };
 
+  try{ if(localStorage.getItem(codeKey)) setTimeout(libReady, 300); }catch(e){}
   console.log('☁️ supabase.js loaded');
 })();

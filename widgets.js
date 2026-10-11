@@ -75,7 +75,7 @@
         return '<div class="lw-card" data-widget="prayer">' +
           '<div class="lw-title"><span class="lw-ic">🕌</span> مواقيت الصلاة' +
           '<button class="lw-refresh" data-action="refresh-prayer">⟳</button></div>' +
-          '<div id="lwPrayerBody"><div class="lw-empty-mini"><div class="lw-em-ic">🕌</div>جاري التحميل...</div></div></div>';
+          '<div id="lwPrayerBody"><div class="skel" style="height:34px;margin-bottom:8px"></div><div class="skel" style="height:44px"></div></div></div>';
       },
       attach: function(card){
         var btn = card.querySelector('[data-action="refresh-prayer"]');
@@ -210,6 +210,13 @@
     }).join('');
     body.innerHTML = html + (all.length > 6 ? '<div class="lw-item-meta">+' + (all.length - 6) + ' أخرى</div>' : '') + '<button type="button" class="lw-link" data-lw="tasks">كل المهام ←</button>';
   }
+  /* منطق مشترك بين الأدوات السريعة و«يومي الجامعي» (hub.js): نافذة الحضور + تسجيل حضور مرة واحدة */
+  function markPresent(name, key){
+    if(attKeys().indexOf(key) > -1) return false;
+    attAdd(key); if(typeof window.markAttendance === 'function') window.markAttendance(name, 'present');
+    toast('✅ سُجّل حضورك: ' + name, 'success'); return true;
+  }
+  window.TodayLogic = { attendTarget: attendTarget, attKeys: attKeys, lecStartMs: lecStartMs, placeOf: placeOf, markPresent: markPresent };
   function refreshQuickTools(){
     if(enabledWidgets.indexOf('next') > -1) renderNextBody();
     if(enabledWidgets.indexOf('tasks') > -1) renderTasksBody();
@@ -221,10 +228,7 @@
     sidebar.addEventListener('click', function(e){
       var b = e.target.closest ? e.target.closest('[data-lw]') : null; if(!b) return; var a = b.getAttribute('data-lw');
       if(a === 'att'){
-        var n = b.getAttribute('data-n'), key = b.getAttribute('data-key');
-        if(attKeys().indexOf(key) > -1) return;
-        attAdd(key); if(typeof window.markAttendance === 'function') window.markAttendance(n, 'present');
-        toast('✅ سُجّل حضورك: ' + n, 'success'); renderNextBody();
+        if(markPresent(b.getAttribute('data-n'), b.getAttribute('data-key'))) renderNextBody();
       }
       else if(a === 'map'){ setSidebarOpen(false); if(window.switchTab) window.switchTab('campus'); if(window.CampusMap) window.CampusMap.select(b.getAttribute('data-b'), true); }
       else if(a === 'done'){ if(window.toggleTask) window.toggleTask(b.getAttribute('data-id')); renderTasksBody(); }
