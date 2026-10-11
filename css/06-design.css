@@ -68,8 +68,8 @@ html.simple .sidebar .nav-settings{display:flex!important}
 #dashboard > .dash-term{grid-column:span 3}
 .md-tasks{grid-column:span 7}
 .md-sched{grid-column:span 5}
-.md-quick{grid-column:span 7}
-.md-deadlines{grid-column:span 5}
+.md-deadlines{grid-column:span 7}
+.md-quick{grid-column:span 5}
 html.simple .md-exam,#dashboard:has(> .dash-term.dash-hidden) .md-exam{grid-column:span 7}
 html.simple .dash-term{display:none!important}
 @media (max-width:1100px){
@@ -77,7 +77,7 @@ html.simple .dash-term{display:none!important}
   .myday{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:var(--gap);grid-column:1/-1;background:none;border:0;box-shadow:none;padding:0;margin:0;border-radius:0}
   .md-lecture{grid-column:span 7}.md-exam{grid-column:span 5}
   .md-tasks{grid-column:span 7}.md-sched{grid-column:span 5}
-  .md-quick,.md-deadlines{grid-column:1/-1}
+  .md-deadlines{grid-column:span 7}.md-quick{grid-column:span 5}
   #dashboard > .dash-term{grid-column:1/-1}
 }
 @media (max-width:760px){
@@ -290,3 +290,67 @@ html.simple .dash-term{display:none!important}
 .hub-note-main small{color:var(--muted);font-size:var(--fs-xs);overflow-wrap:anywhere}
 .hub-note-del{flex:none;width:36px;height:36px;border-radius:50%;border:0;background:transparent;cursor:pointer;font-size:1rem;opacity:.65;transition:background var(--dur-1) ease,opacity var(--dur-1) ease}
 .hub-note-del:hover{background:var(--tint-red);opacity:1}
+
+
+/* ---------- 10) تحسين لوحة التحكم: توازن الأحجام، حالات فراغ واضحة، امتحانات/مواعيد أوضح، نصوص صغيرة أوضح ---------- */
+.md-card{display:flex;flex-direction:column}
+.md-card > .md-tasklist,.md-card > .md-slots,.md-card > .md-dls{flex:0 1 auto}
+.md-foot{margin-top:auto}
+.md-tasks .md-tasklist + .md-foot,.md-tasks .md-more + .md-foot{margin-top:var(--card-gap)}
+.md-tasklist{margin-bottom:var(--card-gap)}
+.md-empty-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;padding:10px 8px;min-height:120px}
+.md-empty-state b{font-size:var(--fs-md);color:var(--text)}
+.md-empty-state small{max-width:30ch;line-height:1.6}
+.md-empty-ic{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;font-size:1.4rem;background:var(--tint-blue);margin-bottom:2px}
+.md-empty-state .btn{margin-top:6px}
+.md-empty-acts{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:6px}
+.md-empty-acts .btn{margin-top:0}
+.md-empty-link{color:var(--accent);font-size:var(--fs-sm);font-weight:700;margin-top:4px}
+.md-exam-empty{justify-content:flex-start}
+.md-exam-empty .md-empty-state{padding-top:6px}
+
+/* الامتحان: درجة الاستعجال بالألوان + صف معلومات */
+.md-badge{background:var(--tint-blue);color:var(--accent)}
+.md-exam.urg-amber .md-badge{background:var(--tint-amber);color:var(--amber)}
+.md-exam.urg-red .md-badge{background:var(--tint-red);color:var(--red)}
+.md-exam.urg-amber .md-cd-box b{color:var(--amber)}
+.md-exam.urg-red .md-cd-box b{color:var(--red)}
+.md-exam-meta{display:flex;flex-wrap:wrap;gap:6px}
+.md-meta-chip{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:99px;background:var(--card2);color:var(--text);font-size:var(--fs-sm);font-weight:600}
+.md-exam{justify-content:flex-start}
+
+/* المواعيد القادمة: شارة أيام بدرجة استعجال */
+.md-dl-days{padding:3px 10px;border-radius:99px;background:var(--tint-blue);color:var(--accent);font-size:var(--fs-sm)}
+.md-dl-days.u-amber{background:var(--tint-amber);color:var(--amber)}
+.md-dl-days.u-red{background:var(--tint-red);color:var(--red)}
+.md-dl{padding:10px 6px;border-radius:var(--r-md)}
+
+/* إجراءات سريعة: قائمة مضغوطة بأيقونة دائرية (تقل الارتفاع) */
+.md-quick-grid{grid-template-columns:minmax(0,1fr);gap:8px}
+.md-qa{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-areas:"ic t" "ic s";column-gap:12px;row-gap:0;align-items:center;justify-items:start;text-align:start;padding:10px 12px;min-height:56px}
+.md-qa-ic{grid-area:ic;margin:0;width:38px;height:38px}
+.md-qa b{grid-area:t;align-self:end}
+.md-qa small{grid-area:s;align-self:start}
+@media (max-width:760px){
+  .md-quick-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .md-qa{display:flex;flex-direction:column;align-items:center;text-align:center;padding:12px 6px}
+  .md-qa-ic{margin-bottom:4px}
+  .md-empty-state{min-height:96px}
+}
+
+/* نصوص صغيرة أوضح: حجم أدنى 12.5px وتباين أعلى (أغمق من --muted قليلاً) */
+.md-card small,.myday-note,.md-slot-time small,.md-cd-box small{font-size:max(12.5px,.8rem);color:color-mix(in srgb,var(--muted) 78%,var(--text))}
+.md-prio,.md-state,.md-badge,.md-chip{font-size:max(12.5px,.8rem)}
+.myday-date,.md-head .myday-date{font-size:var(--fs-sm);color:color-mix(in srgb,var(--muted) 78%,var(--text));font-weight:600}
+.md-link{font-size:max(13px,.84rem)}
+[data-theme="white"] .md-badge{background:#e3ecfd}
+[data-theme="white"] .md-exam.urg-amber .md-badge{background:#fdf0d8}
+[data-theme="white"] .md-exam.urg-red .md-badge{background:#fde8e8}
+[data-theme="white"] .md-dl-days.u-amber{background:#fdf0d8}
+[data-theme="white"] .md-dl-days.u-red{background:#fde8e8}
+[data-theme="white"] .md-dl-days{background:#e3ecfd}
+[data-theme="white"] .md-empty-ic{background:#eaf0fe}
+/* البطاقات القصيرة تلتف حول محتواها بدل التمدد بفراغ (المحاضرة/المهام/المواعيد تحدّد ارتفاع الصف) */
+.md-foot{margin-top:var(--card-gap)}
+.md-sched,.md-quick{align-self:start}
+@media (max-width:760px){.md-sched,.md-quick{align-self:stretch}}

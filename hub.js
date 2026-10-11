@@ -207,21 +207,27 @@
       .sort(function(a, b){ return a.dt - b.dt; });
     function ymdDate(s){ var q = String(s).split('-'); return new Date(+q[0], +q[1] - 1, +q[2]); }
     function dmy(d){ return DA()[d.getDay()] + ' ' + d.getDate() + '/' + (d.getMonth() + 1); }
+    function daysWord(n){ return n === 1 ? 'غداً' : n === 2 ? 'يومان' : n <= 10 ? n + ' أيام' : n + ' يوماً'; }
+    function emptyState(icon, title, hint, extra){
+      return '<div class="md-empty-state"><span class="md-empty-ic" aria-hidden="true">' + icon + '</span><b>' + title + '</b>' + (hint ? '<small>' + hint + '</small>' : '') + (extra || '') + '</div>';
+    }
     var examCard;
     if(upcoming.length){
       var ux = upcoming[0], dd = daysFromToday(ux.dt), totMin = Math.max(0, Math.floor((ux.dt.getTime() - now.getTime()) / 60000));
       var cd = Math.floor(totMin / 1440), ch = Math.floor((totMin % 1440) / 60), cm = totMin % 60;
-      examCard = '<button type="button" class="myday-tile md-card md-exam' + (dd <= 2 ? ' hot' : '') + '" data-go="exams">' +
-        '<span class="md-badge">' + (dd <= 2 ? 'قريب جداً' : 'أقرب امتحان') + '</span>' +
+      var urg = dd <= 2 ? ' urg-red' : dd <= 7 ? ' urg-amber' : '', hasT = /^\d{1,2}:\d{2}/.test(ux.e.time || '');
+      examCard = '<button type="button" class="myday-tile md-card md-exam' + (dd <= 2 ? ' hot' : '') + urg + '" data-go="exams">' +
+        '<span class="md-badge">' + (dd <= 2 ? 'قريب جداً' : dd <= 7 ? 'هالأسبوع' : 'أقرب امتحان') + '</span>' +
         '<span class="myday-lbl strong">' + esc(ux.e.name || 'امتحان') + '</span>' +
         (ux.e.course ? '<span class="myday-note">' + esc(ux.e.course) + '</span>' : '') +
         '<span class="md-cd" aria-label="المتبقي ' + cd + ' يوم و' + ch + ' ساعة و' + cm + ' دقيقة">' +
           '<span class="md-cd-box"><b>' + cd + '</b><small>يوم</small></span>' +
           '<span class="md-cd-box"><b>' + ch + '</b><small>ساعة</small></span>' +
           '<span class="md-cd-box"><b>' + cm + '</b><small>دقيقة</small></span></span>' +
-        '<span class="myday-note">' + dayWord(dd) + ' · ' + dmy(ux.dt) + (/^\d{1,2}:\d{2}/.test(ux.e.time || '') ? ' · <bdi dir="ltr">' + esc(ux.e.time) + '</bdi>' : '') + (upcoming.length > 1 ? ' · +' + (upcoming.length - 1) + ' قادمة' : '') + '</span></button>';
+        '<span class="md-exam-meta"><span class="md-meta-chip">📅 ' + dmy(ux.dt) + '</span>' + (hasT ? '<span class="md-meta-chip">🕙 <bdi dir="ltr">' + esc(ux.e.time) + '</bdi></span>' : '') + (ux.e.room ? '<span class="md-meta-chip">📍 ' + esc(ux.e.room) + '</span>' : '') + '</span>' +
+        '<span class="myday-note">' + dayWord(dd) + (upcoming.length > 1 ? ' · +' + (upcoming.length - 1) + ' قادمة' : '') + '</span></button>';
     } else {
-      examCard = '<button type="button" class="myday-tile md-card md-exam" data-go="exams"><span class="md-badge">الامتحانات</span><span class="myday-lbl strong">لا امتحانات قادمة</span><span class="myday-note">' + (exams.length ? 'كل امتحاناتك المسجّلة انتهت' : 'أضف موعد امتحان') + '</span></button>';
+      examCard = '<button type="button" class="myday-tile md-card md-exam md-exam-empty" data-go="exams"><span class="md-badge">الامتحانات</span>' + emptyState('📝', 'لا امتحانات قادمة', exams.length ? 'كل امتحاناتك المسجّلة انتهت' : 'أضف موعد امتحان ليظهر هنا بعدّاد تنازلي', '<span class="md-empty-link">اضغط لإدارة الامتحانات ←</span>') + '</button>';
     }
 
     /* --- مهام اليوم: متأخرة ثم مستحقة اليوم (بالأولوية) ثم المنجزة اليوم --- */
@@ -247,7 +253,8 @@
     if(dueAll.length) lines += '<div class="myday-line"><span>مهام اليوم</span><b><bdi dir="ltr">' + dueDone + ' / ' + dueAll.length + '</bdi></b></div><div class="myday-bar slim"><i style="width:' + (dueDone / dueAll.length * 100).toFixed(1) + '%"></i></div>';
     if(doneToday) lines += '<div class="myday-line"><span>مهام أُنجزت اليوم</span><b>' + doneToday + '</b></div>';
     var tasksBody = rowsAll.length ? '<div class="md-tasklist">' + rowsAll.slice(0, 4).map(taskRow).join('') + '</div>' + (rowsAll.length > 4 ? '<button type="button" class="md-more" data-go="tasks" data-tf="pending">+' + (rowsAll.length - 4) + ' مهام أخرى</button>' : '')
-      : '<p class="md-empty">' + (tasks.length ? 'لا شي مستحق اليوم' : 'لا مهام بعد') + '</p>';
+      : (tasks.length ? emptyState('🎉', 'لا شي مستحق اليوم', 'ما عندك مهام مستحقة اليوم — أو أضف مهمة جديدة', '<button type="button" class="btn btn-sm btn-ghost" data-myday-act="addtask">＋ إضافة مهمة</button>')
+        : emptyState('📝', 'لا مهام بعد', 'أضف أول مهمة لتظهر هنا مع أولويتها وموعدها', '<button type="button" class="btn btn-sm" data-myday-act="addtask">＋ إضافة مهمة</button>'));
     var tasksCard = '<section class="md-card md-tasks" aria-label="مهام اليوم"><div class="md-card-head"><h4>✅ مهام اليوم</h4><button type="button" class="md-link" data-go="tasks" data-tf="pending">عرض الكل ←</button></div>' +
       (overdue.length ? '<button type="button" class="md-chip danger" data-go="tasks" data-tf="overdue">⚠️ ' + overdue.length + ' ' + (overdue.length === 1 ? 'مهمة متأخرة' : 'مهام متأخرة') + '</button>' : '') +
       tasksBody +
@@ -262,7 +269,8 @@
         (e.state === 'now' ? '<span class="md-state now">جارية</span>' : e.state === 'done' ? '<span class="md-state done">انتهت</span>' : '') + '</button>';
     }).join('');
     var schedCard = '<section class="md-card md-sched" aria-label="جدول اليوم"><div class="md-card-head"><h4>🗓️ جدول اليوم</h4><button type="button" class="md-link" data-go="timetable">عرض الجدول الكامل ←</button></div>' +
-      (slots ? '<div class="md-slots">' + slots + '</div>' : '<p class="md-empty">' + (Object.keys(sp().timetable || {}).length ? 'ما في محاضرات اليوم' : 'ما في محاضرات بجدولك') + '</p>') + '</section>';
+      (slots ? '<div class="md-slots">' + slots + '</div>' : (Object.keys(sp().timetable || {}).length ? emptyState('🌴', 'ما في محاضرات اليوم', 'يومك فاضي من المحاضرات — استغلّه بجلسة تركيز')
+        : emptyState('📅', 'ما في محاضرات بجدولك', 'أضف جدولك لتظهر محاضرات اليوم هنا (الزر بالبطاقة الزرقاء)'))) + '</section>';
 
     /* --- إجراءات سريعة --- */
     var quickCard = '<section class="md-card md-quick" aria-label="إجراءات سريعة"><div class="md-card-head"><h4>⚡ إجراءات سريعة</h4></div><div class="md-quick-grid">' +
@@ -278,11 +286,12 @@
     var dlRows = dl.slice(0, 5).map(function(x){
       return '<button type="button" class="md-dl ' + x.kind + '" data-go="' + (x.kind === 'exam' ? 'exams' : 'tasks') + '"' + (x.kind === 'task' ? ' data-tf="pending"' : '') + '>' +
         '<span class="md-dl-ic" aria-hidden="true">' + (x.kind === 'exam' ? '📝' : '📌') + '</span>' +
-        '<span class="md-dl-body"><b>' + esc(x.title) + '</b><small>' + (x.sub ? esc(x.sub) + ' · ' : '') + dmy(x.dt) + '</small></span>' +
-        '<span class="md-dl-days">' + (x.days === 1 ? 'غداً' : x.days + ' يوماً') + '</span></button>';
+        '<span class="md-dl-body"><b>' + esc(x.title) + '</b><small>' + (x.kind === 'exam' ? 'امتحان' : 'مهمة') + ' · ' + (x.sub ? esc(x.sub) + ' · ' : '') + dmy(x.dt) + '</small></span>' +
+        '<span class="md-dl-days' + (x.days <= 2 ? ' u-red' : x.days <= 7 ? ' u-amber' : '') + '">' + daysWord(x.days) + '</span></button>';
     }).join('');
     var dlCard = '<section class="md-card md-deadlines" aria-label="أهم المواعيد القادمة"><div class="md-card-head"><h4>📅 أهم المواعيد القادمة</h4></div>' +
-      (dlRows ? '<div class="md-dls">' + dlRows + '</div>' : '<p class="md-empty">ما في مواعيد قادمة غير اللي فوق</p>') + '</section>';
+      (dlRows ? '<div class="md-dls">' + dlRows + '</div>' : emptyState('📅', 'ما في مواعيد قادمة', upcoming.length ? 'ما في غير الامتحان القادم بالبطاقة المجاورة' : 'أضف امتحاناً أو مهمة بموعد لتظهر هنا',
+        '<div class="md-empty-acts"><button type="button" class="btn btn-sm" data-myday-act="addexam">＋ امتحان</button><button type="button" class="btn btn-sm btn-ghost" data-myday-act="addtask">＋ مهمة</button></div>')) + '</section>';
 
     /* --- إجراء رئيسي واحد حسب الوقت: «حضرت» أثناء/قرب المحاضرة، وإلا «ابدأ جلسة تركيز» (مع خطة مراجعة لو امتحان قريب) --- */
     var cta = '', TL = window.TodayLogic;
@@ -300,7 +309,7 @@
     }
     var dateLabel = DA()[st.dayIdx] + ' ' + now.getDate() + '/' + (now.getMonth() + 1);
     var html = '<div class="myday-head md-head"><h3>🧭 يومي الجامعي</h3><span class="myday-date">' + dateLabel + '</span></div>' +
-      '<div class="md-card md-lecture">' + hero + '<div class="myday-cta">' + cta + '</div></div>' + examCard + tasksCard + schedCard + quickCard + dlCard;
+      '<div class="md-card md-lecture">' + hero + '<div class="myday-cta">' + cta + '</div></div>' + examCard + tasksCard + schedCard + dlCard + quickCard;
     if(html === myDayLast) return;
     myDayLast = html;
     var fi = -1, fa = document.activeElement;
@@ -337,8 +346,8 @@
       n.addEventListener('click', function(e){ e.stopPropagation(); if(window.toggleTask) window.toggleTask(n.getAttribute('data-task-toggle')); myDayLast = ''; renderMyDay(); });
     });
     el.querySelectorAll('[data-myday-act="addtask"]').forEach(function(n){ n.addEventListener('click', function(e){ e.stopPropagation(); if(window.addTask) window.addTask(); }); });
-    var add = el.querySelector('[data-myday-act="addclass"]');
-    if(add) add.addEventListener('click', function(e){ e.stopPropagation(); if(window.openSmartTimetable) window.openSmartTimetable(); });
+    el.querySelectorAll('[data-myday-act="addclass"]').forEach(function(add){ add.addEventListener('click', function(e){ e.stopPropagation(); if(window.openSmartTimetable) window.openSmartTimetable(); }); });
+    el.querySelectorAll('[data-myday-act="addexam"]').forEach(function(n){ n.addEventListener('click', function(e){ e.stopPropagation(); if(window.addExam) window.addExam(); }); });
     el.querySelectorAll('[data-myday-act="attend"]').forEach(function(b){ b.addEventListener('click', function(e){ e.stopPropagation(); if(window.TodayLogic && window.TodayLogic.markPresent(b.getAttribute('data-n'), b.getAttribute('data-key'))){ myDayLast = ''; renderMyDay(); } }); });
     el.querySelectorAll('[data-myday-act="map"]').forEach(function(b){ b.addEventListener('click', function(e){ e.stopPropagation(); if(window.switchTab) window.switchTab('campus'); if(window.CampusMap) window.CampusMap.select(b.getAttribute('data-b'), true); }); });
     el.querySelectorAll('[data-myday-act="plan"]').forEach(function(b){ b.addEventListener('click', function(e){ e.stopPropagation(); if(window.openExamPlan) window.openExamPlan(); }); });
