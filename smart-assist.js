@@ -2,11 +2,10 @@
    smart-assist.js — مساعد اليوم الجامعي للتلفون
    1) تنبيه «اطلع الآن»: لكل محاضرة بمبنى مختلف عن اللي قبلها، يحسب وقت المشي (من الخريطة) وينبّهك لحظة الطلعة المناسبة
       (يحترم مركز التنبيهات: خيار «تنبيه المحاضرات» + ساعات الهدوء).
-   2) شاشة «الآن»: بطاقة كبيرة سريعة (المحاضرة الحالية/التالية + العدّ التنازلي + المبنى + وقت الطلعة + باقي اليوم)؛
-      تُفتح من الاختصار (manifest) ?glance=1 أو من ⚙️ ← العمل.
+   2) (أُلغيت شاشة «الآن» بإصدار 134؛ بطاقة «يومي الجامعي» باللوحة تغطيها)
    3) شارة أيقونة التطبيق (Badge API) = مهام اليوم والمتأخرة، حيث يدعمها الجهاز (أندرويد/ويندوز لتطبيق PWA المثبّت).
    4) اختصارات: ?quick=task يفتح إضافة مهمة مباشرة.
-   ملاحظة: ما في «ويدجت» حقيقية لتطبيقات الويب على أندرويد/آيفون؛ البديل العملي: الاختصار + الشارة + شاشة «الآن».
+   ملاحظة: ما في «ويدجت» حقيقية لتطبيقات الويب على أندرويد/آيفون؛ البديل العملي: الاختصار + الشارة.
    ============================================================ */
 (function(root, factory){
   var api = factory(root);
@@ -80,48 +79,9 @@
     return sent;
   }
 
-  /* ---------- 2) شاشة «الآن» ---------- */
-  var gEl = null, gTimer = null;
-  function untilTxt(m){ m = Math.max(0, Math.ceil(m)); if(m < 60) return m + ' د'; var h = Math.floor(m / 60), r = m % 60; return h + ' س' + (r ? ' ' + r + ' د' : ''); }
-  function glanceHtml(){
-    var st = W.Schedule ? W.Schedule.status() : { today: [] }, e = st.current || st.next, later = !e && st.later ? st.later.entry : null, t = e || later;
-    var h = '<div class="ga-top"><b>📱 الآن</b><button type="button" class="ga-x" data-ga="close" aria-label="إغلاق">✕</button></div>';
-    if(!t){ return h + '<div class="ga-empty">ما في محاضرات بجدولك 🌴<br><small>أضف جدولك لتظهر هون المحاضرة الجاية.</small></div>'; }
-    var hue = W.courseHue ? W.courseHue(t.name) : 200, r = res(t), infos = leaveInfos(st), li = infos.filter(function(i){ return i.L.key === t.key; })[0];
-    var kicker = st.current ? '🔴 جارية الآن' : (st.next ? '⏭ المحاضرة التالية' : '📅 المحاضرة القادمة'), big;
-    if(st.current) big = t.hasEnd ? 'باقي ' + untilTxt(t.end - st.nowMin) : 'بدأت';
-    else if(st.next) big = 'بعد ' + untilTxt(t.start - st.nowMin);
-    else big = (st.later.daysAhead === 1 ? 'بكرة' : (W.DAYS_AR || [])[t.dayIdx]) + ' ' + hm(t.start);
-    var pct = st.current && t.hasEnd ? Math.min(100, Math.max(0, (st.nowMin - t.start) / (t.end - t.start) * 100)) : null;
-    h += '<div class="ga-card" style="--ch:' + hue + '"><div class="ga-k">' + kicker + '</div><div class="ga-name">' + esc(t.name) + '</div><div class="ga-big">' + esc(big) + '</div>' +
-      '<div class="ga-meta"><span>⏰ <bdi dir="ltr">' + hm(t.start) + (t.hasEnd ? '–' + hm(t.end) : '') + '</bdi></span>' + (r.b ? '<span>📍 ' + esc(r.b.n) + (r.fl ? ' · ط' + r.fl : '') + '</span>' : (t.room ? '<span>📍 ' + esc(t.room) + '</span>' : '')) + (t.instructor ? '<span>👤 ' + esc(t.instructor) + '</span>' : '') + '</div>' +
-      (pct !== null ? '<div class="ga-bar"><i style="width:' + pct.toFixed(1) + '%"></i></div>' : '') +
-      (li ? '<div class="ga-leave' + (li.late ? ' bad' : '') + '">🚶 من ' + esc(li.fromName) + ': المشي ~' + li.walk + ' د — ' + (li.late ? 'الفاصل أقصر من المشي، اطلع أول ما تخلص' : 'اطلع الساعة <b>' + hm(li.leaveAt) + '</b>') + '</div>' : '') +
-      (r.b ? '<button type="button" class="ga-btn" data-ga="map" data-b="' + r.b.id + '">🗺️ اعرضها على الخريطة</button>' : '') + '</div>';
-    var rest = (st.today || []).filter(function(x){ return x.state !== 'done' && x.key !== t.key; });
-    if(rest.length) h += '<div class="ga-list"><div class="ga-sub">باقي اليوم</div>' + rest.map(function(x){ var rb = res(x).b; return '<div class="ga-row"><bdi dir="ltr">' + hm(x.start) + '</bdi><b>' + esc(x.name) + '</b>' + (rb ? '<small>' + esc(rb.n) + '</small>' : '') + '</div>'; }).join('') + '</div>';
-    var n = badgeCount(sp().tasks, todayYmd());
-    var ex = (sp().exams || []).map(function(x){ var p = /^(\d{4})-(\d{2})-(\d{2})$/.exec(x.date || ''); return p ? { x: x, dt: new Date(+p[1], +p[2] - 1, +p[3]) } : null; }).filter(function(z){ return z && z.dt.getTime() >= new Date().setHours(0, 0, 0, 0); }).sort(function(a, b){ return a.dt - b.dt; })[0];
-    h += '<div class="ga-chips">' + (n ? '<button type="button" class="ga-chip" data-ga="tasks">📝 ' + n + ' مهمة اليوم/متأخرة</button>' : '<span class="ga-chip ok">📝 ما عليك مهام اليوم ✓</span>') +
-      (ex ? '<span class="ga-chip">⏳ ' + esc(ex.x.name || 'امتحان') + ' — بعد ' + Math.round((ex.dt - new Date().setHours(0, 0, 0, 0)) / 86400000) + ' يوم</span>' : '') + '</div>';
-    return h;
-  }
-  function renderGlance(){ if(gEl) gEl.innerHTML = glanceHtml(); }
-  function closeGlance(){ if(gTimer){ clearInterval(gTimer); gTimer = null; } if(gEl && gEl.parentNode) gEl.parentNode.removeChild(gEl); gEl = null; d.documentElement.classList.remove('ga-open'); try{ var u = new W.URL(W.location.href); if(u.searchParams.has('glance')){ u.searchParams.delete('glance'); W.history.replaceState(null, '', u.pathname + (u.search || '') + u.hash); } }catch(e){} }
-  function openGlance(){
-    if(gEl){ renderGlance(); return gEl; }
-    gEl = d.createElement('div'); gEl.className = 'ga-overlay'; gEl.setAttribute('role', 'dialog'); gEl.setAttribute('aria-modal', 'true'); gEl.setAttribute('aria-label', 'شاشة الآن');
-    gEl.addEventListener('click', function(e){
-      var b = e.target.closest && e.target.closest('[data-ga]'); if(!b) return; var a = b.getAttribute('data-ga');
-      if(a === 'close') closeGlance();
-      else if(a === 'map'){ closeGlance(); W.switchTab('campus'); if(W.CampusMap) W.CampusMap.select(b.getAttribute('data-b'), true); }
-      else if(a === 'tasks'){ closeGlance(); W.switchTab('tasks'); }
-    });
-    d.addEventListener('keydown', function esc2(e){ if(e.key === 'Escape' && gEl){ closeGlance(); d.removeEventListener('keydown', esc2); } });
-    d.body.appendChild(gEl); d.documentElement.classList.add('ga-open'); renderGlance();
-    gTimer = setInterval(renderGlance, 15000);
-    return gEl;
-  }
+  /* شاشة «الآن» أُلغيت (134). نُبقي openGlance كوصلة توافق لودجات APK القديمة (تفتح اللوحة حيث «يومي الجامعي» فيه المحاضرة الجاية) */
+  function openGlance(){ if(W.switchTab) W.switchTab('dashboard'); return true; }
+  function closeGlance(){}
 
   /* ---------- 3) شارة الأيقونة ---------- */
   function updateBadge(){
@@ -135,23 +95,19 @@
   /* ---------- 4) روابط الاختصارات ---------- */
   function handleParams(){
     var q; try{ q = new W.URLSearchParams(W.location.search); }catch(e){ return; }
-    if(q.get('glance') === '1') openGlance();
+    if(q.get('glance') === '1'){ try{ var g = new W.URL(W.location.href); g.searchParams.delete('glance'); W.history.replaceState(null, '', g.pathname + (g.search || '') + g.hash); }catch(e){} openGlance(); }   /* اختصار قديم مثبّت */
     if(q.get('quick') === 'task'){
       try{ var u = new W.URL(W.location.href); u.searchParams.delete('quick'); W.history.replaceState(null, '', u.pathname + (u.search || '') + u.hash); }catch(e){}
       if(W.switchTab) W.switchTab('tasks'); setTimeout(function(){ if(W.addTask) W.addTask(); }, 350);
     }
   }
-  function bindSettings(){
-    var b = d.getElementById('glanceBtn'); if(b && !b._ga){ b._ga = true; b.addEventListener('click', function(){ if(W.closeSettingsMenu) W.closeSettingsMenu(); openGlance(); }); }
-  }
   function init(){
-    bindSettings(); handleParams(); updateBadge();
+    handleParams(); updateBadge();
     setInterval(function(){ try{ tick(); }catch(e){} }, 60 * 1000);
     setInterval(updateBadge, 5 * 60 * 1000);
-    d.addEventListener('visibilitychange', function(){ if(d.visibilityState === 'visible'){ updateBadge(); if(gEl) renderGlance(); } });
+    d.addEventListener('visibilitychange', function(){ if(d.visibilityState === 'visible') updateBadge(); });
   }
   if(d.readyState === 'loading') d.addEventListener('DOMContentLoaded', function(){ setTimeout(init, 900); }); else setTimeout(init, 900);
-  setTimeout(bindSettings, 1500);
 
   return Object.assign(pure, { leaveInfos: leaveInfos, tick: tick, openGlance: openGlance, closeGlance: closeGlance, updateBadge: updateBadge, handleParams: handleParams });
 });

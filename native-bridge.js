@@ -174,7 +174,7 @@
     box.appendChild(t('div', 'ocri-title', '📱 أضف ودجت للشاشة الرئيسية'));
     box.appendChild(t('div', 'ocri-sub', 'اختر الودجت وبيطلع لك طلب من أندرويد لإضافته. بتتحدّث تلقائياً من جدولك.'));
     var list = t('div', 'wg-list');
-    [['next', '⏭', 'المحاضرة الجاية', 'اسم + عدّاد تنازلي حيّ + القاعة والمبنى + زر ✓ حضرت (2×2)'], ['today', '📅', 'جدول اليوم', 'كل محاضرات اليوم بألوان المواد + المهام (4×3)'], ['actions', '⚡', 'اختصارات سريعة', 'الآن · حضرت ✅ · مهمة · الخريطة · الجدول (4×1)']].forEach(function(x){
+    [['next', '⏭', 'المحاضرة الجاية', 'اسم + عدّاد تنازلي حيّ + القاعة والمبنى + زر ✓ حضرت (2×2)'], ['today', '📅', 'جدول اليوم', 'كل محاضرات اليوم بألوان المواد + المهام (4×3)'], ['actions', '⚡', 'اختصارات سريعة', 'حضرت ✅ · مهمة · الخريطة · الجدول (4×1)']].forEach(function(x){
       var b = t('button', 'wg-opt'); b.type = 'button'; b.setAttribute('data-wg', x[0]);
       b.appendChild(t('span', 'wg-ic', x[1])); var tx = t('span', 'wg-tx'); tx.appendChild(t('b', null, x[2])); tx.appendChild(t('small', null, x[3])); b.appendChild(tx);
       b.addEventListener('click', function(){

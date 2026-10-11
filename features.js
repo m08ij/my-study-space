@@ -89,10 +89,7 @@
      ============================================================ */
   var THEMES = [
     {id:'dark', name:'داكن', colors:['#0b0f1a','#22d3ee','#a78bfa']},
-    {id:'obsidian', name:'أوبسيديان', colors:['#0a0a0d','#d9b46a','#d08f72']},
-    {id:'mocha', name:'موكا', colors:['#16120f','#a8c9a0','#e0c9a6']},
     {id:'coral', name:'مرجان', colors:['#0b1a21','#ff9a85','#7fd6c8']},
-    {id:'graphite', name:'جرافيت', colors:['#0d0f12','#a3e635','#2dd4bf']},
     {id:'royal', name:'ملكي', colors:['#0f0524','#a78bfa','#fbbf24']},
     {id:'cyberpunk', name:'سايبربانك', colors:['#0a0014','#22d3ee','#ec4899']},
     {id:'midnight', name:'منتصف الليل', colors:['#050914','#0ea5e9','#8b5cf6']},
@@ -102,8 +99,12 @@
   window.THEMES = THEMES;
 
   /* ترحيل الثيمات المستبدلة: من اختار ثيماً قديماً (محلياً أو من السحابة) ينتقل لأقرب بديل داكن */
-  var LEGACY_THEMES = { dracula: 'graphite', sakura: 'coral', nord: 'graphite', ocean: 'midnight', aurora: 'mocha', ivory: 'glass-light', sky: 'glass-light', mint: 'glass-light', emerald: 'mocha', ember: 'coral', sunset: 'obsidian', lavender: 'glass-light', burgundy: 'mocha' };
+  var LEGACY_THEMES = { dracula: 'dark', sakura: 'coral', nord: 'dark', ocean: 'midnight', aurora: 'coral', ivory: 'glass-light', sky: 'glass-light', mint: 'glass-light', emerald: 'coral', ember: 'coral', sunset: 'coral', lavender: 'glass-light', burgundy: 'coral', graphite: 'dark', obsidian: 'midnight', mocha: 'coral' };
+  /* «تلقائي»: يتبع ثيم الجهاز (فاتح ← زجاج فاتح، داكن ← داكن) ويتحدّث لحاله لو تغيّر الإعداد */
+  var AUTO = 'auto';
+  function systemTheme(){ try{ return window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'glass-light' : 'dark'; }catch(e){ return 'dark'; } }
   function resolveTheme(t){
+    if(t === AUTO) return systemTheme();
     if(LEGACY_THEMES[t]) t = LEGACY_THEMES[t];
     return THEMES.some(function(x){ return x.id === t; }) ? t : 'dark';
   }
@@ -123,19 +124,25 @@
   }
 
   window.applyTheme = function(t, animate){
-    t = resolveTheme(t);
+    var choice = t === AUTO ? AUTO : resolveTheme(t);        /* المحفوظ: «auto» أو معرّف ثيم صالح */
     if(animate) themeFade();
-    setThemeAttr(t);
+    setThemeAttr(resolveTheme(choice));
     if(window.applyCustomAccent) window.applyCustomAccent();   /* لون التمييز المخصص يُعاد حسابه لخلفية الثيم الجديد */
-    S().set('theme', t);
+    S().set('theme', choice);
     document.querySelectorAll('.theme-swatch').forEach(function(sw){
-      sw.classList.toggle('active', sw.dataset.theme === t);
+      var on = sw.dataset.theme === choice;
+      sw.classList.toggle('active', on); sw.setAttribute('aria-pressed', on ? 'true' : 'false');
     });
   };
+  try{
+    var mq = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)');
+    if(mq){ var onSys = function(){ if(S().get('theme', 'dark') === AUTO) window.applyTheme(AUTO, true); }; if(mq.addEventListener) mq.addEventListener('change', onSys); else if(mq.addListener) mq.addListener(onSys); }
+  }catch(e){}
 
   window.buildThemePanel = function(){
     var grid = document.getElementById('themeGrid'); if(!grid) return;
-    var html = '';
+    var html = '<div class="theme-swatch theme-auto" role="button" tabindex="0" title="تلقائي — يتبع ثيم جهازك (فاتح/داكن)" data-theme="auto" style="background:linear-gradient(135deg, #0b0f1a 0%, #0b0f1a 50%, #e8edf8 50%, #e8edf8 100%)">' +
+      '<div class="sw-check">✓</div><div class="sw-label">🌓 تلقائي</div></div>';
     THEMES.forEach(function(t){
       html += '<div class="theme-swatch" role="button" tabindex="0" title="' + t.name + (t.light ? ' (فاتح)' : '') + '" data-theme="' + t.id + '" style="background:linear-gradient(135deg, ' +
         t.colors[0] + ' 0%, ' + t.colors[0] + ' 40%, ' + t.colors[1] + ' 40%, ' + t.colors[1] + ' 70%, ' +
@@ -145,7 +152,7 @@
     grid.innerHTML = html;
     var pick = function(sw){
       window.applyTheme(sw.dataset.theme, true);
-      var name = (THEMES.find(function(t){ return t.id === sw.dataset.theme; }) || {}).name || '';
+      var name = sw.dataset.theme === 'auto' ? 'تلقائي' : (THEMES.find(function(t){ return t.id === sw.dataset.theme; }) || {}).name || '';
       toast('🎨 تم تفعيل ثيم "' + name + '"', 'success', 1800);
     };
     grid.querySelectorAll('.theme-swatch').forEach(function(sw){

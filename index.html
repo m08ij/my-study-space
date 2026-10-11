@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="مساحتي">
-<link rel="stylesheet" href="app.bundle.css?v=134">
+<link rel="stylesheet" href="app.bundle.css?v=135">
 <script>/* مستخدم جديد: تظهر شاشة الترحيب من أول رسم (بدون وميض اللوحة خلفها)، ويزيل app.js الصنف عند اكتمال الدخول */
 try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement.classList.add("is-new"); }catch(e){}</script>
 </head>
@@ -87,14 +87,11 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
           <div class="si-row" role="group" aria-label="حجم الخط"><span class="si-ic" aria-hidden="true">🔤</span><span class="si-tx"><b>حجم الخط</b><small id="fontSub">عادي</small></span><span class="si-seg"><button type="button" data-fs="sm" aria-pressed="false" aria-label="خط صغير">أ</button><button type="button" data-fs="md" aria-pressed="true" aria-label="خط عادي">أ</button><button type="button" data-fs="lg" aria-pressed="false" aria-label="خط كبير">أ</button></span></div>
         </div>
         <div class="sm-group" data-g="work" role="group" aria-label="وضع العمل">
-          <div class="sm-title"><b>وضع العمل</b><small>تركيز، خصوصية، استيراد من صورة، إشعارات، لوحة الأوامر</small></div>
+          <div class="sm-title"><b>وضع العمل</b><small>تركيز، اليوم فقط، استيراد من صورة، إشعارات</small></div>
           <button class="settings-item native-only" id="widgetBtn" type="button"><span class="si-ic" aria-hidden="true">📱</span><span class="si-tx"><b>ودجتات الشاشة الرئيسية</b><small>أضف المحاضرة الجاية أو جدول اليوم لتلفونك</small></span><span class="si-go" aria-hidden="true">‹</span></button>
-          <button class="settings-item" id="glanceBtn" type="button"><span class="si-ic" aria-hidden="true">📱</span><span class="si-tx"><b>شاشة «الآن»</b><small>المحاضرة الجاية بنظرة سريعة للتلفون</small></span><span class="si-go" aria-hidden="true">‹</span></button>
           <button class="settings-item" id="todayBtn" type="button" role="switch" aria-checked="false"><span class="si-ic" aria-hidden="true">🎯</span><span class="si-tx"><b>اليوم فقط</b><small class="tb-t">اللوحة الكاملة</small></span><span class="si-sw" aria-hidden="true"></span></button>
-          <button class="settings-item" id="privacyBtn" type="button" role="switch" aria-checked="false"><span class="si-ic" aria-hidden="true">🙈</span><span class="si-tx"><b>وضع الخصوصية</b><small class="pv-t">الأرقام ظاهرة</small></span><span class="si-sw" aria-hidden="true"></span></button>
           <button class="settings-item" id="ocrLabBtn" type="button" role="switch" aria-checked="false"><span class="si-ic" aria-hidden="true">📷</span><span class="si-tx"><b>استيراد الجدول من صورة</b><small class="ol-t">تجريبي — مطفأ</small></span><span class="si-sw" aria-hidden="true"></span></button>
           <button class="settings-item" id="notifBtn" type="button"><span class="si-ic" aria-hidden="true">🔔</span><span class="si-tx"><b>الإشعارات</b><small id="notifBtnText">اضغط للتفعيل</small></span><span class="si-go" aria-hidden="true">‹</span></button>
-          <button class="settings-item" id="cmdkBtn" type="button"><span class="si-ic" aria-hidden="true">⌘</span><span class="si-tx"><b>لوحة الأوامر</b><small>بحث وتنقل سريع</small></span><kbd class="si-kbd" dir="ltr">Alt+K</kbd></button>
         </div>
         <div class="sm-group" data-g="data" role="group" aria-label="البيانات">
           <div class="sm-title"><b>البيانات</b><small>مزامنة سحابية اختيارية ونسخ احتياطي بيدك</small></div>
@@ -532,7 +529,7 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
 <div class="toast-container" id="toastContainer" role="status" aria-live="polite"></div>
 
 <!-- مكتبات خارجية -->
-<script src="app.bundle.js?v=134"></script>
+<script src="app.bundle.js?v=135"></script>
 
 <!-- الملفات الأساسية (الترتيب مهم جداً!) -->
 <script>
@@ -555,7 +552,7 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
    1) إن لم يطابق window.APP_BUILD رقم BUILD هنا → يمسح كاش التطبيق ويعيد التحميل مرة واحدة (حارس sessionStorage يمنع التكرار).
    2) أقسام اللوحة المتقدمة (تحليلات/LMS/إحصائيات) تُنقل إلى خانتها الثابتة إذا أضافتها سكربتات قديمة بمكان آخر. */
 (function(){
-  var BUILD = '134';
+  var BUILD = '135';
   var SLOTS = { insightsSection: 'slotInsights', lmsWidget: 'slotLms', enhancedStatsSection: 'slotEnhanced' };
   function heal(){
     var dash = document.getElementById('dashboard'); if(!dash) return;

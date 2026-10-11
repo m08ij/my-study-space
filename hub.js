@@ -1,5 +1,5 @@
 /* ============================================================
-   🧭 hub.js — يومي الجامعي + تفاصيل المحاضرة + مركز المواد + لوحة الأوامر
+   🧭 hub.js — يومي الجامعي + تفاصيل المحاضرة + مركز المواد
    - يعتمد على البيانات والدوال الموجودة (space / S / switchTab / showModal ...)
    - كل الألوان من متغيرات الثيم؛ لا بيانات وهمية
    ============================================================ */
@@ -796,7 +796,7 @@
   }
 
   /* ============================================================
-     4) الإضافة السريعة السياقية + لوحة الأوامر
+     4) الإضافة السريعة السياقية
      ============================================================ */
   var TAB_ADD = {
     courses: { fab: 'course', run: function(){ window.addMyCourse(); } },
@@ -829,156 +829,20 @@
     window._hubSwitchWrapped = true;
   }
 
-  /* --- لوحة الأوامر --- */
-  var palette = null;
-  var SHORTCUTS = [
-    ['Alt + K', 'فتح لوحة الأوامر'], ['؟  /  ?', 'عرض الاختصارات'], ['/', 'التركيز على البحث'],
-    ['Alt + 1…6', 'الرئيسية، الجدول، موادي، المهام، الحضور، علاماتي'], ['Alt + A', 'إضافة حسب الصفحة الحالية'],
-    ['Alt + Q', 'إضافة سريعة بالنص'], ['Alt + T', 'مهمة جديدة'], ['Alt + N', 'ملاحظة جديدة'], ['Alt + P', 'المؤقت'], ['Esc', 'إغلاق أي نافذة']
-  ];
-  function paletteCommands(){
-    var out = [], idxHints = { dashboard: 'Alt+1', timetable: 'Alt+2', courses: 'Alt+3', tasks: 'Alt+4', attendance: 'Alt+5', gradecalc: 'Alt+6' };
-    document.querySelectorAll('.nav-item[data-tab]').forEach(function(n){
-      var tab = n.getAttribute('data-tab'), lbl = (n.querySelector('.label') || n).textContent.trim(), ic = (n.querySelector('.ic') || {}).textContent || '➡️';
-      out.push({ cat: 'تنقل', icon: ic, label: 'اذهب إلى: ' + lbl, kw: tab, hint: idxHints[tab] || '', run: function(){ window.switchTab(tab); } });
-    });
-    var act = [
-      ['📝', 'إضافة مهمة', 'task مهمة واجب', 'Alt+T', function(){ window.addTask(); }],
-      ['⏳', 'إضافة امتحان', 'exam امتحان اختبار', '', function(){ window.addExam(); }],
-      ['📔', 'إضافة ملاحظة', 'note ملاحظة', 'Alt+N', function(){ window.addNote(); }],
-      ['📚', 'إضافة مادة', 'course مادة', '', function(){ window.addMyCourse(); }],
-      ['🗓', 'إضافة محاضرة / جدول', 'class lecture محاضرة جدول', '', function(){ if(window.openSmartTimetable) window.openSmartTimetable(); }],
-      ['💰', 'إضافة مصروف', 'expense مصروف', '', function(){ window.addBudgetItem('expense'); }],
-      ['⚡', 'إضافة سريعة بالنص', 'quick capture', 'Alt+Q', function(){ window.openQuickCapture(); }],
-      ['➕', 'أضف هنا (حسب الصفحة الحالية)', 'add here', 'Alt+A', quickAddHere],
-      ['⏱️', 'المؤقت (التركيز)', 'timer pomodoro مؤقت بومودورو', 'Alt+P', function(){ window.switchTab('timer'); }],
-      ['💾', 'تصدير نسخة احتياطية', 'backup export نسخة', '', function(){ window.downloadBackup(false); }],
-      ['📥', 'استيراد نسخة احتياطية', 'restore import', '', function(){ window.restoreFromFile(); }],
-      ['☁️', 'المزامنة السحابية', 'sync cloud مزامنة', '', function(){ if(window.SB) window.SB.showSyncPanel(); }],
-      ['🖨️', 'طباعة / تصدير PDF', 'print pdf طباعة', '', function(){ window.exportPDF(); }],
-      ['🧠', 'خطة مراجعة للامتحانات', 'exam plan revision خطة مراجعة امتحان', '', function(){ if(window.openExamPlan) window.openExamPlan(); }],
-      ['📅', 'تصدير التقويم (.ics)', 'calendar ics export تقويم تصدير', '', function(){ if(window.exportCalendar) window.exportCalendar(); }],
-      ['🧩', 'تخصيص لوحة التحكم', 'customize dashboard تخصيص لوحة', '', function(){ window.switchTab('dashboard'); dsOpenEditor(); }],
-      ['↺', 'استعادة ترتيب لوحة التحكم الافتراضي', 'reset dashboard layout استعادة ترتيب', '', function(){ window.switchTab('dashboard'); dsConfirmReset(); }],
-      ['⌨️', 'عرض الاختصارات', 'help shortcuts مساعدة اختصارات', '؟', function(){ openPalette('help'); }]
-    ];
-    act.forEach(function(a){ out.push({ cat: 'أوامر', icon: a[0], label: a[1], kw: a[2], hint: a[3], run: a[4] }); });
-    (window.THEMES || []).forEach(function(t){ out.push({ cat: 'الثيم', icon: '🎨', label: 'الثيم: ' + t.name, kw: 'theme ثيم ' + t.id, hint: '', run: function(){ window.applyTheme(t.id, true); } }); });
-    return out;
-  }
-  function paletteData(q){
-    var res = [], tok = q.toLowerCase().split(/\s+/).filter(Boolean);
-    function hit(text){ var h = String(text || '').toLowerCase(); return tok.every(function(t){ return h.indexOf(t) > -1; }); }
-    (sp().courses || []).forEach(function(c){
-      if(hit(c.name + ' ' + (c.code || '') + ' ' + (c.instructor || '') + ' ' + (c.room || ''))) res.push({ cat: 'المواد', icon: '📚', label: c.name, hint: c.code || '', run: function(){ window.switchTab('courses'); openCourse(c.id); } });
-    });
-    (sp().tasks || []).forEach(function(t){
-      if(t.title && hit(t.title + ' ' + (t.course || ''))) res.push({ cat: 'المهام', icon: t.done ? '☑' : '☐', label: t.title, hint: t.due || '', run: function(){ window.switchTab('tasks'); } });
-    });
-    (sp().exams || []).forEach(function(e){
-      if(e.name && hit(e.name + ' ' + (e.course || ''))) res.push({ cat: 'الامتحانات', icon: '⏳', label: e.name, hint: e.date || '', run: function(){ window.switchTab('exams'); } });
-    });
-    (window.notes || []).forEach(function(n){
-      if(n && hit((n.title || '') + ' ' + (n.body || ''))) res.push({ cat: 'الملاحظات', icon: '📔', label: n.title || String(n.body || '').slice(0, 40), hint: n.course || '', run: function(){ window.switchTab('notes'); } });
-    });
-    return res;
-  }
-  function openPalette(mode){
-    if(palette) { palette.input.focus(); if(mode === 'help') renderPalette('?'); return; }
-    var bd = document.createElement('div');
-    bd.className = 'cmdk-backdrop';
-    bd.innerHTML = '<div class="cmdk" role="dialog" aria-modal="true" aria-label="لوحة الأوامر">' +
-      '<div class="cmdk-input"><span aria-hidden="true">⌘</span><input type="text" id="cmdkInput" placeholder="اكتب أمراً أو ابحث في موادك ومهامك…  (؟ للمساعدة)" autocomplete="off" aria-label="لوحة الأوامر" aria-controls="cmdkList"></div>' +
-      '<div class="cmdk-list" id="cmdkList" role="listbox"></div>' +
-      '<div class="cmdk-foot"><span>↑↓ تنقل</span><span>Enter تنفيذ</span><span>Esc إغلاق</span></div></div>';
-    document.body.appendChild(bd);
-    palette = { el: bd, input: bd.querySelector('#cmdkInput'), list: bd.querySelector('#cmdkList'), items: [], active: 0, opener: document.activeElement };
-    bd.addEventListener('click', function(e){ if(e.target === bd) closePalette(); });
-    palette.input.addEventListener('input', function(){ renderPalette(palette.input.value); });
-    palette.input.addEventListener('keydown', function(e){
-      if(e.key === 'ArrowDown'){ e.preventDefault(); setPaletteActive(Math.min(palette.items.length - 1, palette.active + 1)); }
-      else if(e.key === 'ArrowUp'){ e.preventDefault(); setPaletteActive(Math.max(0, palette.active - 1)); }
-      else if(e.key === 'Enter'){ e.preventDefault(); runPaletteItem(palette.active); }
-      else if(e.key === 'Tab'){ e.preventDefault(); }
-    });
-    renderPalette(mode === 'help' ? '?' : '');
-    if(mode === 'help') palette.input.value = '؟';
-    palette.input.focus();
-  }
-  function closePalette(){
-    if(!palette) return false;
-    var p = palette; palette = null; p.el.remove();
-    if(p.opener && p.opener.focus && document.contains(p.opener)){ try{ p.opener.focus(); }catch(e){} }
-    return true;
-  }
-  function setPaletteActive(i){
-    if(!palette) return;
-    palette.active = i;
-    palette.list.querySelectorAll('.cmdk-item').forEach(function(el, k){
-      el.classList.toggle('active', k === i); el.setAttribute('aria-selected', k === i ? 'true' : 'false');
-      if(k === i && el.scrollIntoView) el.scrollIntoView({ block: 'nearest' });
-    });
-  }
-  function runPaletteItem(i){
-    if(!palette || !palette.items[i]) return;
-    var it = palette.items[i];
-    closePalette();
-    setTimeout(function(){ try{ it.run(); }catch(e){ console.error(e); toast('تعذّر تنفيذ الأمر', 'warn', 2200); } }, 30);
-  }
-  function renderPalette(q){
-    if(!palette) return;
-    q = String(q || '').trim();
-    if(q === '?' || q === '؟'){
-      palette.items = []; palette.active = -1;
-      palette.list.innerHTML = '<div class="cmdk-help">' + SHORTCUTS.map(function(s){ return '<div class="cmdk-help-row"><kbd>' + esc(s[0]) + '</kbd><span>' + esc(s[1]) + '</span></div>'; }).join('') + '</div>';
-      return;
-    }
-    var items = [];
-    var cmds = paletteCommands();
-    if(q){
-      var tok = q.toLowerCase().split(/\s+/).filter(Boolean);
-      cmds = cmds.filter(function(c){ var h = (c.label + ' ' + c.kw).toLowerCase(); return tok.every(function(t){ return h.indexOf(t) > -1; }); });
-      cmds.sort(function(a, b){ return a.label.toLowerCase().indexOf(tok[0]) - b.label.toLowerCase().indexOf(tok[0]); });
-      items = cmds.slice(0, 8).concat(paletteData(q).slice(0, 10));
-    } else {
-      /* بدون نص: الإضافات والأوامر أولاً ثم التنقل (الثيمات تظهر عند البحث فقط) */
-      var rest = cmds.filter(function(c){ return c.cat !== 'الثيم'; });
-      items = rest.filter(function(c){ return c.cat === 'أوامر'; }).concat(rest.filter(function(c){ return c.cat === 'تنقل'; })).slice(0, 20);
-    }
-    palette.items = items; palette.active = items.length ? 0 : -1;
-    if(!items.length){ palette.list.innerHTML = '<div class="cmdk-empty">ما في نتائج لـ «' + esc(q) + '»</div>'; return; }
-    var html = '', lastCat = '';
-    items.forEach(function(it, i){
-      if(it.cat !== lastCat){ html += '<div class="cmdk-cat">' + esc(it.cat) + '</div>'; lastCat = it.cat; }
-      html += '<div class="cmdk-item" role="option" data-i="' + i + '" aria-selected="false"><span class="cmdk-ic">' + esc(it.icon) + '</span><span class="cmdk-lbl">' + esc(it.label) + '</span>' + (it.hint ? '<kbd>' + esc(it.hint) + '</kbd>' : '') + '</div>';
-    });
-    palette.list.innerHTML = html;
-    palette.list.querySelectorAll('.cmdk-item').forEach(function(el){
-      el.addEventListener('mousemove', function(){ var i = parseInt(el.getAttribute('data-i'), 10); if(i !== palette.active) setPaletteActive(i); });
-      el.addEventListener('click', function(){ runPaletteItem(parseInt(el.getAttribute('data-i'), 10)); });
-    });
-    setPaletteActive(0);
-  }
-  window.openCommandPalette = openPalette;
 
-  /* Esc يغلق أعلى طبقة تابعة للـ hub (اللوحة ثم النوافذ الجانبية) */
+  /* Esc يغلق أعلى نافذة جانبية تابعة للـ hub */
   window.HubUI = { openSheet: openSheet, closeTop: function(){
-    if(closePalette()) return true;
     var s = sheets[sheets.length - 1];
     if(s){ s.close(); return true; }
     return false;
   } };
 
-  /* اختصارات: Alt+K (لوحة الأوامر) — Alt+A (أضف هنا) — ؟ (الاختصارات). لا تتعارض مع اختصارات المتصفح (Ctrl+K/Ctrl+/ مثلاً) */
+  /* اختصار: Alt+A (أضف هنا حسب الصفحة الحالية). لا يتعارض مع اختصارات المتصفح */
   document.addEventListener('keydown', function(e){
     var tag = ((document.activeElement || {}).tagName || '').toUpperCase();
     var typing = ['INPUT', 'TEXTAREA', 'SELECT'].indexOf(tag) > -1 || (document.activeElement && document.activeElement.isContentEditable);
-    if(e.altKey && !e.ctrlKey && !e.metaKey && String(e.key).toLowerCase() === 'k'){
-      e.preventDefault(); if(palette) closePalette(); else openPalette(); return;
-    }
     if(typing) return;
-    if(e.altKey && !e.ctrlKey && !e.metaKey && String(e.key).toLowerCase() === 'a'){ e.preventDefault(); quickAddHere(); return; }
-    if(!e.altKey && !e.ctrlKey && !e.metaKey && (e.key === '?' || e.key === '؟')){ e.preventDefault(); openPalette('help'); }
+    if(e.altKey && !e.ctrlKey && !e.metaKey && String(e.key).toLowerCase() === 'a'){ e.preventDefault(); quickAddHere(); }
   });
 
   /* ============================================================
@@ -1215,17 +1079,6 @@
   }
 
   function initUI(){
-    var menu = document.getElementById('settingsMenu');
-    if(menu){
-      var b = document.getElementById('cmdkBtn');   /* الزر ثابت بـ index.html (مجموعة «وضع العمل»)؛ نُنشئه فقط إن غاب */
-      if(!b){
-        b = document.createElement('button');
-        b.className = 'settings-item'; b.id = 'cmdkBtn'; b.type = 'button';
-        b.innerHTML = '<span class="si-ic">⌘</span><span class="si-tx"><b>لوحة الأوامر</b></span><kbd class="si-kbd" dir="ltr">Alt+K</kbd>';
-        menu.appendChild(b);
-      }
-      if(!b._cmdk){ b._cmdk = true; b.addEventListener('click', function(){ if(window.closeSettingsMenu) window.closeSettingsMenu(); openPalette(); }); }
-    }
     wrapSwitchTab();
     markFab();
     dsBuildMenu();

@@ -36,7 +36,7 @@
 
   var WIDGETS = {
     focus: {
-      title: 'وضع التركيز', icon: '🎯', default: true,
+      title: 'وضع التركيز', icon: '🎯', default: false,
       html: function(){
         return '<div class="lw-card lw-focus" data-widget="focus">' +
           '<div class="lw-focus-row"><div class="lw-focus-ic">🎯</div>' +
@@ -46,8 +46,31 @@
       },
       attach: function(card){ var btn = card.querySelector('#lwFocusStart'); if(btn) btn.addEventListener('click', openFocusScreen); }
     },
+    next: {
+      title: 'المحاضرة الجاية', icon: '⏭', default: true,
+      html: function(){
+        return '<div class="lw-card" data-widget="next"><div class="lw-title"><span class="lw-ic">⏭</span> المحاضرة الجاية</div><div id="lwNextBody"></div></div>';
+      },
+      attach: function(){ renderNextBody(); }
+    },
+    tasks: {
+      title: 'مهام اليوم', icon: '📝', default: true,
+      html: function(){
+        return '<div class="lw-card" data-widget="tasks"><div class="lw-title"><span class="lw-ic">📝</span> مهام اليوم والمتأخرة</div><div id="lwTasksBody"></div></div>';
+      },
+      attach: function(){ renderTasksBody(); }
+    },
+    quick: {
+      title: 'إضافة سريعة', icon: '⚡', default: true,
+      html: function(){
+        return '<div class="lw-card" data-widget="quick"><div class="lw-title"><span class="lw-ic">⚡</span> إضافة سريعة</div>' +
+          '<div class="lw-quick"><input type="text" id="lwQuickInput" class="lw-input" placeholder="اكتب مهمة… مثلاً: واجب شبكات بكرة" autocomplete="off" aria-label="إضافة مهمة سريعة"><button type="button" class="lw-btn pri" data-lw="qadd" aria-label="أضف المهمة">➕</button></div>' +
+          '<div class="lw-chips"><button type="button" class="lw-chip" data-lw="exam">⏳ امتحان</button><button type="button" class="lw-chip" data-lw="note">📔 ملاحظة</button><button type="button" class="lw-chip" data-lw="spend">💸 مصروف</button><button type="button" class="lw-chip" data-lw="course">📚 مادة</button></div></div>';
+      },
+      attach: function(){}
+    },
     prayer: {
-      title: 'مواقيت الصلاة', icon: '🕌', default: true,
+      title: 'مواقيت الصلاة', icon: '🕌', default: false,
       html: function(){
         return '<div class="lw-card" data-widget="prayer">' +
           '<div class="lw-title"><span class="lw-ic">🕌</span> مواقيت الصلاة' +
@@ -62,7 +85,7 @@
       }
     },
     events: {
-      title: 'الأحداث القادمة', icon: '📅', default: true,
+      title: 'الأحداث القادمة', icon: '📅', default: false,
       html: function(){
         return '<div class="lw-card" data-widget="events">' +
           '<div class="lw-title"><span class="lw-ic">📅</span> الأحداث القادمة' +
@@ -107,7 +130,12 @@
   var enabledWidgets = [];
   function loadEnabled(){
     try{ var v = JSON.parse(localStorage.getItem('lw_enabled_widgets') || 'null'); if(Array.isArray(v)) return v; }catch(e){}
-    return Object.keys(WIDGETS).filter(function(k){ return WIDGETS[k].default; });
+    return defaultEnabled();
+  }
+  /* الافتراضي أخف (3 أدوات): المحاضرة الجاية ثم المهام ثم الإضافة السريعة؛ التركيز والصلاة والأحداث وغيرها من ⚙ التخصيص */
+  function defaultEnabled(){
+    var pref = ['next', 'tasks', 'quick', 'focus', 'prayer'];
+    return pref.filter(function(k){ return WIDGETS[k] && WIDGETS[k].default; }).concat(Object.keys(WIDGETS).filter(function(k){ return WIDGETS[k].default && pref.indexOf(k) < 0; }));
   }
   function saveEnabled(){ try{ localStorage.setItem('lw_enabled_widgets', JSON.stringify(enabledWidgets)); }catch(e){} }
 
@@ -129,6 +157,89 @@
     document.body.appendChild(focusScreen);
   }
 
+  /* ============ أدوات سريعة محسّنة (134): المحاضرة الجاية + مهام اليوم + إضافة سريعة ============ */
+  var ATT_KEY = 'ss_att_applied';   /* نفس مفتاح تطبيق الحضور القادم من ودجات أندرويد (name|startMs) فلا يتكرر التسجيل */
+  function attKeys(){ try{ return JSON.parse(localStorage.getItem(ATT_KEY) || '[]'); }catch(e){ return []; } }
+  function attAdd(k){ var a = attKeys(); if(a.indexOf(k) < 0){ a.push(k); try{ localStorage.setItem(ATT_KEY, JSON.stringify(a.slice(-120))); }catch(e){} } }
+  function lecStartMs(e){ var n = new Date(); return new Date(n.getFullYear(), n.getMonth(), n.getDate()).getTime() + e.start * 60000; }
+  function hmTxt(m){ m = Math.round(m); return ('0' + (Math.floor(m / 60) % 24)).slice(-2) + ':' + ('0' + (m % 60)).slice(-2); }
+  function durTxt(m){ m = Math.max(0, Math.ceil(m)); if(m < 60) return m + ' د'; var h = Math.floor(m / 60), r = m % 60; return h + ' س' + (r ? ' ' + r + ' د' : ''); }
+  function placeOf(e){
+    var CM = window.CampusMap, r = CM && CM.resolve ? CM.resolve(e) : null, room = String(e.room || '').trim();
+    if(r && r.b && r.b.ab) room = room.split(r.b.ab).join('');
+    room = room.replace(/^[\s\-–·:]*(قاعة|قاعه|room)\s*/i, '').replace(/[()]/g, '').trim();
+    if(/^[A-Za-z]?\d+[A-Za-z]?$/.test(room)) room = 'قاعة ' + room;
+    var b = r && r.b ? r.b.n + (r.fl ? ' · ط' + r.fl : '') : (e.building || '');
+    return { text: [room, b].filter(Boolean).join(' · '), bid: r && r.b ? r.b.id : '' };
+  }
+  /* نفس نافذة زر «حضرت» بالودجت: الجارية، أو اللي تبدأ خلال 20 د، أو انتهت قبل <30 د */
+  function attendTarget(st){
+    if(st.current) return st.current;
+    if(st.next && st.next.start - st.nowMin <= 20) return st.next;
+    var last = null; (st.today || []).forEach(function(e){ if(e.state === 'done' && st.nowMin - e.end <= 30 && (!last || e.end > last.end)) last = e; });
+    return last;
+  }
+  function renderNextBody(){
+    var body = document.getElementById('lwNextBody'); if(!body) return;
+    var SC = window.Schedule; if(!SC){ body.innerHTML = ''; return; }
+    var st = SC.status(), t = st.current || st.next || (st.later && st.later.entry);
+    if(!t){ body.innerHTML = '<div class="lw-empty-mini"><div class="lw-em-ic">🌴</div>ما في محاضرات بجدولك</div>'; return; }
+    var hue = window.courseHue ? window.courseHue(t.name) : 200, pl = placeOf(t), k, big;
+    if(st.current){ k = '🔴 جارية الآن'; big = t.hasEnd ? 'باقي ' + durTxt(t.end - st.nowMin) : 'بدأت'; }
+    else if(st.next){ k = '⏭ التالية'; big = 'بعد ' + durTxt(t.start - st.nowMin); }
+    else { k = '📅 القادمة'; big = (st.later.daysAhead === 1 ? 'بكرة' : getDaysAr()[t.dayIdx]) + ' ' + hmTxt(t.start); }
+    var tg = attendTarget(st), att = '';
+    if(tg){
+      var key = tg.name + '|' + lecStartMs(tg);
+      att = attKeys().indexOf(key) > -1 ? '<span class="lw-att done">✔ سُجّل حضورك' + (tg !== t ? ' — ' + esc(tg.name) : '') + '</span>'
+        : '<button type="button" class="lw-btn pri" data-lw="att" data-key="' + esc(key) + '" data-n="' + esc(tg.name) + '">✓ حضرت' + (tg !== t ? ' — ' + esc(tg.name) : '') + '</button>';
+    }
+    body.innerHTML = '<div class="lw-next" style="--ch:' + hue + '"><div class="lw-next-k">' + k + '</div><div class="lw-next-n">' + esc(t.name) + '</div><div class="lw-next-big">' + esc(big) + '</div>' +
+      '<div class="lw-next-m">⏰ <bdi dir="ltr">' + hmTxt(t.start) + (t.hasEnd ? '–' + hmTxt(t.end) : '') + '</bdi>' + (pl.text ? ' · 📍 ' + esc(pl.text) : '') + '</div>' +
+      '<div class="lw-next-a">' + att + (pl.bid ? '<button type="button" class="lw-btn" data-lw="map" data-b="' + esc(pl.bid) + '">🗺️ الخريطة</button>' : '') + '</div></div>';
+  }
+  function renderTasksBody(){
+    var body = document.getElementById('lwTasksBody'); if(!body) return;
+    var today = localToday(), all = (getSpace().tasks || []).filter(function(t){ return t && !t.done && t.due && t.due <= today; });
+    all.sort(function(a, b){ return a.due < b.due ? -1 : a.due > b.due ? 1 : 0; });
+    if(!all.length){ body.innerHTML = '<div class="lw-empty-mini"><div class="lw-em-ic">✅</div>ما عليك مهام اليوم</div><button type="button" class="lw-link" data-lw="tasks">كل المهام ←</button>'; return; }
+    var html = all.slice(0, 6).map(function(t){
+      var late = t.due < today;
+      return '<div class="lw-task"><button type="button" class="lw-chk" data-lw="done" data-id="' + esc(t.id) + '" aria-label="تم إنجاز: ' + esc(t.title) + '">○</button><div class="lw-item-body"><div class="lw-item-title">' + esc(t.title) + '</div>' +
+        '<div class="lw-item-meta' + (late ? ' late' : '') + '">' + (late ? '⚠️ متأخرة · ' : '') + esc(t.course || (late ? t.due : 'اليوم')) + '</div></div></div>';
+    }).join('');
+    body.innerHTML = html + (all.length > 6 ? '<div class="lw-item-meta">+' + (all.length - 6) + ' أخرى</div>' : '') + '<button type="button" class="lw-link" data-lw="tasks">كل المهام ←</button>';
+  }
+  function refreshQuickTools(){
+    if(enabledWidgets.indexOf('next') > -1) renderNextBody();
+    if(enabledWidgets.indexOf('tasks') > -1) renderTasksBody();
+    if(enabledWidgets.indexOf('events') > -1) renderEventsBody();
+  }
+  function bindSidebarActions(sidebar){
+    if(sidebar._lwAct) return; sidebar._lwAct = true;
+    function openFrom(fn){ setSidebarOpen(false); setTimeout(function(){ try{ if(typeof fn === 'function') fn(); }catch(e){} }, 120); }
+    sidebar.addEventListener('click', function(e){
+      var b = e.target.closest ? e.target.closest('[data-lw]') : null; if(!b) return; var a = b.getAttribute('data-lw');
+      if(a === 'att'){
+        var n = b.getAttribute('data-n'), key = b.getAttribute('data-key');
+        if(attKeys().indexOf(key) > -1) return;
+        attAdd(key); if(typeof window.markAttendance === 'function') window.markAttendance(n, 'present');
+        toast('✅ سُجّل حضورك: ' + n, 'success'); renderNextBody();
+      }
+      else if(a === 'map'){ setSidebarOpen(false); if(window.switchTab) window.switchTab('campus'); if(window.CampusMap) window.CampusMap.select(b.getAttribute('data-b'), true); }
+      else if(a === 'done'){ if(window.toggleTask) window.toggleTask(b.getAttribute('data-id')); renderTasksBody(); }
+      else if(a === 'tasks'){ setSidebarOpen(false); if(window.switchTab) window.switchTab('tasks'); }
+      else if(a === 'qadd'){ var i = sidebar.querySelector('#lwQuickInput'); if(i && window.quickAddTask && window.quickAddTask(i.value)){ i.value = ''; renderTasksBody(); } else if(i) i.focus(); }
+      else if(a === 'exam') openFrom(window.addExam);
+      else if(a === 'note') openFrom(window.addNote);
+      else if(a === 'course') openFrom(window.addMyCourse);
+      else if(a === 'spend') openFrom(function(){ if(window.addBudgetItem) window.addBudgetItem('expense'); });
+    });
+    sidebar.addEventListener('keydown', function(e){
+      if(e.key === 'Enter' && e.target && e.target.id === 'lwQuickInput'){ e.preventDefault(); var q = sidebar.querySelector('[data-lw="qadd"]'); if(q) q.click(); }
+    });
+  }
+
   function renderSidebar(){
     var sidebar = document.getElementById('lwSidebar'); if(!sidebar) return;
     var html = '<div class="lw-close-row"><span class="lw-close-title">الأدوات السريعة</span><div class="lw-close-actions"><button class="lw-close-btn" id="lwCustomizeBtn" title="تخصيص">⚙</button><button class="lw-close-btn lw-close-x" id="lwCloseBtn" title="إغلاق">×</button></div></div>';
@@ -138,6 +249,7 @@
       enabledWidgets.forEach(function(id){ var w = WIDGETS[id]; if(w) html += w.html(); });
     }
     sidebar.innerHTML = html;
+    bindSidebarActions(sidebar);
     var closeBtn = sidebar.querySelector('#lwCloseBtn');
     if(closeBtn) closeBtn.addEventListener('click', function(){ setSidebarOpen(false); });
     var custBtn = sidebar.querySelector('#lwCustomizeBtn');
@@ -156,15 +268,23 @@
     document.body.appendChild(backdrop);
     var panel = document.createElement('div'); panel.id = 'lwCustomizePanel'; panel.className = 'lw-customize-panel';
     var html = '<div class="lw-cust-header"><span>🎨 تخصيص الأدوات</span><button class="lw-close-btn lw-close-x" id="lwCustClose">×</button></div><div class="lw-cust-list">';
-    Object.keys(WIDGETS).forEach(function(id){
-      var w = WIDGETS[id]; var checked = enabledWidgets.indexOf(id) > -1;
-      html += '<label class="lw-cust-item ' + (checked ? 'checked' : '') + '" data-cid="' + id + '"><input type="checkbox" data-wid="' + id + '" ' + (checked ? 'checked' : '') + '><span class="lw-cust-ic">' + w.icon + '</span><span class="lw-cust-title">' + w.title + '</span></label>';
+    var order = enabledWidgets.filter(function(id){ return WIDGETS[id]; }).concat(Object.keys(WIDGETS).filter(function(id){ return enabledWidgets.indexOf(id) < 0; }));
+    order.forEach(function(id){
+      var w = WIDGETS[id]; var checked = enabledWidgets.indexOf(id) > -1, pos = enabledWidgets.indexOf(id);
+      html += '<div class="lw-cust-row"><label class="lw-cust-item ' + (checked ? 'checked' : '') + '" data-cid="' + id + '"><input type="checkbox" data-wid="' + id + '" ' + (checked ? 'checked' : '') + '><span class="lw-cust-ic">' + w.icon + '</span><span class="lw-cust-title">' + w.title + '</span></label>' +
+        (checked ? '<span class="lw-cust-mv"><button type="button" data-mv="-1" data-id="' + id + '" aria-label="تحريك ' + w.title + ' للأعلى"' + (pos === 0 ? ' disabled' : '') + '>▲</button><button type="button" data-mv="1" data-id="' + id + '" aria-label="تحريك ' + w.title + ' للأسفل"' + (pos === enabledWidgets.length - 1 ? ' disabled' : '') + '>▼</button></span>' : '') + '</div>';
     });
     html += '</div><div class="lw-cust-footer"><span class="lw-cust-count" id="lwCustCount">' + enabledWidgets.length + ' / ' + Object.keys(WIDGETS).length + '</span><button class="lw-cust-btn" id="lwCustReset">↺ الافتراضي</button></div>';
     panel.innerHTML = html; document.body.appendChild(panel);
     function closePanel(){ panel.remove(); backdrop.remove(); }
     panel.querySelector('#lwCustClose').addEventListener('click', closePanel);
     backdrop.addEventListener('click', closePanel);
+    panel.addEventListener('click', function(e){
+      var m = e.target.closest ? e.target.closest('[data-mv]') : null; if(!m) return;
+      var id = m.getAttribute('data-id'), i = enabledWidgets.indexOf(id), j = i + parseInt(m.getAttribute('data-mv'), 10);
+      if(i < 0 || j < 0 || j >= enabledWidgets.length) return;
+      enabledWidgets[i] = enabledWidgets[j]; enabledWidgets[j] = id; saveEnabled(); renderSidebar(); openCustomizePanel();
+    });
     panel.querySelectorAll('input[data-wid]').forEach(function(cb){
       cb.addEventListener('change', function(){
         var id = cb.dataset.wid; var idx = enabledWidgets.indexOf(id);
@@ -172,11 +292,11 @@
         else if(!cb.checked && idx > -1) enabledWidgets.splice(idx, 1);
         var item = panel.querySelector('[data-cid="' + id + '"]'); if(item) item.classList.toggle('checked', cb.checked);
         var cnt = panel.querySelector('#lwCustCount'); if(cnt) cnt.textContent = enabledWidgets.length + ' / ' + Object.keys(WIDGETS).length;
-        saveEnabled(); renderSidebar();
+        saveEnabled(); renderSidebar(); openCustomizePanel();
       });
     });
     panel.querySelector('#lwCustReset').addEventListener('click', function(){
-      enabledWidgets = Object.keys(WIDGETS).filter(function(k){ return WIDGETS[k].default; });
+      enabledWidgets = defaultEnabled();
       saveEnabled(); closePanel(); renderSidebar(); toast('↺ تم الاسترجاع', 'success');
     });
   }
@@ -187,6 +307,7 @@
     var backdrop = document.getElementById('lwBackdrop');
     if(!sidebar || !expandBtn) return;
     sidebar.classList.toggle('open', v);
+    if(v) refreshQuickTools();
     expandBtn.classList.toggle('hidden', v);
     if(backdrop) backdrop.classList.toggle('show', v);
     try{ localStorage.setItem('lw_sidebar_open', JSON.stringify(v)); }catch(e){}
@@ -536,6 +657,7 @@
     loadPrayerTimes(false);
 
     addInterval(function(){ renderEventsBody(); }, 2 * 60 * 1000);
+    addInterval(function(){ var sb = document.getElementById('lwSidebar'); if(sb && sb.classList.contains('open')) refreshQuickTools(); }, 30 * 1000);
     addInterval(function(){ renderPrayerBody(); }, 2 * 60 * 1000);
 
     window.addEventListener('beforeunload', clearAllIntervals);
@@ -548,6 +670,8 @@
           clearTimeout(window._lwRefreshTimer);
           window._lwRefreshTimer = setTimeout(function(){
             if(enabledWidgets.indexOf('events') > -1) renderEventsBody();
+            if(enabledWidgets.indexOf('next') > -1) renderNextBody();
+            if(enabledWidgets.indexOf('tasks') > -1) renderTasksBody();
             if(enabledWidgets.indexOf('budget') > -1) renderBudgetBody();
             var fs = document.getElementById('focusScreen');
             if(fs && fs.classList.contains('open')) renderFocusTasks();

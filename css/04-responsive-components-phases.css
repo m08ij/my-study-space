@@ -528,12 +528,10 @@
 #dashboard > .page-head::after{display:none}
 
 /* --- شخصية الثيمات: الحواف والإضاءة (تعمل عبر توكنز الحواف فتشمل كل المكوّنات) --- */
-[data-theme="graphite"]{--r-md:8px;--r-lg:10px;--r-xl:14px}
-[data-theme="graphite"] .card{box-shadow:none}
 [data-theme="glass-light"]{--r-md:12px;--r-lg:16px;--r-xl:22px}
 [data-theme="cyberpunk"]{--r-md:6px;--r-lg:8px;--r-xl:12px}
 [data-theme="cyberpunk"] .nav-item.active,[data-theme="cyberpunk"] .card:hover{border-color:var(--accent-2);box-shadow:0 0 0 1px var(--accent-2),var(--sh-glow-sm)}
-[data-theme="coral"] .sidebar,[data-theme="mocha"] .sidebar,[data-theme="obsidian"] .sidebar,[data-theme="royal"] .sidebar{border-left-color:var(--border2)}
+[data-theme="coral"] .sidebar,[data-theme="royal"] .sidebar{border-left-color:var(--border2)}
 [data-theme="glass-light"] .sidebar{background:var(--card);box-shadow:inset -1px 0 0 var(--border)}
 [data-theme="glass-light"] .nav-item .ic{background:var(--bg2)}
 
@@ -1020,7 +1018,6 @@ html{scrollbar-color:var(--border2) transparent}
 /* الثيمات الداكنة: لمعة علوية رقيقة تعطي سطح البطاقة عمقاً */
 :root:not([data-theme="glass-light"]) .card{background-image:linear-gradient(180deg,rgba(255,255,255,.035),transparent 46%);box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
 :root:not([data-theme="glass-light"]) .card:hover{box-shadow:inset 0 1px 0 rgba(255,255,255,.07),var(--sh-lg)}
-[data-theme="graphite"] .card{background-image:none;box-shadow:none}
 /* الفاتحة: ظل أنعم وحد علوي ملوّن خفيف عند التحويم */
 [data-theme="glass-light"] .card{box-shadow:0 1px 2px rgba(40,50,80,.06)}
 [data-theme="glass-light"] .card:hover{border-color:color-mix(in srgb,var(--accent) 45%,var(--border))}
@@ -1028,7 +1025,7 @@ html{scrollbar-color:var(--border2) transparent}
 [data-theme="cyberpunk"] .nav-item.active{box-shadow:inset 0 0 0 1px var(--glow),0 0 18px var(--glow)}
 [data-theme="cyberpunk"] .page-title{text-shadow:0 0 18px var(--glow)}
 [data-theme="royal"] .card{background-image:linear-gradient(160deg,rgba(167,139,250,.07),transparent 55%)}
-[data-theme="mocha"] .card:hover,[data-theme="obsidian"] .card:hover,[data-theme="coral"] .card:hover{border-color:color-mix(in srgb,var(--accent) 50%,var(--border2))}
+[data-theme="coral"] .card:hover{border-color:color-mix(in srgb,var(--accent) 50%,var(--border2))}
 [data-theme="midnight"] body::after{opacity:calc(var(--blob-opacity,.35)*1.25)}
 [data-theme="glass-light"] .page-title{letter-spacing:0}
 .page-title+.page-sub{opacity:.95}
@@ -1124,15 +1121,6 @@ html{scrollbar-color:var(--border2) transparent}
 .task-actions .btn-danger,.att-card .unified-course-btn.added,.gt-card .unified-course-btn.added{background:transparent;color:var(--muted);border:1px solid transparent;box-shadow:none}
 .task-actions .btn-danger:hover,.task-actions .btn-danger:focus-visible,.att-card .unified-course-btn.added:hover,.gt-card .unified-course-btn.added:hover{background:color-mix(in srgb,var(--red) 14%,transparent);color:var(--red);border-color:var(--red);transform:none;box-shadow:none}
 
-/* ===== v118: وضع الخصوصية + تلميحات ===== */
-html.privacy #budget :is(#budgetSummary,#budgetPlan,#budgetList,#budgetCats),
-html.privacy [data-dsec="budget"] #dashBudget,html.privacy #dashBudget,
-html.privacy #qsTotal,
-html.privacy #gradecalc :is(#gradeTrackerList,#gpaBody,#gpaVal,#gpaHrs,#gpaGrade,#ncResult,#whatIfResult,#gcForecast,#gpaScen),
-html.privacy #insightsSection,html.privacy #enhancedStatsSection :is(.donut-wrap,.stats-hero),
-html.privacy .hub-stat.sec[title="العلامة حتى الآن"],
-html.privacy .dash-term .gpa,html.privacy .pg-kpis,html.privacy .pg-rows{filter:blur(9px);transition:filter .25s ease;user-select:none}
-html.privacy :is(#budgetSummary,#budgetPlan,#budgetList,#budgetCats,#dashBudget,#gradeTrackerList,#gpaBody,#gpaVal,#insightsSection,.hub-stat.sec[title="العلامة حتى الآن"],.pg-kpis,.pg-rows):active{filter:none}
 /* ===== هيكل التحميل الأول (يظهر للمستخدم العائد فقط، ويزيله index.html بعد أول رسم) ===== */
 .boot-skel{position:fixed;inset:0;z-index:9000;background:var(--bg);display:flex;flex-direction:column;transition:opacity .3s ease}
 .boot-skel.bs-out{opacity:0;pointer-events:none}
@@ -1643,31 +1631,6 @@ html.sm-open{overflow:hidden}
 .sy-li small{display:block;color:var(--muted);margin-top:4px;line-height:1.7}
 
 /* ===== شاشة «الآن» (smart-assist.js) ===== */
-html.ga-open{overflow:hidden}
-.ga-overlay{position:fixed;inset:0;z-index:1300;overflow:auto;padding:max(14px,env(safe-area-inset-top)) 14px calc(20px + env(safe-area-inset-bottom));background:var(--bg);animation:smFade .2s ease}
-.ga-top{display:flex;align-items:center;justify-content:space-between;max-width:560px;margin:0 auto 12px;font-size:var(--fs-md)}
-.ga-x{width:40px;height:40px;border-radius:50%;background:var(--card);border:1px solid var(--border2);color:var(--text);font-size:1rem;cursor:pointer}
-.ga-card{--ch:200;max-width:560px;margin:0 auto 14px;padding:20px 18px;border-radius:26px;background:linear-gradient(145deg,hsla(var(--ch),75%,52%,.28),var(--card) 70%);border:1px solid hsla(var(--ch),70%,58%,.5);border-inline-start:8px solid hsl(var(--ch),70%,56%);box-shadow:0 14px 40px hsla(var(--ch),70%,40%,.25)}
-.ga-k{font-size:var(--fs-sm);font-weight:800;color:hsl(var(--ch),80%,70%)}
-.ga-name{font-size:1.5rem;font-weight:800;line-height:1.3;margin:6px 0}
-.ga-big{font-size:2.3rem;font-weight:800;line-height:1.2;font-variant-numeric:tabular-nums;color:hsl(var(--ch),85%,72%)}
-.ga-meta{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:10px;font-size:var(--fs-sm);color:var(--muted)}
-.ga-bar{height:6px;border-radius:99px;background:rgba(255,255,255,.12);margin-top:14px;overflow:hidden}
-.ga-bar i{display:block;height:100%;background:hsl(var(--ch),80%,60%);border-radius:99px;transition:width .6s ease}
-.ga-leave{margin-top:12px;padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.08);font-size:var(--fs-sm);line-height:1.7}
-.ga-leave.bad{background:rgba(239,68,68,.18);color:var(--red)}
-.ga-btn{width:100%;margin-top:14px;padding:13px;border-radius:16px;border:1px solid hsla(var(--ch),70%,58%,.6);background:hsla(var(--ch),70%,50%,.2);color:var(--text);font:inherit;font-weight:800;cursor:pointer}
-.ga-btn:active{transform:scale(.98)}
-.ga-list{max-width:560px;margin:0 auto 12px;padding:10px 14px;border-radius:20px;background:var(--card);border:1px solid var(--border)}
-.ga-sub{font-size:var(--fs-xs);color:var(--muted);font-weight:700;margin-bottom:4px}
-.ga-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-top:1px dashed var(--border);font-size:var(--fs-sm)}
-.ga-row:first-of-type{border-top:0}
-.ga-row b{flex:1;min-width:0}.ga-row small{color:var(--muted)}
-.ga-chips{max-width:560px;margin:0 auto;display:flex;flex-wrap:wrap;gap:8px}
-.ga-chip{padding:9px 14px;border-radius:99px;background:var(--card);border:1px solid var(--border);color:var(--text);font:inherit;font-size:var(--fs-sm)}
-.ga-chip.ok{color:var(--green)}
-.ga-empty{max-width:560px;margin:60px auto;text-align:center;font-size:1.2rem;line-height:2;color:var(--muted)}
-@media (prefers-reduced-motion:reduce){.ga-overlay{animation:none}}
 
 /* ===== قارئ الكتاب الداخلي (تلفون/تطبيق) ===== */
 html.rd-open{overflow:hidden}
@@ -1763,3 +1726,39 @@ html.native-app{overscroll-behavior:none}
   #hulinks.hu-fold .hu-grp+.grid{display:none;margin-top:4px}
   #hulinks.hu-fold .hu-grp.open+.grid{display:grid}
 }
+
+/* ===== 134: أدوات سريعة محسّنة ===== */
+.lw-next{--ch:200;border-radius:var(--r-md);padding:10px 12px;background:linear-gradient(135deg,hsl(var(--ch) 70% 56%/.16),transparent 70%);border:1px solid hsl(var(--ch) 70% 56%/.35)}
+.lw-next-k{font-size:var(--fs-xs);font-weight:700;color:var(--muted)}
+.lw-next-n{font-size:var(--fs-base);font-weight:800;margin-top:2px;line-height:1.4}
+.lw-next-big{font-size:1.45rem;font-weight:800;color:var(--accent);margin-top:2px}
+.lw-next-m{font-size:var(--fs-xs);color:var(--muted);margin-top:4px;line-height:1.6}
+.lw-next-a{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.lw-btn{min-height:38px;padding:6px 12px;border-radius:var(--r-md);border:1px solid var(--border2);background:var(--card2);color:var(--text);font:inherit;font-size:var(--fs-sm);font-weight:700;cursor:pointer}
+.lw-btn.pri{background:var(--grad);color:var(--on-accent);border-color:transparent}
+.lw-btn:active{transform:scale(.97)}
+.lw-att.done{display:inline-flex;align-items:center;min-height:38px;padding:0 10px;border-radius:var(--r-md);background:rgba(52,211,153,.14);color:var(--green);font-size:var(--fs-sm);font-weight:700}
+.lw-task{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)}
+.lw-task:last-of-type{border-bottom:0}
+.lw-chk{flex:none;width:34px;height:34px;border-radius:50%;border:1.5px solid var(--border2);background:transparent;color:var(--muted);font-size:1rem;cursor:pointer;line-height:1}
+.lw-chk:hover,.lw-chk:focus-visible{border-color:var(--green);color:var(--green)}
+.lw-item-meta.late{color:var(--amber)}
+.lw-link{display:block;width:100%;margin-top:8px;padding:6px;background:none;border:0;color:var(--accent);font:inherit;font-size:var(--fs-xs);font-weight:700;cursor:pointer;text-align:start}
+.lw-quick{display:flex;gap:6px}
+.lw-input{flex:1;min-width:0;min-height:38px;padding:6px 10px;border-radius:var(--r-md);border:1px solid var(--border);background:var(--bg2);color:var(--text);font:inherit;font-size:var(--fs-sm)}
+.lw-input:focus{outline:none;border-color:var(--accent)}
+.lw-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.lw-chip{min-height:34px;padding:4px 10px;border-radius:99px;border:1px solid var(--border);background:transparent;color:var(--text);font:inherit;font-size:var(--fs-xs);cursor:pointer}
+.lw-chip:hover,.lw-chip:focus-visible{border-color:var(--accent);color:var(--accent)}
+.lw-cust-row{display:flex;align-items:center;gap:6px}
+.lw-cust-row .lw-cust-item{flex:1;min-width:0}
+.lw-cust-mv{display:flex;gap:4px;flex:none}
+.lw-cust-mv button{width:32px;height:32px;border-radius:var(--r-md);border:1px solid var(--border);background:var(--card);color:var(--muted);cursor:pointer}
+.lw-cust-mv button:disabled{opacity:.3;cursor:default}
+@media (max-width:900px){body .lw-expand-btn{width:28px;opacity:.85}}
+/* إصلاح: البطاقات كانت تنضغط وتُقصّ لما يزيد عددها (عمود flex بدون shrink:0) — الشريط يمرّر بدل ما يقصّ */
+.lw-sidebar>*{flex-shrink:0}
+.lw-chips{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.lw-chip{min-height:36px;text-align:center}
+.lw-next-a .lw-btn{flex:1 1 auto}
+.lw-next-big{font-size:1.3rem}
