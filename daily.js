@@ -511,13 +511,23 @@
   }
   function dayName(dow){ return (window.DAYS_AR || ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'])[dow]; }
   function esc(s){ return window.esc ? window.esc(s) : String(s == null ? '' : s); }
+  /* مطويّ؟ اختيار المستخدم (ss_sp_fold) وإلا الافتراضي: مطويّ على الشاشات الصغيرة (الجدول طويل ويدفع الباقي لتحت) */
+  function foldState(){ var v = null; try{ v = localStorage.getItem('ss_sp_fold'); }catch(e){} if(v === '1') return true; if(v === '0') return false; return window.innerWidth <= 700; }
   function render(){
     var sec = document.getElementById('timetable'); if(!sec) return;
     var card = document.getElementById('studyPlanCard');
     if(!card){ card = document.createElement('div'); card.id = 'studyPlanCard'; card.className = 'card sp-card'; var wrap = sec.querySelector('.timetable-wrap'); if(wrap && wrap.parentNode) wrap.parentNode.insertBefore(card, wrap.nextSibling); else sec.appendChild(card); }
     var plan = build(), c = plan.cfg, today = window.today ? window.today() : ymd(new Date());
-    var h = '<div class="sp-head"><h3>📚 جدول المذاكرة المقترح</h3><div style="display:flex;gap:6px"><button type="button" class="btn btn-sm btn-ghost" id="spToggle">' + (c.on ? 'إخفاء' : 'إظهار') + '</button><button type="button" class="btn btn-sm btn-ghost" id="spCfg" aria-label="إعدادات جدول المذاكرة">⚙️</button></div></div>';
+    var folded = foldState();
+    var h = '<div class="sp-head"><h3>📚 جدول المذاكرة المقترح</h3><div style="display:flex;gap:6px">' + (c.on ? '<button type="button" class="btn btn-sm btn-ghost" id="spFold" aria-expanded="' + (folded ? 'false' : 'true') + '">' + (folded ? 'عرض ▾' : 'طيّ ▴') + '</button>' : '') + '<button type="button" class="btn btn-sm btn-ghost" id="spToggle">' + (c.on ? 'إخفاء' : 'إظهار') + '</button><button type="button" class="btn btn-sm btn-ghost" id="spCfg" aria-label="إعدادات جدول المذاكرة">⚙️</button></div></div>';
     if(!c.on){ card.innerHTML = h; bind(card); return; }
+    if(folded){
+      /* مطويّ (الافتراضي على التلفون): سطر ملخّص فقط — الجدول كاملاً بضغطة «عرض» */
+      var td = plan.days.filter(function(d){ return d.date === today; })[0], n = td && !td.off ? td.items.length : 0;
+      h += '<div class="sp-sub">' + (!plan.courses ? 'أضف موادك لتظهر الاقتراحات.' : td && td.off ? 'اليوم يوم راحة.' : n ? 'اليوم: ' + n + (n === 1 ? ' جلسة' : ' جلسات') + ' — أولها ' + td.items[0].start + ' (' + esc(td.items[0].course) + ')' : 'ما في جلسات مقترحة لليوم.') + '</div>';
+      card.className = 'card sp-card sp-folded'; card.innerHTML = h; bind(card); return;
+    }
+    card.className = 'card sp-card';
     h += '<div class="sp-sub">بيوزّع جلسات ' + c.len + ' دقيقة على فراغاتك بين المحاضرات (أقصى ' + c.perDay + ' باليوم)، والأقرب امتحاناً أولاً. بيتحدّث لحاله مع أي تغيير.</div>';
     if(!plan.courses) h += '<div class="sp-none">ما عندك مواد مسجّلة (أو كلها منجزة) — أضف موادك من «موادي» وبيطلع لك جدول.</div>';
     else plan.days.forEach(function(d){
@@ -528,7 +538,8 @@
     card.innerHTML = h; bind(card);
   }
   function bind(card){
-    var t = card.querySelector('#spToggle'), g = card.querySelector('#spCfg');
+    var t = card.querySelector('#spToggle'), g = card.querySelector('#spCfg'), fb = card.querySelector('#spFold');
+    if(fb) fb.onclick = function(){ try{ localStorage.setItem('ss_sp_fold', foldState() ? '0' : '1'); }catch(e){} render(); };
     if(t) t.onclick = function(){ var c = cfg(); c.on = !c.on; saveCfg(c); render(); };
     if(g) g.onclick = function(){
       var c = cfg();

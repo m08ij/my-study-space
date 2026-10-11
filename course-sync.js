@@ -469,7 +469,7 @@
 
     if(!courses.length){
       c.innerHTML = '<div class="empty"><div class="ic">✅</div><p>لا توجد مواد بعد</p>' +
-        '<p class="sub">أضف موادك من تبويب "الخطة"</p></div>';
+        '<p class="sub">الحضور بيتتبّع موادك تلقائياً</p><button type="button" class="btn btn-sm empty-cta" data-go-tab="courses">📚 أضف موادك من «موادي»</button></div>';
       return;
     }
 
@@ -542,7 +542,7 @@
 
     if(!courses.length){
       c.innerHTML = '<div class="empty"><div class="ic">📊</div><p>لا توجد مواد بعد</p>' +
-        '<p class="sub">أضف موادك من تبويب "الخطة" ثم عبّي علاماتك هنا</p></div>';
+        '<p class="sub">أضف موادك ثم عبّي علاماتك هنا</p><button type="button" class="btn btn-sm empty-cta" data-go-tab="courses">📚 أضف موادك من «موادي»</button></div>';
       return;
     }
 
@@ -801,7 +801,7 @@
 
     if(!courses.length && !exams.length){
       c.innerHTML = '<div class="empty"><div class="ic">⏳</div><p>لا توجد مواد بعد</p>' +
-        '<p class="sub">أضف موادك أولاً من تبويب "الخطة"</p></div>';
+        '<p class="sub">أضف موادك أولاً وبعدها سجّل امتحاناتك</p><button type="button" class="btn btn-sm empty-cta" data-go-tab="courses">📚 أضف موادك من «موادي»</button></div>';
       return;
     }
 

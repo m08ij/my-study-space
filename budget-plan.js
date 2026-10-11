@@ -268,7 +268,7 @@
     /* الفئات اللي فيها مصروف أو حد بالأول؛ الباقي (18 فئة كان كلها تظهر بـ«صرفت 0 د») مطويّة */
     var active = expCats.filter(function(x){ var r = rows[x.v]; return (r && r.spent > 0) || p.limits[x.v]; }), rest = expCats.filter(function(x){ return active.indexOf(x) < 0; });
     h += '<div class="bp-cats">' + active.map(catHtml).join('') + '</div>';
-    if(rest.length) h += '<details class="bp-more"' + (active.length ? '' : ' open') + '><summary>' + (active.length ? 'باقي الفئات (' + rest.length + ') — حدّد حداً لأي منها' : 'حدّد حداً للفئات') + '</summary><div class="bp-cats">' + rest.map(catHtml).join('') + '</div></details>';
+    if(rest.length) h += '<details class="bp-more"' + (active.length || window.innerWidth <= 700 ? '' : ' open') + '><summary>' + (active.length ? 'باقي الفئات (' + rest.length + ') — حدّد حداً لأي منها' : 'حدّد حداً للفئات') + '</summary><div class="bp-cats">' + rest.map(catHtml).join('') + '</div></details>';
     return h;
   }
 

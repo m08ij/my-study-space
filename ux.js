@@ -552,7 +552,21 @@
     new MutationObserver(updateStrip).observe(document.querySelector('main') || document.body, { attributes: true, attributeFilter: ['class'], subtree: true });
     updateStrip();
   }
-  function init(){ bindStrip(); }
+  /* روابط الجامعة على التلفون: مجموعات قابلة للطيّ (الأولى مفتوحة) بدل صفحة طويلة جداً */
+  function bindHuFold(){
+    var sec = document.getElementById('hulinks'); if(!sec || sec._hf) return; sec._hf = true;
+    var heads = [].filter.call(sec.querySelectorAll(':scope > h3'), function(h){ return h.nextElementSibling && h.nextElementSibling.classList.contains('grid'); });
+    heads.forEach(function(h, i){
+      h.classList.add('hu-grp'); h.setAttribute('role', 'button'); h.setAttribute('tabindex', '0'); if(i === 0) h.classList.add('open');
+      h.setAttribute('aria-expanded', i === 0 ? 'true' : 'false');
+      function tg(){ var on = !h.classList.contains('open'); h.classList.toggle('open', on); h.setAttribute('aria-expanded', on ? 'true' : 'false'); }
+      h.addEventListener('click', tg);
+      h.addEventListener('keydown', function(e){ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); tg(); } });
+    });
+    function fit(){ sec.classList.toggle('hu-fold', window.innerWidth <= 700); }
+    fit(); window.addEventListener('resize', fit);
+  }
+  function init(){ bindStrip(); bindHuFold(); }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
   setTimeout(init, 600); setTimeout(updateStrip, 1500);
 })();

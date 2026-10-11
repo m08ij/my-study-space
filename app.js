@@ -840,6 +840,8 @@
       item.setAttribute('role', 'button'); item.setAttribute('tabindex', '0');
       item.addEventListener('keydown', function(e){ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); window.switchTab(item.dataset.tab); } });
     });
+    /* أزرار حالات «لا يوجد» (تُرسم ديناميكياً): data-go-tab يفتح التبويب */
+    document.addEventListener('click', function(e){ var b = e.target.closest && e.target.closest('[data-go-tab]'); if(b){ e.preventDefault(); window.switchTab(b.getAttribute('data-go-tab')); } });
     document.querySelectorAll('[data-goto]').forEach(function(el){
       el.addEventListener('click', function(){ window.switchTab(el.dataset.goto); });
     });

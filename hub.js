@@ -993,18 +993,18 @@
     { id: 'myday', name: 'يومي الجامعي', icon: '🧭' },
     { id: 'term', name: 'تقدم الترم', icon: '🎓' },
     { id: 'stats', name: 'الأرقام الرئيسية', icon: '🔢' },
-    { id: 'weekly', name: 'ملخصك الأسبوعي', icon: '📈' },
+    { id: 'analytics', name: 'إحصائياتي (أسبوعي · متقدمة · تحليلات)', icon: '📊' },
     { id: 'timer', name: 'مؤقت التركيز', icon: '⏱️' },
     { id: 'budget', name: 'نظرة الميزانية', icon: '💰' },
     { id: 'qspend', name: 'مصروف سريع', icon: '💸' },
-    { id: 'lms', name: 'روابط LMS HU السريعة', icon: '🔗' },
-    { id: 'enhanced', name: 'الإحصائيات المتقدمة', icon: '📊' },
-    { id: 'insights', name: 'التحليلات المتقدمة', icon: '📈' }
+    { id: 'lms', name: 'روابط LMS HU السريعة', icon: '🔗' }
   ];
+  /* الافتراضي أبسط (134): الاقتباس والمصروف السريع وروابط LMS مخفية (كلها بـ«تخصيص لوحة التحكم» وبتبويباتها) */
+  var DASH_HIDDEN_DEFAULT = ['quote', 'qspend', 'lms'];
   var dsById = {}; DASH_SECTIONS.forEach(function(s){ dsById[s.id] = s; });
   var dsState = null;
 
-  function dsDefault(){ return { order: DASH_SECTIONS.map(function(s){ return s.id; }), hidden: [] }; }
+  function dsDefault(){ return { order: DASH_SECTIONS.map(function(s){ return s.id; }), hidden: DASH_HIDDEN_DEFAULT.slice() }; }
   function dsClone(st){ return { order: st.order.slice(), hidden: st.hidden.slice() }; }
   function dsEqual(a, b){ return a.order.join() === b.order.join() && a.hidden.slice().sort().join() === b.hidden.slice().sort().join(); }
   /* تنظيف أي تخصيص محفوظ: يتجاهل المجهول والمكرر، ويضيف الأقسام الجديدة بأماكنها الافتراضية */
@@ -1229,7 +1229,20 @@
     wrapSwitchTab();
     markFab();
     dsBuildMenu();
+    bindStatTabs();
     dsApply(dsLoad());
+  }
+  /* تبويبات «إحصائياتي»: لوحة وحدة ظاهرة (الباقي مخفي بـCSS) وتُحفظ آخر لوحة (ss_stat_tab) */
+  function bindStatTabs(){
+    var box = document.getElementById('statTabs'); if(!box || box._st) return; box._st = true;
+    function go(k, save){
+      if(['weekly', 'enhanced', 'insights'].indexOf(k) < 0) k = 'weekly';
+      box.setAttribute('data-st', k);
+      Array.prototype.forEach.call(box.querySelectorAll('.st-tab'), function(b){ var on = b.getAttribute('data-st-go') === k; b.classList.toggle('active', on); b.setAttribute('aria-selected', on ? 'true' : 'false'); });
+      if(save){ try{ localStorage.setItem('ss_stat_tab', k); }catch(e){} }
+    }
+    box.addEventListener('click', function(e){ var b = e.target.closest ? e.target.closest('[data-st-go]') : null; if(b) go(b.getAttribute('data-st-go'), true); });
+    var v = null; try{ v = localStorage.getItem('ss_stat_tab'); }catch(e){} go(v, false);
   }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initUI); else initUI();
 

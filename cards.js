@@ -137,7 +137,7 @@
     var c = document.getElementById('decksList'); if(!c) return;
     var ds = decks();
     if(!ds.length){
-      c.innerHTML = '<div class="empty"><div class="ic">🃏</div><p>لا توجد مجموعات</p></div>';
+      c.innerHTML = '<div class="empty"><div class="ic">🃏</div><p>لا توجد مجموعات</p><p class="sub">اجمع أسئلتك بمجموعة بطاقات وراجعها بالتباعد — اضغط «+ مجموعة» بالأعلى، أو ولّدها من «مذاكرة قسم» بورقة المادة</p></div>';
       return;
     }
     var due = dueTotal(), tc = todayCount(), st = streak(), total = 0, fresh = 0;

@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="مساحتي">
-<link rel="stylesheet" href="app.bundle.css?v=133">
+<link rel="stylesheet" href="app.bundle.css?v=134">
 <script>/* مستخدم جديد: تظهر شاشة الترحيب من أول رسم (بدون وميض اللوحة خلفها)، ويزيل app.js الصنف عند اكتمال الدخول */
 try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement.classList.add("is-new"); }catch(e){}</script>
 </head>
@@ -164,7 +164,13 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
     <div class="grid grid-4" id="dashStats" data-dsec="stats"></div>
     <!-- يومي الجامعي: حالة المحاضرة الحالية/القادمة + مهام وامتحانات وإنجاز اليوم (يُبنى من hub.js) -->
     <section class="myday" id="myDay" data-dsec="myday" aria-label="يومي الجامعي"></section>
-    <section class="card dash-weekly" id="weeklySummary" data-dsec="weekly" aria-label="ملخصك الأسبوعي"></section>
+    <!-- إحصائياتي: ثلاث لوحات (أسبوعي/متقدمة/تحليلات) ببطاقة واحدة بتبويبات؛ العقد نفسها بمعرّفاتها (تُرسم من study/extras/integrations) -->
+    <section class="card stat-tabs" id="statTabs" data-dsec="analytics" data-st="weekly" aria-label="إحصائياتي">
+      <div class="st-tabs" role="tablist" aria-label="نوع الإحصائيات"><button type="button" role="tab" class="st-tab active" data-st-go="weekly">📈 أسبوعي</button><button type="button" role="tab" class="st-tab" data-st-go="enhanced">📊 متقدمة</button><button type="button" role="tab" class="st-tab" data-st-go="insights">🧠 تحليلات</button></div>
+      <section class="dash-weekly" id="weeklySummary" data-st-pane="weekly" aria-label="ملخصك الأسبوعي"></section>
+      <div id="slotEnhanced" data-st-pane="enhanced"></div>
+      <div id="slotInsights" data-st-pane="insights"></div>
+    </section>
     <div class="mini-timer" data-dsec="timer" data-half>
         <div class="ring">
           <svg viewBox="0 0 56 56">
@@ -196,8 +202,6 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
       <div class="quote-author" id="dailyQuoteAuthor">—</div>
     </div>
     <div class="dash-slot" id="slotLms" data-dsec="lms"></div>
-    <div class="dash-slot" id="slotEnhanced" data-dsec="enhanced"></div>
-    <div class="dash-slot" id="slotInsights" data-dsec="insights"></div>
   </section>
   <section id="timetable" class="section">
     <div class="page-head"><h2 class="page-title">📅 الجدول الأسبوعي</h2>
@@ -528,7 +532,7 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
 <div class="toast-container" id="toastContainer" role="status" aria-live="polite"></div>
 
 <!-- مكتبات خارجية -->
-<script src="app.bundle.js?v=133"></script>
+<script src="app.bundle.js?v=134"></script>
 
 <!-- الملفات الأساسية (الترتيب مهم جداً!) -->
 <script>
@@ -551,7 +555,7 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
    1) إن لم يطابق window.APP_BUILD رقم BUILD هنا → يمسح كاش التطبيق ويعيد التحميل مرة واحدة (حارس sessionStorage يمنع التكرار).
    2) أقسام اللوحة المتقدمة (تحليلات/LMS/إحصائيات) تُنقل إلى خانتها الثابتة إذا أضافتها سكربتات قديمة بمكان آخر. */
 (function(){
-  var BUILD = '133';
+  var BUILD = '134';
   var SLOTS = { insightsSection: 'slotInsights', lmsWidget: 'slotLms', enhancedStatsSection: 'slotEnhanced' };
   function heal(){
     var dash = document.getElementById('dashboard'); if(!dash) return;

@@ -1225,7 +1225,7 @@ html.is-new .boot-skel{display:none}
 /* ===== الوضع البسيط ===== */
 html.simple .sidebar .nav-section,
 html.simple .sidebar .nav-item:not([data-tab="dashboard"]):not([data-tab="timetable"]):not([data-tab="courses"]):not([data-tab="tasks"]):not([data-tab="exams"]){display:none}
-html.simple [data-dsec="weekly"],html.simple [data-dsec="timer"],html.simple [data-dsec="budget"],html.simple [data-dsec="qspend"],html.simple [data-dsec="term"]{display:none!important}
+html.simple [data-dsec="analytics"],html.simple [data-dsec="timer"],html.simple [data-dsec="budget"],html.simple [data-dsec="qspend"],html.simple [data-dsec="term"]{display:none!important}
 html.simple .ai-fab,html.simple .fab-menu{display:none}
 
 /* ===== تفاعل: تموّج، وصول متتالي ===== */
@@ -1725,3 +1725,41 @@ html.native-app{overscroll-behavior:none}
 .up-notes{margin:8px 0;padding-inline-start:20px;line-height:1.9;font-size:var(--fs-sm);text-align:start}
 .up-bar{height:8px;border-radius:99px;background:var(--bg2);border:1px solid var(--border);overflow:hidden;margin:10px 0}
 .up-bar i{display:block;height:100%;width:0;background:var(--grad);border-radius:99px;transition:width .25s ease}
+
+/* ===== 134: لمس مريح + نص مقروء على التلفون ===== */
+@media (max-width:900px){
+  .tt-step,.cm-zoom button,.cm-layers button,#dashMoreBtn{min-width:40px;min-height:40px}
+  .plan-done-btn{width:38px;height:38px;flex:none}
+  .budget-tab,.cm-tab,.cm-chip{min-height:40px}
+  .budget-cat-chip{min-height:36px}
+  .u-mono,.plan-lock,.badge,.u-note,.lbl,.card-action,.tt-date,.plan-hint,.bp-cat-sub,.bp-f,.plan-chip,.wk-bar>span{font-size:max(11.5px,.72rem)}
+  .daily-quote{display:none}
+  .sp-card.sp-folded .sp-head{margin-bottom:0}
+}
+.empty .empty-cta{margin-top:14px}
+
+/* ===== 134: «إحصائياتي» — ثلاث لوحات ببطاقة وحدة بتبويبات ===== */
+.stat-tabs{padding:14px 16px}
+.st-tabs{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;scrollbar-width:none}
+.st-tabs::-webkit-scrollbar{display:none}
+.st-tab{flex:1 1 auto;min-height:38px;padding:6px 12px;border-radius:var(--r-md);border:1px solid var(--border);background:transparent;color:var(--muted);font:inherit;font-size:var(--fs-sm);font-weight:600;cursor:pointer;white-space:nowrap}
+.st-tab.active{background:var(--grad-soft);color:var(--accent);border-color:var(--accent)}
+.stat-tabs [data-st-pane]{display:none}
+.stat-tabs[data-st="weekly"] [data-st-pane="weekly"],.stat-tabs[data-st="enhanced"] [data-st-pane="enhanced"],.stat-tabs[data-st="insights"] [data-st-pane="insights"]{display:block}
+.stat-tabs .dash-weekly,.stat-tabs .card{background:none;border:0;box-shadow:none;padding:0;margin:0}
+.stat-tabs [data-st-pane]:empty{display:none!important}
+
+/* ===== 134: ميزانية وروابط أخف على التلفون ===== */
+@media (max-width:700px){
+  .budget-summary{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:14px}
+  .budget-card{padding:12px 6px}
+  .budget-card .bc-icon{font-size:var(--fs-lg);margin-bottom:2px}
+  .budget-card .bc-val{font-size:var(--fs-md)}
+  .budget-card .bc-lbl{font-size:max(11.5px,.72rem)}
+  .hu-hero{padding:12px 14px}
+  #hulinks.hu-fold .hu-grp{margin:10px 0 0;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:44px;padding:0 4px;-webkit-tap-highlight-color:transparent}
+  #hulinks.hu-fold .hu-grp::after{content:'▾';opacity:.7;transition:transform .2s ease}
+  #hulinks.hu-fold .hu-grp.open::after{transform:rotate(180deg)}
+  #hulinks.hu-fold .hu-grp+.grid{display:none;margin-top:4px}
+  #hulinks.hu-fold .hu-grp.open+.grid{display:grid}
+}

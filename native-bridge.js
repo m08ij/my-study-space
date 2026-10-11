@@ -79,7 +79,7 @@
       entries.forEach(function(e){
         if(e.dayIdx !== day.getDay()) return;
         var end = e.hasEnd ? e.end : e.start + 60;
-        lectures.push({ s: atMin(day, e.start).getTime(), e: atMin(day, end).getTime(), n: String(e.name || '').slice(0, 60), p: String(h.placeOf ? h.placeOf(e) : (e.room || '')).slice(0, 40), h: h.hueOf ? h.hueOf(e.name) : 200 });
+        lectures.push({ s: atMin(day, e.start).getTime(), e: atMin(day, end).getTime(), n: String(e.name || '').slice(0, 60), p: String(h.placeOf ? h.placeOf(e) : (e.room || '')).slice(0, 40), r: String(h.roomOf ? h.roomOf(e) : '').slice(0, 16), h: h.hueOf ? h.hueOf(e.name) : 200 });
       });
     }
     lectures = lectures.filter(function(l){ return l.e > now.getTime(); }).sort(function(a, b){ return a.s - b.s; }).slice(0, 42);
@@ -88,11 +88,25 @@
     if(ex){ var p = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ex.date), tm = toMin(ex.time || ''); if(p) exam = { n: String(ex.name || 'امتحان').slice(0, 50), at: new Date(+p[1], +p[2] - 1, +p[3], tm === null ? 0 : Math.floor(tm / 60), tm === null ? 0 : tm % 60).getTime() }; }
     return { v: 1, at: now.getTime(), lectures: lectures, tasks: { due: due.length, titles: due.slice(0, 3).map(function(t){ return String(t.title || '').slice(0, 50); }) }, exam: exam };
   }
+  /* حضور سُجّل من الودجات (طابور من Java: [{n: اسم المادة, s: بداية المحاضرة}]) → ما نضيفه فعلاً لسجل الحضور. applied: مفاتيح سبق تطبيقها (حماية مزدوجة بجانب منع التكرار بالجهاز). */
+  function attendItems(items, space, applied){
+    var seen = {}, out = [], keys = (applied || []).slice(0), courses = {};
+    keys.forEach(function(k){ seen[k] = 1; });
+    ((space && space.courses) || []).forEach(function(c){ if(c && c.name) courses[c.name] = 1; });
+    var att = (space && space.attendance) || {};
+    (items || []).forEach(function(it){
+      if(!it || typeof it.n !== 'string' || !it.n) return;
+      var k = it.n + '|' + Number(it.s || 0);
+      if(seen[k]) return; seen[k] = 1; keys.push(k);
+      if(courses[it.n] || att[it.n]) out.push({ n: it.n, s: Number(it.s || 0) });
+    });
+    return { apply: out, keys: keys.slice(-120) };
+  }
   /* ---- تحديث التطبيق (APK) من GitHub Pages: apk/version.json {versionCode, versionName, url, sha256, size, notes[]} ---- */
   function newerRelease(installedCode, remote, skippedCode){
     return !!(remote && typeof remote === 'object' && Number(remote.versionCode) > Number(installedCode) && Number(remote.versionCode) !== Number(skippedCode) && /^apk\/[\w.\-]+\.apk$/.test(String(remote.url || '')));
   }
-  var pure = { newerRelease: newerRelease, plan: plan, widgetData: widgetData, hashId: hashId, inQuiet: inQuiet };
+  var pure = { attendItems: attendItems, newerRelease: newerRelease, plan: plan, widgetData: widgetData, hashId: hashId, inQuiet: inQuiet };
   if(!W || !W.document) return pure;
 
   /* ---------- وقت التشغيل داخل التطبيق ---------- */
@@ -133,7 +147,14 @@
   function widgetHelpers(){
     var CM = W.CampusMap;
     return {
-      placeOf: function(e){ var r = CM && CM.resolve ? CM.resolve(e) : null; if(r && r.b) return r.b.n + (r.fl ? ' · ط' + r.fl : ''); return e.room || e.building || ''; },
+      /* المبنى (+ الطابق) فقط؛ رقم القاعة بحقل منفصل roomOf فيعرضه الودجت بوضوح: «قاعة 101 · الحسين الباني» */
+      placeOf: function(e){ var r = CM && CM.resolve ? CM.resolve(e) : null; if(r && r.b) return r.b.n + (r.fl ? ' · ط' + r.fl : ''); return e.building || ''; },
+      roomOf: function(e){
+        var r = CM && CM.resolve ? CM.resolve(e) : null, t = String(e.room || '').trim();
+        if(r && r.b && r.b.ab) t = t.split(r.b.ab).join('');
+        t = t.replace(/^[\s\-–·:]*(قاعة|قاعه|room)\s*/i, '').replace(/[()]/g, '').trim();
+        return t;
+      },
       hueOf: function(n){ return W.courseHue ? W.courseHue(n) : 200; }
     };
   }
@@ -153,7 +174,7 @@
     box.appendChild(t('div', 'ocri-title', '📱 أضف ودجت للشاشة الرئيسية'));
     box.appendChild(t('div', 'ocri-sub', 'اختر الودجت وبيطلع لك طلب من أندرويد لإضافته. بتتحدّث تلقائياً من جدولك.'));
     var list = t('div', 'wg-list');
-    [['next', '⏭', 'المحاضرة الجاية', 'اسم + عدّاد تنازلي حيّ + المبنى (2×2)'], ['today', '📅', 'جدول اليوم', 'كل محاضرات اليوم بألوان المواد + المهام (4×3)'], ['actions', '⚡', 'اختصارات سريعة', 'الآن · مهمة · الخريطة · الجدول (4×1)']].forEach(function(x){
+    [['next', '⏭', 'المحاضرة الجاية', 'اسم + عدّاد تنازلي حيّ + القاعة والمبنى + زر ✓ حضرت (2×2)'], ['today', '📅', 'جدول اليوم', 'كل محاضرات اليوم بألوان المواد + المهام (4×3)'], ['actions', '⚡', 'اختصارات سريعة', 'الآن · حضرت ✅ · مهمة · الخريطة · الجدول (4×1)']].forEach(function(x){
       var b = t('button', 'wg-opt'); b.type = 'button'; b.setAttribute('data-wg', x[0]);
       b.appendChild(t('span', 'wg-ic', x[1])); var tx = t('span', 'wg-tx'); tx.appendChild(t('b', null, x[2])); tx.appendChild(t('small', null, x[3])); b.appendChild(tx);
       b.addEventListener('click', function(){
@@ -214,6 +235,20 @@
       });
     }).catch(function(e){ if(manual && W.toast) W.toast('تعذّر فحص التحديثات — تأكد من الإنترنت', 'warn', 4000); return { error: String(e && e.message || e) }; });
   }
+  var AK = 'ss_att_applied';
+  function pullAttendance(){
+    if(!isNative()) return Promise.resolve({ native: false });
+    var WB = plugin('WidgetBridge'); if(!WB || !WB.takePending) return Promise.resolve({ plugin: false });
+    return WB.takePending().then(function(r){
+      var applied = []; try{ applied = JSON.parse(lsg(AK) || '[]'); }catch(e){}
+      var res = attendItems(r && r.items, W.space || {}, applied);
+      lss(AK, JSON.stringify(res.keys));
+      if(!res.apply.length || typeof W.markAttendance !== 'function') return { applied: 0 };
+      res.apply.forEach(function(x){ W.markAttendance(x.n, 'present'); });
+      if(W.toast){ var names = []; res.apply.forEach(function(x){ if(names.indexOf(x.n) < 0) names.push(x.n); }); W.toast('✅ سُجّل حضورك من الودجت: ' + names.slice(0, 3).join('، '), 'success', 4500); }
+      return { applied: res.apply.length };
+    }, function(){ return { error: true }; });
+  }
   var permAsked = false, scheduling = false, again = false;
   function schedule(){
     if(!isNative()) return Promise.resolve({ native: false });
@@ -261,14 +296,14 @@
     if(!isNative()) return;
     d.documentElement.classList.add('native-app');
     patchDownloads();
-    schedule(); pushWidget();
+    pullAttendance().then(function(){ schedule(); pushWidget(); });
     var ub = d.getElementById('updateBtn'); if(ub && !ub._up){ ub._up = true; ub.addEventListener('click', function(){ if(W.closeSettingsMenu) W.closeSettingsMenu(); checkUpdate(true); }); }
     setTimeout(function(){ checkUpdate(false); }, 6000);
     var wb = d.getElementById('widgetBtn'); if(wb && !wb._wg){ wb._wg = true; wb.addEventListener('click', function(){ if(W.closeSettingsMenu) W.closeSettingsMenu(); openWidgetPicker(); }); }
-    d.addEventListener('visibilitychange', function(){ if(d.visibilityState === 'visible') scheduleSoon(); });
+    d.addEventListener('visibilitychange', function(){ if(d.visibilityState === 'visible'){ pullAttendance(); scheduleSoon(); } });
     if(typeof W.saveSpace === 'function' && !W.saveSpace._nb){ var orig = W.saveSpace; W.saveSpace = function(){ var r = orig.apply(this, arguments); scheduleSoon(); return r; }; W.saveSpace._nb = true; }
   }
   if(d.readyState === 'loading') d.addEventListener('DOMContentLoaded', function(){ setTimeout(init, 1500); }); else setTimeout(init, 1500);
 
-  return Object.assign(pure, { checkUpdate: checkUpdate, showUpdate: showUpdate, pushWidget: pushWidget, openWidgetPicker: openWidgetPicker, isNative: isNative, schedule: schedule, buildPlan: buildPlan, saveNative: saveNative, patchDownloads: patchDownloads, _plugin: plugin, _reset: function(){ cache = {}; } });
+  return Object.assign(pure, { pullAttendance: pullAttendance, checkUpdate: checkUpdate, showUpdate: showUpdate, pushWidget: pushWidget, openWidgetPicker: openWidgetPicker, isNative: isNative, schedule: schedule, buildPlan: buildPlan, saveNative: saveNative, patchDownloads: patchDownloads, _plugin: plugin, _reset: function(){ cache = {}; } });
 });

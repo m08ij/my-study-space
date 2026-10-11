@@ -499,6 +499,12 @@
       icon: '🤖',
       title: 'اسأل مساعدك الذكي',
       body: 'اضغط زر 🤖 واسأل: "شو مهامي؟" · "كم ساعة درست اليوم؟" · "خططلي يومي".'
+    },
+    {
+      icon: '🧘',
+      title: 'كيف بتفضّل الواجهة؟',
+      body: '«بسيط» بيعرض الأساسيات فقط (اللوحة، الجدول، المواد، المهام، الامتحانات). «كامل» كل الميزات. ما بتخسر أي شي، وبتغيّرها بأي وقت من ⚙️ ← المظهر.',
+      choice: true
     }
   ];
 
@@ -524,10 +530,9 @@
           '<p>' + s.body + '</p>' +
           '<div class="onb-dots">' + dots + '</div>' +
           '<div class="onb-actions">' +
-            '<button class="onb-skip" id="onbSkip">تخطي</button>' +
-            '<button class="onb-next" id="onbNext">' +
-              (step === ONB_STEPS.length - 1 ? '🚀 ابدأ' : 'التالي →') +
-            '</button>' +
+            '<button class="onb-skip" id="onbSkip">' + (s.choice ? 'تخطي (كامل)' : 'تخطي') + '</button>' +
+            (s.choice ? '<button class="onb-next" id="onbFull">🧰 كامل</button><button class="onb-next" id="onbSimple">🧘 بسيط</button>' :
+            '<button class="onb-next" id="onbNext">' + (step === ONB_STEPS.length - 1 ? '🚀 ابدأ' : 'التالي →') + '</button>') +
           '</div>' +
         '</div>';
       overlay.classList.add('show');
@@ -536,7 +541,18 @@
         getS().set(ONB_KEY, true);
         overlay.classList.remove('show');
       });
-      overlay.querySelector('#onbNext').addEventListener('click', function(){
+      function finish(simple){
+        getS().set(ONB_KEY, true);
+        if(window.SimpleMode) window.SimpleMode.set(!!simple, true);
+        overlay.classList.remove('show');
+        window.celebrate(2);
+        toast(simple ? '🧘 الوضع البسيط شغّال — بتغيّره من ⚙️ ← المظهر' : '🚀 رحلتك بدأت!', 'success', 3000);
+      }
+      var bs = overlay.querySelector('#onbSimple'), bf = overlay.querySelector('#onbFull');
+      if(bs) bs.addEventListener('click', function(){ finish(true); });
+      if(bf) bf.addEventListener('click', function(){ finish(false); });
+      var bn = overlay.querySelector('#onbNext'); if(!bn) return;
+      bn.addEventListener('click', function(){
         if(step === ONB_STEPS.length - 1){
           getS().set(ONB_KEY, true);
           overlay.classList.remove('show');

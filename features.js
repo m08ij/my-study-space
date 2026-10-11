@@ -1143,7 +1143,7 @@
 
     var list = document.getElementById('budgetList');
     if(!items.length){
-      list.innerHTML = '<div class="empty"><div class="ic">💰</div><p>لا توجد عناصر</p></div>';
+      list.innerHTML = '<div class="empty"><div class="ic">💰</div><p>لا توجد عناصر</p><p class="sub">سجّل أول دخل أو مصروف بالأزرار بالأعلى</p></div>';
       return;
     }
     var html = '';
@@ -1252,7 +1252,7 @@
     var cnt = document.getElementById('notesCount');
     if(cnt) cnt.textContent = notes.length + ' ملاحظة';
     if(!notes.length){
-      c.innerHTML = '<div class="empty"><div class="ic">📔</div><p>لا توجد ملاحظات</p></div>';
+      c.innerHTML = '<div class="empty"><div class="ic">📔</div><p>لا توجد ملاحظات</p><p class="sub">اضغط «+ ملاحظة» بالأعلى، وتقدر تربطها بمادة</p></div>';
       return;
     }
     var html = '';
