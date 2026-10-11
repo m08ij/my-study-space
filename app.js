@@ -111,7 +111,9 @@
     'gpa': {tab:'gradecalc', subTab:'gpa'},
     'coursedescriptions': {tab:'plan', subTab:'desc'},
     'stats': {tab:'dashboard'},
-    'extracurricular': {tab:'dashboard'}
+    'extracurricular': {tab:'dashboard'},
+    'notes': {tab:'courses'},
+    'flashcards': {tab:'courses'}
   };
 
   window.switchSubTab = function(sectionId, subKey){
@@ -171,7 +173,6 @@
     var fns = {
       dashboard: window.renderDashboard, exams: window.renderExams,
       budget: window.renderBudget, courses: window.renderCourses, tasks: window.renderTasks,
-      notes: window.renderNotes, flashcards: window.renderDecks,
       attendance: window.renderAttendance, timetable: window.renderTimetable,
       plan: window.renderPlan, campus: window.renderCampus, hulinks: window.renderHuLinks, gradecalc: window.renderGradeCalc
     };
@@ -550,17 +551,12 @@
       (window.space.courses || []).forEach(function(c){ mine[c.name] = true; idx.push({name: c.name, type:'موادي', tab:'courses', courseId: c.id}); });
       (window.space.tasks || []).forEach(function(t){ if(t.title) idx.push({name: t.title, type:'مهمة', tab:'tasks'}); });
       (window.space.exams || []).forEach(function(e){ if(e.name) idx.push({name: e.name, type:'امتحان', tab:'exams'}); });
-      (window.notes || []).forEach(function(n){ var nm = n && (n.title || String(n.body || '').slice(0, 40)); if(nm) idx.push({name: nm, type:'ملاحظة', tab:'notes'}); });
+      (window.notes || []).forEach(function(n){ var nm = n && n.course && (n.title || String(n.body || '').slice(0, 40)); var oc = nm && (window.space.courses || []).filter(function(c){ return c.name === n.course; })[0]; if(oc) idx.push({name: nm, type:'ملاحظة · ' + n.course, tab:'courses', courseId: oc.id}); });
       /* محتوى المواد: مواضيع خطة المادة + عناوين المذاكرة + ملفات المادة (تفتح ورقة المادة) */
       (window.space.courses || []).forEach(function(c){
         var weeks = c.syllabus && c.syllabus.weeks || [];
         weeks.forEach(function(w){ (w.topics || []).forEach(function(t){ if(t && t.title) idx.push({name: t.title, type:'موضوع · ' + c.name, tab:'courses', courseId: c.id}); }); });
         Object.keys(c.study || {}).forEach(function(k){ var s = c.study[k]; (s && s.flashcards || []).forEach(function(f){ idx.push({name: f.q, type:'مذاكرة · ' + c.name, tab:'courses', courseId: c.id}); }); (s && s.definitions || []).forEach(function(f){ idx.push({name: f.term, type:'مذاكرة · ' + c.name, tab:'courses', courseId: c.id}); }); });
-      });
-      /* مجموعات البطاقات وأسئلتها */
-      (window.space.decks || []).forEach(function(d){
-        if(d.name) idx.push({name: d.name, type:'بطاقات', tab:'flashcards', deckId: d.id});
-        (d.cards || []).forEach(function(cd){ if(cd && cd.q) idx.push({name: cd.q, type:'بطاقة · ' + (d.name || ''), tab:'flashcards', deckId: d.id}); });
       });
       /* مباني الحرم */
       var CM = window.CampusMap;
@@ -582,7 +578,6 @@
       /* مادتك: نفتح صفحة المادة مباشرة (ملفات/مهام/امتحانات/علامات/حضور) */
       if(x.courseId && window.Hub && window.Hub.openCourse) window.Hub.openCourse(x.courseId);
       if(x.bld && window.CampusMap && window.CampusMap.select) setTimeout(function(){ try{ window.CampusMap.select(x.bld, true); }catch(e){} }, 200);
-      if(x.deckId && window.openDeck) setTimeout(function(){ try{ window.openDeck(x.deckId); }catch(e){} }, 150);
     }
     /* تطبيع عربي (تشكيل/همزات/ة-ه/ى-ي) ليلقى البحث «اداره» و«إدارة» بنفس الوقت */
     function nz(s){ return String(s == null ? '' : s).toLowerCase().replace(/[ً-ْـ]/g, '').replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').replace(/\s+/g, ' ').trim(); }
@@ -879,11 +874,9 @@
     bind('btnAddExam', window.addExam);
     bind('btnAddAtt', window.addAttendanceCourse);
     bind('btnTimerSettings', window.openTimerSettings);
-    bind('btnAddDeck', window.addDeck);
     bind('btnAddIncome', function(){ window.addBudgetItem('income'); });
     bind('btnAddExpense', function(){ window.addBudgetItem('expense'); });
     bind('btnClearBudget', window.clearBudget);
-    bind('btnAddNote', window.addNote);
     bind('btnAddGpa', window.addCourse);
     bind('btnLoadGpaSample', window.loadSampleGpa);
     bind('btnClearGpa', window.clearGpa);
@@ -936,7 +929,7 @@
         else if(type === 'task'){ window.switchTab('tasks'); setTimeout(window.addTask, 250); }
         else if(type === 'course'){ window.switchTab('courses'); setTimeout(window.addMyCourse, 250); }
         else if(type === 'exam'){ window.switchTab('exams'); setTimeout(window.addExam, 250); }
-        else if(type === 'note'){ window.switchTab('notes'); setTimeout(window.addNote, 250); }
+        else if(type === 'note'){ if(window.addCourseNote) window.addCourseNote(); }
         else if(type === 'budget'){ window.switchTab('budget'); setTimeout(function(){ window.addBudgetItem('expense'); }, 250); }
       });
     });
@@ -1446,7 +1439,7 @@
       return;
     }
     if(e.altKey && e.key.toLowerCase() === 't'){ e.preventDefault(); window.switchTab('tasks'); setTimeout(window.addTask, 200); return; }
-    if(e.altKey && e.key.toLowerCase() === 'n'){ e.preventDefault(); window.switchTab('notes'); setTimeout(window.addNote, 200); return; }
+    if(e.altKey && e.key.toLowerCase() === 'n'){ e.preventDefault(); if(window.addCourseNote) window.addCourseNote(); return; }
     if(e.altKey && e.key.toLowerCase() === 'p'){ e.preventDefault(); window.switchTab('timer'); return; }
     if(e.altKey && e.key.toLowerCase() === 'q'){ e.preventDefault(); window.openQuickCapture(); return; }
     if(e.key === 'Escape'){
@@ -1583,8 +1576,6 @@
     safeRun('Tasks', window.renderTasks);
     safeRun('Exams', window.renderExams);
     safeRun('Attendance', window.renderAttendance);
-    safeRun('Decks', window.renderDecks);
-    safeRun('Notes', window.renderNotes);
     safeRun('GPA', window.renderGpa);
     safeRun('Budget', window.renderBudget);
     safeRun('HU Links', window.renderHuLinks);

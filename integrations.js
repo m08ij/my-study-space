@@ -341,11 +341,7 @@
           if(window.renderDashboard) window.renderDashboard();
           toast('✓ أُضيف ' + (p.type === 'expense' ? 'مصروف' : 'دخل') + ': ' + p.amount + ' د', 'success', 2000);
         } else if(p.type === 'note'){
-          window.notes.unshift({ title: p.title.slice(0, 60), body: p.title, ts: Date.now() });
-          getS().set('notes', window.notes);
-          if(window.renderNotes) window.renderNotes();
-          if(window.renderDashboard) window.renderDashboard();
-          toast('✓ أُضيفت ملاحظة', 'success', 2000);
+          if(window.addCourseNote) window.addCourseNote(null, p.title);   /* الملاحظات لكل مادة: نسأل لأي مادة */
         } else if(p.type === 'course'){
           /* مادة جديدة: نأخذ الكود/الساعات من قاعدة المواد إن طابق الاسم تماماً، وإلا مادة بسيطة */
           var known = (window.COURSES_DB || {})[p.title];

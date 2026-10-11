@@ -238,7 +238,6 @@
     { r: rx(['ثيم', 'theme', 'الوضع الغامق', 'الوضع المظلم', 'غير الالوان', 'dark mode']), t: '🎨 **المظهر:** ⚙️ الإعدادات ← «المظهر» (7 ثيمات + تلقائي)، وفيها كمان حجم الخط والكثافة.' },
     { r: rx(['اشعارات', 'تنبيهات', 'notifications', 'ذكرني']), t: '🔔 **الإشعارات:** ⚙️ الإعدادات ← «الإشعارات» (بيطلب إذن المتصفح). بتوصلك تنبيهات المهام والامتحانات القريبة. أنا ما بقدر أرسل لك تذكيرات لحالي.' },
     { r: rx(['تثبيت التطبيق', 'نزل التطبيق', 'pwa', 'install']), t: '📲 **التثبيت:** ⚙️ الإعدادات ← «تثبيت التطبيق» (بيظهر لما المتصفح يدعمه)، أو من قائمة المتصفح «إضافة إلى الشاشة الرئيسية».' },
-    { r: rx(['بطاقات تعليميه', 'flashcards', 'كيف اراجع البطاقات']), t: '🃏 **البطاقات:** تبويب «بطاقات تعليمية» ← أنشئ مجموعة وأضف بطاقات (أو استورد `سؤال :: جواب`). المراجعة بالمفاتيح: Space لقلب البطاقة و1–4 للتقييم. المراجعة بتتجدول تلقائياً بالتكرار المتباعد.' },
     { r: rx(['وضع اليوم', 'today mode']), t: '🎯 **وضع اليوم:** ⚙️ الإعدادات ← «وضع اليوم» بيخفي كل شي ما إله علاقة باليوم ويخلّي الصفحة على المهم.' },
     { r: rx(['رتب الصفحه الرئيسيه', 'تخصيص الرئيسيه', 'تخصيص لوحه التحكم', 'اخفي قسم']), t: '🧩 **تخصيص الرئيسية:** بلوحة التحكم في زر التخصيص: بتخفي الأقسام وبترتبها بالسحب أو الأسهم.' }
   ];
@@ -251,9 +250,7 @@
     ['exams', ['الامتحانات', 'امتحاناتي', 'صفحه الامتحانات'], 'الامتحانات'],
     ['attendance', ['الحضور', 'حضوري', 'الغياب'], 'الحضور'],
     ['timer', ['بومودورو', 'المؤقت', 'التركيز', 'timer'], 'بومودورو'],
-    ['flashcards', ['البطاقات', 'بطاقات', 'فلاش كارد'], 'البطاقات'],
     ['budget', ['الميزانيه', 'ميزانيتي', 'المصاريف'], 'الميزانية'],
-    ['notes', ['الملاحظات', 'ملاحظاتي'], 'الملاحظات'],
     ['gradecalc', ['العلامات', 'علاماتي', 'حاسبه المعدل', 'المعدل'], 'علاماتي'],
     ['plan', ['الخطه', 'الخطه الدراسيه', 'خطتي'], 'الخطة'],
     ['campus', ['خريطه الجامعه', 'خريطه', 'الخريطه', 'موقع القاعه', 'وين'], 'خريطة الجامعة'],
@@ -303,11 +300,6 @@
   }
   function attOf(c){ var a = (sp().attendance || {})[c.name] || {}, p = +a.present || 0, b = +a.absent || 0; return { p: p, a: b, tot: p + b, pct: p + b ? Math.round(p / (p + b) * 100) : null }; }
   function gradeOf(c){ var g = (sp().grades || []).filter(function(x){ return x.name === c.name; })[0]; return g || null; }
-  function dueCards(){
-    var n = 0, ui = window.CardsUI; if(!ui || !ui.stats) return 0;
-    (sp().decks || []).forEach(function(d){ try{ n += ui.stats(d).due; }catch(e){} });
-    return n;
-  }
   function gradeScale(){
     var G = window.GRADES || {}, out = [];
     Object.keys(G).forEach(function(k){ var m = /\((\d+)\s*-\s*(\d+)\)/.exec(k); if(m) out.push({ label: k.split(' ')[0], min: +m[1], pts: G[k] }); });
@@ -423,7 +415,6 @@
     gradeW: rx(['علامه', 'علامات', 'علامتي', 'علاماتي', 'درجه', 'درجات', 'معدل', 'معدلي', 'gpa', 'تقدير', 'نتيجه', 'علامه نهائيه']),
     needW: rx(['لازم اجيب', 'كم اجيب', 'شو لازم اجيب', 'كم لازم', 'بدي اجيب', 'ابغي اجيب', 'بدي انجح', 'اوصل', 'لاوصل', 'لاجيب', 'كم يلزمني', 'كم بحتاج', 'كم احتاج']),
     coursesW: rx(['مواد', 'مادة', 'ماده', 'كورس', 'مسجل', 'ساعات', 'متطلب', 'متطلبات', 'prereq']),
-    cardsW: rx(['بطاقات', 'بطاقه', 'فلاش', 'flashcards', 'مراجعه البطاقات']),
     studyW: rx(['درست', 'ذاكرت', 'دراسه اليوم', 'ساعات دراستي', 'وقت الدراسه', 'كم ركزت', 'تركيزي', 'احصائيات', 'احصائياتي']),
     spendQ: rx(['كم صرفت', 'كم دفعت', 'مصروفي', 'مصاريفي', 'كم انفقت', 'كم خسرت', 'كم مصرف']),
     timeW: rx(['كم الساعه', 'الساعه كم', 'الوقت', 'الساعه الان', 'شو الوقت', 'شو الساعه', 'كم صارت الساعه', 'الساعه شو']),
@@ -512,6 +503,7 @@
     var wf = whenFrags(n, false);
     if(/(?:^|\s)(?:ال)?(?:ملاحظه|نوت|note)(?:\s|$)/.test(n)){
       var nb = c.raw.replace(/[؟?]+\s*$/, '').replace(/^\s*(?:ضيفلي|ضيف|اضف|اضيف|سجلي|سجل|حطلي|حط|بدي اضيف)\s+/, '').replace(/^\s*(?:ال)?(?:ملاحظ[ةه]|نوت|note)\s*(?:عن|حول|بخصوص|:)?\s*/i, '').trim();
+      if(!c.cOwn) return done('📔 الملاحظات صارت لكل مادة — قول مثلاً: «ضيف ملاحظة بالفيزياء: …».');
       if(!nb){ setPending({ type: 'note', course: c.cOwn }); return done('شو بدك أكتب بالملاحظة؟'); }
       return addNoteProposal({ title: nb.length > 50 ? nb.slice(0, 50) + '…' : nb, body: nb, course: c.cOwn });
     }
@@ -573,6 +565,7 @@
     }
     if(p.type === 'note'){
       var body = c.raw.trim(); if(body.length < 2) return null;
+      if(!p.course) return done('📔 الملاحظات صارت لكل مادة — اذكر اسم المادة.');
       mem.pending = null;
       return addNoteProposal({ title: body.length > 50 ? body.slice(0, 50) + '…' : body, body: body, course: p.course });
     }
@@ -686,7 +679,6 @@
     var pr = od.concat(td, rest).slice(0, 3);
     if(pr.length){ L.push('', '✅ **أولوياتك:**'); pr.forEach(function(x, i){ var d = x.due ? diff(x.due) : null; L.push((i + 1) + '. ' + x.title + (d === null ? '' : d < 0 ? ' ⚠️ متأخرة' : d === 0 ? ' — اليوم' : ' — ' + whenWord(d))); }); }
     var ex = upcomingExams()[0]; if(ex && diff(ex.date) <= 7) L.push('', '⏳ «' + ex.name + '» ' + whenWord(diff(ex.date)) + ' — خصّص جلسة مراجعة.');
-    var dc = dueCards(); if(dc) L.push('', '🃏 عندك ' + dc + ' بطاقة مستحقة للمراجعة (10 دقائق).');
     var sessions = Math.max(2, Math.min(6, pr.length * 2 + (ex ? 1 : 0)));
     L.push('', '⏱️ اقتراح: **' + sessions + ' جلسات بومودورو** بين المحاضرات وبعدها، مع راحة 5 دقائق بين كل جلسة.');
     if(!lec.length && !pr.length && !dc) L.push('', 'يومك فاضي حسب البيانات 🎈 استغله بمراجعة خفيفة أو تقدّم مهمة.');
@@ -803,15 +795,7 @@
     return null;
   }
 
-  /* --- بطاقات / دراسة / إنفاق --- */
-  function hCards(c){
-    if(!R.cardsW.test(c.n) || R.addV.test(c.n)) return null;
-    var decks = sp().decks || [], ui = window.CardsUI;
-    if(!decks.length || !ui) return done('🃏 ما عندك بطاقات بعد. أنشئ مجموعة من «بطاقات تعليمية» وأضف سؤال وجواب، أو استورد `سؤال :: جواب`.', [go('flashcards', 'افتح البطاقات')]);
-    var due = 0, fresh = 0, tot = 0, rows = [];
-    decks.forEach(function(d){ try{ var s = ui.stats(d); due += s.due; fresh += s.fresh; tot += s.total; if(s.due) rows.push('• ' + (d.name || 'مجموعة') + ': ' + s.due + ' مستحقة'); }catch(e){} });
-    return done('🃏 **بطاقاتك:** ' + tot + ' بطاقة بـ' + decks.length + ' مجموعة.\n' + (due ? '⏰ مستحقة للمراجعة الآن: **' + due + '**\n' + rows.slice(0, 5).join('\n') : '🎉 ما في بطاقات مستحقة الآن.') + (fresh ? '\n🆕 جديدة لسا ما انراجعت: ' + fresh : ''), [go('flashcards', due ? '▶️ ابدأ المراجعة' : 'افتح البطاقات')]);
-  }
+  /* --- دراسة / إنفاق --- */
   function hStudy(c){
     if(!R.studyW.test(c.n)) return null;
     var today = studyMinutes(1), week = studyMinutes(7), month = studyMinutes(30);
@@ -857,7 +841,6 @@
     if(ex && diff(ex.date) <= 3) F.push({ w: 3, t: '⏳ «' + ex.name + '»' + (ex.course ? ' (' + ex.course + ')' : '') + ' ' + whenWord(diff(ex.date)) + ' — خصّص له جلسات مراجعة هسا.' });
     else if(ex && diff(ex.date) <= 10) F.push({ w: 1, t: '📅 أقرب امتحان «' + ex.name + '» ' + whenWord(diff(ex.date)) + ' — بلّش بتغطية المادة بدري.' });
     (sp().courses || []).forEach(function(c){ var a = attOf(c); if(a.tot >= 4 && a.pct < 85) F.push({ w: a.pct < 75 ? 3 : 2, t: '✅ حضورك بـ«' + c.name + '» ' + a.pct + '% — ' + (a.pct < 75 ? 'خطر، لا تغيب أكثر.' : 'قريب من الحد، انتبه.') }); });
-    var dc = dueCards(); if(dc) F.push({ w: 1, t: '🃏 ' + dc + ' بطاقة مستحقة — 10 دقائق مراجعة بتثبّت المعلومات.' });
     var st = streak(); if(st >= 3) F.push({ w: 0, t: '🔥 ' + st + ' أيام دراسة متواصلة — حافظ عليها.' }); else if(!studyMinutes(3)) F.push({ w: 1, t: '⏱️ ما سجّلت تركيز آخر 3 أيام — جلسة 25 دقيقة اليوم بتبدأ السلسلة.' });
     var bal = 0; (sp().budget || []).forEach(function(b){ var a = parseFloat(b.amount) || 0; bal += b.type === 'income' ? a : -a; });
     if((sp().budget || []).length && bal < 0) F.push({ w: 2, t: '💰 رصيدك بالسالب (' + money(bal) + ') — راجع مصاريفك.' });
@@ -876,8 +859,8 @@
     return confirmCard('📔 بسجّل ملاحظة:\n**' + c.title + '**' + (c.body && c.body !== c.title ? '\n' + (c.body.length > 120 ? c.body.slice(0, 120) + '…' : c.body) : '') + (c.course ? '\n📚 ' + c.course.name : '') + '\nأأكّد؟', function(){
       if(!Array.isArray(window.notes)) window.notes = [];
       var nt = { title: c.title, body: c.body || c.title, ts: Date.now(), course: c.course ? c.course.name : '' };
-      window.notes.unshift(nt); if(window.S) window.S.set('notes', window.notes); if(window.renderNotes) try{ window.renderNotes(); }catch(e){}
-      undoable('أُضيفت الملاحظة', function(){ var i = window.notes.indexOf(nt); if(i > -1){ window.notes.splice(i, 1); if(window.S) window.S.set('notes', window.notes); if(window.renderNotes) try{ window.renderNotes(); }catch(e){} } });
+      window.notes.unshift(nt); if(window.S) window.S.set('notes', window.notes);
+      undoable('أُضيفت الملاحظة', function(){ var i = window.notes.indexOf(nt); if(i > -1){ window.notes.splice(i, 1); if(window.S) window.S.set('notes', window.notes); } });
       return '✅ تم حفظ الملاحظة.';
     }, '✅ احفظ الملاحظة');
   }
@@ -961,7 +944,7 @@
   function route(raw, noFollow){
     if(mem.pending && !noFollow) mem.pending.age = (mem.pending.age || 0) + 1;     /* يُحسب عمر السؤال المعلّق بعدد الرسائل */
     var c = ctxOf(raw), r = null, i;
-    var chain = [hPending, hCalc, hSmall, hNavStrict, hSpend, hDone, hAdd, hNextLec, hStudyTable, hDayPlan, hStudyPlan, hAgenda, hExams, hTasks, hAttendance, hGrades, hCards, hStudy, hSpendQ, hAdvice, hFaq, hCourses, hNav, hKnow, hTime];
+    var chain = [hPending, hCalc, hSmall, hNavStrict, hSpend, hDone, hAdd, hNextLec, hStudyTable, hDayPlan, hStudyPlan, hAgenda, hExams, hTasks, hAttendance, hGrades, hStudy, hSpendQ, hAdvice, hFaq, hCourses, hNav, hKnow, hTime];
     if(!noFollow) chain.splice(1, 0, hFollow);
     for(i = 0; i < chain.length; i++){
       try{ r = chain[i](c); }catch(e){ console.warn('ai handler', chain[i].name, e); r = null; }

@@ -26,9 +26,9 @@
 
     /* Features */
     ['renderDashboard','renderTasks','renderExams','renderCourses',
-     'renderBudget','renderNotes','renderGpa','renderGradeCalc',
-     'renderAttendance','renderDecks','renderPlan','renderHuLinks',
-     'addTask','addExam','addMyCourse','addBudgetItem','addNote',
+     'renderBudget','renderGpa','renderGradeCalc',
+     'renderAttendance','renderPlan','renderHuLinks',
+     'addTask','addExam','addMyCourse','addBudgetItem','addCourseNote',
      'toggleTimer','switchTab','switchSubTab'].forEach(function(fn){
       assert('window.' + fn + ' موجودة', typeof window[fn] === 'function');
     });

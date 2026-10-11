@@ -34,11 +34,6 @@
     if(t){ hh = +t[1]; mm = +t[2]; }
     return new Date(+m[1], +m[2] - 1, +m[3], hh, mm, 0);
   }
-  function dueCardsInfo(now){
-    var t = dstr(now || new Date()), due = 0, fresh = 0;
-    (sp().decks || []).forEach(function(d){ (d.cards || []).forEach(function(c){ if(!c.last) fresh++; else if((c.due || t) <= t) due++; }); });
-    return { due: due, fresh: fresh };
-  }
   function tasksInfo(now){
     var t = dstr(now || new Date()), over = [], today = [];
     (sp().tasks || []).forEach(function(k){
@@ -77,7 +72,7 @@
   function todayData(now){
     now = now || new Date();
     var st = schedule(now);
-    return { now: now, st: st, tasks: tasksInfo(now), exams: examsSoon(now, 7), cards: dueCardsInfo(now), spent: spentToday(now) };
+    return { now: now, st: st, tasks: tasksInfo(now), exams: examsSoon(now, 7), spent: spentToday(now) };
   }
 
   /* «بين محاضرتين»: انتهت محاضرة اليوم ولسا ما بدأت التالية، والفراغ بين 15 دقيقة و4 ساعات (ضمن 06:00–22:00) */
@@ -91,11 +86,7 @@
   }
   function suggestBetween(g, now){
     var items = []; if(!g) return items;
-    var c = dueCardsInfo(now), m = g.minutes;
-    if(c.due > 0){
-      var n = Math.min(c.due, 20, Math.max(5, m * 2));   /* افتراض: ~30 ثانية للبطاقة */
-      items.push({ k: 'cards', icon: '🃏', text: 'راجع ' + n + ' بطاقة مستحقة', est: Math.max(3, Math.ceil(n / 2)), note: 'افتراض: ~30 ث للبطاقة' });
-    }
+    var m = g.minutes;
     var ti = tasksInfo(now), pool = ti.over.concat(ti.today);
     if(!pool.length){ (sp().tasks || []).forEach(function(k){ if(!k.done && k.due && k.due >= dstr(now || new Date())) pool.push(k); }); pool.sort(function(a, b){ return String(a.due).localeCompare(String(b.due)); }); }
     if(pool.length && m >= 20) items.push({ k: 'task', icon: '📝', text: 'اشتغل على «' + pool[0].title + '»', id: pool[0].id, est: Math.min(m - 5, 25), note: pool[0].due ? 'موعده ' + pool[0].due : '' });
@@ -189,10 +180,6 @@
         return '<div class="td-row"><span class="td-main">' + esc(x.e.name || 'امتحان') + (x.e.course ? ' · ' + esc(x.e.course) : '') + '</span><span class="td-badge ' + (x.d <= 1 ? 'late' : 'next') + '">' + (x.d === 0 ? 'اليوم' : x.d === 1 ? 'غداً' : 'بعد ' + x.d + ' أيام') + '</span></div>';
       }).join('') + '</div>';
     }
-    if(d.cards.due || d.cards.fresh){
-      sections++;
-      h += '<div class="td-sec"><b>🃏 البطاقات</b><div class="td-row"><span class="td-main">' + (d.cards.due ? d.cards.due + ' مستحقة' : '') + (d.cards.due && d.cards.fresh ? ' · ' : '') + (d.cards.fresh ? d.cards.fresh + ' جديدة' : '') + '</span><button class="btn btn-sm" type="button" data-td-cards>▶ راجع</button></div></div>';
-    }
     var pk = peakLine(peak(d.now)); if(pk) h += '<p class="u-note td-peak">⏰ ' + esc(pk) + '</p>';
     if(!sections) h += '<div class="u-empty">🎉 ما في شي ملحّ اليوم</div>';
     if(d.spent) h += '<p class="u-note">💸 صرفت اليوم: ' + d.spent + ' د</p>';
@@ -206,11 +193,10 @@
   }
   function calmHtml(c, now){
     var e = c.e, hrs = c.hours, when = hrs <= 0 ? 'بدأ قبل قليل' : hrs < 1 ? 'بعد ' + Math.max(1, Math.round(hrs * 60)) + ' دقيقة' : 'بعد ' + Math.round(hrs) + ' ساعة تقريباً';
-    var pend = e.course ? (sp().tasks || []).filter(function(t){ return !t.done && t.course === e.course; }).length : 0, ci = dueCardsInfo(now);
+    var pend = e.course ? (sp().tasks || []).filter(function(t){ return !t.done && t.course === e.course; }).length : 0;
     return '<div class="card-head"><h3>🧘 وضع التهدئة</h3><button class="btn btn-sm btn-ghost" type="button" data-calm="all">إظهار كل اللوحة</button></div>' +
       '<p class="calm-main"><b>' + esc(e.name || 'امتحان') + '</b>' + (e.course ? ' · ' + esc(e.course) : '') + ' — ' + when + (e.room ? ' · ' + esc(e.room) : '') + '</p>' +
-      '<div class="calm-acts">' + (ci.due ? '<button class="btn btn-sm" type="button" data-calm="cards">🃏 راجع ' + ci.due + ' بطاقة</button>' : '') +
-      (e.course ? '<button class="btn btn-sm" type="button" data-calm="focus" data-course="' + esc(e.course) + '">⏱️ جلسة تركيز</button>' : '') +
+      '<div class="calm-acts">' + (e.course ? '<button class="btn btn-sm" type="button" data-calm="focus" data-course="' + esc(e.course) + '">⏱️ جلسة تركيز</button>' : '') +
       '<button class="btn btn-sm btn-ghost" type="button" data-calm="exams">كل الامتحانات</button></div>' +
       (pend ? '<p class="u-note">📝 عندك ' + pend + ' مهمة مفتوحة بهذه المادة (مخفية الآن للتركيز).</p>' : '') +
       '<p class="u-note">اللوحة مبسّطة قبل الامتحان بـ24 ساعة. تقدر ترجع للوضع الكامل بأي وقت.</p>';
@@ -305,12 +291,10 @@
   }
   function onClick(ev){
     var t = ev.target; if(!t.closest) return;
-    var b = t.closest('[data-td-cards]'); if(b){ if(window.CardsUI) window.CardsUI.review(null); return; }
-    b = t.closest('[data-gap]');
+    var b = t.closest('[data-gap]');
     if(b){
       var k = b.getAttribute('data-gap');
-      if(k === 'cards'){ if(window.CardsUI) window.CardsUI.review(null); }
-      else if(k === 'task'){ if(window.switchTab) window.switchTab('tasks'); }
+      if(k === 'task'){ if(window.switchTab) window.switchTab('tasks'); }
       else if(k === 'focus' && window.Progress && window.Progress.focusCourse) window.Progress.focusCourse(b.getAttribute('data-course'));
       return;
     }
@@ -318,7 +302,6 @@
     if(b){
       var c = b.getAttribute('data-calm');
       if(c === 'all'){ var cx = calmExam(new Date()); if(cx) ssSet('ss_calm_off', String(cx.e.id || cx.e.name)); renderDaily(); }
-      else if(c === 'cards'){ if(window.CardsUI) window.CardsUI.review(null); }
       else if(c === 'focus' && window.Progress && window.Progress.focusCourse) window.Progress.focusCourse(b.getAttribute('data-course'));
       else if(c === 'exams' && window.switchTab) window.switchTab('exams');
     }
@@ -387,7 +370,7 @@
   /* ============================================================
      قوائم طويلة: أول 60 عنصراً ثم «عرض المزيد» (يمنع بطء الرسم مع مئات العناصر)
      ============================================================ */
-  var LIMIT = 60, LIST_SEL = '#tasksList,#examsList,#budgetList,#notesList,#decksList,.cd-list';
+  var LIMIT = 60, LIST_SEL = '#tasksList,#examsList,#budgetList,.cd-list';
   function limitList(c){
     var kids = Array.prototype.filter.call(c.children, function(k){ return !k.classList.contains('lz-more'); });
     var more = c.querySelector(':scope > .lz-more');

@@ -35,7 +35,7 @@
 
   /* ---------- قياس الأداء (بالذاكرة فقط؛ لا يُحفظ ولا يُرسل) ---------- */
   var perfStats = {}, longTasks = { n: 0, max: 0 };
-  var RENDERS = ['renderDashboard', 'renderTasks', 'renderExams', 'renderCourses', 'renderBudget', 'renderDecks', 'renderNotes', 'renderTimetable', 'renderAttendance', 'renderGradeCalc', 'renderPlan'];
+  var RENDERS = ['renderDashboard', 'renderTasks', 'renderExams', 'renderCourses', 'renderBudget', 'renderTimetable', 'renderAttendance', 'renderGradeCalc', 'renderPlan'];
   function wrapRenders(){
     RENDERS.forEach(function(name){
       var f = window[name]; if(typeof f !== 'function' || f._perf) return;

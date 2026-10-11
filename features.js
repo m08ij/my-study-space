@@ -94,7 +94,8 @@
     {id:'cyberpunk', name:'سايبربانك', colors:['#0a0014','#22d3ee','#ec4899']},
     {id:'midnight', name:'منتصف الليل', colors:['#050914','#0ea5e9','#8b5cf6']},
     {id:'glass', name:'زجاج داكن', colors:['#0b1024','#7cd4f5','#b3a6ff']},
-    {id:'glass-light', name:'زجاج فاتح', light:true, colors:['#e8edf8','#3b82f6','#7c5cf0']}
+    {id:'glass-light', name:'زجاج فاتح', light:true, colors:['#e8edf8','#3b82f6','#7c5cf0']},
+    {id:'white', name:'أبيض', light:true, colors:['#f4f6fb','#2563eb','#0f2a5c']}
   ];
   window.THEMES = THEMES;
 
@@ -212,7 +213,6 @@
     if(typeof window.renderDailyQuote === 'function') window.renderDailyQuote();
 
     var sp = space();
-    var notes = window.notes || [];
     var DAYS_EN = window.DAYS_EN || ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
     var now = new Date();
@@ -1247,68 +1247,6 @@
     window.customConfirm('مسح كل العناصر (' + space().budget.length + ' معاملة)؟ لا يمكن التراجع، ويُفضّل أخذ نسخة احتياطية أولاً.', function(){
       window.space.budget = [];
       saveSpace(); window.renderBudget(); window.renderDashboard();
-    });
-  };
-
-  /* ============================================================
-     NOTES
-     ============================================================ */
-  window.renderNotes = function(){
-    var c = document.getElementById('notesList'); if(!c) return;
-    var notes = window.notes || [];
-    var cnt = document.getElementById('notesCount');
-    if(cnt) cnt.textContent = notes.length + ' ملاحظة';
-    if(!notes.length){
-      c.innerHTML = '<div class="empty"><div class="ic">📔</div><p>لا توجد ملاحظات</p><p class="sub">اضغط «+ ملاحظة» بالأعلى، وتقدر تربطها بمادة</p></div>';
-      return;
-    }
-    var html = '';
-    notes.forEach(function(n, i){
-      var dateStr = '';
-      try{ dateStr = new Date(n.ts).toLocaleDateString('ar-EG', {weekday:'long', year:'numeric', month:'short', day:'numeric'}); }catch(e){}
-      html += '<div class="note-card">' +
-        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">' +
-        '<span style="font-size:var(--fs-xs);color:var(--muted2)">' + dateStr + '</span>' +
-        '<button class="btn btn-sm btn-danger" data-del-note="' + i + '">✕</button></div>' +
-        '<input value="' + esc(n.title || '') + '" placeholder="عنوان..." data-note-title="' + i + '">' +
-        '<textarea placeholder="اكتب..." data-note-body="' + i + '">' + esc(n.body || '') + '</textarea></div>';
-    });
-    c.innerHTML = html;
-    c.querySelectorAll('[data-del-note]').forEach(function(b){
-      b.addEventListener('click', function(){ window.deleteNote(parseInt(b.dataset.delNote)); });
-    });
-    c.querySelectorAll('[data-note-title]').forEach(function(inp){
-      inp.addEventListener('input', function(){
-        window.notes[parseInt(inp.dataset.noteTitle)].title = inp.value;
-        getS().set('notes', window.notes);
-      });
-    });
-    c.querySelectorAll('[data-note-body]').forEach(function(t){
-      t.addEventListener('input', function(){
-        window.notes[parseInt(t.dataset.noteBody)].body = t.value;
-        getS().set('notes', window.notes);
-      });
-    });
-  };
-
-  window.addNote = function(){
-    window.notes.unshift({title:'', body:'', ts: Date.now()});
-    getS().set('notes', window.notes);
-    window.renderNotes(); window.renderDashboard();
-    toast('تمت الإضافة', 'success', 1500);
-    var nt = document.querySelector('#notesList [data-note-title="0"]'); if(nt){ try{ nt.focus(); }catch(e){} }   /* جاهز للكتابة مباشرة */
-  };
-
-  window.deleteNote = function(i){
-    var n = window.notes[i]; if(!n) return;
-    window.notes.splice(i, 1);
-    getS().set('notes', window.notes);
-    window.renderNotes(); window.renderDashboard();
-    if(window.toastUndo) window.toastUndo('حُذفت الملاحظة', function(){
-      if(window.notes.indexOf(n) > -1) return;
-      window.notes.splice(Math.min(i, window.notes.length), 0, n);
-      getS().set('notes', window.notes);
-      window.renderNotes(); window.renderDashboard();
     });
   };
 

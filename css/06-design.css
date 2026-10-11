@@ -1,0 +1,292 @@
+/* ============================================================
+   06-design.css (نسخة V4-design): توحيد التصميم + ثيم «أبيض» + قائمة جانبية دائرية الأيقونات والإعدادات بأسفلها + لوحة تحكم بشبكة بطاقات
+   يُحمَّل آخر شيء؛ كله إضافات فوق الملفات السابقة (لا يحذف ولا يعيد تسمية شيء)، والثيمات الأخرى تحتفظ بألوانها كما هي.
+   ============================================================ */
+
+/* ---------- 1) توكنز مشتركة (كل الثيمات) ---------- */
+:root{
+  --ic-bg:color-mix(in srgb,var(--accent) 11%,var(--card));
+  --ic-bg-hover:color-mix(in srgb,var(--accent) 20%,var(--card));
+  --tint-red:color-mix(in srgb,var(--red) 14%,var(--card));
+  --tint-amber:color-mix(in srgb,var(--amber) 16%,var(--card));
+  --tint-blue:color-mix(in srgb,var(--accent) 13%,var(--card));
+  --tint-green:color-mix(in srgb,var(--green) 15%,var(--card));
+  --success:var(--green);--warning:var(--amber);--danger:var(--red);
+  --card-pad:18px;--card-gap:12px;
+  --hero-bg:var(--grad-soft),var(--card);--hero-fg:var(--text);--hero-muted:var(--muted);--hero-accent:var(--accent);
+  --hero-btn-bg:var(--card);--hero-btn-fg:var(--text);
+}
+/* حالات موحّدة: تركيز لوحة المفاتيح + تعطيل */
+:where(button,a,input,select,textarea,summary,[tabindex]):focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+:where(button,.btn,input,select,textarea):disabled{opacity:.5;cursor:not-allowed}
+
+/* ---------- 2) الشريط العلوي: أزرار دائرية ---------- */
+.topbar .icon-btn{border-radius:50%}
+.icon-circle{width:42px;height:42px}
+.icon-circle .ico{width:20px;height:20px}
+.icon-btn[aria-expanded="true"]{border-color:var(--accent);background:var(--tint-blue);color:var(--accent)}
+
+/* ---------- 3) القائمة الجانبية: تنقل قابل للتمرير + «الإعدادات» مثبّتة بأسفلها (Flexbox بدون position:fixed إضافي) ---------- */
+.sidebar{display:flex;flex-direction:column;overflow:hidden;padding:12px var(--sp-3) 0}
+.sidebar-nav{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:0 2px 10px;scrollbar-width:thin}
+.sidebar-foot{flex:none;padding:10px 2px 14px;border-top:1px solid var(--border)}
+.nav-item .ic{width:36px;height:36px;border-radius:50%;border:0;background:var(--ic-bg);color:var(--accent)}
+.nav-item .ic .ico{width:20px;height:20px}
+.nav-item:hover .ic{background:var(--ic-bg-hover);color:var(--accent);border-color:transparent}
+.nav-item.active .ic{background:var(--grad);color:var(--on-accent)}
+.nav-item.active{box-shadow:inset 0 0 0 1px var(--border2)}
+.nav-settings{width:100%;margin-bottom:0;border:0;background:transparent;font:inherit;font-weight:600;font-size:var(--fs-md);text-align:start;cursor:pointer;color:var(--muted)}
+.nav-settings:hover{background:var(--card2);color:var(--text)}
+.nav-settings[aria-expanded="true"]{color:var(--text)}
+html.simple .sidebar .nav-settings{display:flex!important}
+@media (max-width:900px){
+  .sidebar{padding-bottom:0}
+  .sidebar-foot{padding-bottom:calc(92px + env(safe-area-inset-bottom,0px))}
+}
+
+/* ---------- 4) لوحة التحكم: شبكة 12 عموداً ---------- */
+#dashboard.active{grid-template-columns:repeat(12,minmax(0,1fr));grid-auto-flow:row dense}
+#dashboard > [data-half]:not(.dash-solo){grid-column:span 6}
+@media (max-width:760px){#dashboard > [data-half]:not(.dash-solo){grid-column:1/-1}}
+
+.md-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--sh-sm);padding:var(--card-pad);min-width:0;align-self:stretch}
+.md-card-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:var(--card-gap)}
+.md-card-head h4{font-size:var(--fs-md);font-weight:800;margin:0}
+.md-link{background:none;border:0;color:var(--accent);font:inherit;font-size:var(--fs-sm);font-weight:700;cursor:pointer;padding:6px 4px;min-height:32px;border-radius:var(--r-sm)}
+.md-link:hover{text-decoration:underline}
+.md-empty{color:var(--muted);font-size:var(--fs-sm);padding:14px 4px;text-align:center}
+.md-foot{margin-top:var(--card-gap);padding-top:var(--card-gap);border-top:1px solid var(--border)}
+.md-more{background:none;border:0;color:var(--accent);font:inherit;font-size:var(--fs-sm);font-weight:700;cursor:pointer;margin-top:8px;padding:6px 0}
+.md-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;margin-bottom:10px;border-radius:99px;border:1px solid var(--border);background:var(--card2);color:var(--text);font:inherit;font-size:var(--fs-sm);font-weight:700;cursor:pointer}
+.md-chip.danger{background:var(--tint-red);border-color:transparent;color:var(--red)}
+
+/* #myDay: على الشاشات العريضة بطاقاته تصير عناصر مباشرة في شبكة اللوحة (فتأخذ «تقدم الترم» الفراغ بجانب الامتحان) */
+.myday{display:contents}
+.md-head{grid-column:1/-1;margin-bottom:0}
+.md-lecture{grid-column:span 5}
+.md-exam{grid-column:span 4}
+#dashboard > .dash-term{grid-column:span 3}
+.md-tasks{grid-column:span 7}
+.md-sched{grid-column:span 5}
+.md-quick{grid-column:span 7}
+.md-deadlines{grid-column:span 5}
+html.simple .md-exam,#dashboard:has(> .dash-term.dash-hidden) .md-exam{grid-column:span 7}
+html.simple .dash-term{display:none!important}
+@media (max-width:1100px){
+  /* لوحي: بطاقات «يومي» بشبكة داخلية، و«تقدم الترم» تحتها بعرض كامل */
+  .myday{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:var(--gap);grid-column:1/-1;background:none;border:0;box-shadow:none;padding:0;margin:0;border-radius:0}
+  .md-lecture{grid-column:span 7}.md-exam{grid-column:span 5}
+  .md-tasks{grid-column:span 7}.md-sched{grid-column:span 5}
+  .md-quick,.md-deadlines{grid-column:1/-1}
+  #dashboard > .dash-term{grid-column:1/-1}
+}
+@media (max-width:760px){
+  /* هاتف: عمود واحد بالأولوية: المحاضرة ← المهام ← الامتحان ← الجدول ← الإجراءات ← المواعيد */
+  .myday{display:flex;flex-direction:column;gap:var(--gap);padding:0}
+  .md-lecture,.md-exam,.md-tasks,.md-sched,.md-quick,.md-deadlines{grid-column:auto;width:100%}
+  .md-head{order:0}.md-lecture{order:1}.md-tasks{order:2}.md-exam{order:3}.md-sched{order:4}.md-quick{order:5}.md-deadlines{order:6}
+  .md-card{padding:14px}
+  .md-quick-grid{gap:8px}
+}
+
+/* بطاقة المحاضرة القادمة (الأبرز) */
+.md-lecture{display:flex;flex-direction:column;gap:12px;background:var(--hero-bg);color:var(--hero-fg);border-color:var(--border2);box-shadow:var(--sh-md)}
+.md-lecture .myday-hero,.md-lecture .myday-hero.now,.md-lecture .myday-hero.next{background:transparent;border:0;box-shadow:none;padding:0;margin:0;color:inherit;border-radius:0;-webkit-backdrop-filter:none;backdrop-filter:none;transform:none}
+.md-lecture .myday-hero:hover{transform:none}
+.md-lecture .myday-hero:focus-visible{outline-offset:6px;border-radius:var(--r-md)}
+.md-lecture .myday-kicker{color:var(--hero-accent)}
+.md-lecture .myday-title{color:var(--hero-fg);font-size:var(--fs-xl);margin:6px 0}
+.md-lecture .myday-meta,.md-lecture .myday-sub{color:var(--hero-muted)}
+.md-lecture .myday-sub b{color:var(--hero-fg)}
+.md-lecture .myday-count b{color:var(--hero-accent)}
+.md-lecture .myday-bar{background:rgba(255,255,255,.18)}
+.md-hero-go{display:inline-flex;align-items:center;margin-top:12px;padding:9px 16px;border-radius:var(--r-md);background:var(--hero-btn-bg);color:var(--hero-btn-fg);border:1px solid var(--border);font-weight:700;font-size:var(--fs-sm)}
+.md-lecture .myday-cta{margin:0}
+.md-lecture .myday-cta .btn{min-height:42px}
+
+/* بطاقة الامتحان القادم */
+.myday-tile.md-card{background:var(--card);border-radius:var(--r-xl);padding:var(--card-pad);gap:8px;text-align:start}
+.myday-tile.md-card:hover{border-color:var(--border2);box-shadow:var(--sh-md)}
+.myday-tile.md-card.hot{border-color:var(--red)}
+.md-badge{align-self:flex-start;padding:3px 12px;border-radius:99px;font-size:var(--fs-xs);font-weight:700;background:var(--tint-red);color:var(--red)}
+.md-exam .myday-lbl.strong{font-size:var(--fs-lg)}
+.md-cd{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:4px 0}
+.md-cd-box{background:var(--card2);border-radius:var(--r-md);padding:8px 4px;text-align:center}
+.md-cd-box b{display:block;font-size:var(--fs-xl);line-height:1.15;color:var(--text);font-weight:800}
+.md-cd-box small{color:var(--muted);font-size:var(--fs-xs)}
+
+/* بطاقة مهام اليوم */
+.md-tasklist{display:flex;flex-direction:column;gap:8px}
+.md-task{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r-lg);background:var(--card)}
+.md-task.late{border-color:color-mix(in srgb,var(--red) 45%,var(--border))}
+.md-check{position:relative;width:22px;height:22px;flex:none;border-radius:50%;border:2px solid var(--border2);background:transparent;cursor:pointer;padding:0}
+.md-check::after{content:'';position:absolute;inset:-11px}
+.md-check[aria-checked="true"]{background:var(--green);border-color:var(--green)}
+.md-check[aria-checked="true"]::before{content:'';position:absolute;inset:3px 6px 6px 6px;border:solid var(--on-accent);border-width:0 2px 2px 0;transform:rotate(40deg)}
+.md-task-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;text-align:start;background:none;border:0;color:inherit;font:inherit;cursor:pointer;padding:0}
+.md-task-main b{font-size:var(--fs-md);font-weight:700;overflow-wrap:anywhere}
+.md-task-main small{color:var(--muted);font-size:var(--fs-xs)}
+.md-task.late .md-task-main small{color:var(--red)}
+.md-task.done .md-task-main b{text-decoration:line-through;color:var(--muted)}
+.md-prio{flex:none;font-size:var(--fs-xs);font-weight:700;padding:3px 10px;border-radius:99px}
+.md-prio.high{background:var(--tint-red);color:var(--red)}
+.md-prio.normal{background:var(--tint-amber);color:var(--amber)}
+.md-prio.low{background:var(--tint-blue);color:var(--accent)}
+
+/* جدول اليوم المختصر */
+.md-slots{display:flex;flex-direction:column;gap:8px;max-height:340px;overflow-y:auto;padding-inline-end:2px}
+.md-slot{display:flex;align-items:center;gap:12px;width:100%;text-align:start;padding:10px 12px;border-radius:var(--r-md);border:1px solid var(--border);border-inline-start:4px solid var(--accent);background:var(--card2);color:var(--text);font:inherit;cursor:pointer}
+.md-slot:hover{border-color:var(--accent)}
+.md-slot.now{background:var(--tint-blue);border-color:var(--accent)}
+.md-slot.done{opacity:.68}
+.md-slot-time{display:flex;flex-direction:column;min-width:46px;font-weight:700;font-size:var(--fs-sm)}
+.md-slot-time small{color:var(--muted);font-weight:500;font-size:var(--fs-xs)}
+.md-slot-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.md-slot-body b{font-size:var(--fs-md);overflow-wrap:anywhere}
+.md-slot-body small{color:var(--muted);font-size:var(--fs-xs)}
+.md-state{flex:none;font-size:var(--fs-xs);font-weight:700;padding:3px 10px;border-radius:99px;background:var(--card);color:var(--muted)}
+.md-state.now{background:var(--accent);color:var(--on-accent)}
+
+/* إجراءات سريعة */
+.md-quick-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.md-qa{display:flex;flex-direction:column;align-items:center;gap:4px;padding:14px 8px;border-radius:var(--r-lg);border:1px solid var(--border);background:var(--card);color:var(--text);font:inherit;cursor:pointer;min-height:44px;text-align:center}
+.md-qa:hover{border-color:var(--accent);background:var(--card2)}
+.md-qa b{font-size:var(--fs-md)}
+.md-qa small{color:var(--muted);font-size:var(--fs-xs)}
+.md-qa-ic{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:var(--ic-bg);color:var(--accent);font-size:1.25rem;font-weight:700;margin-bottom:4px}
+
+/* أهم المواعيد القادمة */
+.md-dls{display:flex;flex-direction:column}
+.md-dl{display:flex;align-items:center;gap:10px;width:100%;text-align:start;padding:10px 4px;background:none;border:0;border-bottom:1px solid var(--border);color:var(--text);font:inherit;cursor:pointer}
+.md-dl:last-child{border-bottom:0}
+.md-dl:hover{background:var(--card2)}
+.md-dl-ic{width:36px;height:36px;flex:none;border-radius:50%;display:grid;place-items:center;font-size:1rem;background:var(--tint-blue)}
+.md-dl.exam .md-dl-ic{background:var(--tint-red)}
+.md-dl-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.md-dl-body b{font-size:var(--fs-md);overflow-wrap:anywhere}
+.md-dl-body small{color:var(--muted);font-size:var(--fs-xs)}
+.md-dl-days{flex:none;font-weight:800;font-size:var(--fs-sm);color:var(--accent)}
+
+/* تقدم الترم: دائرة نسبة + تسمية */
+.term-wrap{display:flex;align-items:center;gap:16px}
+.term-ring{position:relative;width:104px;height:104px;flex:none}
+.term-ring svg{transform:rotate(-90deg);display:block}
+.term-ring circle{fill:none;stroke-width:9}
+.term-ring-bg{stroke:var(--card2)}
+.term-ring-fg{stroke:var(--accent);stroke-linecap:round;transition:stroke-dasharray .6s var(--ease)}
+.term-ring b{position:absolute;inset:0;display:grid;place-items:center;font-size:var(--fs-xl);font-weight:800;color:var(--text)}
+.term-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+.term-info .sc-progress{display:none}
+.term-line{font-size:var(--fs-sm);color:var(--muted);line-height:1.6}
+.term-line b{color:var(--text)}
+.term-sub{color:var(--muted2);font-size:var(--fs-xs)}
+.term-more{margin-top:12px}
+.term-more summary{cursor:pointer;color:var(--accent);font-size:var(--fs-sm);font-weight:700;min-height:32px;display:flex;align-items:center}
+@media (min-width:1400px){
+  .dash-term .term-wrap{flex-direction:column;text-align:center}
+  .dash-term .card-head{margin-bottom:6px}
+}
+/* عرض متوسط (1101–1399): «تقدم الترم» بصف كامل تحت المحاضرة والامتحان بدل عمود ضيّق */
+@media (min-width:1101px) and (max-width:1399px){
+  .md-lecture,.md-exam,html.simple .md-exam,#dashboard:has(> .dash-term.dash-hidden) .md-exam{grid-column:span 6}
+  #dashboard > .dash-term{grid-column:1/-1}
+}
+
+/* ---------- 5) ثيمات الزجاج: البطاقات الجديدة تتبع نفس مظهر البطاقات ---------- */
+[data-theme^="glass"] .md-card,[data-theme^="glass"] .myday-tile.md-card,[data-theme^="glass"] .md-task,[data-theme^="glass"] .md-slot,[data-theme^="glass"] .md-qa{background:var(--lg-spec),var(--lg-fill);-webkit-backdrop-filter:blur(var(--lg-blur,22px)) saturate(var(--lg-sat,160%));backdrop-filter:blur(var(--lg-blur,22px)) saturate(var(--lg-sat,160%));border:1px solid var(--lg-edge-in);border-top-color:var(--lg-edge-hi);box-shadow:inset 0 1px 1px var(--lg-edge-hi),0 6px 18px rgba(var(--lg-ink),.14)}
+[data-theme^="glass"] .md-lecture{background:var(--lg-spec),var(--grad-soft),var(--lg-fill)}
+[data-theme^="glass"] .md-task,[data-theme^="glass"] .md-slot,[data-theme^="glass"] .md-qa{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--lg-task)}
+@media (prefers-reduced-transparency:reduce){[data-theme^="glass"] .md-card,[data-theme^="glass"] .myday-tile.md-card{background:var(--card);-webkit-backdrop-filter:none;backdrop-filter:none}[data-theme^="glass"] .md-lecture{background:var(--hero-bg)}}
+
+/* ---------- 6) ثيم «أبيض»: خلفية فاتحة هادئة، بطاقات بيضاء بحدود خفيفة وظل خفيف، بدون ضبابية أو توهّج ---------- */
+[data-theme="white"]{
+  color-scheme:light;
+  --on-accent:#ffffff;--blob-opacity:0;
+  --bg:#f4f6fb;--bg2:#eef1f8;--card:#ffffff;--card2:#f6f8fc;--border:#e3e8f2;--border2:#ccd5e6;
+  --text:#0f1b33;--muted:#4f5d7a;--muted2:#5a6785;
+  --cyan:#1f55e0;--purple:#6a3fd0;--green:#0f7a52;--amber:#8a5506;--red:#b91c1c;--pink:#b8185d;
+  --grad:linear-gradient(135deg,#1f55e0,#1a46c4);--grad-soft:linear-gradient(135deg,rgba(31,85,224,.07),rgba(31,85,224,.03));
+  --shadow:0 4px 16px rgba(15,27,51,.06);--shadow-lg:0 14px 40px rgba(15,27,51,.14);--glow:rgba(31,85,224,.16);
+  --topbar-bg:rgba(255,255,255,.94);
+  --sh-sm:0 1px 2px rgba(15,27,51,.05),0 1px 3px rgba(15,27,51,.05);--sh-md:0 6px 20px rgba(15,27,51,.08);
+  --r-md:12px;--r-lg:16px;--r-xl:22px;--radius:14px;--radius-lg:20px;
+  --hero-bg:linear-gradient(135deg,#0f2a5c 0%,#1d4ed8 100%);--hero-fg:#ffffff;--hero-muted:rgba(255,255,255,.84);--hero-accent:#c3d5ff;
+  --hero-btn-bg:#ffffff;--hero-btn-fg:#0f2a5c;
+  --ic-bg:#eaf0fe;--ic-bg-hover:#dbe6fd;
+}
+[data-theme="white"] body{background:var(--bg)}
+[data-theme="white"] body::before,[data-theme="white"] body::after{opacity:0}
+[data-theme="white"] .topbar{box-shadow:var(--sh-sm);-webkit-backdrop-filter:none;backdrop-filter:none}
+[data-theme="white"] .sidebar{background:var(--card);box-shadow:none;border-left:1px solid var(--border)}
+[data-theme="white"] .nav-item.active{background:var(--ic-bg);box-shadow:none}
+[data-theme="white"] .nav-item.active::before{box-shadow:none}
+[data-theme="white"] .nav-item:hover{background:var(--card2)}
+[data-theme="white"] .card,[data-theme="white"] .hub-card,[data-theme="white"] .stat,[data-theme="white"] .task,[data-theme="white"] .exam-card,[data-theme="white"] .budget-item{box-shadow:var(--sh-sm)}
+[data-theme="white"] .card:hover,[data-theme="white"] .hub-card:hover,[data-theme="white"] .stat:hover{box-shadow:var(--sh-md)}
+[data-theme="white"] .btn:not(.btn-ghost):not(.btn-danger){box-shadow:none}
+[data-theme="white"] .md-lecture .myday-cta .btn:not(.btn-ghost){background:#ffffff;color:#0f2a5c;border-color:#ffffff}
+[data-theme="white"] .md-lecture .myday-cta .btn.btn-ghost{background:transparent;color:#ffffff;border-color:rgba(255,255,255,.5)}
+[data-theme="white"] .md-lecture .myday-done{background:rgba(255,255,255,.16);color:#ffffff}
+[data-theme="white"] .md-lecture .myday-bar i{background:#ffffff}
+[data-theme="white"] .md-lecture{box-shadow:0 8px 24px rgba(15,42,92,.22);border-color:transparent}
+[data-theme="white"] .md-badge{background:#fde8e8}
+[data-theme="white"] .md-prio.high{background:#fde8e8}
+[data-theme="white"] .md-prio.normal{background:#fdf0d8}
+[data-theme="white"] .md-prio.low{background:#e3ecfd}
+[data-theme="white"] .badge.exam,[data-theme="white"] .badge.assignment,[data-theme="white"] .badge.quiz,[data-theme="white"] .badge.project,[data-theme="white"] .badge.task{background:rgba(120,120,120,.09)}
+[data-theme="white"] .badge.project{color:#0b5326}
+[data-theme="white"] .modal,[data-theme="white"] .sm-dialog,[data-theme="white"] .hub-sheet{box-shadow:var(--shadow-lg)}
+
+/* ---------- 7) شريط التمرير: مخفي بالقائمة الجانبية، وبباقي المواضع إبهام دائري يظهر بس عند التمرير فوق المنطقة ----------
+   سبب الشكل القديم (خط بزوايا حادة وأسهم): scrollbar-color/scrollbar-width القياسيان بالملفات السابقة تتغلّب على ::-webkit-scrollbar بكروم الحديث.
+   فنلغيهما بكروم/سفاري (Firefox يبقى على القياسي). الشرائط المخفية عمداً (.qs-chips/.st-tabs/.sidebar-nav) تبقى مخفية (التمرير بالعجلة/اللمس يشتغل). */
+.sidebar,.sidebar-nav{scrollbar-width:none}
+.sidebar::-webkit-scrollbar,.sidebar-nav::-webkit-scrollbar{display:none}
+@supports selector(::-webkit-scrollbar){
+  *:not(.qs-chips):not(.st-tabs):not(.sidebar):not(.sidebar-nav){scrollbar-color:auto;scrollbar-width:auto}
+  ::-webkit-scrollbar{width:12px;height:12px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:transparent;border:3px solid transparent;background-clip:padding-box;border-radius:99px;min-height:36px;min-width:36px}
+  :hover::-webkit-scrollbar-thumb{background:color-mix(in srgb,var(--muted2) 45%,transparent);background-clip:padding-box}
+  ::-webkit-scrollbar-thumb:hover{background:color-mix(in srgb,var(--muted2) 75%,transparent);background-clip:padding-box}
+  ::-webkit-scrollbar-thumb:active{background:var(--accent);background-clip:padding-box}
+  ::-webkit-scrollbar-button{display:none;width:0;height:0}
+  ::-webkit-scrollbar-corner{background:transparent}
+  .lw-sidebar::-webkit-scrollbar{width:10px}
+  .lw-sidebar::-webkit-scrollbar-thumb{background:transparent;background-clip:padding-box;border-radius:99px}
+  .lw-sidebar:hover::-webkit-scrollbar-thumb{background:color-mix(in srgb,var(--muted2) 45%,transparent);background-clip:padding-box}
+}
+
+/* ---------- 8) القائمة الجانبية: لوح عائم بحواف دائرية + عناصر حبّة تفاعلية ---------- */
+.sidebar{border-radius:28px;border:1px solid var(--border);box-shadow:var(--sh-md)}
+.sidebar-nav{-webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 14px,#000 calc(100% - 14px),transparent 100%);mask-image:linear-gradient(to bottom,transparent 0,#000 14px,#000 calc(100% - 14px),transparent 100%);padding-top:6px}
+@media (min-width:901px){
+  .sidebar{top:80px;right:14px;bottom:14px}
+  main{margin-right:calc(var(--sidebar-w) + 28px)}
+}
+@media (max-width:900px){
+  .sidebar{border-radius:28px 0 0 28px;right:0}
+}
+.nav-item{border-radius:999px;transition:background var(--dur-2) ease,color var(--dur-2) ease,transform var(--dur-2) var(--ease),box-shadow var(--dur-2) ease}
+.nav-item::after{border-radius:999px}
+.nav-item.active::before{display:none}
+.nav-item .ic{transition:transform var(--dur-2) var(--ease),background var(--dur-2) ease,box-shadow var(--dur-2) ease,color var(--dur-2) ease}
+.nav-item:hover{transform:translateX(-4px)}
+.nav-item:hover .ic{transform:scale(1.1) rotate(-4deg)}
+.nav-item:active{transform:scale(.97)}
+.nav-item.active{transform:none;box-shadow:inset 0 0 0 1px var(--border2),var(--sh-sm)}
+.nav-item.active .ic{box-shadow:0 4px 12px var(--glow)}
+.nav-item.active .label{color:var(--text)}
+.nav-settings:hover .ic{transform:rotate(60deg) scale(1.1)}
+.nav-section{padding-inline:var(--sp-3)}
+.sidebar-foot{margin-inline:6px}
+[data-theme="white"] .sidebar{border:1px solid var(--border);box-shadow:var(--sh-sm)}
+@media (prefers-reduced-motion:reduce){.nav-item:hover,.nav-item:hover .ic,.nav-settings:hover .ic{transform:none}}
+
+/* ---------- 9) ملاحظات المادة (داخل ورقة المادة؛ تبويب الملاحظات العام حُذف) ---------- */
+.hub-note{display:flex;align-items:center;gap:8px}
+.hub-note-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;text-align:start;background:none;border:0;color:inherit;font:inherit;cursor:pointer;padding:2px 0}
+.hub-note-main b{font-size:var(--fs-md);overflow-wrap:anywhere}
+.hub-note-main small{color:var(--muted);font-size:var(--fs-xs);overflow-wrap:anywhere}
+.hub-note-del{flex:none;width:36px;height:36px;border-radius:50%;border:0;background:transparent;cursor:pointer;font-size:1rem;opacity:.65;transition:background var(--dur-1) ease,opacity var(--dur-1) ease}
+.hub-note-del:hover{background:var(--tint-red);opacity:1}

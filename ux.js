@@ -40,8 +40,6 @@
     tasks:      { btn: 'btnAddTask',    empty: function(s){ return !(s.tasks || []).length; } },
     exams:      { btn: 'btnAddExam',    empty: function(s){ return !(s.exams || []).length; } },
     attendance: { btn: 'btnAddAtt',     empty: function(s){ return !Object.keys(s.attendance || {}).length; } },
-    flashcards: { btn: 'btnAddDeck',    empty: function(s){ return !(s.decks || []).length; } },
-    notes:      { btn: 'btnAddNote',    empty: function(){ return !(window.notes || []).length; } },
     budget:     { btn: 'btnAddExpense', empty: function(s){ return !(s.budget || []).length; } },
     courses:    { btn: 'btnAddCourse',  empty: function(s){ return !(s.courses || []).length; } }
   };
@@ -253,8 +251,6 @@
     if(tomHigh) chips.push({ cls: 'info', go: 'tasks', icon: '🔺', text: tomHigh + ' مهمة مهمة غدًا' });
     var ex = (s.exams || []).map(function(e){ return { e: e, d: daysLeft(e.date) }; }).filter(function(x){ return x.d !== null && x.d >= 0 && x.d <= 3; }).sort(function(a, b){ return a.d - b.d; })[0];
     if(ex) chips.push({ cls: 'warn', go: 'exams', icon: '⏳', text: String(ex.e.name || 'امتحان').slice(0, 22) + ' ' + (ex.d === 0 ? 'اليوم' : ex.d === 1 ? 'غدًا' : 'بعد ' + ex.d + ' أيام') });
-    var due = 0; (s.decks || []).forEach(function(d){ (d.cards || []).forEach(function(c){ if(c.last && (c.due || t) <= t) due++; }); });
-    if(due) chips.push({ cls: 'info', go: 'flashcards', icon: '🃏', text: due + ' بطاقة مستحقة' });
     return chips.slice(0, 4);
   }
   window.startupBrief = function(name, opt){
@@ -403,13 +399,30 @@
       smg.addEventListener('click', function(e){ pickTheme(e.target.closest && e.target.closest('.theme-swatch')); });
       smg.addEventListener('keydown', function(e){ if(e.key === 'Enter' || e.key === ' '){ var sw = e.target.closest && e.target.closest('.theme-swatch'); if(sw){ e.preventDefault(); pickTheme(sw); } } });
     }
-    var wasOpen = false;
+    var wasOpen = false, opener = null;
+    /* الإعدادات تُفتح من زر الشريط العلوي أو من أسفل القائمة الجانبية: نتذكر الفاتح لنعيد له التركيز عند الإغلاق */
+    var navS = document.getElementById('navSettings'), topS = document.getElementById('settingsBtn');
+    if(topS) topS.addEventListener('click', function(){ opener = topS; }, true);
+    if(navS){
+      navS.addEventListener('click', function(e){
+        e.stopPropagation(); opener = navS;
+        if(window.closeSidebar) window.closeSidebar();
+        if(window.toggleSettingsMenu) window.toggleSettingsMenu();
+      });
+    }
     new MutationObserver(function(){
       var on = m.classList.contains('show'); if(on === wasOpen) return; wasOpen = on;
       document.documentElement.classList.toggle('sm-open', on);
+      [navS, topS].forEach(function(b){ if(b) b.setAttribute('aria-expanded', on ? 'true' : 'false'); });
+      if(navS) navS.classList.toggle('active', on);   /* تمييز «الإعدادات» بالقائمة الجانبية طالما الصفحة مفتوحة */
       if(on) buildSmThemes();
       if(on){ var t = m.querySelector('.sm-tab[aria-selected="true"]'); if(t) setTimeout(function(){ t.focus(); }, 40); }
-      else { var sb = document.getElementById('settingsBtn'); if(sb && (!document.activeElement || document.activeElement === document.body || m.contains(document.activeElement))) sb.focus(); }
+      else {
+        /* لو الفاتح هو «الإعدادات» بدرج جانبي مسكّر (هاتف) نرجّع التركيز لزر الشريط العلوي بدل عنصر غير ظاهر */
+        var drawer = opener && opener.closest && opener.closest('.sidebar'), drawerShut = drawer && window.matchMedia && window.matchMedia('(max-width:900px)').matches && !drawer.classList.contains('open');
+        var sb = (opener && document.contains(opener) && !drawerShut) ? opener : topS;
+        if(sb && (!document.activeElement || document.activeElement === document.body || m.contains(document.activeElement))) sb.focus();
+      }
     }).observe(m, { attributes: true, attributeFilter: ['class'] });
     /* حبس Tab داخل النافذة */
     m.addEventListener('keydown', function(e){

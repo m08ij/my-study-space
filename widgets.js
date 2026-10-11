@@ -107,15 +107,6 @@
       },
       attach: function(card){ renderPomodoroBody(); }
     },
-    notes: {
-      title: 'آخر الملاحظات', icon: '📔', default: false,
-      html: function(){
-        return '<div class="lw-card" data-widget="notes">' +
-          '<div class="lw-title"><span class="lw-ic">📔</span> آخر الملاحظات</div>' +
-          '<div id="lwNotesBody"></div></div>';
-      },
-      attach: function(card){ renderNotesBody(); }
-    },
     budget: {
       title: 'ملخص الميزانية', icon: '💰', default: false,
       html: function(){
@@ -235,7 +226,7 @@
       else if(a === 'tasks'){ setSidebarOpen(false); if(window.switchTab) window.switchTab('tasks'); }
       else if(a === 'qadd'){ var i = sidebar.querySelector('#lwQuickInput'); if(i && window.quickAddTask && window.quickAddTask(i.value)){ i.value = ''; renderTasksBody(); } else if(i) i.focus(); }
       else if(a === 'exam') openFrom(window.addExam);
-      else if(a === 'note') openFrom(window.addNote);
+      else if(a === 'note') openFrom(window.addCourseNote);
       else if(a === 'course') openFrom(window.addMyCourse);
       else if(a === 'spend') openFrom(function(){ if(window.addBudgetItem) window.addBudgetItem('expense'); });
     });
@@ -408,17 +399,6 @@
     var body = document.getElementById('lwPomodoroBody'); if(!body) return;
     var S = getS(); var sessions = S.get('pomoSessions', 0) || 0; var focusMin = S.get('pomoFocus', 0) || 0;
     body.innerHTML = '<div class="lw-stats"><div class="lw-stat"><div class="lw-stat-val">' + sessions + '</div><div class="lw-stat-lbl">جلسات</div></div><div class="lw-stat"><div class="lw-stat-val green">' + focusMin + '</div><div class="lw-stat-lbl">دقيقة</div></div></div>';
-  }
-
-  function renderNotesBody(){
-    var body = document.getElementById('lwNotesBody'); if(!body) return;
-    var notes = window.notes || [];
-    if(!notes.length){ body.innerHTML = '<div class="lw-empty-mini"><div class="lw-em-ic">📔</div>لا ملاحظات</div>'; return; }
-    var html = '';
-    notes.slice(0, 4).forEach(function(n){
-      html += '<div class="lw-item"><div class="lw-item-ic">📝</div><div class="lw-item-body"><div class="lw-item-title">' + esc(n.title || '') + '</div><div class="lw-item-meta">' + esc((n.body || '').slice(0, 50)) + '</div></div></div>';
-    });
-    body.innerHTML = html;
   }
 
   function renderBudgetBody(){

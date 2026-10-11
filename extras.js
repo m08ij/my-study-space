@@ -55,13 +55,18 @@
       'major-e': {l:'تخصص اختياري', total:15, color:'var(--pink)'}
     };
 
-    var html = '<div style="display:flex;justify-content:space-between;margin-bottom:10px;font-size:var(--fs-md);flex-wrap:wrap;gap:8px">' +
-      '<span style="color:var(--muted)">📚 <b style="color:var(--text)">' + registered + '</b> / ' + TOTAL + ' ساعة</span>' +
-      '<span style="color:var(--accent);font-weight:800">' + pct + '%</span></div>' +
-      '<div class="sc-progress"><div class="sc-progress-fill" style="width:' + pct + '%"></div></div>';
+    /* دائرة نسبة + تسمية توضيحية (التقدم = ساعات المواد المسجّلة من ساعات خطة التخرج) */
+    var pctC = Math.max(0, Math.min(100, pct)), RAD = 42, CIRC = 2 * Math.PI * RAD;
+    var html = '<div class="term-wrap"><div class="term-ring" role="img" aria-label="' + pct + '% من ساعات الخطة">' +
+      '<svg viewBox="0 0 100 100" width="104" height="104" aria-hidden="true"><circle class="term-ring-bg" cx="50" cy="50" r="' + RAD + '"/>' +
+      '<circle class="term-ring-fg" cx="50" cy="50" r="' + RAD + '" stroke-dasharray="' + (CIRC * pctC / 100).toFixed(1) + ' ' + CIRC.toFixed(1) + '"/></svg>' +
+      '<b>' + pct + '%</b></div>' +
+      '<div class="term-info"><div class="term-line"><b>' + registered + ' / ' + TOTAL + '</b> ساعة مسجّلة من خطة التخرج</div>' +
+      '<div class="sc-progress"><div class="sc-progress-fill" style="width:' + pct + '%"></div></div>' +
+      '<small class="term-sub">باقي ' + Math.max(0, TOTAL - registered) + ' ساعة للتخرج</small></div></div>';
 
-    /* تفصيل حسب النوع */
-    html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-top:14px">';
+    /* تفصيل حسب النوع (مطويّ افتراضياً لتبقى البطاقة مختصرة) */
+    html += '<details class="term-more"><summary>تفصيل حسب النوع</summary><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-top:10px">';
     Object.keys(typeLabels).forEach(function(k){
       var meta = typeLabels[k];
       var got = byType[k] || 0;
@@ -72,10 +77,7 @@
         '<div style="height:4px;background:var(--card);border-radius:var(--r-sm);overflow:hidden">' +
         '<div style="height:100%;width:' + Math.min(100,p) + '%;background:' + meta.color + '"></div></div></div>';
     });
-    html += '</div>';
-
-    html += '<div style="text-align:center;color:var(--muted2);font-size:var(--fs-xs);margin-top:12px">باقي ' +
-      Math.max(0, TOTAL - registered) + ' ساعة للتخرج</div>';
+    html += '</div></details>';
 
     tp.innerHTML = html;
   }

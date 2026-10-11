@@ -649,21 +649,11 @@
       block('🃏 بطاقات (' + st.flashcards.length + ')', st.flashcards, function(x){ var r = el('details', 'sy-li'); r.appendChild(el('summary', null, x.q)); r.appendChild(el('small', null, x.a)); return r; });
       b.appendChild(el('div', 'ocri-note', 'الملخص من توليد Gemini من صفحات الكتاب — راجع الكتاب للتأكد، خصوصاً بالمعادلات. (انحفظ بالمادة، فما بيستهلك حصة مرة ثانية)'));
       var row = el('div', 'ocri-actions');
-      if(st.flashcards.length){ var ab = el('button', 'ocri-btn', '➕ أضف البطاقات لمجموعة'); ab.type = 'button'; ab.addEventListener('click', function(){ addFlashcards(c, sec, st); }); row.appendChild(ab); }
       var rb = el('button', 'ocri-btn ghost', '🔄 إعادة توليد'); rb.type = 'button'; rb.addEventListener('click', function(){ closeDlg(); var p = key.indexOf('#') > -1 ? parseInt(key.split('#')[1], 10) : 0; studySection(c, sec, p || undefined, true); });
       var cl = el('button', 'ocri-btn ghost', 'إغلاق'); cl.type = 'button'; cl.addEventListener('click', closeDlg);
       row.appendChild(rb); row.appendChild(cl); b.appendChild(row);
     });
   }
-  function addFlashcards(c, sec, st){
-    if(!Array.isArray(sp().decks)) W.space.decks = [];
-    var name = c.name + ' — ' + sec, deck = W.space.decks.filter(function(x){ return x.name === name; })[0];
-    if(!deck){ deck = { id: W.uid ? W.uid() : Date.now().toString(36), name: name, cards: [], course: c.name }; W.space.decks.push(deck); }
-    var have = {}; deck.cards.forEach(function(x){ have[x.q] = 1; }); var n = 0;
-    st.flashcards.forEach(function(f){ if(have[f.q]) return; deck.cards.push({ id: W.uid ? W.uid() : Date.now().toString(36) + n, q: f.q, a: f.a }); n++; });
-    save(); if(W.renderDecks) try{ W.renderDecks(); }catch(e){} toast(n ? '🃏 أضفت ' + n + ' بطاقة لمجموعة «' + name + '»' : 'البطاقات موجودة من قبل', n ? 'success' : 'info', 4000);
-  }
-
   /* ---- قسم «خطة المادة» داخل ورقة المادة ---- */
   function sectionHtml(c){
     var p = c.syllabus, h = '<section class="hub-sec sy-sec" id="hs-plan" data-ctabs="plan"><h4>🧾 خطة المادة' + (c.book ? ' <span class="muted">· 📖 الكتاب مربوط</span>' : '') + '</h4>';
@@ -741,5 +731,5 @@
     });
   }
 
-  return Object.assign(pure, { examButtons: examButtons, addReviewTasks: addReviewTasks, studySection: studySection, showStudy: showStudy, addFlashcards: addFlashcards, upcomingExams: upcomingExams, weekBrief: weekBrief, sectionHtml: sectionHtml, bindSection: bindSection, startImport: startImport, importPlan: importPlan, attachBook: attachBook, openBook: openBook, openReader: openReader, closeReader: closeReader, wantReader: wantReader, askOffset: askOffset, addReadingTasks: addReadingTasks, loadPdfJs: loadPdfJs, _preview: preview, _setRefresh: function(f){ refresh = f; } });
+  return Object.assign(pure, { examButtons: examButtons, addReviewTasks: addReviewTasks, studySection: studySection, showStudy: showStudy, upcomingExams: upcomingExams, weekBrief: weekBrief, sectionHtml: sectionHtml, bindSection: bindSection, startImport: startImport, importPlan: importPlan, attachBook: attachBook, openBook: openBook, openReader: openReader, closeReader: closeReader, wantReader: wantReader, askOffset: askOffset, addReadingTasks: addReadingTasks, loadPdfJs: loadPdfJs, _preview: preview, _setRefresh: function(f){ refresh = f; } });
 });

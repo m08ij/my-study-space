@@ -173,7 +173,7 @@
         (count ? '<div class="myday-count">' + count + '</div>' : '') +
         (pct !== null && pct !== undefined ? '<div class="myday-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + Math.round(pct) + '"><i style="width:' + pct.toFixed(1) + '%"></i></div>' : '') +
         (sub ? '<div class="myday-sub">' + sub + '</div>' : '') +
-        '</div>';
+        '<span class="md-hero-go">عرض تفاصيل المحاضرة ←</span></div>';
     }
     function laterText(l){
       var e = l.entry;
@@ -201,45 +201,88 @@
         '<button type="button" class="btn btn-sm" data-myday-act="addclass">➕ إضافة محاضرات</button></div>';
     }
 
-    /* --- المهام --- */
-    var pending = tasks.filter(function(t){ return !t.done; });
-    var dueToday = pending.filter(function(t){ return t.due === today; });
-    var overdue = pending.filter(function(t){ return t.due && t.due < today; });
-    var tiles = '';
-    tiles += '<button type="button" class="myday-tile' + (dueToday.length ? ' hot' : '') + '" data-go="tasks" data-tf="pending">' +
-      '<span class="myday-tile-ic">📝</span><span class="myday-num">' + dueToday.length + '</span>' +
-      '<span class="myday-lbl">' + (dueToday.length === 1 ? 'مهمة مستحقة اليوم' : 'مهام مستحقة اليوم') + '</span>' +
-      (dueToday.length ? '<span class="myday-note">' + esc(dueToday.slice(0, 2).map(function(t){ return t.title; }).join('، ')) + (dueToday.length > 2 ? '…' : '') + '</span>' : (tasks.length ? '<span class="myday-note">لا شي مستحق اليوم</span>' : '<span class="myday-note">لا مهام بعد</span>')) +
-      '</button>';
-    tiles += '<button type="button" class="myday-tile' + (overdue.length ? ' danger' : '') + '" data-go="tasks" data-tf="overdue">' +
-      '<span class="myday-tile-ic">⚠️</span><span class="myday-num">' + overdue.length + '</span>' +
-      '<span class="myday-lbl">' + (overdue.length === 1 ? 'مهمة متأخرة' : 'مهام متأخرة') + '</span>' +
-      '<span class="myday-note">' + (overdue.length ? esc(overdue.slice(0, 2).map(function(t){ return t.title; }).join('، ')) + (overdue.length > 2 ? '…' : '') : 'ما في متأخرات') + '</span></button>';
-
     /* --- الامتحان القادم (الأقرب فعلاً بالتاريخ/الوقت) --- */
     var upcoming = exams.map(function(e){ return { e: e, dt: parseExamDate(e) }; })
       .filter(function(x){ return x.dt && x.dt.getTime() > now.getTime(); })
       .sort(function(a, b){ return a.dt - b.dt; });
+    function ymdDate(s){ var q = String(s).split('-'); return new Date(+q[0], +q[1] - 1, +q[2]); }
+    function dmy(d){ return DA()[d.getDay()] + ' ' + d.getDate() + '/' + (d.getMonth() + 1); }
+    var examCard;
     if(upcoming.length){
-      var ux = upcoming[0], dd = daysFromToday(ux.dt);
-      tiles += '<button type="button" class="myday-tile' + (dd <= 2 ? ' hot' : '') + '" data-go="exams">' +
-        '<span class="myday-tile-ic">⏳</span><span class="myday-num sm">' + dayWord(dd) + '</span>' +
-        '<span class="myday-lbl">' + esc(ux.e.name || 'امتحان') + '</span>' +
-        '<span class="myday-note">' + (ux.e.course ? esc(ux.e.course) + ' · ' : '') + (/^\d{1,2}:\d{2}/.test(ux.e.time || '') ? '<bdi dir="ltr">' + esc(ux.e.time) + '</bdi>' : esc(ux.e.date)) + (upcoming.length > 1 ? ' · +' + (upcoming.length - 1) + ' قادمة' : '') + '</span></button>';
+      var ux = upcoming[0], dd = daysFromToday(ux.dt), totMin = Math.max(0, Math.floor((ux.dt.getTime() - now.getTime()) / 60000));
+      var cd = Math.floor(totMin / 1440), ch = Math.floor((totMin % 1440) / 60), cm = totMin % 60;
+      examCard = '<button type="button" class="myday-tile md-card md-exam' + (dd <= 2 ? ' hot' : '') + '" data-go="exams">' +
+        '<span class="md-badge">' + (dd <= 2 ? 'قريب جداً' : 'أقرب امتحان') + '</span>' +
+        '<span class="myday-lbl strong">' + esc(ux.e.name || 'امتحان') + '</span>' +
+        (ux.e.course ? '<span class="myday-note">' + esc(ux.e.course) + '</span>' : '') +
+        '<span class="md-cd" aria-label="المتبقي ' + cd + ' يوم و' + ch + ' ساعة و' + cm + ' دقيقة">' +
+          '<span class="md-cd-box"><b>' + cd + '</b><small>يوم</small></span>' +
+          '<span class="md-cd-box"><b>' + ch + '</b><small>ساعة</small></span>' +
+          '<span class="md-cd-box"><b>' + cm + '</b><small>دقيقة</small></span></span>' +
+        '<span class="myday-note">' + dayWord(dd) + ' · ' + dmy(ux.dt) + (/^\d{1,2}:\d{2}/.test(ux.e.time || '') ? ' · <bdi dir="ltr">' + esc(ux.e.time) + '</bdi>' : '') + (upcoming.length > 1 ? ' · +' + (upcoming.length - 1) + ' قادمة' : '') + '</span></button>';
     } else {
-      tiles += '<button type="button" class="myday-tile" data-go="exams"><span class="myday-tile-ic">⏳</span><span class="myday-num sm">—</span><span class="myday-lbl">لا امتحانات قادمة</span><span class="myday-note">' + (exams.length ? 'كل امتحاناتك المسجّلة انتهت' : 'أضف موعد امتحان') + '</span></button>';
+      examCard = '<button type="button" class="myday-tile md-card md-exam" data-go="exams"><span class="md-badge">الامتحانات</span><span class="myday-lbl strong">لا امتحانات قادمة</span><span class="myday-note">' + (exams.length ? 'كل امتحاناتك المسجّلة انتهت' : 'أضف موعد امتحان') + '</span></button>';
     }
 
-    /* --- إنجاز اليوم (من بيانات فعلية فقط) --- */
+    /* --- مهام اليوم: متأخرة ثم مستحقة اليوم (بالأولوية) ثم المنجزة اليوم --- */
+    var pending = tasks.filter(function(t){ return !t.done; });
+    var dueToday = pending.filter(function(t){ return t.due === today; });
+    var overdue = pending.filter(function(t){ return t.due && t.due < today; });
+    var PRIO_AR = { high: 'عالية', normal: 'متوسطة', low: 'منخفضة' }, PRIO_W = { high: 0, normal: 1, low: 2 };
+    function prioOf(t){ return t.priority === 'high' || t.priority === 'low' ? t.priority : 'normal'; }
+    var doneDue = tasks.filter(function(t){ return t.done && t.due === today; });
+    var rowsAll = overdue.slice().sort(function(a, b){ return a.due < b.due ? -1 : a.due > b.due ? 1 : 0; })
+      .concat(dueToday.slice().sort(function(a, b){ return PRIO_W[prioOf(a)] - PRIO_W[prioOf(b)]; }), doneDue);
+    function taskRow(t){
+      var late = !t.done && t.due && t.due < today, p = prioOf(t), n = late ? -daysFromToday(ymdDate(t.due)) : 0;
+      var when = t.done ? 'أُنجزت' : late ? 'متأخرة ' + (n === 1 ? 'منذ أمس' : 'منذ ' + n + ' يوم') : 'اليوم';
+      return '<div class="md-task' + (t.done ? ' done' : '') + (late ? ' late' : '') + '">' +
+        '<button type="button" class="md-check" data-task-toggle="' + esc(t.id) + '" role="checkbox" aria-checked="' + (t.done ? 'true' : 'false') + '" aria-label="' + esc((t.done ? 'إلغاء إنجاز: ' : 'إنجاز: ') + t.title) + '"></button>' +
+        '<button type="button" class="md-task-main" data-go="tasks" data-tf="' + (late ? 'overdue' : 'pending') + '"><b>' + esc(t.title) + '</b><small>' + (t.course ? esc(t.course) + ' · ' : '') + when + '</small></button>' +
+        (t.done ? '' : '<span class="md-prio ' + p + '">' + PRIO_AR[p] + '</span>') + '</div>';
+    }
     var doneToday = tasks.filter(function(t){ return t.done && t.completedAt === today; }).length;
     var dueAll = tasks.filter(function(t){ return t.due === today; }), dueDone = dueAll.filter(function(t){ return t.done; }).length;
-    var log = (window.S && window.S.get('studyLog', {})) || {}, studyMin = parseInt(log[today], 10) || 0;
     var lines = '';
-    if(dueAll.length) lines += '<div class="myday-line"><span>مهام اليوم</span><b>' + dueDone + ' / ' + dueAll.length + '</b></div><div class="myday-bar slim"><i style="width:' + (dueDone / dueAll.length * 100).toFixed(1) + '%"></i></div>';
+    if(dueAll.length) lines += '<div class="myday-line"><span>مهام اليوم</span><b><bdi dir="ltr">' + dueDone + ' / ' + dueAll.length + '</bdi></b></div><div class="myday-bar slim"><i style="width:' + (dueDone / dueAll.length * 100).toFixed(1) + '%"></i></div>';
     if(doneToday) lines += '<div class="myday-line"><span>مهام أُنجزت اليوم</span><b>' + doneToday + '</b></div>';
-    tiles += '<button type="button" class="myday-tile wide" data-go="' + (lines ? 'tasks' : 'timer') + '">' +
-      '<span class="myday-tile-ic">🏁</span><span class="myday-lbl strong">إنجاز اليوم</span>' +
-      (lines ? '<span class="myday-lines">' + lines + '</span>' : '<span class="myday-note">ما في إنجاز مسجّل بعد اليوم — ابدأ جلسة تركيز أو أنجز مهمة.</span>') + '</button>';
+    var tasksBody = rowsAll.length ? '<div class="md-tasklist">' + rowsAll.slice(0, 4).map(taskRow).join('') + '</div>' + (rowsAll.length > 4 ? '<button type="button" class="md-more" data-go="tasks" data-tf="pending">+' + (rowsAll.length - 4) + ' مهام أخرى</button>' : '')
+      : '<p class="md-empty">' + (tasks.length ? 'لا شي مستحق اليوم' : 'لا مهام بعد') + '</p>';
+    var tasksCard = '<section class="md-card md-tasks" aria-label="مهام اليوم"><div class="md-card-head"><h4>✅ مهام اليوم</h4><button type="button" class="md-link" data-go="tasks" data-tf="pending">عرض الكل ←</button></div>' +
+      (overdue.length ? '<button type="button" class="md-chip danger" data-go="tasks" data-tf="overdue">⚠️ ' + overdue.length + ' ' + (overdue.length === 1 ? 'مهمة متأخرة' : 'مهام متأخرة') + '</button>' : '') +
+      tasksBody +
+      '<div class="md-foot">' + (lines ? '<div class="myday-lines">' + lines + '</div>' : '<span class="myday-note">ما في إنجاز مسجّل بعد اليوم — ابدأ جلسة تركيز أو أنجز مهمة.</span>') + '</div></section>';
+
+    /* --- جدول اليوم المختصر (من جدول المحاضرات الفعلي) --- */
+    var slots = st.today.map(function(e){
+      var place = Schedule.place(e);
+      return '<button type="button" class="md-slot ' + e.state + '" data-slot-course="' + esc(e.name) + '">' +
+        '<span class="md-slot-time"><bdi dir="ltr">' + pad(e.start) + '</bdi>' + (e.hasEnd ? '<small><bdi dir="ltr">' + pad(e.end) + '</bdi></small>' : '') + '</span>' +
+        '<span class="md-slot-body"><b>' + esc(e.name) + '</b>' + (place ? '<small>' + esc(place) + '</small>' : '') + '</span>' +
+        (e.state === 'now' ? '<span class="md-state now">جارية</span>' : e.state === 'done' ? '<span class="md-state done">انتهت</span>' : '') + '</button>';
+    }).join('');
+    var schedCard = '<section class="md-card md-sched" aria-label="جدول اليوم"><div class="md-card-head"><h4>🗓️ جدول اليوم</h4><button type="button" class="md-link" data-go="timetable">عرض الجدول الكامل ←</button></div>' +
+      (slots ? '<div class="md-slots">' + slots + '</div>' : '<p class="md-empty">' + (Object.keys(sp().timetable || {}).length ? 'ما في محاضرات اليوم' : 'ما في محاضرات بجدولك') + '</p>') + '</section>';
+
+    /* --- إجراءات سريعة --- */
+    var quickCard = '<section class="md-card md-quick" aria-label="إجراءات سريعة"><div class="md-card-head"><h4>⚡ إجراءات سريعة</h4></div><div class="md-quick-grid">' +
+      '<button type="button" class="md-qa" data-myday-act="addtask"><span class="md-qa-ic" aria-hidden="true">＋</span><b>إضافة مهمة</b><small>مهمة جديدة</small></button>' +
+      '<button type="button" class="md-qa" data-go="courses"><span class="md-qa-ic" aria-hidden="true">📖</span><b>فتح المواد</b><small>عرض جميع المواد</small></button>' +
+      '<button type="button" class="md-qa" data-go="timer"><span class="md-qa-ic" aria-hidden="true">⏱️</span><b>بدء التركيز</b><small>مؤقت بومودورو</small></button></div></section>';
+
+    /* --- أهم المواعيد القادمة: مهام بعد اليوم + امتحانات (بدون الامتحان الظاهر ببطاقته، ولا مهام اليوم/المتأخرة الظاهرة أعلاه) --- */
+    var dl = [];
+    pending.forEach(function(t){ if(t.due && t.due > today){ var d = ymdDate(t.due); dl.push({ kind: 'task', dt: d, title: t.title, sub: t.course || '', days: daysFromToday(d) }); } });
+    upcoming.slice(1).forEach(function(x){ dl.push({ kind: 'exam', dt: x.dt, title: x.e.name || 'امتحان', sub: x.e.course || '', days: daysFromToday(x.dt) }); });
+    dl.sort(function(a, b){ return a.dt - b.dt; });
+    var dlRows = dl.slice(0, 5).map(function(x){
+      return '<button type="button" class="md-dl ' + x.kind + '" data-go="' + (x.kind === 'exam' ? 'exams' : 'tasks') + '"' + (x.kind === 'task' ? ' data-tf="pending"' : '') + '>' +
+        '<span class="md-dl-ic" aria-hidden="true">' + (x.kind === 'exam' ? '📝' : '📌') + '</span>' +
+        '<span class="md-dl-body"><b>' + esc(x.title) + '</b><small>' + (x.sub ? esc(x.sub) + ' · ' : '') + dmy(x.dt) + '</small></span>' +
+        '<span class="md-dl-days">' + (x.days === 1 ? 'غداً' : x.days + ' يوماً') + '</span></button>';
+    }).join('');
+    var dlCard = '<section class="md-card md-deadlines" aria-label="أهم المواعيد القادمة"><div class="md-card-head"><h4>📅 أهم المواعيد القادمة</h4></div>' +
+      (dlRows ? '<div class="md-dls">' + dlRows + '</div>' : '<p class="md-empty">ما في مواعيد قادمة غير اللي فوق</p>') + '</section>';
 
     /* --- إجراء رئيسي واحد حسب الوقت: «حضرت» أثناء/قرب المحاضرة، وإلا «ابدأ جلسة تركيز» (مع خطة مراجعة لو امتحان قريب) --- */
     var cta = '', TL = window.TodayLogic;
@@ -256,11 +299,15 @@
       if(upcoming.length && daysFromToday(upcoming[0].dt) <= 7 && window.openExamPlan) cta += '<button type="button" class="btn btn-ghost" data-myday-act="plan">🧠 خطة مراجعة</button>';
     }
     var dateLabel = DA()[st.dayIdx] + ' ' + now.getDate() + '/' + (now.getMonth() + 1);
-    var html = '<div class="myday-head"><h3>🧭 يومي الجامعي</h3><span class="myday-date">' + dateLabel + '</span></div>' + hero + '<div class="myday-cta">' + cta + '</div><div class="myday-grid">' + tiles + '</div>';
+    var html = '<div class="myday-head md-head"><h3>🧭 يومي الجامعي</h3><span class="myday-date">' + dateLabel + '</span></div>' +
+      '<div class="md-card md-lecture">' + hero + '<div class="myday-cta">' + cta + '</div></div>' + examCard + tasksCard + schedCard + quickCard + dlCard;
     if(html === myDayLast) return;
     myDayLast = html;
+    var fi = -1, fa = document.activeElement;
+    if(fa && el.contains(fa)) fi = Array.prototype.indexOf.call(el.querySelectorAll('button,[role="button"]'), fa);
     el.innerHTML = html;
     bindMyDay(el);
+    if(fi > -1){ var nb = el.querySelectorAll('button,[role="button"]')[fi]; if(nb) try{ nb.focus(); }catch(e){} }
   }
   function bindMyDay(el){
     var go = function(node){
@@ -280,6 +327,16 @@
       n.addEventListener('click', open);
       n.addEventListener('keydown', function(e){ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); open(); } });
     });
+    el.querySelectorAll('[data-slot-course]').forEach(function(n){
+      n.addEventListener('click', function(){
+        var c = findCourse(n.getAttribute('data-slot-course'));
+        if(c){ window.switchTab('courses'); openCourse(c.id); } else if(window.switchTab) window.switchTab('timetable');
+      });
+    });
+    el.querySelectorAll('[data-task-toggle]').forEach(function(n){
+      n.addEventListener('click', function(e){ e.stopPropagation(); if(window.toggleTask) window.toggleTask(n.getAttribute('data-task-toggle')); myDayLast = ''; renderMyDay(); });
+    });
+    el.querySelectorAll('[data-myday-act="addtask"]').forEach(function(n){ n.addEventListener('click', function(e){ e.stopPropagation(); if(window.addTask) window.addTask(); }); });
     var add = el.querySelector('[data-myday-act="addclass"]');
     if(add) add.addEventListener('click', function(e){ e.stopPropagation(); if(window.openSmartTimetable) window.openSmartTimetable(); });
     el.querySelectorAll('[data-myday-act="attend"]').forEach(function(b){ b.addEventListener('click', function(e){ e.stopPropagation(); if(window.TodayLogic && window.TodayLogic.markPresent(b.getAttribute('data-n'), b.getAttribute('data-key'))){ myDayLast = ''; renderMyDay(); } }); });
@@ -346,14 +403,13 @@
     drawLecNotes();
     ln.addEventListener('click', function(ev){
       var b = ev.target.closest ? ev.target.closest('[data-ln]') : null; if(!b) return;
-      if(b.getAttribute('data-ln') === 'all'){ s.close(); window.switchTab('notes'); return; }
+      if(b.getAttribute('data-ln') === 'all'){ var lc = findCourse(e.name); s.close(); window.switchTab('courses'); if(lc) openCourse(lc.id, 'notes'); return; }
       window.showModal('ملاحظة — ' + e.name, [ { key: 'title', label: 'العنوان' }, { key: 'body', label: 'الملاحظة', type: 'textarea' } ],
         { title: e.name + ' — ' + todayStr(), body: '' }, function(data){
           if(!data.title && !data.body){ toast('اكتب عنواناً أو نصاً', 'warn', 2000); return false; }
           window.notes = window.notes || [];
           window.notes.unshift({ title: (data.title || data.body).slice(0, 60), body: data.body || '', ts: Date.now(), course: e.name, lecture: key, date: todayStr() });
           window.S.set('notes', window.notes);
-          if(window.renderNotes) window.renderNotes();
           drawLecNotes();
           toast('✓ حُفظت الملاحظة', 'success', 1500);
           return true;
@@ -719,8 +775,9 @@
 
     /* الملاحظات */
     h += '<section class="hub-sec" id="hs-notes" data-ctabs="notes"><h4>📔 ملاحظات المادة</h4>';
-    if(notes.length) h += '<div class="hub-list">' + notes.slice(0, 6).map(function(x){
-      return '<button type="button" class="hub-li" data-note-open="1"><span class="hub-li-main">' + esc(x.n.title || '(بدون عنوان)') + '<small>' + esc(String(x.n.body || '').slice(0, 70)) + '</small></span></button>';
+    if(notes.length) h += '<div class="hub-list">' + notes.map(function(x){
+      return '<div class="hub-li hub-note"><button type="button" class="hub-li-main hub-note-main" data-note-edit="' + x.i + '"><b>' + esc(x.n.title || '(بدون عنوان)') + '</b><small>' + esc(String(x.n.body || '').slice(0, 90)) + '</small></button>' +
+        '<button type="button" class="hub-note-del" data-note-del="' + x.i + '" aria-label="حذف الملاحظة" title="حذف">🗑</button></div>';
     }).join('') + '</div>'; else h += '<div class="hub-empty">لا ملاحظات مرتبطة بهذه المادة.</div>';
     h += '<button type="button" class="btn btn-sm" data-act="addnote">+ ملاحظة</button></section>';
 
@@ -753,7 +810,8 @@
     on('[data-task-edit]', function(el){ window.editTask(el.getAttribute('data-task-edit')); });
     on('[data-exam-edit]', function(el){ window.editExam(el.getAttribute('data-exam-edit')); });
     on('[data-att]', function(el){ window.markAttendance(name, el.getAttribute('data-att')); });
-    on('[data-note-open]', function(){ sheet.close(); window.switchTab('notes'); });
+    on('[data-note-edit]', function(el){ editNoteAt(parseInt(el.getAttribute('data-note-edit'), 10)); });
+    on('[data-note-del]', function(el){ deleteNoteAt(parseInt(el.getAttribute('data-note-del'), 10)); });
     on('[data-grade-del]', function(el){
       var g = (sp().grades || []).filter(function(x){ return x.name === name; })[0]; if(!g) return;
       g.items.splice(parseInt(el.getAttribute('data-grade-del'), 10), 1); window.saveSpace();
@@ -799,18 +857,57 @@
       return true;
     });
   }
-  function addNoteFor(name){
+  function noteSaved(){ if(window.S) window.S.set('notes', window.notes); afterChange(); }
+  function addNoteFor(name, body){
     window.showModal('ملاحظة — ' + name, [
       { key: 'title', label: 'العنوان' },
       { key: 'body', label: 'النص', type: 'textarea' }
-    ], { title: '', body: '' }, function(data){
+    ], { title: '', body: body || '' }, function(data){
       if(!data.title && !data.body){ toast('اكتب عنواناً أو نصاً', 'warn'); return false; }
+      if(!Array.isArray(window.notes)) window.notes = [];
       window.notes.unshift({ title: data.title, body: data.body, ts: Date.now(), course: name });
-      if(window.S) window.S.set('notes', window.notes);
-      if(window.renderNotes) window.renderNotes(); afterChange();
+      noteSaved();
       return true;
     });
   }
+  function editNoteAt(i){
+    var n = (window.notes || [])[i]; if(!n) return;
+    window.showModal('تعديل الملاحظة' + (n.course ? ' — ' + n.course : ''), [
+      { key: 'title', label: 'العنوان' },
+      { key: 'body', label: 'النص', type: 'textarea' }
+    ], { title: n.title || '', body: n.body || '' }, function(data){
+      if(!data.title && !data.body){ toast('اكتب عنواناً أو نصاً', 'warn'); return false; }
+      n.title = data.title; n.body = data.body; noteSaved();
+      return true;
+    });
+  }
+  function deleteNoteAt(i){
+    var n = (window.notes || [])[i]; if(!n) return;
+    window.notes.splice(i, 1); noteSaved();
+    if(window.toastUndo) window.toastUndo('حُذفت الملاحظة', function(){
+      if(window.notes.indexOf(n) > -1) return;
+      window.notes.splice(Math.min(i, window.notes.length), 0, n); noteSaved();
+    });
+  }
+  /* ملاحظة جديدة من أي مكان (زر الإضافة العائم / Alt+N / الإضافة السريعة): الملاحظات صارت لكل مادة فنسأل «لأي مادة؟» */
+  function addCourseNote(name, body){
+    var list = sp().courses || [];
+    if(name){ addNoteFor(name, body); return; }
+    if(!list.length){ toast('أضف مادة أولاً لتكتب عليها ملاحظة', 'warn', 2500); return; }
+    if(list.length === 1){ addNoteFor(list[0].name, body); return; }
+    window.showModal('ملاحظة جديدة', [
+      { key: 'course', label: 'المادة', type: 'select', options: list.map(function(c){ return { v: c.name, l: c.name }; }) },
+      { key: 'title', label: 'العنوان' },
+      { key: 'body', label: 'النص', type: 'textarea' }
+    ], { course: list[0].name, title: '', body: body || '' }, function(data){
+      if(!data.title && !data.body){ toast('اكتب عنواناً أو نصاً', 'warn'); return false; }
+      if(!Array.isArray(window.notes)) window.notes = [];
+      window.notes.unshift({ title: data.title, body: data.body, ts: Date.now(), course: data.course || list[0].name });
+      noteSaved();
+      return true;
+    });
+  }
+  window.addCourseNote = addCourseNote;
 
   /* ============================================================
      4) الإضافة السريعة السياقية
@@ -819,7 +916,6 @@
     courses: { fab: 'course', run: function(){ window.addMyCourse(); } },
     tasks: { fab: 'task', run: function(){ window.addTask(); } },
     exams: { fab: 'exam', run: function(){ window.addExam(); } },
-    notes: { fab: 'note', run: function(){ window.addNote(); } },
     budget: { fab: 'budget', run: function(){ window.addBudgetItem('expense'); } },
     timetable: { fab: 'quick', run: function(){ window.addClassSlot(); } },
     attendance: { fab: 'quick', run: function(){ window.addAttendanceCourse(); } }
