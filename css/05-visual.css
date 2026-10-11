@@ -30,3 +30,14 @@ html,body,button,input,select,textarea{font-family:var(--font-ui)}
 .myday-cta{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 12px}
 .myday-cta .btn{flex:1 1 auto;min-height:44px;justify-content:center}
 .myday-done{display:flex;align-items:center;min-height:44px;padding:0 14px;border-radius:var(--r-md);background:rgba(52,211,153,.14);color:var(--green);font-weight:700;font-size:var(--fs-sm)}
+
+/* ---- أهداف لمس: مربع إنجاز المهمة 22px بصرياً لكن منطقة الضغط ≥44px ---- */
+.task-check{position:relative}
+.task-check::after{content:'';position:absolute;inset:-11px}
+
+/* ---- نص مقروء على التلفون: لا شي أصغر من ~10.8px (كان بعضه 9.9px) ---- */
+@media (max-width:700px){
+  :root{--fs-2xs:.72rem}
+  .em-chip,.class-block .room,.tt-badge,.tt-time,.bi-amount .date,.hub-card-title small,.cm-tab,.cm-course-main small,.bp-f small,.exam-countdown .lbl,.sem-head>div,.plan-course-row>div>span{font-size:max(10.8px,.68rem)}
+}
+.sp-item small{font-size:max(11px,.7rem)}

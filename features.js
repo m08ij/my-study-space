@@ -1117,7 +1117,7 @@
     var BC = window.BUDGET_CATS || [];
     var catsEl = document.getElementById('budgetCats');
     var usedCats = [];
-    budget.forEach(function(b){ if(usedCats.indexOf(b.category) === -1) usedCats.push(b.category); });
+    budget.forEach(function(b){ var cc = b.category || 'none'; if(usedCats.indexOf(cc) === -1) usedCats.push(cc); });   /* بند بلا تصنيف (مثل دخل) كان يطلع زر «undefined» فاضي */
     if(usedCats.length){
       var catsHtml = '<button class="budget-cat-chip ' +
         (window.currentBudgetCat === 'all' ? 'active' : '') + '" data-cat="all">كل التصنيفات</button>';
@@ -1125,7 +1125,7 @@
         var cat = BC.find(function(x){ return x.v === c; });
         catsHtml += '<button class="budget-cat-chip ' +
           (window.currentBudgetCat === c ? 'active' : '') + '" data-cat="' + c + '">' +
-          (cat ? cat.i + ' ' + cat.l : esc(c)) + '</button>';
+          (cat ? cat.i + ' ' + cat.l : (c === 'none' ? '📦 بدون تصنيف' : esc(c))) + '</button>';
       });
       catsEl.innerHTML = catsHtml;
     } else {
@@ -1145,7 +1145,7 @@
       items = items.filter(function(i){ return i.type === window.currentBudgetFilter; });
     }
     if(window.currentBudgetCat !== 'all'){
-      items = items.filter(function(i){ return i.category === window.currentBudgetCat; });
+      items = items.filter(function(i){ return (i.category || 'none') === window.currentBudgetCat; });
     }
 
     var list = document.getElementById('budgetList');
