@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="مساحتي">
-<link rel="stylesheet" href="app.bundle.css?v=140">
+<link rel="stylesheet" href="app.bundle.css?v=141">
 <script>/* مستخدم جديد: تظهر شاشة الترحيب من أول رسم (بدون وميض اللوحة خلفها)، ويزيل app.js الصنف عند اكتمال الدخول */
 try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement.classList.add("is-new"); }catch(e){}</script>
 </head>
@@ -418,6 +418,7 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
     </div>
     <div class="section-tabs">
       <button class="section-tab active" data-plan-tab="plan">📖 الخطة الدراسية</button>
+      <button class="section-tab" data-plan-tab="tree">🌳 الخطة الشجرية</button>
       <button class="section-tab" data-plan-tab="desc">📕 وصف المواد</button>
     </div>
     <div class="subsection active" data-plan-sub="plan">
@@ -430,6 +431,9 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
         <button class="chip" data-filter="5">سنة 5</button>
       </div>
       <div id="semesters"></div>
+    </div>
+    <div class="subsection" data-plan-sub="tree">
+      <div id="planTree"></div>
     </div>
     <div class="subsection" data-plan-sub="desc">
       <div class="controls">
@@ -516,7 +520,7 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
 <!-- مكتبات خارجية -->
 
 <!-- الملفات الأساسية (الترتيب مهم جداً!) -->
-<script src="app.bundle.js?v=140"></script>
+<script src="app.bundle.js?v=141"></script>
 <script>
 /* إخفاء الهيكل الرمادي بعد أول رسم للتطبيق (مع مؤقّت أمان كي لا يعلق أبداً) */
 (function(){
@@ -537,7 +541,7 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
    1) إن لم يطابق window.APP_BUILD رقم BUILD هنا → يمسح كاش التطبيق ويعيد التحميل مرة واحدة (حارس sessionStorage يمنع التكرار).
    2) أقسام اللوحة المتقدمة (تحليلات/LMS/إحصائيات) تُنقل إلى خانتها الثابتة إذا أضافتها سكربتات قديمة بمكان آخر. */
 (function(){
-  var BUILD = '140';
+  var BUILD = '141';
   var SLOTS = { insightsSection: 'slotInsights', lmsWidget: 'slotLms', enhancedStatsSection: 'slotEnhanced' };
   function heal(){
     var dash = document.getElementById('dashboard'); if(!dash) return;

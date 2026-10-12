@@ -397,6 +397,7 @@
         try{ if(window[fn]) window[fn](); }catch(e){}
       });
     try{ if(window.Hub && window.Hub.refreshActive) window.Hub.refreshActive(); }catch(e){}   /* نافذة المادة المفتوحة تتحدّث دائماً */
+    try{ if(window.PlanTree) window.PlanTree.refresh(); }catch(e){}   /* الخطة الشجرية (لو ظاهرة) تحدّث حالات المواد */
     setTimeout(refreshAllUnifiedButtons, 80);
   }
   window.syncAllUI = syncAllUI;
@@ -939,6 +940,8 @@
       { key: 'grade', label: 'العلامة (اختياري — بتدخل حاسبة المعدل التراكمي)', type: 'select', options: [{ v: '', l: 'بدون علامة' }].concat(gradeKeys().map(function(k){ return { v: k, l: k }; })) }
     ], { grade: '' }, function(d){ window.markCourseCompleted(name, d.grade); return true; }, null, { saveLabel: 'تعليم' });
   }
+
+  window.askCourseCompleted = askCompleted;
 
   function gpaOf(rows){
     var pts = 0, hrs = 0; rows.forEach(function(r){ if(r.grade && window.GRADES && window.GRADES[r.grade] !== undefined){ pts += window.GRADES[r.grade] * r.hours; hrs += r.hours; } });

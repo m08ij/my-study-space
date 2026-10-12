@@ -110,6 +110,7 @@
   var TAB_REDIRECTS = {
     'gpa': {tab:'gradecalc', subTab:'gpa'},
     'coursedescriptions': {tab:'plan', subTab:'desc'},
+    'plantree': {tab:'plan', subTab:'tree'},
     'stats': {tab:'dashboard'},
     'extracurricular': {tab:'dashboard'},
     'notes': {tab:'courses'},
@@ -129,6 +130,7 @@
       else if(sectionId === 'plan') s.classList.toggle('active', s.dataset.planSub === subKey);
     });
     if(sectionId === 'plan' && subKey === 'desc') window.renderCourseDescriptions();
+    if(sectionId === 'plan' && subKey === 'tree' && window.PlanTree) window.PlanTree.render();
     if(sectionId === 'plan' && subKey === 'simulator') window.renderPlanSimulator();
   };
 
