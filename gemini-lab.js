@@ -16,11 +16,25 @@
   function hasKey(){ return !!key(); }
 
   /* لا مفتاح: نفتح إعدادات الاستيراد (نفس حوار المفتاح والنموذج) */
-  function ensureKey(){
-    if(hasKey()) return true;
-    if(typeof window.toast === 'function') window.toast('🔑 هالميزة بتستعمل Gemini المجاني — ضع المفتاح أول (مرة وحدة)', 'info', 4500);
-    if(window.OcrImport && window.OcrImport.openSettings) window.OcrImport.openSettings();
+  /* موافقة صريحة مرة وحدة قبل إرسال أي ملف/صفحات لـGoogle — نفس علم موافقة استيراد الجدول (ocr_consent) فلا تتكرر.
+     كان استيراد الجدول يطلبها بينما خطة المادة/مذاكرة القسم ترسل الملفات بدونها. تُرجع false بعد عرض الحوار (المستخدم يعيد الضغط بعد الموافقة). */
+  function ensureConsent(){
+    if(lget('ocr_consent') === '1') return true;
+    var msg = 'هالميزة بتبعت محتوى الملف أو صفحات الكتاب اللي اخترتها لسيرفرات Google (Gemini) وقت المعالجة فقط، وبالطبقة المجانية ممكن يستعملها Google لتحسين منتجاته.' + String.fromCharCode(10, 10) + 'تجنّب الملفات اللي فيها معلومات شخصية حساسة، وتأكد إنك مسموح لك ترفع هذا الكتاب أو الملف (حقوق النشر).';
+    var ok = function(){
+      try{ window.localStorage.setItem('ocr_consent', '1'); }catch(e){}
+      if(typeof window.toast === 'function') window.toast('✅ تمت الموافقة — اضغط الزر مرة ثانية للمتابعة', 'success', 3500);
+    };
+    if(typeof window.customConfirm === 'function') window.customConfirm(msg, ok, { title: 'موافقة إرسال لـGoogle', icon: '🔒', okLabel: 'موافق', danger: false });
     return false;
+  }
+  function ensureKey(){
+    if(!hasKey()){
+      if(typeof window.toast === 'function') window.toast('🔑 هالميزة بتستعمل Gemini المجاني — ضع المفتاح أول (مرة وحدة)', 'info', 4500);
+      if(window.OcrImport && window.OcrImport.openSettings) window.OcrImport.openSettings();
+      return false;
+    }
+    return ensureConsent();
   }
 
   function fileToBase64(file){

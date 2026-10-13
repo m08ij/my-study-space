@@ -228,7 +228,7 @@
   }
   function applyCustomAccent(){
     var root = document.documentElement, hex = lsGet('ss_custom_accent');
-    ['--accent', '--accent-2', '--glow', '--on-accent', '--grad'].forEach(function(p){ root.style.removeProperty(p); });
+    ['--accent', '--accent-2', '--glow', '--on-accent', '--grad', '--brand-grad', '--on-brand'].forEach(function(p){ root.style.removeProperty(p); });
     if(!hex || !hex2rgb(hex)) return null;
     root.style.removeProperty('--accent');   /* نقرأ لون البطاقة الأصلي للثيم بدون تأثير تخصيصنا */
     var cs = getComputedStyle(root), card = parseCssColor(cs.getPropertyValue('--card')) || { r: 20, g: 28, b: 46 };
@@ -238,13 +238,14 @@
     root.style.setProperty('--glow', 'rgba(' + a.r + ',' + a.g + ',' + a.b + ',.35)');
     root.style.setProperty('--on-accent', lum(a) > .4 ? '#0b0f1a' : '#ffffff');
     root.style.setProperty('--grad', 'linear-gradient(135deg,' + f.hex + ',' + second + ')');
+    root.style.setProperty('--brand-grad', 'linear-gradient(135deg,' + f.hex + ',' + second + ')'); root.style.setProperty('--on-brand', lum(a) > .4 ? '#0b0f1a' : '#ffffff');   /* التصميم الملكي (08-royal.css) يقرأ --brand-grad لأزرار التمييز */
     return f;
   }
   window.applyCustomAccent = applyCustomAccent;
   function buildAccentRow(){
     var panel = $('themePanel'); if(!panel || $('accentRow')) return;
     var row = document.createElement('div'); row.id = 'accentRow'; row.className = 'accent-row';
-    row.innerHTML = '<label for="accentPick">🎯 لون تمييز مخصص</label><div class="accent-ctl"><input type="color" id="accentPick" value="#22d3ee" aria-label="اختيار لون التمييز"><button class="btn btn-sm btn-ghost" type="button" id="accentReset">إعادة</button></div><div class="u-note" id="accentNote"></div>';
+    row.innerHTML = '<label for="accentPick">🎯 لون تمييز مخصص</label><div class="accent-ctl"><input type="color" id="accentPick" value="#6c97ff" aria-label="اختيار لون التمييز"><button class="btn btn-sm btn-ghost" type="button" id="accentReset">إعادة</button></div><div class="u-note" id="accentNote"></div>';
     panel.appendChild(row);
     var pick = $('accentPick'), note = $('accentNote'), saved = lsGet('ss_custom_accent'); if(saved && hex2rgb(saved)) pick.value = saved;
     pick.addEventListener('input', function(){

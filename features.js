@@ -88,14 +88,14 @@
      THEMES
      ============================================================ */
   var THEMES = [
-    {id:'dark', name:'داكن', colors:['#0b0f1a','#22d3ee','#a78bfa']},
+    {id:'dark', name:'داكن', colors:['#060b1e','#3a68f6','#6c97ff']},
     {id:'coral', name:'مرجان', colors:['#0b1a21','#ff9a85','#7fd6c8']},
     {id:'royal', name:'ملكي', colors:['#0f0524','#a78bfa','#fbbf24']},
     {id:'cyberpunk', name:'سايبربانك', colors:['#0a0014','#22d3ee','#ec4899']},
     {id:'midnight', name:'منتصف الليل', colors:['#050914','#0ea5e9','#8b5cf6']},
     {id:'glass', name:'زجاج داكن', colors:['#0b1024','#7cd4f5','#b3a6ff']},
     {id:'glass-light', name:'زجاج فاتح', light:true, colors:['#e8edf8','#3b82f6','#7c5cf0']},
-    {id:'white', name:'أبيض', light:true, colors:['#f4f6fb','#2563eb','#0f2a5c']}
+    {id:'white', name:'أبيض', light:true, colors:['#f2f5fc','#2f5cf0','#142e86']}
   ];
   window.THEMES = THEMES;
 
@@ -1199,10 +1199,10 @@
       html += '<div class="budget-item"><div class="bi-left"><div class="bi-icon">' + cat.i + '</div>' +
         '<div class="bi-info"><div class="bi-cat">' + esc(cat.l) + '</div>' +
         (b.note ? '<div class="bi-note">' + esc(b.note) + '</div>' : '') + '</div></div>' +
-        '<div class="bi-amount ' + b.type + '">' + sign + b.amount +
-        ' د<span class="date">' + (b.date || '') + '</span></div>' +
-        '<div class="bi-actions"><button class="btn btn-sm btn-ghost" data-edit-budget="' + b.id + '">✏️</button>' +
-        '<button class="btn btn-sm btn-danger" data-del-budget="' + b.id + '">🗑</button></div></div>';
+        '<div class="bi-amount ' + esc(b.type) + '">' + sign + esc(b.amount) +
+        ' د<span class="date">' + esc(b.date || '') + '</span></div>' +
+        '<div class="bi-actions"><button class="btn btn-sm btn-ghost" data-edit-budget="' + esc(b.id) + '">✏️</button>' +
+        '<button class="btn btn-sm btn-danger" data-del-budget="' + esc(b.id) + '">🗑</button></div></div>';
     });
     list.innerHTML = html;
     list.querySelectorAll('[data-edit-budget]').forEach(function(btn){

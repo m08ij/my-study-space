@@ -218,7 +218,7 @@
     try{ if(h >= 5 && h < 12 && localStorage.getItem('ss_morning_date') !== dstr(now) && morningData(now).lines.length && !opt.force) return 'morning'; }catch(e){}
     window._briefAt = Date.now();
     if(!chips.length){ window.toast(greet + ' 👋', 'success', 2400); return true; }
-    var el = window.toastCard('<div class="brief-head"><b>' + esc(greet) + ' 👋</b><span class="brief-sub">عندك اليوم:</span></div>' +
+    var el = window.toastCard('<div class="brief-head"><b>' + esc(greet) + '</b><span class="brief-sub">عندك اليوم:</span></div>' +
       '<div class="brief-chips">' + chips.map(function(c){ return '<button type="button" class="brief-chip ' + c.cls + '" data-go="' + c.go + '">' + c.icon + ' ' + esc(c.text) + '</button>'; }).join('') + '</div>',
       { cls: 'brief', icon: '👋', dur: 9000 });
     if(el) el.addEventListener('click', function(ev){
@@ -525,4 +525,101 @@
   }
   window.Haptic = haptic;
   setTimeout(init, 900); setTimeout(init, 3000);
+})();
+
+/* ===== تجربة الهاتف: زر الرجوع، لوحة المفاتيح، العودة من الخلفية، الروابط ===== */
+(function(){
+  'use strict';
+  var W = window, D = document, root = D.documentElement;
+  function mm(q){ try{ return !!(W.matchMedia && W.matchMedia(q).matches); }catch(e){ return false; } }
+  function isNative(){ try{ return !!(W.Capacitor && W.Capacitor.isNativePlatform && W.Capacitor.isNativePlatform()); }catch(e){ return false; } }
+
+  /* ---------- 1) زر الرجوع (أندرويد/لمس/تطبيق مثبّت) ----------
+     الترتيب: نافذة/درج مفتوح ← يُغلق أولاً (نفس منطق مفتاح Esc الشامل)؛ ثم رجوع بين الصفحات (سجل المتصفح)؛ وعند مدخل «القاعدة» (الصفحة الأولى)
+     رسالة «اضغط رجوع مرة ثانية للخروج»، والضغطة الثانية تخرج من التطبيق فعلاً (لا يوجد مدخل أقدم). سطح المكتب: سلوك المتصفح كما هو. */
+  var OVERLAYS = '.modal-backdrop,.hub-sheet-backdrop,.cmdk-backdrop,.ocri-overlay,.rd-overlay,#sidebar.open,#settingsMenu.show,#aiPanel.show,#fabMenu.show,#examCountdownScreen.open,#focusScreen.open,#themePanel.show';
+  var enabled = mm('(pointer:coarse)') || mm('(display-mode:standalone)') || isNative();
+  var ignore = false, ignoreT = null, armed = false, armT = null;
+  function overlayOpen(){ try{ return !!D.querySelector(OVERLAYS); }catch(e){ return false; } }
+  function closeTop(){
+    try{
+      var rd = D.querySelector('.rd-bar [data-rd="close"]'); if(rd){ rd.click(); return; }
+      var oc = D.querySelector('.ocri-overlay');
+      if(oc){ var b = oc.querySelector('.ocri-btn.ghost,[data-x],button[aria-label="إغلاق"]'); if(b) b.click(); else if(oc.parentNode) oc.parentNode.removeChild(oc); return; }
+      D.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    }catch(e){}
+  }
+  function skipNextPop(){ ignore = true; clearTimeout(ignoreT); ignoreT = setTimeout(function(){ ignore = false; }, 600); }
+  function forward(){ skipNextPop(); try{ W.history.forward(); }catch(e){ ignore = false; } }
+  var BackNav = W.BackNav = { enabled: enabled, onPop: function(e){
+    if(!enabled) return false;
+    if(ignore){ ignore = false; clearTimeout(ignoreT); return true; }
+    if(overlayOpen()){ closeTop(); forward(); return true; }          /* رجوع = إغلاق النافذة ثم نعيد السجل لمكانه */
+    if(e && e.state && e.state.base){
+      if(!armed){
+        armed = true; clearTimeout(armT);
+        if(W.toast) W.toast('اضغط رجوع مرة ثانية للخروج', 'info', 2200);
+        armT = setTimeout(function(){ armed = false; try{ if(W.history.state && W.history.state.base) forward(); }catch(err){} }, 2300);
+      }
+      return true;                                                      /* لا تبديل صفحة عند القاعدة */
+    }
+    return false;
+  } };
+
+  /* ---------- 2) لوحة المفاتيح ---------- */
+  var layoutH = W.innerHeight, kbOpen = false;
+  function isField(el){
+    if(!el || !el.tagName) return false;
+    var t = el.tagName;
+    if(t === 'TEXTAREA' || t === 'SELECT') return true;
+    if(t === 'INPUT') return !/^(checkbox|radio|button|submit|range|color|file|reset|image)$/.test(el.type || 'text');
+    return !!el.isContentEditable;
+  }
+  function kbUpdate(){
+    var vv = W.visualViewport, typing = isField(D.activeElement);
+    if(!typing){ layoutH = Math.max(W.innerHeight, vv ? vv.height + (vv.offsetTop || 0) : 0); }     /* ارتفاع الشاشة بدون كيبورد (يتحدّث مع تدوير الشاشة) */
+    var vh = vv ? vv.height : W.innerHeight, top = vv ? (vv.offsetTop || 0) : 0;
+    var kb = Math.max(0, layoutH - vh - top, layoutH - W.innerHeight);
+    var open = typing && kb > 120;
+    root.style.setProperty('--vvh', Math.round(vh) + 'px');
+    root.style.setProperty('--kb', open ? Math.round(kb) + 'px' : '0px');
+    if(open !== kbOpen){ kbOpen = open; root.classList.toggle('kb-open', open); }
+  }
+  function revealField(el){
+    try{
+      if(!isField(el) || !el.getBoundingClientRect) return;
+      var vv = W.visualViewport, vh = vv ? vv.height : W.innerHeight, r = el.getBoundingClientRect();
+      if(r.bottom > vh - 24 || r.top < 72) el.scrollIntoView({ block: 'center', behavior: mm('(prefers-reduced-motion: reduce)') ? 'auto' : 'smooth' });
+    }catch(e){}
+  }
+  if(W.visualViewport){ W.visualViewport.addEventListener('resize', kbUpdate); W.visualViewport.addEventListener('scroll', kbUpdate); }
+  W.addEventListener('resize', kbUpdate);
+  W.addEventListener('orientationchange', function(){ setTimeout(function(){ layoutH = W.innerHeight; kbUpdate(); }, 350); });
+  D.addEventListener('focusin', function(e){ if(!isField(e.target)) return; kbUpdate(); setTimeout(function(){ kbUpdate(); revealField(e.target); }, 320); });
+  D.addEventListener('focusout', function(){ setTimeout(kbUpdate, 150); });
+  kbUpdate();
+
+  /* ---------- 3) العودة من الخلفية: يوم جديد ← تحديث الشاشات؛ الصفحة المستعادة من الكاش ← نفس الشيء ---------- */
+  var lastDay = W.today ? W.today() : '', hiddenAt = 0;
+  function onResume(force){
+    try{
+      var d = W.today ? W.today() : '';
+      if(force || (d && d !== lastDay)){
+        lastDay = d;
+        if(W.syncAllUI) W.syncAllUI(); else if(W.renderDashboard) W.renderDashboard();
+      }
+      kbUpdate();
+    }catch(e){}
+  }
+  D.addEventListener('visibilitychange', function(){
+    if(D.hidden){ hiddenAt = Date.now(); return; }
+    onResume(hiddenAt && Date.now() - hiddenAt > 30 * 60 * 1000);   /* غياب أكثر من نصف ساعة: حدّث كل شي (التحديث الدوري متوقف بالخلفية) */
+  });
+  W.addEventListener('pageshow', function(e){ if(e && e.persisted) onResume(true); });
+
+  /* ---------- 4) روابط خارجية بنافذة جديدة: أمان الخصوصية (بدون وصول للصفحة الأصلية) ---------- */
+  D.addEventListener('click', function(e){
+    var a = e.target && e.target.closest ? e.target.closest('a[target="_blank"]') : null;
+    if(a && !/noopener/.test(a.rel || '')) a.rel = ((a.rel || '') + ' noopener noreferrer').trim();
+  }, true);
 })();

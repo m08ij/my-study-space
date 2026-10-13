@@ -31,7 +31,7 @@
   window.celebrate = function(intensity){
     intensity = intensity || 1;
     var count = 40 * intensity;
-    var colors = ['#22d3ee','#a78bfa','#34d399','#fbbf24','#f472b6','#f87171'];
+    var colors = ['#6c97ff','#8f86ff','#34d399','#fbbf24','#f472b6','#f87171'];
     for(var i = 0; i < count; i++){
       (function(i){
         setTimeout(function(){
@@ -129,7 +129,7 @@
       var info = DB[c.name];
       if(info && byType[info.t] !== undefined) byType[info.t] += (parseFloat(c.hours) || info.h || 3);
     });
-    var donutColors = { 'uni-c':'#22d3ee', 'uni-e':'#a78bfa', 'faculty':'#34d399', 'major-c':'#fbbf24', 'major-e':'#f472b6' };
+    var donutColors = { 'uni-c':'#6c97ff', 'uni-e':'#8f86ff', 'faculty':'#34d399', 'major-c':'#fbbf24', 'major-e':'#f472b6' };
     var donutLabels = { 'uni-c':'جامعة إجبارية', 'uni-e':'جامعة اختيارية', 'faculty':'كلية', 'major-c':'تخصص إجباري', 'major-e':'تخصص اختياري' };
 
     var total = Object.values(byType).reduce(function(a,b){ return a + b; }, 0);
@@ -255,8 +255,8 @@
         '<div class="ecs-ring">' +
           '<svg viewBox="0 0 100 100">' +
             '<defs><linearGradient id="ecsGrad" x1="0%" y1="0%" x2="100%" y2="100%">' +
-              '<stop offset="0%" stop-color="#22d3ee"/>' +
-              '<stop offset="100%" stop-color="#a78bfa"/>' +
+              '<stop offset="0%" style="stop-color:var(--accent)"/>' +
+              '<stop offset="100%" style="stop-color:var(--accent-2)"/>' +
             '</linearGradient></defs>' +
             '<circle class="bg" cx="50" cy="50" r="44"/>' +
             '<circle class="fg" id="ecsRing" cx="50" cy="50" r="44" ' +

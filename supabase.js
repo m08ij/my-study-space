@@ -14,12 +14,23 @@
   var codeKey = 'ss_sync_code';
   var code = null;
 
+  /* الرمز هو مفتاح الوصول لبيانات المستخدم بالسحابة، فنولّده بمصدر عشوائي آمن (crypto) بدل Math.random القابل للتنبؤ.
+     رفض العينات الزائدة (rejection sampling) حتى لا يميل التوزيع لأحرف معيّنة. Math.random احتياط فقط للمتصفحات القديمة جداً. */
   function genCode(){
-    var chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
-    var out = '';
-    for(var i = 0; i < 12; i++){ out += chars.charAt(Math.floor(Math.random() * chars.length)); }
+    var chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789', out = '', i, n = chars.length, lim = 256 - (256 % n);
+    var cr = (typeof window !== 'undefined') && (window.crypto || window.msCrypto);
+    if(cr && cr.getRandomValues){
+      while(out.length < 12){
+        var buf = new Uint8Array(24); cr.getRandomValues(buf);
+        for(i = 0; i < buf.length && out.length < 12; i++){ if(buf[i] < lim) out += chars.charAt(buf[i] % n); }
+      }
+      return out;
+    }
+    for(i = 0; i < 12; i++){ out += chars.charAt(Math.floor(Math.random() * n)); }
     return out;
   }
+  /* صيغة الرمز المقبولة (الخادم يقبل 6–32): أحرف إنجليزية وأرقام فقط — يمنع رمزاً مكتوباً بالغلط أو بمسافات/رموز غريبة */
+  function validCode(c){ return /^[A-Z0-9]{6,32}$/.test(String(c || '')); }
   function ensureCode(){
     if(code) return code;
     try{ code = localStorage.getItem(codeKey); }catch(e){}
@@ -308,7 +319,8 @@
         window.showModal('🔄 تغيير رمز المزامنة', [
           { key: 'code', label: 'الرمز الجديد (اتركه فارغاً للتوليد)', placeholder: 'ABC123' }
         ], { code: '' }, function(data){
-          var newCode = String(data.code || '').trim().toUpperCase() || genCode();
+          var newCode = String(data.code || '').replace(/[\s\-]/g, '').toUpperCase() || genCode();
+          if(!validCode(newCode)){ if(window.toast) window.toast('الرمز غير صالح — يجب أن يكون 6 إلى 32 حرفاً إنجليزياً أو رقماً', 'warn', 4000); return false; }
           setCode(newCode);
           if(window.toast) window.toast('✅ تم التغيير — جاري إعادة التحميل...', 'success');
           setTimeout(function(){ location.reload(); }, 1000);

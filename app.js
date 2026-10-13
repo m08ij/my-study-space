@@ -57,13 +57,21 @@
   window.startTimer = function(){
     if(window.ts.running) return;
     window.ts.running = true;
-    window.ts.interval = setInterval(function(){
-      if(window.timerMode === 'stopwatch'){ window.ts.remaining++; }
-      else { window.ts.remaining--; if(window.ts.remaining <= 0) window.completeSession(); }
-      window.updateTimerUI();
-    }, 1000);
+    /* العدّ بالساعة الحقيقية لا بعدد النبضات: مع قفل الشاشة/الخلفية يوقف الهاتف المؤقتات (setInterval)، فكان التركيز يتأخر ويعدّ ثواني أقل.
+       الآن نحسب المنقضي من وقت البدء، فيرجع صحيحاً فوراً عند العودة للتطبيق (visibilitychange أدناه). */
+    var t0 = Date.now(), base = window.ts.remaining, sw = (window.timerMode === 'stopwatch');
+    window.ts._tick = function(){
+      if(!window.ts.running) return;
+      var el = Math.floor((Date.now() - t0) / 1000), next;
+      if(sw) next = base + el;
+      else { next = base - el; if(next <= 0){ window.ts.remaining = 0; window.completeSession(); return; } }
+      if(next !== window.ts.remaining){ window.ts.remaining = next; window.updateTimerUI(); }
+    };
+    window.ts.interval = setInterval(window.ts._tick, 250);
     window.updateTimerUI();
   };
+  /* العودة من الخلفية: حدّث المؤقت فوراً (بدون انتظار النبضة التالية) */
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden && window.ts && window.ts.running && window.ts._tick) window.ts._tick(); });
   window.stopTimer = function(){
     window.ts.running = false;
     if(window.ts.interval){ clearInterval(window.ts.interval); window.ts.interval = null; }
@@ -142,8 +150,12 @@
     /* رابط مباشر (#exams) أو نقر إشعار: له الأولوية على آخر تبويب محفوظ (كان يُستبدل فيضيع الرابط) */
     var hashTab = location.hash ? location.hash.slice(1) : '';
     if(hashTab && document.getElementById(hashTab) && document.getElementById(hashTab).classList.contains('section')) currentTab = hashTab;
-    try{ history.replaceState({tab: currentTab, appInit: true}, '', '#' + currentTab); }catch(e){}
+    /* أجهزة اللمس/التطبيق: نضع مدخل «قاعدة» تحت الصفحة الأولى ليتحكّم BackNav (ux.js) بزر الرجوع: يغلق النافذة المفتوحة أولاً، ثم يرجع بين الصفحات،
+       وعند الوصول للقاعدة يطلب «اضغط مرة ثانية للخروج». على سطح المكتب لا نغيّر سلوك المتصفح. */
+    var guard = !!(window.BackNav && window.BackNav.enabled);
+    try{ history.replaceState({tab: currentTab, appInit: true, base: guard}, '', '#' + currentTab); if(guard) history.pushState({tab: currentTab}, '', '#' + currentTab); }catch(e){}
     window.addEventListener('popstate', function(e){
+      if(window.BackNav && window.BackNav.onPop(e)) return;
       var tab = (e.state && e.state.tab) || (location.hash ? location.hash.slice(1) : 'dashboard');
       if(document.getElementById(tab)) window.switchTab(tab, false);
     });
@@ -167,8 +179,9 @@
     if(!sameTab) sec.classList.add('tab-play');
     sec.classList.add('active');
     try{ localStorage.setItem('activeTab', JSON.stringify(tab)); }catch(e){}
-    if(pushHistory){ try{ history.pushState({tab:tab}, '', '#' + tab); }catch(e){} }
-    else{ try{ history.replaceState({tab:tab}, '', '#' + tab); }catch(e){} }
+    /* الضغط على نفس الصفحة لا يضيف مدخلاً جديداً بالسجل (كان يحتاج زر الرجوع عدة مرات للخروج منها) */
+    if(pushHistory && !sameTab){ try{ history.pushState({tab:tab}, '', '#' + tab); }catch(e){} }
+    else{ try{ var keepBase = !!(history.state && history.state.base); history.replaceState(keepBase ? {tab:tab, base:true} : {tab:tab}, '', '#' + tab); }catch(e){} }
     window.closeSidebar();
     window.closeSettingsMenu();
     if(!sameTab) window.scrollTo({top:0, behavior:'smooth'});   /* البقاء بمكانك عند إعادة اختيار نفس الصفحة */
@@ -364,7 +377,7 @@
       window.SB.load().then(function(sd){
         if(window.SB.lastLoadStatus === 'error') return;
         var decision = (sd && sd.data) ? decideSync(sd) : 'keep-local';
-        if(decision === 'apply'){ window.applyServerData(sd.data); window.markSynced(sd.updated_at); location.reload(); return; }
+        if(decision === 'apply'){ if(metaGet('ss_cloud_ver') === null) backupBeforeCloudApply(); window.applyServerData(sd.data); window.markSynced(sd.updated_at); location.reload(); return; }
         window.cloudLoadFailed = false; window.cloudSyncBlocked = false;
         if(decision === 'conflict') window.handleSyncConflict();
         else { if(sd && sd.data && metaGet('ss_cloud_ver') === null) window.markSynced(sd.updated_at, '__dirty__'); window.doServerSave(); }
@@ -435,8 +448,38 @@
     return out;
   }
 
+  /* تعقيم أي بيانات واردة (سحابة/ملف/نسخة سابقة) قبل اعتمادها: يُزال __proto__، وتصير معرّفات العناصر آمنة للإدراج بالواجهة
+     (المعرّفات تُكتب بسمات HTML؛ معرّف فيه < > " كان يمكن أن ينفّذ كوداً من نسخة مخرَّبة). معرّفات التطبيق العادية (uid) لا تتغير. */
+  function cleanIncoming(data){
+    var out;
+    try{ out = JSON.parse(JSON.stringify(data), function(k, v){ return k === '__proto__' ? undefined : v; }); }
+    catch(e){ return data; }
+    var sp = out && out.space;
+    if(sp && typeof sp === 'object'){
+      ['courses','tasks','exams','budget','grades'].forEach(function(k){
+        if(!Array.isArray(sp[k])) return;
+        sp[k].forEach(function(it){ if(it && typeof it === 'object' && it.id != null && /[^\w\-.:]/.test(String(it.id))) it.id = String(it.id).replace(/[^\w\-.:]/g, '_'); });
+      });
+    }
+    return out;
+  }
+  /* قبل ما بيانات السحابة تحلّ محل بيانات هذا الجهاز (مثلاً بعد تغيير رمز المزامنة، أو أول فتح بلا سجل مزامنة): نحفظ نسخة محلية
+     يمكن استرجاعها من ⚙️ ← «استرجاع نسخة سابقة». لا نحفظ إن كان الجهاز فاضياً (لا شيء يضيع). */
+  function hasUserData(){
+    var s = window.space || {};
+    return !!((s.courses || []).length || (s.tasks || []).length || (s.exams || []).length || (s.budget || []).length || Object.keys(s.timetable || {}).length);
+  }
+  function backupBeforeCloudApply(){
+    try{
+      if(!hasUserData()) return;
+      metaSet('ss_pre_restore_backup', { at: new Date().toISOString(), kind: 'cloud-apply', snapshot: window.gatherSnapshot() });
+      if(window.refreshRestorePrevBtn) window.refreshRestorePrevBtn();
+    }catch(e){}
+  }
+
   window.applyServerData = function(data){
     if(!data || typeof data !== 'object') return;
+    data = cleanIncoming(data);
     try{
       if(data.space){
         var dSpace = window.defaultSpace || {};
@@ -488,7 +531,12 @@
     }catch(e){ window.gpaRows = [{name:'', hrs:3, grade:'A (90-100)'}]; }
     try{
       var tsData = window.S.get('timerSettings', {});
-      window.timerSettings = {focus:(tsData && tsData.focus)||25, short:(tsData && tsData.short)||5, long:(tsData && tsData.long)||15};
+      /* نفس حدود applyServerData: قيمة غريبة (نص/سالب/ضخم) من نسخة أو تخزين تالف كانت تكسر المؤقت */
+      window.timerSettings = {
+        focus: Math.max(1, Math.min(120, parseInt(tsData && tsData.focus, 10) || 25)),
+        short: Math.max(1, Math.min(60, parseInt(tsData && tsData.short, 10) || 5)),
+        long:  Math.max(1, Math.min(90, parseInt(tsData && tsData.long, 10) || 15))
+      };
     }catch(e){ window.timerSettings = {focus:25, short:5, long:15}; }
   };
 
@@ -602,7 +650,7 @@
       else {
         var html = '';
         m.forEach(function(x, i){
-          html += '<div class="search-item" data-si="' + i + '"><span>' + window.esc(x.name) + '</span><span class="s-tag">' + x.type + '</span></div>';
+          html += '<div class="search-item" data-si="' + i + '"><span>' + window.esc(x.name) + '</span><span class="s-tag">' + window.esc(x.type) + '</span></div>';
         });
         res.innerHTML = html;
         res.querySelectorAll('[data-si]').forEach(function(el){
@@ -665,6 +713,10 @@
     });
     if(badCourse) errors.push(badCourse + ' مادة بدون اسم صالح');
     if(dup) errors.push('معرّفات مواد مكررة (' + dup + ') — قد تفقد ارتباط الملفات');
+    /* معرّفات فيها رموز HTML (< > " ') ليست من التطبيق: ملف مخرَّب أو معدَّل — ننبّه ثم تُنظَّف تلقائياً عند الاستيراد */
+    var unsafeIds = 0;
+    ['courses','tasks','exams','budget'].forEach(function(k){ (Array.isArray(sp[k]) ? sp[k] : []).forEach(function(it){ if(isObj(it) && it.id != null && /[<>"'&`]/.test(String(it.id))) unsafeIds++; }); });
+    if(unsafeIds) warnings.push(unsafeIds + ' عنصر بمعرّف غير اعتيادي (سيُنظَّف تلقائياً)');
     var tasks = Array.isArray(sp.tasks) ? sp.tasks : [], badTask = tasks.filter(function(t){ return !isObj(t) || typeof t.title !== 'string'; }).length;
     if(badTask) errors.push(badTask + ' مهمة بصيغة غير صالحة');
     var exams = Array.isArray(sp.exams) ? sp.exams : [], badExam = exams.filter(function(e){ return !isObj(e) || typeof e.name !== 'string'; }).length;
@@ -731,7 +783,7 @@
     function cnt(s){ return s && s.space && Array.isArray(s.space.courses) ? s.space.courses.length : 0; }
     if(c && c.local) list.push({ v: 'cl', l: 'تعارض ' + fmt(c.at) + ' — نسخة هذا الجهاز (' + cnt(c.local) + ' مادة)', snap: c.local });
     if(c && c.cloud) list.push({ v: 'cc', l: 'تعارض ' + fmt(c.at) + ' — نسخة السحابة (' + cnt(c.cloud) + ' مادة)', snap: c.cloud });
-    if(p && p.snapshot) list.push({ v: 'pr', l: 'قبل استعادة ملف ' + fmt(p.at) + ' (' + cnt(p.snapshot) + ' مادة)', snap: p.snapshot });
+    if(p && p.snapshot) list.push({ v: 'pr', l: (p.kind === 'cloud-apply' ? 'قبل استبدال بيانات الجهاز ببيانات السحابة ' : 'قبل استعادة ملف ') + fmt(p.at) + ' (' + cnt(p.snapshot) + ' مادة)', snap: p.snapshot });
     return list;
   }
   window.refreshRestorePrevBtn = function(){
@@ -1525,6 +1577,7 @@
       window.serverOnline = true;
       if(decision === 'apply'){
         console.log('☁️ Loaded from Supabase');
+        if(metaGet('ss_cloud_ver') === null) backupBeforeCloudApply();   /* لا سجل مزامنة (جهاز جديد/رمز جديد): احمِ ما على الجهاز قبل استبداله */
         safeRun('Apply server data', function(){ window.applyServerData(serverData.data); });
         var serverMs = toMs(serverData.updated_at);
         if(serverMs) window.S.set('ss_space_ts', serverMs);

@@ -504,7 +504,7 @@
         '</div>' +
         '<div class="att-bar"><div class="att-fill ' + lvl + '" style="width:' + (hasData ? pct : 0) + '%"></div></div>' +
         '<div class="att-actions">' +
-          '<span style="margin-right:auto">✅ <b>' + a.present + '</b> · ❌ <b>' + a.absent + '</b></span>' +
+          '<span style="margin-right:auto">✅ <b>' + esc(a.present) + '</b> · ❌ <b>' + esc(a.absent) + '</b></span>' +
           '<button class="btn btn-sm" data-mark-p="' + esc(name) + '">+ حاضر</button>' +
           '<button class="btn btn-sm btn-ghost" data-mark-a="' + esc(name) + '">+ غائب</button>' +
         '</div>' +
@@ -578,7 +578,7 @@
         (g.items || []).forEach(function(it, i){
           itemsHtml += '<div class="gt-item-row">' +
             '<span style="flex:1">' + esc(it.name) + '</span>' +
-            '<span style="color:var(--muted)">' + it.score + '/' + it.weight + '</span>' +
+            '<span style="color:var(--muted)">' + esc(it.score) + '/' + esc(it.weight) + '</span>' +
             '<button class="btn btn-sm btn-danger" data-gt-del="' + esc(course.name) + '|' + i + '" style="padding:2px 6px;font-size:var(--fs-2xs)">✕</button>' +
           '</div>';
         });

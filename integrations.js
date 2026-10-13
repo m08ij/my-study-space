@@ -49,9 +49,10 @@
         });
         inputHtml = '<select id="mf_' + f.key + '">' + opts + '</select>';
       } else if(f.type === 'textarea'){
-        inputHtml = '<textarea id="mf_' + f.key + '" rows="3">' + esc(val) + '</textarea>';
+        inputHtml = '<textarea id="mf_' + f.key + '" rows="3" autocomplete="off">' + esc(val) + '</textarea>';
       } else {
-        inputHtml = '<input id="mf_' + f.key + '" type="' + (f.type || 'text') + '" value="' + esc(val) + '" placeholder="' + esc(f.placeholder || '') + '">';
+        /* autocomplete=off: اقتراحات المتصفح/الهاتف (عناوين، بطاقات) كانت تغطي الحقول؛ inputmode=decimal: لوحة أرقام بفاصلة عشرية للمبالغ/العلامات */
+        inputHtml = '<input id="mf_' + f.key + '" type="' + (f.type || 'text') + '" value="' + esc(val) + '" placeholder="' + esc(f.placeholder || '') + '" autocomplete="off"' + (f.type === 'number' ? ' inputmode="decimal"' : '') + '>';
       }
       fieldsHtml += '<div class="form-group"><label for="mf_' + f.key + '">' + esc(f.label) + '</label>' + inputHtml + '</div>';
     });
@@ -1686,7 +1687,7 @@
       days.push({date: ds, minutes: m});
     }
     if(maxMin === 0) maxMin = 60;
-    var colors = ['var(--bg2)', 'rgba(34,211,238,.25)', 'rgba(34,211,238,.5)', 'rgba(34,211,238,.75)', 'var(--accent)'];
+    var colors = ['var(--bg2)', 'color-mix(in srgb,var(--accent) 25%,transparent)', 'color-mix(in srgb,var(--accent) 50%,transparent)', 'color-mix(in srgb,var(--accent) 75%,transparent)', 'var(--accent)'];
     var html = '<div style="display:flex;gap:3px;overflow-x:auto;padding:8px 0;direction:ltr">';
     for(var w = 0; w < 17; w++){
       html += '<div style="display:flex;flex-direction:column;gap:3px">';
