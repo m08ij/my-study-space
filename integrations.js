@@ -486,7 +486,7 @@
     header.className = 'stt-header';
     header.innerHTML =
       '<h3>✨ إضافة جدول — دفعة واحدة</h3>' +
-      (window.OcrImport && window.OcrImport.enabled() ? '<button class="stt-ocr-btn" type="button" data-ocr="pick" title="تحليل صورة جدول التسجيل وتعبئة الصفوف (تجريبي)">📷 من صورة</button>' : '') +
+      (window.OcrImport ? '<button class="stt-ocr-btn" type="button" data-ocr="pick" title="تحليل صورة الجدول وتعبئة الصفوف">📷 من صورة</button>' : '') +
       '<button class="stt-close" type="button" title="إغلاق">×</button>';
     modal.appendChild(header);
 
@@ -874,11 +874,11 @@
       if(window.OcrImport) window.OcrImport.summary(meta);
     }
     /* سحب صورة وإفلاتها فوق النافذة */
-    if(window.OcrImport && window.OcrImport.enabled()){
+    if(window.OcrImport){
       backdrop.addEventListener('dragover', function(e){ if(e.dataTransfer && Array.prototype.indexOf.call(e.dataTransfer.types || [], 'Files') > -1) e.preventDefault(); });
       backdrop.addEventListener('drop', function(e){
-        var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
-        if(f && /^image\//.test(f.type)){ e.preventDefault(); window.OcrImport.run(f, applyOcrRows); }
+        var imgs = [].slice.call((e.dataTransfer && e.dataTransfer.files) || []).filter(function(f){ return /^image\//.test(f.type); });
+        if(imgs.length){ e.preventDefault(); e.stopPropagation(); window.OcrImport.handleFiles(imgs, applyOcrRows); }
       });
     }
 

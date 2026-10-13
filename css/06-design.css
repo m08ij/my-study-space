@@ -374,3 +374,25 @@ html.simple .dash-term{display:none!important}
 .hub-health.h-warn{background:color-mix(in srgb,var(--amber) 16%,var(--card));color:var(--amber)}
 .hub-health.h-risk{background:color-mix(in srgb,var(--red) 14%,var(--card));color:var(--red)}
 [data-theme="white"] .hub-health.h-good{background:#e1f4ea}[data-theme="white"] .hub-health.h-warn{background:#fdf0d8}[data-theme="white"] .hub-health.h-risk{background:#fde8e8}
+
+/* ---------- 12) استيراد الجدول من صورة: زر الصفحة + شاشة النتيجة + إعداد المفتاح ---------- */
+.ocri-page{display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:12px;width:100%}
+.ocri-page-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;width:100%}
+.ocri-page-row .btn{min-height:44px;justify-content:center}
+#btnOcrTimetable{background:var(--card);color:var(--accent);border:1.5px solid var(--accent);font-weight:800;flex:1 1 220px;max-width:320px}
+#btnOcrTimetable:hover{background:var(--tint-blue)}
+.ocri-page-hint{max-width:420px;text-align:center;color:color-mix(in srgb,var(--muted) 78%,var(--text));font-size:max(12.5px,.8rem);line-height:1.7}
+.ocri-result{max-width:560px;text-align:start;max-height:92vh;overflow:auto}
+.ocri-thumbs{display:flex;gap:8px;overflow-x:auto;margin:8px 0;padding-bottom:4px}
+.ocri-thumbs img{height:120px;width:auto;border-radius:var(--r-md);border:1px solid var(--border);flex:none}
+.ocri-rowsum{display:flex;flex-direction:column;gap:6px;max-height:36vh;overflow-y:auto;margin:8px 0}
+.ocri-rs{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 10px;border-radius:var(--r-md);background:var(--card2);border-inline-start:4px solid var(--green)}
+.ocri-rs.medium{border-inline-start-color:var(--amber)}
+.ocri-rs.review{border-inline-start-color:var(--red);background:color-mix(in srgb,var(--red) 8%,var(--card))}
+.ocri-dot{width:9px;height:9px;border-radius:50%;background:var(--green);flex:none}
+.ocri-rs.medium .ocri-dot{background:var(--amber)}.ocri-rs.review .ocri-dot{background:var(--red)}
+.ocri-rs b{font-size:var(--fs-md)}
+.ocri-rs small{margin-inline-start:auto;color:color-mix(in srgb,var(--muted) 78%,var(--text));font-size:max(12.5px,.8rem)}
+.ocri-intro{padding:8px 10px;border-radius:var(--r-md);background:var(--tint-blue);color:var(--text)}
+.ocri-test{margin-top:6px}
+.ocri-testres{min-height:1.4em;margin-top:4px}

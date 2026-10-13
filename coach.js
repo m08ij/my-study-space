@@ -7,7 +7,7 @@
 (function(){
   'use strict';
   if(window.Coach) return;
-  var DISMISS_KEY = 'ss_coach_dismiss', NEWS_KEY = 'ss_seen_news', NEWS_VER = '142';
+  var DISMISS_KEY = 'ss_coach_dismiss', NEWS_KEY = 'ss_seen_news', NEWS_VER = '143';
 
   function sp(){ return window.space || {}; }
   function esc(s){ return window.esc ? window.esc(s) : String(s == null ? '' : s); }
@@ -115,7 +115,7 @@
   }
 
   /* ---------- ما الجديد (مرة واحدة لكل إصدار مميزات، للمستخدم اللي عنده بيانات) ---------- */
-  var NEWS = ['🌳 الخطة الشجرية: متطلبات المواد بشكل تفاعلي (الخطة والمواد ← 🌳)', '💡 اقتراحات لك: الخطوة الجاية بحسب مهامك وامتحاناتك وحضورك (بلوحة التحكم)', '🟢🟡🔴 صحة كل مادة بصفحة موادي', '🖼️ مشاركة جدولك كصورة (الجدول الأسبوعي)'];
+  var NEWS = ['🌳 الخطة الشجرية: متطلبات المواد بشكل تفاعلي (الخطة والمواد ← 🌳)', '💡 اقتراحات لك: الخطوة الجاية بحسب مهامك وامتحاناتك وحضورك (بلوحة التحكم)', '🟢🟡🔴 صحة كل مادة بصفحة موادي', '🖼️ مشاركة جدولك كصورة (الجدول الأسبوعي)', '📷 استيراد الجدول من صورة صار أقوى: عدة صور، لصق (Ctrl+V)، تصوير، قراءة أي جدول، وتبديل تلقائي بين نماذج Gemini'];
   function whatsNew(){
     var s = sp(); if(!((s.courses || []).length + (s.tasks || []).length)) return false;
     if(lsGet(NEWS_KEY) === NEWS_VER) return false;
