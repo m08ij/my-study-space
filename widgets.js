@@ -6,7 +6,7 @@
 (function(){
   'use strict';
 
-  function getSpace(){ return window.space || {profile:{},timetable:{},courses:[],tasks:[],exams:[],attendance:{},decks:[],budget:[],extras:[],grades:[]}; }
+  function getSpace(){ return window.space || {profile:{},timetable:{},courses:[],tasks:[],exams:[],attendance:{},budget:[],extras:[],grades:[]}; }
   function toast(msg, type){ if(typeof window.toast === 'function') window.toast(msg, type || 'info', 2200); }
   function saveSpace(){ if(typeof window.saveSpace === 'function') window.saveSpace(); else if(window.S) window.S.set('space', window.space); }
   function esc(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }

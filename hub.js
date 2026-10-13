@@ -309,7 +309,7 @@
     }
     var dateLabel = DA()[st.dayIdx] + ' ' + now.getDate() + '/' + (now.getMonth() + 1);
     var html = '<div class="myday-head md-head"><h3>🧭 يومي الجامعي</h3><span class="myday-date">' + dateLabel + '</span></div>' +
-      '<div class="md-card md-lecture">' + hero + '<div class="myday-cta">' + cta + '</div></div>' + examCard + tasksCard + schedCard + dlCard + quickCard;
+      '<div class="md-card md-lecture">' + hero + '<div class="myday-cta">' + cta + '</div></div>' + examCard + (window.Coach ? window.Coach.cardHtml(now) : '') + tasksCard + schedCard + dlCard + quickCard;
     if(html === myDayLast) return;
     myDayLast = html;
     var fi = -1, fa = document.activeElement;
@@ -347,6 +347,8 @@
     });
     el.querySelectorAll('[data-myday-act="addtask"]').forEach(function(n){ n.addEventListener('click', function(e){ e.stopPropagation(); if(window.addTask) window.addTask(); }); });
     el.querySelectorAll('[data-myday-act="addclass"]').forEach(function(add){ add.addEventListener('click', function(e){ e.stopPropagation(); if(window.openSmartTimetable) window.openSmartTimetable(); }); });
+    el.querySelectorAll('[data-coach-act]').forEach(function(n){ n.addEventListener('click', function(e){ e.stopPropagation(); if(window.Coach) window.Coach.run(n.getAttribute('data-coach-act')); }); });
+    el.querySelectorAll('[data-coach-x]').forEach(function(n){ n.addEventListener('click', function(e){ e.stopPropagation(); if(window.Coach){ window.Coach.dismiss(n.getAttribute('data-coach-x')); myDayLast = ''; renderMyDay(); } }); });
     el.querySelectorAll('[data-myday-act="addexam"]').forEach(function(n){ n.addEventListener('click', function(e){ e.stopPropagation(); if(window.addExam) window.addExam(); }); });
     el.querySelectorAll('[data-myday-act="attend"]').forEach(function(b){ b.addEventListener('click', function(e){ e.stopPropagation(); if(window.TodayLogic && window.TodayLogic.markPresent(b.getAttribute('data-n'), b.getAttribute('data-key'))){ myDayLast = ''; renderMyDay(); } }); });
     el.querySelectorAll('[data-myday-act="map"]').forEach(function(b){ b.addEventListener('click', function(e){ e.stopPropagation(); if(window.switchTab) window.switchTab('campus'); if(window.CampusMap) window.CampusMap.select(b.getAttribute('data-b'), true); }); });
@@ -581,7 +583,7 @@
         '<div class="hub-card-head"><div class="hub-card-title"><b>' + esc(c.name) + '</b>' + (c.code ? '<small>' + esc(c.code) + '</small>' : '') + '</div>' +
           '<div class="hub-card-actions"><button type="button" class="btn btn-sm btn-ghost" data-card-upload="' + esc(c.id) + '" title="رفع ملفات لهذه المادة" aria-label="رفع ملفات إلى ' + esc(c.name) + '">📤</button><input type="file" multiple hidden data-card-file="' + esc(c.id) + '" tabindex="-1" aria-hidden="true"><button type="button" class="btn btn-sm btn-ghost" data-edit-course="' + esc(c.id) + '" title="تعديل المادة" aria-label="تعديل ' + esc(c.name) + '">✏️</button>' +
           '<button type="button" class="unified-course-btn added" data-course-name="' + esc(c.name) + '" title="حذف المادة" aria-label="حذف ' + esc(c.name) + '">🗑</button></div></div>' +
-        '<div class="hub-chips"><span class="badge">' + (c.hours || 3) + ' ساعات</span>' +
+        '<div class="hub-chips">' + (window.Coach ? window.Coach.healthPill(c.name) : '') + '<span class="badge">' + (c.hours || 3) + ' ساعات</span>' +
           (c.instructor ? '<span class="badge">👤 ' + esc(c.instructor) + '</span>' : '') +
           ((c.room || place) ? '<span class="badge">📍 ' + esc(place || c.room) + '</span>' : '') + '</div>' +
         (cx.sched.length ? '<div class="hub-sched">🗓 ' + schedLine(cx.sched) + '</div>' : '<div class="hub-sched none">🗓 لا محاضرات بالجدول</div>') +
@@ -714,7 +716,7 @@
 
     var h = '';
     h += '<div class="hub-course-top">' +
-      '<div class="hub-chips">' + (c.code ? '<span class="badge mono">' + esc(c.code) + '</span>' : '') + '<span class="badge">' + (c.hours || 3) + ' ساعات</span>' +
+      '<div class="hub-chips">' + (window.Coach ? window.Coach.healthPill(c.name) : '') + (c.code ? '<span class="badge mono">' + esc(c.code) + '</span>' : '') + '<span class="badge">' + (c.hours || 3) + ' ساعات</span>' +
         (c.instructor ? '<span class="badge">👤 ' + esc(c.instructor) + '</span>' : '') + (c.room ? '<span class="badge">📍 ' + esc(c.room) + '</span>' : '') + '</div>' +
       '<div class="hub-actions inline"><button type="button" class="btn btn-sm" data-act="focus">⏱️ جلسة تركيز</button><button type="button" class="btn btn-sm btn-ghost" data-act="edit">✏️ تعديل</button><button type="button" class="btn btn-sm btn-danger hub-del" data-act="delete" aria-label="حذف المادة" title="حذف المادة">🗑</button></div></div>';
     var CTABS = [['over', '🏠 نظرة'], ['plan', '🧾 الخطة'], ['files', '📎 الملفات'], ['work', '📝 المهام والامتحانات'], ['marks', '📊 العلامات والحضور'], ['notes', '📔 الملاحظات']];

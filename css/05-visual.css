@@ -38,7 +38,17 @@ html,body,button,input,select,textarea{font-family:var(--font-ui)}
 /* ---- نص مقروء على التلفون: لا شي أصغر من ~10.8px (كان بعضه 9.9px) ---- */
 @media (max-width:700px){
   :root{--fs-2xs:.72rem}
-  .em-chip,.class-block .room,.tt-badge,.tt-time,.bi-amount .date,.hub-card-title small,.cm-tab,.cm-course-main small,.bp-f small,.exam-countdown .lbl,.sem-head>div,.plan-course-row>div>span{font-size:max(10.8px,.68rem)}
+.class-block .room,
+.tt-badge,
+.tt-time,
+.bi-amount .date,
+.hub-card-title small,
+.cm-tab,
+.cm-course-main small,
+.bp-f small,
+.exam-countdown .lbl,
+.sem-head>div,
+.plan-course-row>div>span{font-size:max(10.8px,.68rem)}
 }
 .sp-item small{font-size:max(11px,.7rem)}
 

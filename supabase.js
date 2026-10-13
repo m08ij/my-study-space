@@ -285,9 +285,6 @@
         '<div class="sync-warn">🔐 أي شخص يملك هذا الرمز يصل لبياناتك. احفظه بمكان آمن ولا تنشره.</div>' +
         '<div class="sync-backup"><div class="sync-backup-head"><b>💾 نسخة احتياطية على جهازك</b><span id="syncBkInfo"></span></div>' +
           '<div class="sync-actions"><button class="btn btn-sm btn-ghost" id="syncBkExport" type="button">⬇️ تصدير نسخة</button><button class="btn btn-sm btn-ghost" id="syncBkImport" type="button">⬆️ استيراد نسخة</button></div></div>' +
-        '<details class="sync-qr-box"><summary>عرض رمز QR (اختياري)</summary>' +
-          '<p>يُنشأ الـQR عبر خدمة خارجية (api.qrserver.com) وبتستقبل الرمز لحظة العرض. استخدمه فقط إن كنت تقبل ذلك.</p>' +
-          '<button class="btn btn-sm btn-ghost" id="syncQrBtn" type="button">إنشاء QR</button><div id="syncQr" class="sync-qr"></div></details>' +
         '<div class="sync-footer"><button class="btn btn-ghost" id="syncChange" type="button">🔄 تغيير الرمز</button><button class="btn btn-ghost" id="syncClose" type="button">إغلاق</button></div>' +
       '</div>';
     document.body.appendChild(bd);
@@ -304,14 +301,6 @@
                 location.origin + location.pathname;
       if(navigator.share) navigator.share({ title: 'مساحتي الدراسية', text: msg }).catch(function(){});
       else window.copyText(msg, '📋 نُسخ الرابط');
-    };
-    bd.querySelector('#syncQrBtn').onclick = function(){
-      var qr = bd.querySelector('#syncQr'), c = getCode();
-      if(qr && !qr.innerHTML){
-        var img = document.createElement('img'); img.alt = 'QR'; img.className = 'sync-qr-img';
-        img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' + encodeURIComponent(c);
-        qr.appendChild(img);
-      }
     };
     bd.querySelector('#syncChange').onclick = function(){
       bd.remove();

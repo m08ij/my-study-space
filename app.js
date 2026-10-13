@@ -441,7 +441,7 @@
       if(data.space){
         var dSpace = window.defaultSpace || {};
         var clean = Object.assign({}, dSpace, data.space);
-        ['courses','tasks','exams','decks','budget','grades','completedCourses'].forEach(function(k){
+        ['courses','tasks','exams','budget','grades','completedCourses'].forEach(function(k){
           if(!Array.isArray(clean[k])) clean[k] = [];
         });
         ['timetable','attendance','profile'].forEach(function(k){
@@ -648,7 +648,7 @@
     if(!isObj(data)) return { ok: false, errors: ['الملف ليس نسخة احتياطية صالحة'], warnings: [], summary: null };
     if(!isObj(data.space)) return { ok: false, errors: ['لا يحتوي بيانات المساحة (space)'], warnings: [], summary: null };
     var sp = data.space;
-    ['courses','tasks','exams','decks','budget','grades','completedCourses'].forEach(function(k){
+    ['courses','tasks','exams','budget','grades','completedCourses'].forEach(function(k){
       if(sp[k] !== undefined && !Array.isArray(sp[k])) errors.push('الحقل ' + k + ' يجب أن يكون قائمة');
     });
     ['timetable','attendance','profile'].forEach(function(k){

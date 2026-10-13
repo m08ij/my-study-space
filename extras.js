@@ -26,74 +26,6 @@
   }
 
   /* ============================================================
-     1️⃣  FIX: الساعات الصحيحة 160
-     ============================================================ */
-  function patchDashboardTermProgress(){
-    var tp = document.getElementById('dashTermProgress');
-    if(!tp) return;
-    var sp = space();
-    var TOTAL = (window.TOTAL_REQUIRED_HOURS && window.TOTAL_REQUIRED_HOURS.total) || 160;
-
-    var registered = (sp.courses || []).reduce(function(a,c){
-      return a + (parseFloat(c.hours) || 0);
-    }, 0);
-    var pct = TOTAL > 0 ? Math.round(registered / TOTAL * 100) : 0;
-
-    /* Progress by type */
-    var DB = window.COURSES_DB || {};
-    var byType = { 'uni-c':0, 'uni-e':0, 'faculty':0, 'major-c':0, 'major-e':0 };
-    (sp.courses || []).forEach(function(c){
-      var info = DB[c.name];
-      if(info && byType[info.t] !== undefined) byType[info.t] += (parseFloat(c.hours) || info.h || 0);
-    });
-
-    var typeLabels = {
-      'uni-c': {l:'جامعة إجبارية', total:18, color:'var(--accent)'},
-      'uni-e': {l:'جامعة اختيارية', total:6, color:'var(--accent-2)'},
-      'faculty': {l:'كلية إجبارية', total:33, color:'var(--green)'},
-      'major-c': {l:'تخصص إجباري', total:88, color:'var(--amber)'},
-      'major-e': {l:'تخصص اختياري', total:15, color:'var(--pink)'}
-    };
-
-    /* دائرة نسبة + تسمية توضيحية (التقدم = ساعات المواد المسجّلة من ساعات خطة التخرج) */
-    var pctC = Math.max(0, Math.min(100, pct)), RAD = 42, CIRC = 2 * Math.PI * RAD;
-    var html = '<div class="term-wrap"><div class="term-ring" role="img" aria-label="' + pct + '% من ساعات الخطة">' +
-      '<svg viewBox="0 0 100 100" width="104" height="104" aria-hidden="true"><circle class="term-ring-bg" cx="50" cy="50" r="' + RAD + '"/>' +
-      '<circle class="term-ring-fg" cx="50" cy="50" r="' + RAD + '" stroke-dasharray="' + (CIRC * pctC / 100).toFixed(1) + ' ' + CIRC.toFixed(1) + '"/></svg>' +
-      '<b>' + pct + '%</b></div>' +
-      '<div class="term-info"><div class="term-line"><b>' + registered + ' / ' + TOTAL + '</b> ساعة مسجّلة من خطة التخرج</div>' +
-      '<div class="sc-progress"><div class="sc-progress-fill" style="width:' + pct + '%"></div></div>' +
-      '<small class="term-sub">باقي ' + Math.max(0, TOTAL - registered) + ' ساعة للتخرج</small></div></div>';
-
-    /* تفصيل حسب النوع (مطويّ افتراضياً لتبقى البطاقة مختصرة) */
-    html += '<details class="term-more"><summary>تفصيل حسب النوع</summary><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-top:10px">';
-    Object.keys(typeLabels).forEach(function(k){
-      var meta = typeLabels[k];
-      var got = byType[k] || 0;
-      var p = Math.round(got / meta.total * 100);
-      html += '<div style="padding:8px 10px;background:var(--bg2);border-radius:var(--r-md)">' +
-        '<div style="display:flex;justify-content:space-between;font-size:var(--fs-2xs);color:var(--muted);margin-bottom:5px">' +
-        '<span>' + meta.l + '</span><span style="color:' + meta.color + ';font-weight:700">' + got + '/' + meta.total + '</span></div>' +
-        '<div style="height:4px;background:var(--card);border-radius:var(--r-sm);overflow:hidden">' +
-        '<div style="height:100%;width:' + Math.min(100,p) + '%;background:' + meta.color + '"></div></div></div>';
-    });
-    html += '</div></details>';
-
-    tp.innerHTML = html;
-  }
-
-  /* Patch renderDashboard */
-  if(typeof window.renderDashboard === 'function' && !window._dashTermPatched){
-    var origDash = window.renderDashboard;
-    window.renderDashboard = function(){
-      var r = origDash.apply(this, arguments);
-      setTimeout(patchDashboardTermProgress, 30);
-      return r;
-    };
-    window._dashTermPatched = true;
-  }
-
-  /* ============================================================
      2️⃣  Confetti — احتفال عند الإنجاز
      ============================================================ */
   window.celebrate = function(intensity){
@@ -689,7 +621,6 @@
     buildExamCountdownScreen();
     setTimeout(injectMoodleWidget, 800);
     setTimeout(injectOnbBtn, 1200);
-    setTimeout(patchDashboardTermProgress, 500);
     setTimeout(buildEnhancedStats, 700);
 
     /* Re-run on dashboard visit */
@@ -699,7 +630,6 @@
         var r = origSwitch.apply(this, arguments);
         setTimeout(function(){
           if(tab === 'dashboard'){
-            patchDashboardTermProgress();
             if(window._enhStale || !document.getElementById('enhancedStatsSection')) buildEnhancedStats();
             injectMoodleWidget();
           }

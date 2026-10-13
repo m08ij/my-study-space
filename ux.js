@@ -96,52 +96,6 @@
     var d = ymd(dateStr), t = ymd(window.today ? window.today() : ''); if(!d || !t) return null;
     return Math.round((d - t) / 86400000);
   }
-  function courseGrade(name){
-    var g = (sp().grades || []).filter(function(x){ return x.name === name; })[0]; if(!g) return null;
-    var earned = 0, done = 0; (g.items || []).forEach(function(i){ var w = parseFloat(i.weight) || 0; if(w > 0){ earned += Math.min(parseFloat(i.score) || 0, w); done += w; } });
-    return done > 0 ? Math.round(earned / done * 1000) / 10 : null;
-  }
-  function fmtMin(m){ m = Math.round(m); return m >= 60 ? Math.floor(m / 60) + ' س ' + (m % 60) + ' د' : m + ' د'; }
-  function examModeHtml(list){
-    var focus = (window.S && window.S.get('focusLinks', null)) || {}, fc = (focus && focus.courses) || {};
-    var rows = list.slice(0, 3).map(function(x){
-      var e = x.e, d = x.d, when = d === 0 ? 'اليوم' : d === 1 ? 'غداً' : 'بعد ' + d + ' أيام';
-      var pend = e.course ? (sp().tasks || []).filter(function(t){ return !t.done && t.course === e.course; }).length : 0;
-      var gr = e.course ? courseGrade(e.course) : null, fm = e.course ? fc[e.course] : 0;
-      var chips = [];
-      if(pend) chips.push('<span class="em-chip">📝 ' + pend + ' مهمة مفتوحة</span>');
-      if(gr !== null) chips.push('<span class="em-chip">📊 علامتك الحالية ' + gr + '%</span>');
-      if(fm) chips.push('<span class="em-chip">⏱️ ' + fmtMin(fm) + ' تركيز</span>');
-      return '<div class="em-row' + (d <= 1 ? ' hot' : '') + '"><div class="em-when">' + esc(when) + '</div><div class="em-main"><b>' + esc(e.name || 'امتحان') + '</b>' +
-        '<div class="em-meta">' + (e.course ? window.courseLink(e.course, '📚 ') + ' · ' : '') + esc(e.date) + (/^\d{1,2}:\d{2}/.test(e.time || '') ? ' · <bdi dir="ltr">' + esc(e.time) + '</bdi>' : '') + (e.room ? ' · ' + esc(e.room) : '') + '</div>' +
-        (chips.length ? '<div class="em-chips">' + chips.join('') + '</div>' : '') + '</div></div>';
-    }).join('');
-    return '<div class="card-head"><h3>🎯 وضع الامتحانات</h3><span class="u-note">امتحانات خلال أسبوع (' + list.length + ')</span></div>' + rows +
-      '<div class="em-actions"><button class="btn btn-sm" type="button" data-em="timer">⏱️ جلسة تركيز</button>' +
-      (typeof window.openExamPlan === 'function' ? '<button class="btn btn-sm btn-ghost" type="button" data-em="plan">📋 خطة مراجعة</button>' : '') +
-      '<button class="btn btn-sm btn-ghost" type="button" data-em="exams">كل الامتحانات</button></div>';
-  }
-  function renderExamMode(){
-    var dash = document.getElementById('dashboard'); if(!dash) return;
-    var list = (sp().exams || []).map(function(e){ return { e: e, d: daysLeft(e.date) }; }).filter(function(x){ return x.d !== null && x.d >= 0 && x.d <= 7; })
-      .sort(function(a, b){ return a.d - b.d || String(a.e.time || '').localeCompare(String(b.e.time || '')); });
-    var box = document.getElementById('examMode');
-    if(!list.length){ if(box) box.remove(); return; }
-    var html = examModeHtml(list);
-    if(!box){
-      box = document.createElement('section'); box.id = 'examMode'; box.className = 'card exam-mode'; box.setAttribute('aria-label', 'وضع الامتحانات');
-      var head = dash.querySelector(':scope > .page-head');
-      if(head && head.nextSibling) dash.insertBefore(box, head.nextSibling); else dash.insertBefore(box, dash.firstChild);
-      box.addEventListener('click', function(ev){
-        var b = ev.target.closest && ev.target.closest('[data-em]'); if(!b) return;
-        var k = b.getAttribute('data-em');
-        if(k === 'plan' && window.openExamPlan) window.openExamPlan();
-        else if(window.switchTab) window.switchTab(k === 'timer' ? 'timer' : 'exams');
-      });
-    }
-    if(box._h !== html){ box._h = html; box.innerHTML = html; }
-  }
-
   /* ---------- 5) تذكير النسخة الاحتياطية (مرة كل 7 أيام كحدّ أقصى؛ لا ينسخ شيئاً تلقائياً) ---------- */
   var DAY = 86400000, NAG_AFTER = 7 * DAY;
   function lsNum(k){ try{ return parseInt(localStorage.getItem(k), 10) || 0; }catch(e){ return 0; } }
@@ -288,7 +242,6 @@
     if(ts){ var f = (window.THEMES || []).filter(function(x){ return x.id === th; })[0]; ts.textContent = f ? f.name : th; }
     applyFont(lsv('ss_font'));
     var d = document.getElementById('densityBtn'); if(d){ var on = lsv('ss_density') === 'compact', t = d.querySelector('.db-t'); if(t) t.textContent = on ? 'مضغوطة' : 'مريحة'; d.setAttribute('aria-checked', on ? 'true' : 'false'); }
-    var td = document.getElementById('todayBtn'); if(td){ var on2 = lsv('ss_today_mode') === '1', t2 = td.querySelector('.tb-t'); if(t2) t2.textContent = on2 ? 'مفعّل — اللوحة مبسّطة' : 'اللوحة الكاملة'; td.setAttribute('aria-checked', on2 ? 'true' : 'false'); }
     if(window.updateNotifBtn) try{ window.updateNotifBtn(); }catch(e){}
     var ss = document.getElementById('syncMenuSub'); if(ss && window.getSyncStatus) try{ ss.textContent = window.getSyncStatus().text; }catch(e){}
   };
@@ -361,8 +314,8 @@
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initSwipe); else initSwipe();
 
   var _enhance = enhance;
-  enhance = function(){ _enhance(); renderExamMode(); };
-  window.UX = { enhance: function(){ enhance(); }, renderExamMode: renderExamMode, maybeNag: maybeNag, maybeMorning: maybeMorning, morningData: morningData };
+  enhance = function(){ _enhance(); };
+  window.UX = { enhance: function(){ enhance(); }, maybeNag: maybeNag, maybeMorning: maybeMorning, morningData: morningData };
 })();
 
 

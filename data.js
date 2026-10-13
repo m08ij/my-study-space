@@ -436,7 +436,7 @@ var HU_LINKS = {
 var defaultSpace = {
   profile: {name: ''},
   timetable: {}, courses: [], tasks: [], exams: [], attendance: {},
-  decks: [], budget: [], grades: [],
+  budget: [], grades: [],
   completedCourses: [],
   currentSemester: 1
 };

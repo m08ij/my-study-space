@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="مساحتي">
-<link rel="stylesheet" href="app.bundle.css?v=141">
+<link rel="stylesheet" href="app.bundle.css?v=142">
 <script>/* مستخدم جديد: تظهر شاشة الترحيب من أول رسم (بدون وميض اللوحة خلفها)، ويزيل app.js الصنف عند اكتمال الدخول */
 try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement.classList.add("is-new"); }catch(e){}</script>
 </head>
@@ -89,7 +89,6 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
         <div class="sm-group" data-g="work" role="group" aria-label="وضع العمل">
           <div class="sm-title"><b>وضع العمل</b><small>تركيز، اليوم فقط، استيراد من صورة، إشعارات</small></div>
           <button class="settings-item native-only" id="widgetBtn" type="button"><span class="si-ic" aria-hidden="true">📱</span><span class="si-tx"><b>ودجتات الشاشة الرئيسية</b><small>أضف المحاضرة الجاية أو جدول اليوم لتلفونك</small></span><span class="si-go" aria-hidden="true">‹</span></button>
-          <button class="settings-item" id="todayBtn" type="button" role="switch" aria-checked="false"><span class="si-ic" aria-hidden="true">🎯</span><span class="si-tx"><b>اليوم فقط</b><small class="tb-t">اللوحة الكاملة</small></span><span class="si-sw" aria-hidden="true"></span></button>
           <button class="settings-item" id="ocrLabBtn" type="button" role="switch" aria-checked="false"><span class="si-ic" aria-hidden="true">📷</span><span class="si-tx"><b>استيراد الجدول من صورة</b><small class="ol-t">تجريبي — مطفأ</small></span><span class="si-sw" aria-hidden="true"></span></button>
           <button class="settings-item" id="notifBtn" type="button"><span class="si-ic" aria-hidden="true">🔔</span><span class="si-tx"><b>الإشعارات</b><small id="notifBtnText">اضغط للتفعيل</small></span><span class="si-go" aria-hidden="true">‹</span></button>
         </div>
@@ -236,6 +235,7 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
     </div>
     <div class="controls">
       <button class="btn" id="btnAddClass">+ محاضرة</button>
+      <button class="btn btn-sm btn-ghost" id="btnShareTt">🖼️ مشاركة كصورة</button>
       <button class="btn btn-sm btn-ghost" id="btnClearTt">🗑 مسح الجدول</button>
     </div>
     <div class="timetable-wrap"><table class="timetable" id="timetableTable"></table></div>
@@ -520,7 +520,7 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
 <!-- مكتبات خارجية -->
 
 <!-- الملفات الأساسية (الترتيب مهم جداً!) -->
-<script src="app.bundle.js?v=141"></script>
+<script src="app.bundle.js?v=142"></script>
 <script>
 /* إخفاء الهيكل الرمادي بعد أول رسم للتطبيق (مع مؤقّت أمان كي لا يعلق أبداً) */
 (function(){
@@ -541,7 +541,7 @@ try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement
    1) إن لم يطابق window.APP_BUILD رقم BUILD هنا → يمسح كاش التطبيق ويعيد التحميل مرة واحدة (حارس sessionStorage يمنع التكرار).
    2) أقسام اللوحة المتقدمة (تحليلات/LMS/إحصائيات) تُنقل إلى خانتها الثابتة إذا أضافتها سكربتات قديمة بمكان آخر. */
 (function(){
-  var BUILD = '141';
+  var BUILD = '142';
   var SLOTS = { insightsSection: 'slotInsights', lmsWidget: 'slotLms', enhancedStatsSection: 'slotEnhanced' };
   function heal(){
     var dash = document.getElementById('dashboard'); if(!dash) return;

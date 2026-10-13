@@ -209,6 +209,62 @@
   /* ============================================================
      DASHBOARD
      ============================================================ */
+  /* تقدم الترم: دائرة نسبة + تسمية + تفصيل النوع (نسخة واحدة؛ كانت مكرّرة بـextras.js) */
+  function renderTermProgress(){
+    var tp = document.getElementById('dashTermProgress');
+    if(!tp) return;
+    var sp = space();
+    var TOTAL = (window.TOTAL_REQUIRED_HOURS && window.TOTAL_REQUIRED_HOURS.total) || 160;
+
+    var registered = (sp.courses || []).reduce(function(a,c){
+      return a + (parseFloat(c.hours) || 0);
+    }, 0);
+    var pct = TOTAL > 0 ? Math.round(registered / TOTAL * 100) : 0;
+
+    /* Progress by type */
+    var DB = window.COURSES_DB || {};
+    var byType = { 'uni-c':0, 'uni-e':0, 'faculty':0, 'major-c':0, 'major-e':0 };
+    (sp.courses || []).forEach(function(c){
+      var info = DB[c.name];
+      if(info && byType[info.t] !== undefined) byType[info.t] += (parseFloat(c.hours) || info.h || 0);
+    });
+
+    var typeLabels = {
+      'uni-c': {l:'جامعة إجبارية', total:18, color:'var(--accent)'},
+      'uni-e': {l:'جامعة اختيارية', total:6, color:'var(--accent-2)'},
+      'faculty': {l:'كلية إجبارية', total:33, color:'var(--green)'},
+      'major-c': {l:'تخصص إجباري', total:88, color:'var(--amber)'},
+      'major-e': {l:'تخصص اختياري', total:15, color:'var(--pink)'}
+    };
+
+    /* دائرة نسبة + تسمية توضيحية (التقدم = ساعات المواد المسجّلة من ساعات خطة التخرج) */
+    var pctC = Math.max(0, Math.min(100, pct)), RAD = 42, CIRC = 2 * Math.PI * RAD;
+    var html = '<div class="term-wrap"><div class="term-ring" role="img" aria-label="' + pct + '% من ساعات الخطة">' +
+      '<svg viewBox="0 0 100 100" width="104" height="104" aria-hidden="true"><circle class="term-ring-bg" cx="50" cy="50" r="' + RAD + '"/>' +
+      '<circle class="term-ring-fg" cx="50" cy="50" r="' + RAD + '" stroke-dasharray="' + (CIRC * pctC / 100).toFixed(1) + ' ' + CIRC.toFixed(1) + '"/></svg>' +
+      '<b>' + pct + '%</b></div>' +
+      '<div class="term-info"><div class="term-line"><b>' + registered + ' / ' + TOTAL + '</b> ساعة مسجّلة من خطة التخرج</div>' +
+      '<div class="sc-progress"><div class="sc-progress-fill" style="width:' + pct + '%"></div></div>' +
+      '<small class="term-sub">باقي ' + Math.max(0, TOTAL - registered) + ' ساعة للتخرج</small></div></div>';
+
+    /* تفصيل حسب النوع (مطويّ افتراضياً لتبقى البطاقة مختصرة) */
+    html += '<details class="term-more"><summary>تفصيل حسب النوع</summary><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-top:10px">';
+    Object.keys(typeLabels).forEach(function(k){
+      var meta = typeLabels[k];
+      var got = byType[k] || 0;
+      var p = Math.round(got / meta.total * 100);
+      html += '<div style="padding:8px 10px;background:var(--bg2);border-radius:var(--r-md)">' +
+        '<div style="display:flex;justify-content:space-between;font-size:var(--fs-2xs);color:var(--muted);margin-bottom:5px">' +
+        '<span>' + meta.l + '</span><span style="color:' + meta.color + ';font-weight:700">' + got + '/' + meta.total + '</span></div>' +
+        '<div style="height:4px;background:var(--card);border-radius:var(--r-sm);overflow:hidden">' +
+        '<div style="height:100%;width:' + Math.min(100,p) + '%;background:' + meta.color + '"></div></div></div>';
+    });
+    html += '</div></details>';
+
+    tp.innerHTML = html;
+  }
+
+
   window.renderDashboard = function(){
     if(typeof window.renderDailyQuote === 'function') window.renderDailyQuote();
 
@@ -230,24 +286,7 @@
     var todayKey = DAYS_EN[todayIdx] || 'Sun';
     var todayStr = today();
 
-    /* Term progress */
-    var tp = document.getElementById('dashTermProgress');
-    if(tp){
-      var totalRequired = 0;
-      var SEMESTERS = window.SEMESTERS || [];
-      SEMESTERS.forEach(function(sem){
-        (sem.courses || []).forEach(function(c){ totalRequired += c.h; });
-      });
-      var registered = (sp.courses || []).reduce(function(a,c){ return a + (c.hours || 0); }, 0);
-      var pct = totalRequired > 0 ? Math.round(registered / totalRequired * 100) : 0;
-      tp.innerHTML =
-        '<div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:var(--fs-sm)">' +
-        '<span style="color:var(--muted)">📚 ' + registered + ' / ' + totalRequired + ' ساعة</span>' +
-        '<span style="color:var(--accent);font-weight:700">' + pct + '%</span></div>' +
-        '<div class="sc-progress"><div class="sc-progress-fill" style="width:' + pct + '%"></div></div>' +
-        '<div style="text-align:center;color:var(--muted2);font-size:var(--fs-xs);margin-top:6px">باقي ' +
-        Math.max(0, totalRequired - registered) + ' ساعة للتخرج</div>';
-    }
+    renderTermProgress();
 
     var pending = (sp.tasks || []).filter(function(t){ return !t.done; }).length;
     var budget = sp.budget || [];
