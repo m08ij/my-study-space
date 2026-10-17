@@ -618,7 +618,7 @@
     }
     if(force){ prayerData = null; renderPrayerBody(); }
 
-    var url = 'https://api.aladhan.com/v1/timings?latitude=31.9856&longitude=35.9531&method=23&school=0';
+    var url = 'https://api.aladhan.com/v1/timings?latitude=32.1031&longitude=36.1867&method=23&school=0';
     fetch(url, {cache: 'no-store'})
       .then(function(r){ return r.json(); })
       .then(function(j){

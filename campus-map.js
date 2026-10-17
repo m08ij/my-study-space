@@ -122,6 +122,118 @@
   var ABBR = { 'حب': 'hb', 'مغ': 'west', 'غم': 'west', 'مش': 'east', 'شم': 'east' };
 
   var byId = {}; BLD.forEach(function(b){ b.cx = b.x + b.w / 2; b.cy = b.y + b.h / 2; byId[b.id] = b; });
+
+  /* ===== الموقع الفعلي (GPS): إحداثيات حقيقية =====
+     المصدر: خرائط OpenStreetMap (ترخيص ODbL — © مساهمو OpenStreetMap): حدّ حرم الجامعة الهاشمية (92 نقطة) ومواقع المباني/البوابات/المرافق.
+     مباني غير مسمّاة بالخريطة المفتوحة (EST) قدّرنا موقعها من مطابقة رسم الخريطة (دوران ~44° ومقياس ~1.15 م/بكسل؛ متوسط الخطأ ~40 م).
+     تُستعمل لقرار «داخل/خارج حدود الجامعة» ولاسم المكان الحالي؛ التطبيق يعمل بدون هذه البيانات (يرجع للسؤال اليدوي). */
+  var G0 = { lat: 32.1030, lon: 36.1867 };
+  var REAL_LL = { hb:[32.10025,36.18856], west:[32.105,36.18655], east:[32.1028,36.189], eng:[32.10121,36.18725], it:[32.10033,36.18615], pe:[32.10171,36.18412], activity:[32.1015,36.18455], dean:[32.10262,36.18615], rest:[32.10332,36.1872], lib:[32.10435,36.18661], reg:[32.10343,36.18568], eco:[32.10458,36.18564], bank:[32.10417,36.18483], h4:[32.10539,36.18379], tour:[32.10064,36.18685], health:[32.10678,36.18531], ahs:[32.10583,36.18487], nurs:[32.10563,36.18515], med:[32.10539,36.18541], qr:[32.10707,36.18442], mosque:[32.10659,36.18306], sdean:[32.10301,36.18825], res:[32.10152,36.18891], phys:[32.10187,36.18932], bio:[32.10219,36.18974], chem:[32.10255,36.19013], nursery:[32.10141,36.18996], busz:[32.10548,36.18269], busa:[32.09994,36.18985], busm:[32.10216,36.18111] };
+  var EST_LL = { annex:[32.10017,36.18685], itfield:[32.10136,36.18578], pefield:[32.10127,36.18453], risala:[32.10211,36.18563], grad:[32.10421,36.18451], pharm:[32.10688,36.18677], math:[32.1028,36.18784] };
+  var GATE_LL = { gm: [32.10304, 36.18143], gn: [32.10576, 36.18332], gz: [32.10548, 36.18269], ga: [32.10010, 36.18976] };
+  var POIS = [['الفيلج', 32.10228, 36.18659], ['مكتبة الخطيب', 32.10247, 36.18592], ['كلية الآداب', 32.10426, 36.18296], ['مبنى إدارة الجامعة', 32.10206, 36.18549], ['مبنى النشاط الثقافي والاجتماعي', 32.10260, 36.18667],
+    ['صالة عثمان بدير', 32.10127, 36.18412], ['ملاعب التنس', 32.10086, 36.18607], ['ملاعب الكرة الطائرة', 32.10080, 36.18540], ['كلية طب الأسنان', 32.10741, 36.18664], ['كلية هندسة العمارة', 32.09987, 36.18824],
+    ['المشاغل الهندسية', 32.10012, 36.18708], ['مركز التعليم الإلكتروني', 32.10259, 36.18914], ['حديقة الشرقي', 32.10289, 36.18917], ['حديقة الرياضيات', 32.10263, 36.18777], ['دوار العمادة', 32.10300, 36.18671]];
+  var CAMPUS_LL = [[32.10574,36.18361],[32.10625,36.18422],[32.10725,36.18309],[32.10778,36.18364],[32.10808,36.18416],[32.10829,36.18480],[32.10831,36.18541],[32.10821,36.18606],[32.10794,36.18669],[32.10590,36.18914],[32.10566,36.18943],[32.10482,36.18842],[32.10479,36.18841],[32.10475,36.18839],[32.10470,36.18840],[32.10336,36.18994],[32.10338,36.18997],[32.10309,36.19031],[32.10306,36.19028],[32.10248,36.19095],[32.10257,36.19107],[32.10282,36.19137],[32.10244,36.19182],[32.10234,36.19195],[32.10192,36.19135],[32.10177,36.19134],[32.10164,36.19128],[32.10155,36.19121],[32.10043,36.18988],[32.10041,36.18986],[32.10039,36.18986],[32.10037,36.18986],[32.10035,36.18987],[32.10024,36.18999],[32.10019,36.18993],[32.10016,36.18989],[32.10013,36.18985],[32.10009,36.18981],[32.10006,36.18977],[32.10000,36.18970],[32.09956,36.18916],[32.09908,36.18968],[32.09837,36.18908],[32.09869,36.18754],[32.09823,36.18744],[32.09782,36.18709],[32.09859,36.18598],[32.09858,36.18502],[32.09895,36.18459],[32.09941,36.18459],[32.09941,36.18452],[32.09941,36.18451],[32.09949,36.18451],[32.09949,36.18442],[32.09955,36.18442],[32.09956,36.18394],[32.09957,36.18324],[32.09959,36.18306],[32.09964,36.18288],[32.09970,36.18272],[32.09976,36.18259],[32.09984,36.18245],[32.09994,36.18233],[32.10006,36.18221],[32.10021,36.18210],[32.10042,36.18200],[32.10057,36.18196],[32.10072,36.18194],[32.10104,36.18193],[32.10109,36.18180],[32.10199,36.18181],[32.10253,36.18182],[32.10271,36.18162],[32.10289,36.18142],[32.10294,36.18142],[32.10298,36.18142],[32.10310,36.18142],[32.10315,36.18142],[32.10317,36.18143],[32.10321,36.18143],[32.10323,36.18146],[32.10327,36.18145],[32.10356,36.18182],[32.10428,36.18182],[32.10427,36.18199],[32.10432,36.18201],[32.10438,36.18204],[32.10449,36.18212],[32.10567,36.18352],[32.10570,36.18355],[32.10573,36.18359]];
+  /* تحويل (شرق،شمال بالمتر) ← إحداثيات الرسم: (e,n) = s·R(th)·(x,-y) + (tx,ty) */
+  var AFFINE = { s: 1.1539, th: 0.7674, tx: -749.61, ty: 103.68 };
+
+  /* ---- هندسة الموقع الفعلي: داخل/خارج الحرم، أقرب مبنى/بوابة، موقعك على الرسم ---- */
+  BLD.forEach(function(b){ var ll = REAL_LL[b.id] || EST_LL[b.id]; if(ll){ b.ll = ll; b.est = !REAL_LL[b.id]; b.loc = geoLocal(ll[0], ll[1], G0.lat, G0.lon); } });
+  GATES.forEach(function(g){ var ll = GATE_LL[g.id]; if(ll){ g.ll = ll; g.loc = geoLocal(ll[0], ll[1], G0.lat, G0.lon); } });
+  var POLY = CAMPUS_LL.map(function(p){ var q = geoLocal(p[0], p[1], G0.lat, G0.lon); return [q.e, q.n]; });
+  var POIL = POIS.map(function(p){ return { n: p[0], loc: geoLocal(p[1], p[2], G0.lat, G0.lon) }; });
+  function inPoly(e, n){
+    var c = false;
+    for(var i = 0, j = POLY.length - 1; i < POLY.length; j = i++){
+      var a = POLY[i], b = POLY[j];
+      if((a[1] > n) !== (b[1] > n) && e < (b[0] - a[0]) * (n - a[1]) / (b[1] - a[1]) + a[0]) c = !c;
+    }
+    return c;
+  }
+  function distSeg(e, n, a, b){
+    var dx = b[0] - a[0], dy = b[1] - a[1], l = dx * dx + dy * dy, t = l ? Math.max(0, Math.min(1, ((e - a[0]) * dx + (n - a[1]) * dy) / l)) : 0;
+    return Math.hypot(e - (a[0] + t * dx), n - (a[1] + t * dy));
+  }
+  function distPoly(e, n){ var d = 1e9; for(var i = 0; i < POLY.length; i++) d = Math.min(d, distSeg(e, n, POLY[i], POLY[(i + 1) % POLY.length])); return d; }
+  function geoToXY(lat, lon){
+    var q = geoLocal(lat, lon, G0.lat, G0.lon), c = AFFINE.s * Math.cos(AFFINE.th), s = AFFINE.s * Math.sin(AFFINE.th), de = q.e - AFFINE.tx, dn = q.n - AFFINE.ty, det = c * c + s * s;
+    return { x: (c * de + s * dn) / det, y: -((-s * de + c * dn) / det) };
+  }
+  function fmtDist(m){ m = Math.round(m); if(m < 1000) return m + ' م'; var k = (m / 1000).toFixed(1); if(k.slice(-2) === '.0') k = k.slice(0, -2); return k + ' كم'; }
+  /* الحكم: «inside/outside» فقط إن كان بعد النقطة عن الحدّ أكبر من دقة الـGPS؛ وإلا «edge» (على الحدود تقريباً) أو «weak» (دقة ضعيفة لا تسمح بالحكم) */
+  function whereAmI(lat, lon, acc){
+    acc = Math.max(0, Math.round(+acc || 0));
+    var q = geoLocal(lat, lon, G0.lat, G0.lon), inside = inPoly(q.e, q.n), edge = Math.round(distPoly(q.e, q.n));
+    var nb = null, nbd = 1e9, np = null, npd = 1e9, gt = null, gtd = 1e9, d;
+    BLD.forEach(function(b){ if(!b.loc) return; d = Math.hypot(q.e - b.loc.e, q.n - b.loc.n); if(d < nbd){ nbd = d; nb = b; } });
+    POIL.forEach(function(p){ d = Math.hypot(q.e - p.loc.e, q.n - p.loc.n); if(d < npd){ npd = d; np = p; } });
+    GATES.forEach(function(g){ if(!g.loc) return; d = Math.hypot(q.e - g.loc.e, q.n - g.loc.n); if(d < gtd){ gtd = d; gt = g; } });
+    var state = edge > acc ? (inside ? 'inside' : 'outside') : (acc <= 100 ? 'edge' : 'weak');
+    var xy = geoToXY(lat, lon);
+    if(nb && nbd <= 40){ xy = { x: nb.cx, y: nb.cy }; }   /* قريب جداً من مبنى: نثبّت العلامة على مركزه */
+    return { state: state, inside: inside, acc: acc, edge: edge,
+      here: nb ? { id: nb.id, n: nb.n, m: Math.round(nbd), est: !!nb.est } : null,
+      poi: np ? { n: np.n, m: Math.round(npd) } : null,
+      gate: gt ? { id: gt.id, n: gt.n, m: Math.round(gtd), min: Math.max(1, Math.ceil(gtd * DETOUR / WALK)) } : null,
+      x: Math.round(xy.x), y: Math.round(xy.y) };
+  }
+  function placeLine(w){
+    var near = w.poi && w.here && w.poi.m < w.here.m && w.poi.m <= 50 ? w.poi : null;
+    if(near) return 'عند ' + near.n;
+    if(!w.here) return '';
+    return w.here.m <= 60 ? 'عند ' + w.here.n : 'قرب ' + w.here.n + ' (~' + w.here.m + ' م)';
+  }
+  function whereText(w){
+    var accTxt = w.acc ? ' · دقة ±' + w.acc + ' م' : '';
+    if(w.state === 'outside'){
+      var far = w.edge > 3000;
+      return { tone: 'out', title: '🚫 أنت خارج حدود الجامعة',
+        sub: (far ? 'بعيد عن الجامعة (~' + fmtDist(w.edge) + ' عن حدودها)' : 'تبعد حوالي ' + fmtDist(w.edge) + ' عن حدود الجامعة') +
+          (w.gate && !far ? ' · أقرب بوابة: ' + w.gate.n + ' (' + fmtDist(w.gate.m) + '، حوالي ' + w.gate.min + ' د مشي)' : '') + accTxt };
+    }
+    if(w.state === 'edge') return { tone: 'edge', title: '📍 أنت على حدود الجامعة تقريباً', sub: (placeLine(w) || 'قرب أحد المداخل') + accTxt };
+    if(w.state === 'weak') return { tone: 'weak', title: '📡 دقة الموقع ضعيفة', sub: 'ما قدرت أحكم إذا أنت داخل الجامعة أو برا (دقة ±' + w.acc + ' م). اطلع لمكان مفتوح أو قرب نافذة وانتظر ثواني، وبعدين اضغط «حدّث موقعي».' };
+    return { tone: 'in', title: '✅ أنت داخل حرم الجامعة الهاشمية', sub: placeLine(w) + accTxt };
+  }
+  /* قراءة GPS دقيقة: نراقب الموقع بضع ثوانٍ ونأخذ أفضل دقة (يتوقف مبكراً عند ≤25 م)، بدل قراءة واحدة سريعة غير دقيقة (كانت تعطي مكاناً قديماً/تقريبياً).
+     cb(fix|null, err) حيث err: unsupported|insecure|denied|unavailable|timeout */
+  function acquireFix(cb){
+    var geo = navigator.geolocation;
+    if(!geo){ cb(null, 'unsupported'); return; }
+    if(window.isSecureContext === false){ cb(null, 'insecure'); return; }
+    var best = null, wid = null, done = false, t0 = Date.now(), tSoft = null, tHard = null;
+    function fin(err){
+      if(done) return; done = true; clearTimeout(tSoft); clearTimeout(tHard);
+      try{ if(wid !== null && geo.clearWatch) geo.clearWatch(wid); }catch(e){}
+      cb(best, best ? null : (err || 'timeout'));
+    }
+    function got(p){
+      var c = p && p.coords; if(!c || !isFinite(c.latitude) || !isFinite(c.longitude)) return;
+      var f = { lat: c.latitude, lon: c.longitude, acc: Math.round(c.accuracy || 0) || 9999, t: Date.now() };
+      if(!best || f.acc < best.acc) best = f;
+      var el = Date.now() - t0;
+      if(best.acc <= 25 || (best.acc <= 60 && el > 3500) || (best.acc <= 150 && el > 6500)) fin();
+    }
+    function bad(e){
+      if(best){ fin(); return; }
+      fin(e && e.code === 1 ? 'denied' : (e && e.code === 3 ? 'timeout' : 'unavailable'));
+    }
+    var opts = { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 };
+    tSoft = setTimeout(function(){ if(best) fin(); }, 9000);
+    tHard = setTimeout(function(){ fin('timeout'); }, 20000);   /* مهلة تكفي لظهور نافذة طلب الصلاحية */
+    try{
+      if(geo.watchPosition) wid = geo.watchPosition(got, bad, opts);
+      else geo.getCurrentPosition(function(p){ got(p); fin(); }, bad, opts);
+    }catch(e){ fin('unavailable'); }
+  }
+  var GEO_ERR = {
+    unsupported: 'المتصفح ما بيدعم تحديد الموقع.',
+    insecure: 'تحديد الموقع يحتاج اتصالاً آمناً (https).',
+    denied: 'ما عندي صلاحية الموقع. فعّلها من إعدادات المتصفح/التطبيق (الموقع ← السماح)، وبعدين اضغط «حدّث موقعي».',
+    unavailable: 'ما قدرت أحدد موقعك (الـGPS مغلق أو الإشارة ضعيفة). فعّل «الموقع» بالجهاز وجرّب برا المبنى.',
+    timeout: 'تأخر تحديد الموقع. تأكد إن «الموقع» مفعّل وجرّب من مكان مفتوح.'
+  };
   function norm(s){
     return String(s == null ? '' : s).toLowerCase().replace(/[ً-ْـ]/g, '').replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').replace(/\s+/g, ' ').trim();
   }
@@ -261,6 +373,7 @@
       st.route.ids.forEach(function(id, i){ var p = pointOf(id); if(!p) return; var last = i === st.route.ids.length - 1;
         h += '<g class="cm-stop' + (i === 0 ? ' first' : '') + (last ? ' last' : '') + '" transform="translate(' + p.x + ' ' + p.y + ')"><circle r="11"/><text text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="800">' + (i + 1) + '</text></g>'; });
     }
+    if(st.me){ var mr = Math.max(12, Math.min(90, (st.me.acc || 0) / MPP)); h += '<g class="cm-me" transform="translate(' + st.me.x + ' ' + st.me.y + ')" aria-label="موقعك"><circle class="cm-me-acc" r="' + mr + '"/><circle class="cm-me-dot" r="7"/></g>'; }
     h += '</svg>';
     return h;
   }
@@ -370,18 +483,25 @@
       '</optgroup><optgroup label="البوابات">' + GATES.map(function(g){ return '<option value="g:' + g.id + '">' + esc(g.n) + '</option>'; }).join('') + '</optgroup>';
   }
   function nameOf(id){ var p = pointOf(id); return p ? p.n : ''; }
+  function whereCard(w){ if(!w) return ''; var t = whereText(w); return '<div class="cm-where ' + t.tone + '" role="status"><b>' + esc(t.title) + '</b><small>' + esc(t.sub) + '</small></div>'; }
   function guideHtml(status){
     var g = st.guide, h = '<div class="cm-guide" role="region" aria-label="وين أروح؟">';
     if(g.step === 'idle'){
       h += '<button type="button" class="cm-guide-btn" data-g="go"><span class="cm-guide-ic" aria-hidden="true">📍</span><span class="cm-guide-tx"><b>وين أروح؟</b><small>اضغط وبقول لك وين محاضرتك الجاية وكم بتمشي</small></span></button>';
     } else if(g.step === 'locating'){
-      h += '<div class="cm-guide-msg"><span class="cm-live"></span> بحدّد مكانك…</div>';
+      h += '<div class="cm-guide-msg"><span class="cm-live"></span> بحدّد مكانك بدقة… (إذا طلب منك الجهاز صلاحية الموقع اضغط «سماح»)</div>';
+    } else if(g.step === 'outside'){
+      h += whereCard(g.where) + '<div class="cm-guide-card"><div class="cm-guide-acts">' + (g.where && g.where.gate && g.where.edge <= 3000 ? '<button type="button" class="btn btn-sm" data-g="gate">🚪 اعرض أقرب بوابة</button>' : '') +
+        '<button type="button" class="btn btn-sm btn-ghost" data-g="redo">🔄 حدّث موقعي</button><button type="button" class="btn btn-sm btn-ghost" data-g="manual">✍️ أنا بالحرم — اختر مبناي</button>' +
+        '<button type="button" class="btn btn-sm btn-ghost" data-g="close" aria-label="إغلاق">✕</button></div></div>';
     } else if(g.step === 'ask'){
       var guess = scheduleGuess(status), chips = '';
+      if(g.err === 'weak' && g.where) h += whereCard(g.where);
+      else if(g.err && GEO_ERR[g.err]) h += '<div class="cm-where warn" role="status"><b>⚠️ ' + esc(GEO_ERR[g.err]) + '</b></div>';
       if(g.fix && g.fix.near) chips += '<button type="button" class="cm-chip" data-g-here="' + g.fix.near.id + '">🛰️ ' + esc(g.fix.near.n) + ' (حسب الـGPS)</button>';
       if(guess && (!g.fix || !g.fix.near || guess.id !== g.fix.near.id)) chips += '<button type="button" class="cm-chip" data-g-here="' + guess.id + '">' + esc(nameOf(guess.id)) + ' — ' + esc(guess.why) + '</button>';
       h += '<div class="cm-guide-card"><b>وين أنت هسا؟</b>' + (g.fix ? '<small>' + (g.fix.near ? 'الـGPS مش متأكد، ' : 'ما قدرت أطابق الـGPS بالخريطة بعد، ') + 'اختر مبناك مرة وبتعلّم منها.</small>' : '<small>اختر مبناك وبحسب لك الطريق.</small>') +
-        (chips ? '<div class="cm-chips">' + chips + '</div>' : '') + '<select class="cm-dir-sel" data-g-sel aria-label="مكاني الحالي">' + guideSelOpts('') + '</select></div>';
+        (chips ? '<div class="cm-chips">' + chips + '</div>' : '') + '<select class="cm-dir-sel" data-g-sel aria-label="مكاني الحالي">' + guideSelOpts('') + '</select><div class="cm-guide-acts"><button type="button" class="btn btn-sm btn-ghost" data-g="redo">🔄 حدّث موقعي</button></div></div>';
     } else if(g.step === 'result'){
       var tg = lectureTarget(status, g.here), pickDest = g.destManual === ' ', destId = pickDest ? '' : (g.destManual || (tg && tg.b.id)), body = '';
       if(!destId){
@@ -399,27 +519,24 @@
         body = '<b>🧭 من ' + esc(nameOf(g.here)) + ' إلى ' + esc(nameOf(destId)) + '</b><span class="cm-guide-walk">🚶 حوالي <b>' + mi + ' د</b> (' + m + ' م)' + (tg && tg.fl && !g.destManual ? ' · الطابق ' + tg.fl : '') + '</span>' + (msg ? '<small>' + msg + '</small>' : '') +
           '<small class="cm-guide-note">تقدير تقريبي مش قياس حقيقي</small>';
       }
-      h += '<div class="cm-guide-card result">' + body + '<div class="cm-guide-acts">' + (destId && destId !== g.here ? '<button type="button" class="btn btn-sm" data-g="route">🧭 اعرض المسار</button>' : '') +
-        '<button type="button" class="btn btn-sm btn-ghost" data-g="redo">📍 غيّر مكاني</button>' + (destId ? '<button type="button" class="btn btn-sm btn-ghost" data-g="dest">🎯 وجهة ثانية</button>' : '') + '<button type="button" class="btn btn-sm btn-ghost" data-g="close" aria-label="إغلاق">✕</button></div></div>';
+      h += (g.where && g.how === 'gps' ? whereCard(g.where) : '') + '<div class="cm-guide-card result">' + body + '<div class="cm-guide-acts">' + (destId && destId !== g.here ? '<button type="button" class="btn btn-sm" data-g="route">🧭 اعرض المسار</button>' : '') +
+        '<button type="button" class="btn btn-sm btn-ghost" data-g="redo">🔄 حدّث موقعي</button><button type="button" class="btn btn-sm btn-ghost" data-g="manual">✍️ اختر مبناي</button>' + (destId ? '<button type="button" class="btn btn-sm btn-ghost" data-g="dest">🎯 وجهة ثانية</button>' : '') + '<button type="button" class="btn btn-sm btn-ghost" data-g="close" aria-label="إغلاق">✕</button></div></div>';
     }
     return h + '</div>';
   }
   function guideStart(){
-    st.guide = { step: 'locating', here: '', how: '', dest: '', fix: null }; render();
-    var status = (window.Schedule && window.Schedule.status) ? window.Schedule.status() : { today: [] };
-    function done(fix){
-      st.guide.fix = fix || null;
-      var near = null;
-      if(fix){ var fit = fitCalib(loadCal()); if(fit && fit.ok && fit.err <= 80){ var xy = geoToMap(fit, fix.lat, fix.lon), nb = nearestBld(xy.x, xy.y); if(nb && nb.m <= 120) near = { id: nb.b.id, n: nb.b.n, m: nb.m }; fix.near = near; fix.cal = true; } }
-      if(near && near.m <= 45){ pickHere(near.id, true); return; }   /* GPS معايَر وقريب من مبنى: بدون سؤال */
-      st.guide.step = 'ask'; render();
-    }
-    if(!navigator.geolocation){ done(null); return; }
-    var finished = false, t = setTimeout(function(){ if(!finished){ finished = true; done(null); } }, 7500);
-    try{
-      navigator.geolocation.getCurrentPosition(function(p){ if(finished) return; finished = true; clearTimeout(t); done({ lat: p.coords.latitude, lon: p.coords.longitude, acc: Math.round(p.coords.accuracy || 0) }); },
-        function(){ if(finished) return; finished = true; clearTimeout(t); done(null); }, { enableHighAccuracy: true, timeout: 7000, maximumAge: 30000 });
-    }catch(e){ finished = true; clearTimeout(t); done(null); }
+    st.guide = { step: 'locating', here: '', how: '', dest: '', fix: null, where: null, err: '' }; st.me = null; render();
+    acquireFix(function(fix, err){
+      var g = st.guide; if(!g || g.step !== 'locating') return;   /* أُغلق/تغيّر أثناء الانتظار */
+      g.err = err || ''; g.fix = fix || null;
+      if(!fix){ g.step = 'ask'; render(); return; }
+      var w = whereAmI(fix.lat, fix.lon, fix.acc); g.where = w;
+      if(w.state === 'outside'){ g.step = 'outside'; st.me = null; render(); return; }
+      if(w.state === 'weak' || !w.here){ g.step = 'ask'; g.err = 'weak'; render(); return; }
+      st.me = { x: w.x, y: w.y, acc: fix.acc };
+      pickHere(w.here.id, true);
+      var ww = 300; animateTo({ x: w.x - ww / 2, y: w.y - ww * H / W / 2, w: ww });
+    });
   }
   function pickHere(id, auto){
     var g = st.guide; g.here = id; g.how = auto ? 'gps' : 'user'; g.step = 'result'; g.destManual = '';
@@ -508,7 +625,9 @@
         if(ga === 'go' || ga === 'redo') guideStart();
         else if(ga === 'route') guideRoute();
         else if(ga === 'dest'){ st.guide.destManual = ' '; st.guide.step = 'result'; render(); }
-        else if(ga === 'close'){ st.guide = { step: 'idle', here: '', how: '', dest: '', fix: null }; render(); }
+        else if(ga === 'manual'){ st.guide.step = 'ask'; st.guide.err = ''; render(); }
+        else if(ga === 'gate'){ var gw = st.guide.where, gg = gw && gw.gate ? GATES.filter(function(x){ return x.id === gw.gate.id; })[0] : null; if(gg){ var gz = 240; animateTo({ x: gg.x - gz / 2, y: gg.y - gz * H / W / 2, w: gz }); st.sel = null; } }
+        else if(ga === 'close'){ st.guide = { step: 'idle', here: '', how: '', dest: '', fix: null }; st.me = null; render(); }
         return;
       }
       var gh = t.closest('[data-g-here]'); if(gh){ pickHere(gh.getAttribute('data-g-here'), false); return; }
@@ -579,5 +698,5 @@
   }
 
   window.renderCampus = render;
-  window.CampusMap = { calib: { fit: fitCalib, toMap: geoToMap, nearest: nearestBld, load: loadCal, add: addCal, geoLocal: geoLocal }, guide: { start: guideStart, state: function(){ return st.guide; }, target: lectureTarget, guess: scheduleGuess }, walkMinutes: walkMinutes, walkMeters: walkMeters, dayStops: dayStops, render: render, resolve: resolve, courses: courses, select: select, assign: assign, buildings: BLD, labs: LABS, norm: norm, state: st };
+  window.CampusMap = { geo: { where: whereAmI, text: whereText, toXY: geoToXY, acquire: acquireFix, inPoly: function(lat, lon){ var q = geoLocal(lat, lon, G0.lat, G0.lon); return inPoly(q.e, q.n); }, real: REAL_LL, est: EST_LL, gates: GATE_LL, campus: CAMPUS_LL, affine: AFFINE }, calib: { fit: fitCalib, toMap: geoToMap, nearest: nearestBld, load: loadCal, add: addCal, geoLocal: geoLocal }, guide: { start: guideStart, state: function(){ return st.guide; }, target: lectureTarget, guess: scheduleGuess }, walkMinutes: walkMinutes, walkMeters: walkMeters, dayStops: dayStops, render: render, resolve: resolve, courses: courses, select: select, assign: assign, buildings: BLD, labs: LABS, norm: norm, state: st };
 })();

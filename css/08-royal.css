@@ -409,3 +409,16 @@ main{margin-top:calc(max(10px,var(--sat)) + 72px)}
   .bn-bar .bn-lbl{display:none}
   .modal{max-height:calc(var(--vvh,100dvh) - 12px)}
 }
+
+/* ---------- 19) «وين أنا؟» بالخريطة: بطاقة الموقع (داخل/خارج الحرم) + علامة موقعك ---------- */
+.cm-where{display:flex;flex-direction:column;gap:3px;margin-bottom:10px;padding:12px 14px;border-radius:var(--r-lg);border:1px solid color-mix(in srgb,var(--green) 40%,var(--line));background:color-mix(in srgb,var(--green) 10%,var(--card))}
+.cm-where b{font-size:var(--fs-md);font-weight:700;color:var(--text)}
+.cm-where small{font-size:var(--fs-sm);color:color-mix(in srgb,var(--muted) 70%,var(--text));line-height:1.6}
+.cm-where.out{border-color:color-mix(in srgb,var(--red) 45%,var(--line));background:color-mix(in srgb,var(--red) 10%,var(--card))}
+.cm-where.edge,.cm-where.weak,.cm-where.warn{border-color:color-mix(in srgb,var(--amber) 50%,var(--line));background:color-mix(in srgb,var(--amber) 11%,var(--card))}
+.cm-me-acc{fill:color-mix(in srgb,var(--accent) 22%,transparent);stroke:var(--accent);stroke-width:1.2;stroke-dasharray:4 3}
+.cm-me-dot{fill:var(--accent);stroke:#fff;stroke-width:3}
+.cm-me{pointer-events:none}
+.cm-me-dot{animation:cmMePulse 2s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes cmMePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.25)}}
+@media (prefers-reduced-motion:reduce){.cm-me-dot{animation:none}}
