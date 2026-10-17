@@ -86,7 +86,15 @@
     var today = ymd(now), due = (space.tasks || []).filter(function(t){ return t && !t.done && t.due && t.due <= today; });
     var ex = (space.exams || []).filter(function(x){ return x && x.date && x.date >= today; }).sort(function(a, b){ return a.date < b.date ? -1 : 1; })[0], exam = null;
     if(ex){ var p = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ex.date), tm = toMin(ex.time || ''); if(p) exam = { n: String(ex.name || 'امتحان').slice(0, 50), at: new Date(+p[1], +p[2] - 1, +p[3], tm === null ? 0 : Math.floor(tm / 60), tm === null ? 0 : tm % 60).getTime() }; }
-    return { v: 1, at: now.getTime(), lectures: lectures, tasks: { due: due.length, titles: due.slice(0, 3).map(function(t){ return String(t.title || '').slice(0, 50); }) }, exam: exam };
+    /* ودجت الامتحانات (حتى 5 قادمة) وودجت المهام (حتى 8 معلّقة: المتأخرة ثم الأقرب موعداً ثم بلا موعد) */
+    var exams = (space.exams || []).filter(function(x){ return x && x.date && x.date >= today; }).sort(function(a, b){ return a.date === b.date ? String(a.time || '').localeCompare(String(b.time || '')) : (a.date < b.date ? -1 : 1); }).slice(0, 5).map(function(x){
+      var p = /^(\d{4})-(\d{2})-(\d{2})$/.exec(x.date), tm = toMin(x.time || ''); if(!p) return null;
+      return { n: String(x.name || 'امتحان').slice(0, 50), c: String(x.course || '').slice(0, 40), at: new Date(+p[1], +p[2] - 1, +p[3], tm === null ? 0 : Math.floor(tm / 60), tm === null ? 0 : tm % 60).getTime() };
+    }).filter(Boolean);
+    var tl = (space.tasks || []).filter(function(t){ return t && !t.done && t.id != null && t.title; }).sort(function(a, b){ var ad = a.due || '9999-99-99', bd = b.due || '9999-99-99'; return ad === bd ? 0 : (ad < bd ? -1 : 1); }).slice(0, 8).map(function(t){
+      return { i: String(t.id), t: String(t.title).slice(0, 60), c: String(t.course || '').slice(0, 40), d: String(t.due || '').slice(0, 10) };
+    });
+    return { v: 2, at: now.getTime(), exams: exams, tl: tl, lectures: lectures, tasks: { due: due.length, titles: due.slice(0, 3).map(function(t){ return String(t.title || '').slice(0, 50); }) }, exam: exam };
   }
   /* حضور سُجّل من الودجات (طابور من Java: [{n: اسم المادة, s: بداية المحاضرة}]) → ما نضيفه فعلاً لسجل الحضور. applied: مفاتيح سبق تطبيقها (حماية مزدوجة بجانب منع التكرار بالجهاز). */
   function attendItems(items, space, applied){
@@ -174,7 +182,7 @@
     box.appendChild(t('div', 'ocri-title', '📱 أضف ودجت للشاشة الرئيسية'));
     box.appendChild(t('div', 'ocri-sub', 'اختر الودجت وبيطلع لك طلب من أندرويد لإضافته. بتتحدّث تلقائياً من جدولك.'));
     var list = t('div', 'wg-list');
-    [['next', '⏭', 'المحاضرة الجاية', 'اسم + عدّاد تنازلي حيّ + القاعة والمبنى + زر ✓ حضرت (2×2)'], ['today', '📅', 'جدول اليوم', 'كل محاضرات اليوم بألوان المواد + المهام (4×3)'], ['actions', '⚡', 'اختصارات سريعة', 'حضرت ✅ · مهمة · الخريطة · الجدول (4×1)']].forEach(function(x){
+    [['next', '⏭', 'المحاضرة الجاية', 'اسم + عدّاد تنازلي حيّ + القاعة والمبنى + زر ✓ حضرت (2×2)'], ['today', '📅', 'جدول اليوم', 'كل محاضرات اليوم بألوان المواد + المهام (4×3)'], ['actions', '⚡', 'اختصارات سريعة', 'حضرت ✅ · مهمة · الخريطة · الجدول (4×1)'], ['exams', '📝', 'الامتحانات', 'عدّ تنازلي لأقرب امتحاناتك بألوان الاستعجال (4×2)'], ['tasks', '✅', 'المهام', 'مهامك المعلّقة وزر ○ لإنجازها من الشاشة الرئيسية (4×3)'], ['where', '📍', 'أين أنا؟', 'داخل أو خارج حدود الجامعة وأقرب مبنى — اضغط ⟳ للتحديث (4×1)']].forEach(function(x){
       var b = t('button', 'wg-opt'); b.type = 'button'; b.setAttribute('data-wg', x[0]);
       b.appendChild(t('span', 'wg-ic', x[1])); var tx = t('span', 'wg-tx'); tx.appendChild(t('b', null, x[2])); tx.appendChild(t('small', null, x[3])); b.appendChild(tx);
       b.addEventListener('click', function(){
@@ -249,6 +257,20 @@
       return { applied: res.apply.length };
     }, function(){ return { error: true }; });
   }
+  /* مهام أُنجزت من ودجت المهام (طابور من Java: ids) → نطبّق toggleTask فقط للمهام المعلّقة الموجودة فعلاً (لا نعيد فتح مهمة) */
+  function pullTasks(){
+    if(!isNative()) return Promise.resolve({ native: false });
+    var WB = plugin('WidgetBridge'); if(!WB || !WB.takePendingTasks) return Promise.resolve({ plugin: false });
+    return WB.takePendingTasks().then(function(r){
+      var ids = (r && r.ids) || [], n = 0, tasks = (W.space && W.space.tasks) || [];
+      ids.forEach(function(id){
+        var t = tasks.filter(function(x){ return x && String(x.id) === String(id); })[0];
+        if(t && !t.done && typeof W.toggleTask === 'function'){ W.toggleTask(t.id); n++; }
+      });
+      if(n && W.toast) W.toast('✅ أُنجزت من الودجت: ' + n + (n === 1 ? ' مهمة' : ' مهام'), 'success', 3500);
+      return { applied: n };
+    }, function(){ return { error: true }; });
+  }
   var permAsked = false, scheduling = false, again = false;
   function schedule(){
     if(!isNative()) return Promise.resolve({ native: false });
@@ -296,14 +318,14 @@
     if(!isNative()) return;
     d.documentElement.classList.add('native-app');
     patchDownloads();
-    pullAttendance().then(function(){ schedule(); pushWidget(); });
+    pullAttendance().then(function(){ return pullTasks(); }).then(function(){ schedule(); pushWidget(); });
     var ub = d.getElementById('updateBtn'); if(ub && !ub._up){ ub._up = true; ub.addEventListener('click', function(){ if(W.closeSettingsMenu) W.closeSettingsMenu(); checkUpdate(true); }); }
     setTimeout(function(){ checkUpdate(false); }, 6000);
     var wb = d.getElementById('widgetBtn'); if(wb && !wb._wg){ wb._wg = true; wb.addEventListener('click', function(){ if(W.closeSettingsMenu) W.closeSettingsMenu(); openWidgetPicker(); }); }
-    d.addEventListener('visibilitychange', function(){ if(d.visibilityState === 'visible'){ pullAttendance(); scheduleSoon(); } });
+    d.addEventListener('visibilitychange', function(){ if(d.visibilityState === 'visible'){ pullAttendance(); pullTasks(); scheduleSoon(); } });
     if(typeof W.saveSpace === 'function' && !W.saveSpace._nb){ var orig = W.saveSpace; W.saveSpace = function(){ var r = orig.apply(this, arguments); scheduleSoon(); return r; }; W.saveSpace._nb = true; }
   }
   if(d.readyState === 'loading') d.addEventListener('DOMContentLoaded', function(){ setTimeout(init, 1500); }); else setTimeout(init, 1500);
 
-  return Object.assign(pure, { pullAttendance: pullAttendance, checkUpdate: checkUpdate, showUpdate: showUpdate, pushWidget: pushWidget, openWidgetPicker: openWidgetPicker, isNative: isNative, schedule: schedule, buildPlan: buildPlan, saveNative: saveNative, patchDownloads: patchDownloads, _plugin: plugin, _reset: function(){ cache = {}; } });
+  return Object.assign(pure, { pullAttendance: pullAttendance, pullTasks: pullTasks, checkUpdate: checkUpdate, showUpdate: showUpdate, pushWidget: pushWidget, openWidgetPicker: openWidgetPicker, isNative: isNative, schedule: schedule, buildPlan: buildPlan, saveNative: saveNative, patchDownloads: patchDownloads, _plugin: plugin, _reset: function(){ cache = {}; } });
 });
