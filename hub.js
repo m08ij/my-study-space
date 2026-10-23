@@ -309,7 +309,7 @@
     }
     var dateLabel = DA()[st.dayIdx] + ' ' + now.getDate() + '/' + (now.getMonth() + 1);
     var html = '<div class="myday-head md-head"><h3>🧭 يومي الجامعي</h3><span class="myday-date">' + dateLabel + '</span></div>' +
-      '<div class="md-card md-lecture">' + hero + '<div class="myday-cta">' + cta + '</div></div>' + examCard + (window.Coach ? window.Coach.cardHtml(now) : '') + tasksCard + schedCard + dlCard + quickCard;
+      '<div class="md-card md-lecture">' + hero + '<div class="myday-cta">' + cta + '</div></div>' + (window.DayPlan ? window.DayPlan.cardHtml(now) : '') + examCard + (window.Coach ? window.Coach.cardHtml(now) : '') + tasksCard + schedCard + dlCard + quickCard;
     if(html === myDayLast) return;
     myDayLast = html;
     var fi = -1, fa = document.activeElement;

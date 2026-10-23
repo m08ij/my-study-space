@@ -483,7 +483,8 @@
       '</optgroup><optgroup label="البوابات">' + GATES.map(function(g){ return '<option value="g:' + g.id + '">' + esc(g.n) + '</option>'; }).join('') + '</optgroup>';
   }
   function nameOf(id){ var p = pointOf(id); return p ? p.n : ''; }
-  function whereCard(w){ if(!w) return ''; var t = whereText(w); return '<div class="cm-where ' + t.tone + '" role="status"><b>' + esc(t.title) + '</b><small>' + esc(t.sub) + '</small></div>'; }
+  function whereCard(w){ if(!w) return ''; var t = whereText(w); return '<div class="cm-where ' + t.tone + '" role="status"><b>' + esc(t.title) + '</b><small>' + esc(t.sub) + '</small>' + (st.track ? '<small class="cm-track-note"><span class="cm-live"></span> تتبّع مباشر — يتحدّث وأنت ماشي ويتوقف لحاله بعد 10 دقائق</small>' : '') + '</div>'; }
+  function trackBtn(){ var geo = navigator.geolocation; if(!geo || !geo.watchPosition) return ''; var on = !!st.track; return '<button type="button" class="btn btn-sm' + (on ? '' : ' btn-ghost') + '" data-g="track" aria-pressed="' + on + '">' + (on ? '⏹ أوقف التتبّع' : '🛰️ تتبّع مباشر') + '</button>'; }
   function guideHtml(status){
     var g = st.guide, h = '<div class="cm-guide" role="region" aria-label="وين أروح؟">';
     if(g.step === 'idle'){
@@ -492,7 +493,7 @@
       h += '<div class="cm-guide-msg"><span class="cm-live"></span> بحدّد مكانك بدقة… (إذا طلب منك الجهاز صلاحية الموقع اضغط «سماح»)</div>';
     } else if(g.step === 'outside'){
       h += whereCard(g.where) + '<div class="cm-guide-card"><div class="cm-guide-acts">' + (g.where && g.where.gate && g.where.edge <= 3000 ? '<button type="button" class="btn btn-sm" data-g="gate">🚪 اعرض أقرب بوابة</button>' : '') +
-        '<button type="button" class="btn btn-sm btn-ghost" data-g="redo">🔄 حدّث موقعي</button><button type="button" class="btn btn-sm btn-ghost" data-g="manual">✍️ أنا بالحرم — اختر مبناي</button>' +
+        trackBtn() + '<button type="button" class="btn btn-sm btn-ghost" data-g="redo">🔄 حدّث موقعي</button><button type="button" class="btn btn-sm btn-ghost" data-g="manual">✍️ أنا بالحرم — اختر مبناي</button>' +
         '<button type="button" class="btn btn-sm btn-ghost" data-g="close" aria-label="إغلاق">✕</button></div></div>';
     } else if(g.step === 'ask'){
       var guess = scheduleGuess(status), chips = '';
@@ -520,11 +521,41 @@
           '<small class="cm-guide-note">تقدير تقريبي مش قياس حقيقي</small>';
       }
       h += (g.where && g.how === 'gps' ? whereCard(g.where) : '') + '<div class="cm-guide-card result">' + body + '<div class="cm-guide-acts">' + (destId && destId !== g.here ? '<button type="button" class="btn btn-sm" data-g="route">🧭 اعرض المسار</button>' : '') +
-        '<button type="button" class="btn btn-sm btn-ghost" data-g="redo">🔄 حدّث موقعي</button><button type="button" class="btn btn-sm btn-ghost" data-g="manual">✍️ اختر مبناي</button>' + (destId ? '<button type="button" class="btn btn-sm btn-ghost" data-g="dest">🎯 وجهة ثانية</button>' : '') + '<button type="button" class="btn btn-sm btn-ghost" data-g="close" aria-label="إغلاق">✕</button></div></div>';
+        (g.how === 'gps' ? trackBtn() : '') + '<button type="button" class="btn btn-sm btn-ghost" data-g="redo">🔄 حدّث موقعي</button><button type="button" class="btn btn-sm btn-ghost" data-g="manual">✍️ اختر مبناي</button>' + (destId ? '<button type="button" class="btn btn-sm btn-ghost" data-g="dest">🎯 وجهة ثانية</button>' : '') + '<button type="button" class="btn btn-sm btn-ghost" data-g="close" aria-label="إغلاق">✕</button></div></div>';
     }
     return h + '</div>';
   }
+  /* تتبّع مباشر وأنت ماشي: كل قراءة GPS جديدة تحدّث مكانك والمسار (حتى 10 دقائق)، ويتوقف عند الإغلاق أو مغادرة الخريطة أو إخفاء التطبيق — توفيراً للبطارية.
+     لا يعيد رسم الخريطة إلا إذا تغيّر المبنى/الحالة أو تحركت العلامة بشكل ملحوظ (أو كل 15 ثانية). */
+  var TRACK_MAX = 10 * 60 * 1000;
+  function stopTrack(silent){ if(!st.track) return; try{ navigator.geolocation.clearWatch(st.track.wid); }catch(e){} st.track = null; if(!silent) render(); }
+  function startTrack(){
+    var geo = navigator.geolocation; if(!geo || !geo.watchPosition || st.track) return;
+    var t = { wid: null, until: Date.now() + TRACK_MAX, last: 0, sig: '' }; st.track = t;
+    t.wid = geo.watchPosition(function(p){
+      if(st.track !== t) return;
+      var sec = document.getElementById('campus');   /* غادر صفحة الخريطة أو انتهت المدة: نوقف */
+      if(Date.now() > t.until || !sec || !sec.classList.contains('active')){ stopTrack(); return; }
+      var c = p && p.coords; if(!c) return;
+      var acc = Math.round(c.accuracy || 0) || 9999; if(acc > 150) return;   /* قراءة ضعيفة أثناء المشي: نتجاهلها */
+      var w = whereAmI(c.latitude, c.longitude, acc), g = st.guide;
+      g.where = w; g.fix = { lat: c.latitude, lon: c.longitude, acc: acc };
+      if(w.state === 'outside'){ g.step = 'outside'; st.me = null; }
+      else if(w.here){
+        st.me = { x: w.x, y: w.y, acc: acc };
+        if(g.step !== 'result' || g.here !== w.here.id){
+          g.here = w.here.id; g.how = 'gps'; g.step = 'result';
+          if(st.route && st.route.kind === 'dir' && st.route.ids && st.route.ids.length > 1){ st.route.ids[0] = g.here; st.dir.from = g.here; }   /* المسار المعروض يبدأ من مكانك الجديد */
+        }
+      }
+      var sig = w.state + '|' + (w.here && w.here.id) + '|' + Math.round(w.x / 6) + ',' + Math.round(w.y / 6);
+      if(sig !== t.sig || Date.now() - t.last > 15000){ t.sig = sig; t.last = Date.now(); render(); }
+    }, function(e){ if(st.track !== t) return; if(e && e.code === 1){ st.guide.err = 'denied'; st.guide.step = 'ask'; stopTrack(); } }, { enableHighAccuracy: true, maximumAge: 5000, timeout: 20000 });
+    render();
+  }
+  document.addEventListener('visibilitychange', function(){ if(document.hidden) stopTrack(true); });
   function guideStart(){
+    stopTrack(true);
     st.guide = { step: 'locating', here: '', how: '', dest: '', fix: null, where: null, err: '' }; st.me = null; render();
     acquireFix(function(fix, err){
       var g = st.guide; if(!g || g.step !== 'locating') return;   /* أُغلق/تغيّر أثناء الانتظار */
@@ -625,9 +656,10 @@
         if(ga === 'go' || ga === 'redo') guideStart();
         else if(ga === 'route') guideRoute();
         else if(ga === 'dest'){ st.guide.destManual = ' '; st.guide.step = 'result'; render(); }
-        else if(ga === 'manual'){ st.guide.step = 'ask'; st.guide.err = ''; render(); }
+        else if(ga === 'manual'){ stopTrack(true); st.guide.step = 'ask'; st.guide.err = ''; render(); }
+        else if(ga === 'track'){ if(st.track) stopTrack(); else startTrack(); }
         else if(ga === 'gate'){ var gw = st.guide.where, gg = gw && gw.gate ? GATES.filter(function(x){ return x.id === gw.gate.id; })[0] : null; if(gg){ var gz = 240; animateTo({ x: gg.x - gz / 2, y: gg.y - gz * H / W / 2, w: gz }); st.sel = null; } }
-        else if(ga === 'close'){ st.guide = { step: 'idle', here: '', how: '', dest: '', fix: null }; st.me = null; render(); }
+        else if(ga === 'close'){ stopTrack(true); st.guide = { step: 'idle', here: '', how: '', dest: '', fix: null }; st.me = null; render(); }
         return;
       }
       var gh = t.closest('[data-g-here]'); if(gh){ pickHere(gh.getAttribute('data-g-here'), false); return; }
@@ -698,5 +730,5 @@
   }
 
   window.renderCampus = render;
-  window.CampusMap = { geo: { where: whereAmI, text: whereText, toXY: geoToXY, acquire: acquireFix, inPoly: function(lat, lon){ var q = geoLocal(lat, lon, G0.lat, G0.lon); return inPoly(q.e, q.n); }, real: REAL_LL, est: EST_LL, gates: GATE_LL, campus: CAMPUS_LL, affine: AFFINE }, calib: { fit: fitCalib, toMap: geoToMap, nearest: nearestBld, load: loadCal, add: addCal, geoLocal: geoLocal }, guide: { start: guideStart, state: function(){ return st.guide; }, target: lectureTarget, guess: scheduleGuess }, walkMinutes: walkMinutes, walkMeters: walkMeters, dayStops: dayStops, render: render, resolve: resolve, courses: courses, select: select, assign: assign, buildings: BLD, labs: LABS, norm: norm, state: st };
+  window.CampusMap = { geo: { where: whereAmI, text: whereText, toXY: geoToXY, acquire: acquireFix, inPoly: function(lat, lon){ var q = geoLocal(lat, lon, G0.lat, G0.lon); return inPoly(q.e, q.n); }, real: REAL_LL, est: EST_LL, gates: GATE_LL, campus: CAMPUS_LL, affine: AFFINE }, calib: { fit: fitCalib, toMap: geoToMap, nearest: nearestBld, load: loadCal, add: addCal, geoLocal: geoLocal }, guide: { start: guideStart, track: { start: startTrack, stop: stopTrack, on: function(){ return !!st.track; } }, state: function(){ return st.guide; }, target: lectureTarget, guess: scheduleGuess }, walkMinutes: walkMinutes, walkMeters: walkMeters, dayStops: dayStops, render: render, resolve: resolve, courses: courses, select: select, assign: assign, buildings: BLD, labs: LABS, norm: norm, state: st };
 })();

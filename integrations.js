@@ -1390,7 +1390,7 @@
      - التنبيهات بتوصل والتطبيق مفتوح أو شغّال بالخلفية (المتصفح/PWA). المضمون وهو مسكّر = تنبيهات التقويم (ics).
      ============================================================ */
   var NP_KEY = 'ss_notif_prefs', NP_FIRED = 'ss_notif_fired_v1';
-  function npDefaults(){ return { lec: true, lecMin: 10, exams: true, tasks: true, tasksAt: '08:00', study: true, sound: true, quietOn: true, quietFrom: '23:00', quietTo: '07:00' }; }
+  function npDefaults(){ return { lec: true, lecMin: 10, exams: true, tasks: true, tasksAt: '08:00', study: true, dayplan: true, sound: true, quietOn: true, quietFrom: '23:00', quietTo: '07:00' }; }
   function npGet(){ var d = npDefaults(), s = {}; try{ s = JSON.parse(localStorage.getItem(NP_KEY) || '{}') || {}; }catch(e){} Object.keys(d).forEach(function(k){ if(s[k] === undefined) s[k] = d[k]; }); return s; }
   function npSet(p){ try{ localStorage.setItem(NP_KEY, JSON.stringify(p)); }catch(e){} }
   function npMin(t){ var m = /^(\d{1,2}):(\d{2})/.exec(String(t || '')); return m ? (+m[1]) * 60 + (+m[2]) : null; }
@@ -1405,7 +1405,7 @@
   window.NotifyCenter = {
     prefs: npGet, setPrefs: function(p){ npSet(Object.assign(npGet(), p)); },
     isQuiet: function(now){ return npQuiet(now || new Date()); },
-    allow: function(kind){ var p = npGet(); return kind === 'tasks' ? !!p.tasks : kind === 'exams' ? !!p.exams : kind === 'lec' ? !!p.lec : kind === 'study' ? !!p.study : true; },
+    allow: function(kind){ var p = npGet(); return kind === 'tasks' ? !!p.tasks : kind === 'exams' ? !!p.exams : kind === 'lec' ? !!p.lec : kind === 'study' ? !!p.study : kind === 'dayplan' ? !!p.dayplan : true; },
     tasksHour: function(){ var m = npMin(npGet().tasksAt); return m === null ? 8 : Math.floor(m / 60); },
     /* منبّه كل دقيقة: جلسات المذاكرة (قبلها 5 د) + الامتحانات (قبلها بساعتين، ومساء اليوم السابق 8) */
     tick: function(){
@@ -1420,6 +1420,10 @@
         try{ (window.StudyPlan.build().days[0].items || []).forEach(function(it){
           var diff = npMin(it.start) - cur; if(diff <= 5 && diff > -3) fire(d + '_study_' + it.start + '_' + it.course, '📖 جلسة مذاكرة بعد ' + Math.max(0, diff) + ' د', it.course + ' — ' + it.reason, 'timetable');
         }); }catch(e){}
+      }
+      /* خطتي اليوم (dayplan.js): نفس تذكيرات التطبيق (الصبح/4/8/10 م لحد ما تخلص) والموقع مفتوح أو بالخلفية */
+      if(p.dayplan && window.DayPlan){
+        try{ window.DayPlan.notifs(now, now).forEach(function(n){ var df = (n.at - now) / 60000; if(df <= 0 && df > -3) fire(n.key, n.title, n.body, 'dashboard'); }); }catch(e){}
       }
       if(p.exams){
         (space().exams || []).forEach(function(e){
@@ -1455,6 +1459,7 @@
         '<div class="nc-list">' +
         sw('ncLec', '🎓 قبل المحاضرة', p.lec, '<select id="ncLecMin" aria-label="كم دقيقة قبل">' + [5, 10, 15, 20].map(function(m){ return '<option value="' + m + '"' + (p.lecMin === m ? ' selected' : '') + '>' + m + ' د</option>'; }).join('') + '</select>') +
         sw('ncStudy', '📖 جلسات المذاكرة (قبلها 5 د)', p.study) +
+        sw('ncPlan', '📚 خطتي اليوم (الصبح + تذكير لحد ما تخلص)', p.dayplan) +
         sw('ncExams', '⏳ الامتحانات (مساء قبلها وقبلها بساعتين)', p.exams) +
         sw('ncTasks', '📌 ملخص المهام اليومي', p.tasks, '<input type="time" id="ncTasksAt" value="' + p.tasksAt + '" aria-label="وقت الملخص">') +
         sw('ncSound', '🔊 صوت التنبيه', p.sound) +
@@ -1463,7 +1468,7 @@
         '<div class="nc-note">التنبيهات بتوصل والتطبيق مفتوح أو شغّال بالخلفية. وهو مسكّر تماماً، المضمون هو تنبيهات <b>التقويم</b>:</div>' +
         '<div class="modal-actions" style="flex-wrap:wrap"><button class="btn btn-sm btn-ghost" id="ncClose">إغلاق</button><button class="btn btn-sm btn-ghost" id="ncTest">🔔 جرّب تنبيه</button><button class="btn btn-sm" id="ncIcs">📅 تقويم بتنبيهات (ics)</button></div></div>';
       var q = function(s){ return bd.querySelector(s); }, save = function(){
-        window.NotifyCenter.setPrefs({ lec: q('#ncLec').checked, lecMin: parseInt(q('#ncLecMin').value, 10) || 10, study: q('#ncStudy').checked, exams: q('#ncExams').checked, tasks: q('#ncTasks').checked, tasksAt: q('#ncTasksAt').value || '08:00', sound: q('#ncSound').checked, quietOn: q('#ncQuiet').checked, quietFrom: q('#ncQFrom').value || '23:00', quietTo: q('#ncQTo').value || '07:00' });
+        window.NotifyCenter.setPrefs({ lec: q('#ncLec').checked, lecMin: parseInt(q('#ncLecMin').value, 10) || 10, study: q('#ncStudy').checked, dayplan: q('#ncPlan').checked, exams: q('#ncExams').checked, tasks: q('#ncTasks').checked, tasksAt: q('#ncTasksAt').value || '08:00', sound: q('#ncSound').checked, quietOn: q('#ncQuiet').checked, quietFrom: q('#ncQFrom').value || '23:00', quietTo: q('#ncQTo').value || '07:00' });
       };
       bd.querySelectorAll('input,select').forEach(function(el){ el.addEventListener('change', save); });
       q('#ncClose').onclick = close; q('#ncTest').onclick = function(){ save(); window.NotifyCenter.test(); };
@@ -1953,7 +1958,7 @@
       result.suggestions.forEach(function(s){
         var t = (window.COURSE_TYPES && window.COURSE_TYPES[s.info.t]) || { label:'مادة', icon:'📘', color:'var(--accent)' };
         var badge = s.ready
-          ? '<span style="font-size:var(--fs-2xs);padding:3px 9px;border-radius:var(--r-sm);background:rgba(52,211,153,.15);color:var(--green);font-weight:700">✅ جاهز</span>'
+          ? '<span style="font-size:var(--fs-2xs);padding:3px 9px;border-radius:var(--r-sm);background:rgba(52,211,153,.15);color:color-mix(in srgb,var(--green) 78%,var(--text));font-weight:700">✅ جاهز</span>'
           : '<span style="font-size:var(--fs-2xs);padding:3px 9px;border-radius:var(--r-sm);background:rgba(251,191,36,.15);color:var(--amber);font-weight:700">⚠️ متطلب</span>';
         html += '<div style="display:flex;align-items:center;gap:10px;padding:12px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-lg)' + (s.ready ? '' : ';opacity:.75') + '">' +
           '<div style="font-size:var(--fs-xl)">' + t.icon + '</div>' +

@@ -819,6 +819,19 @@
     return done('💸 **مصروفك ' + label + ': ' + money(sum) + '** (' + sel.length + ' معاملة)\n' + top.map(function(k){ return '• ' + catLabel(k) + ': ' + money(cats[k]); }).join('\n') + '\n📎 من معاملاتك المسجّلة فقط.', [go('budget', 'افتح الميزانية')]);
   }
 
+  /* --- خطتي اليوم (dayplan.js): شو أدرس من كل مادة اليوم + السلسلة --- */
+  function hDayChecklist(c){
+    if(!window.DayPlan || !/(?:^|\s)خطتي (?:ال)?يوم|خطه (?:ال)?دراسه (?:ال)?يوم|شو (?:بدي )?ادرس (?:ال)?يوم|شو باقي (?:علي )?(?:من )?(?:خطتي|الخطه)|(?:^|\s)سلسلتي|الستريك/.test(c.n)) return null;
+    mem.last = { id: 'daychecklist' };
+    var open = { label: '📚 افتح الخطة', run: function(){ if(window.switchTab) window.switchTab('dashboard'); window.DayPlan.openSheet(); } };
+    var v = window.DayPlan.viewFor(), sx = window.DayPlan.streakInfo(new Date(), v);
+    if(!v.n) return done('🌴 ما في دراسة مطلوبة اليوم (لا محاضرات ولا امتحان قريب ولا مهام مستحقة). 🔥 السلسلة: ' + sx.cur + '. بدك تضيف بند لمادة؟', [open]);
+    var L = ['📚 **خطتي اليوم** — ' + v.okN + '/' + v.n + ' مواد · 🔥 ' + sx.cur];
+    v.courses.forEach(function(co){ L.push('', (co.ok ? '✅ ' : '⬜ ') + '**' + co.name + '**' + (co.why.length ? ' — ' + co.why[0] : '')); co.items.forEach(function(it){ L.push((it.d ? '  ✓ ' : '  • ') + it.t); }); });
+    L.push('', v.ok ? '✅ يومك منجز — والباقي بونص.' : '📎 بند واحد من كل مادة وبيتسجّل يومك منجز.');
+    return done(L.join('\n'), [open]);
+  }
+
   /* --- جدول المذاكرة (من daily.js StudyPlan) --- */
   function hStudyTable(c){
     if(!/(?:^|\s)(?:ال)?جدول(?:ي)? (?:ال)?(?:مذاكر|مراجع|دراس)|اوقات (?:ال)?(?:مذاكر|مراجع)|متي ادرس|شو (?:بدي )?ادرس (?:اليوم|بكره|هالاسبوع)|خطه (?:ال)?اسبوع/.test(c.n) || !window.StudyPlan) return null;
@@ -944,7 +957,7 @@
   function route(raw, noFollow){
     if(mem.pending && !noFollow) mem.pending.age = (mem.pending.age || 0) + 1;     /* يُحسب عمر السؤال المعلّق بعدد الرسائل */
     var c = ctxOf(raw), r = null, i;
-    var chain = [hPending, hCalc, hSmall, hNavStrict, hSpend, hDone, hAdd, hNextLec, hStudyTable, hDayPlan, hStudyPlan, hAgenda, hExams, hTasks, hAttendance, hGrades, hStudy, hSpendQ, hAdvice, hFaq, hCourses, hNav, hKnow, hTime];
+    var chain = [hPending, hCalc, hSmall, hNavStrict, hSpend, hDone, hAdd, hNextLec, hDayChecklist, hStudyTable, hDayPlan, hStudyPlan, hAgenda, hExams, hTasks, hAttendance, hGrades, hStudy, hSpendQ, hAdvice, hFaq, hCourses, hNav, hKnow, hTime];
     if(!noFollow) chain.splice(1, 0, hFollow);
     for(i = 0; i < chain.length; i++){
       try{ r = chain[i](c); }catch(e){ console.warn('ai handler', chain[i].name, e); r = null; }

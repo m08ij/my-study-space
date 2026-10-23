@@ -422,3 +422,108 @@ main{margin-top:calc(max(10px,var(--sat)) + 72px)}
 .cm-me-dot{animation:cmMePulse 2s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
 @keyframes cmMePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.25)}}
 @media (prefers-reduced-motion:reduce){.cm-me-dot{animation:none}}
+
+/* ---------- 20) إصلاحات تباين من فحص المتصفح الحقيقي (كل الثيمات والحالات) ---------- */
+/* شريط «المحاضرة القادمة» أعلى الصفحات: لون التسمية كان فاتحاً جداً على الثيمات الفاتحة (1.5:1) */
+.qs-lead{color:hsl(var(--ch),80%,76%)}
+[data-theme="white"] .qs-lead,[data-theme="glass-light"] .qs-lead{color:hsl(var(--ch),72%,30%)}
+/* زجاج فاتح: تدرّج التمييز أغمق ليبقى النص الأبيض مقروءاً (الأزرار، رأس اليوم بالجدول، الشرائح النشطة)، ولون تمييز أغمق للنص على الأسطح المظلّلة */
+[data-theme="glass-light"]{--grad:linear-gradient(135deg,#2563eb,#6a45dc);--cyan:#1c55c8;--green:#0b6544;--muted:#3d4a6d}
+[data-theme="glass-light"] .modal{background:color-mix(in srgb,var(--card) 97%,transparent)}
+/* أبيض: لون تمييز أغمق قليلاً (النص فوق خلفيات المواد الملوّنة بالجدول) */
+[data-theme="white"]{--cyan:#1d45c2;--muted:#434f70}
+/* زجاج داكن: نص ثانوي أفتح على الأسطح الزجاجية الشفافة */
+[data-theme="glass"]{--muted:#bcc5ea;--muted2:#aeb8e0}
+/* حالات «باهتة» (محاضرة انتهت، مادة مقفلة بالخطة الشجرية): نبقيها مميّزة لكن مقروءة */
+.md-slot.done{opacity:.86}
+.pt-node.s-locked{opacity:.8}
+.pt-node small{color:color-mix(in srgb,var(--muted) 72%,var(--text))}
+/* نص ملوّن على خلفية بنفس اللون (تنبيه/نجاح): نقرّبه من لون النص */
+.md-chip.danger{color:color-mix(in srgb,var(--red) 72%,var(--text))}
+.hub-stat.ok{color:color-mix(in srgb,var(--green) 78%,var(--text))}
+
+/* ---------- 21) أهداف لمس ناقصة من الفحص ---------- */
+.hu-grp{min-height:40px;display:flex;align-items:center}
+@media (pointer:coarse){.cc-x{width:40px;height:40px}}
+/* شارات ملوّنة على خلفية بنفس اللون */
+.badge.assignment{color:color-mix(in srgb,var(--accent-2) 70%,var(--text))}
+.md-prio.high,.hub-health.h-risk{color:color-mix(in srgb,var(--red) 78%,var(--text))}
+.cm-where .cm-track-note{display:flex;align-items:center;gap:6px;margin-top:4px;font-weight:600;color:var(--accent)}
+
+/* 22) خطتي اليوم (dayplan.js): تشيك ليست لكل مادة + سلسلة + مراجعة أسبوعية */
+.md-plan{grid-column:1/-1}
+.md-plan.late{border-color:color-mix(in srgb,var(--red) 55%,var(--border));box-shadow:0 0 0 1px color-mix(in srgb,var(--red) 28%,transparent),var(--sh-sm)}
+.md-plan.ok{border-color:color-mix(in srgb,var(--green) 45%,var(--border))}
+.dp-head-r{display:flex;align-items:center;gap:6px}
+.dp-streak{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:var(--r-pill);background:color-mix(in srgb,var(--amber) 16%,var(--card2));color:var(--text);font-weight:800;font-size:var(--fs-sm);white-space:nowrap}
+.dp-streak.zero{background:var(--card2);color:color-mix(in srgb,var(--muted) 78%,var(--text))}
+.dp-sum{display:flex;align-items:center;gap:14px;margin-bottom:12px}
+.dp-ring{--p:0;position:relative;width:58px;height:58px;flex:none;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--green) calc(var(--p) * 1%),var(--card2) 0)}
+.dp-ring b{position:absolute;inset:6px;border-radius:50%;background:var(--card);color:var(--text);display:grid;place-items:center;font-size:var(--fs-sm);font-weight:800}
+.dp-sum-t{display:flex;flex-direction:column;gap:2px;min-width:0}
+.dp-sum-t b{font-size:var(--fs-md)}
+.dp-sum-t small,.dp-fz{color:color-mix(in srgb,var(--muted) 78%,var(--text));font-size:max(12.5px,.8rem);overflow-wrap:anywhere}
+.md-plan.late .dp-sum-t b{color:color-mix(in srgb,var(--red) 78%,var(--text))}
+.dp-courses{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.dp-course{border:1px solid var(--line);border-inline-start:4px solid hsl(var(--h,210),70%,55%);border-radius:var(--r-lg);background:var(--card2);padding:10px 12px;min-width:0}
+.dp-course.ok{border-inline-start-color:var(--green)}
+.dp-ch{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 8px;align-items:center;margin-bottom:4px}
+.dp-ch b{font-size:var(--fs-md);overflow-wrap:anywhere}
+.dp-ch small{grid-column:1/-1;color:color-mix(in srgb,var(--muted) 78%,var(--text));font-size:max(12px,.78rem);overflow-wrap:anywhere}
+.dp-cp{font-size:var(--fs-sm);font-weight:800;padding:2px 8px;border-radius:var(--r-pill);background:var(--card);color:color-mix(in srgb,var(--muted) 78%,var(--text))}
+.dp-cp.ok{background:var(--tint-green);color:color-mix(in srgb,var(--green) 70%,var(--text))}
+.dp-items{display:flex;flex-direction:column;gap:2px}
+.dp-item{display:flex;align-items:center;gap:10px;min-height:42px}
+.dp-t{flex:1;min-width:0;font-size:var(--fs-sm);line-height:1.45;overflow-wrap:anywhere}
+.dp-item.done .dp-t{text-decoration:line-through;color:color-mix(in srgb,var(--muted) 85%,var(--text))}
+.dp-item.late .dp-t{color:color-mix(in srgb,var(--red) 75%,var(--text))}
+.dp-ic{flex:none;width:36px;height:36px;padding:0;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--text);font:inherit;font-size:.85rem;cursor:pointer;display:grid;place-items:center}
+.dp-ic:hover{border-color:var(--accent);color:var(--accent)}
+@media (pointer:coarse){.dp-ic{width:40px;height:40px}}
+.dp-more{align-self:flex-start;background:none;border:0;color:var(--accent);font:inherit;font-size:var(--fs-sm);font-weight:700;cursor:pointer;padding:6px 0;min-height:36px}
+.dp-add{display:flex;gap:6px;margin-top:8px}
+.dp-add input,.dp-add select{flex:1;min-width:0}
+.dp-add-course{margin-top:12px;flex-wrap:wrap}
+.dp-add-course .btn{flex:1 1 100%}
+.dp-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.dp-chip{min-height:36px;padding:6px 11px;border-radius:var(--r-pill);border:1px solid var(--line);background:var(--card);color:var(--text);font:inherit;font-size:max(12.5px,.8rem);cursor:pointer}
+.dp-chip:hover{border-color:var(--accent)}
+.dp-chip[aria-pressed="true"]{background:color-mix(in srgb,var(--accent) 18%,var(--card));border-color:var(--accent);font-weight:700}
+.dp-review-cta{display:flex;align-items:center;gap:12px;width:100%;margin-top:12px;padding:10px 12px;border-radius:var(--r-lg);border:1px dashed color-mix(in srgb,var(--accent) 55%,var(--border));background:color-mix(in srgb,var(--accent) 8%,var(--card));color:var(--text);font:inherit;text-align:start;cursor:pointer}
+.dp-review-cta > span:first-child{font-size:1.4rem}
+.dp-review-cta b{display:block}
+.dp-review-cta small{color:color-mix(in srgb,var(--muted) 78%,var(--text))}
+.dp-date{margin-bottom:8px;font-weight:700;color:color-mix(in srgb,var(--muted) 78%,var(--text))}
+.dp-lite{color:var(--accent)}
+.dp-hist{margin:0 0 12px}
+.dp-dots{display:flex;gap:4px;margin-bottom:4px;flex-wrap:wrap}
+.dp-dot{width:14px;height:14px;flex:none;border-radius:4px;background:var(--card2);border:1px solid var(--border)}
+.dp-dot.s-done{background:var(--green);border-color:var(--green)}
+.dp-dot.s-miss{background:var(--red);border-color:var(--red)}
+.dp-dot.s-freeze{background:#60a5fa;border-color:#60a5fa}
+.dp-dot.s-today{border:2px solid var(--accent)}
+.dp-dot.s-none,.dp-dot.s-future{opacity:.45}
+.dp-hist small{color:color-mix(in srgb,var(--muted) 78%,var(--text));font-size:max(12px,.76rem)}
+.dp-sheet .dp-courses{grid-template-columns:minmax(0,1fr)}
+.dp-set{margin-top:14px;padding-top:6px;border-top:1px solid var(--line)}
+.dp-set summary{cursor:pointer;font-weight:700;min-height:44px;display:flex;align-items:center}
+.dp-row{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:46px;padding:6px 0;border-bottom:1px solid var(--line)}
+.dp-row > span{flex:1;min-width:0;font-size:var(--fs-sm)}
+.dp-row input[type="checkbox"]{width:22px;height:22px;flex:none;accent-color:var(--accent)}
+.dp-row select{width:auto;flex:none}
+.dp-set-acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.dp-rv-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;margin-bottom:12px}
+.dp-rv-day{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:max(12px,.76rem);font-weight:700;text-align:center}
+.dp-rv-day .dp-dot{width:22px;height:22px;border-radius:7px}
+.dp-rv-day small{font-weight:400;color:color-mix(in srgb,var(--muted) 78%,var(--text))}
+.dp-rv-head{margin:0 0 12px;font-weight:700;font-size:var(--fs-md)}
+.dp-rv-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:12px}
+.dp-rv-stats span{display:flex;flex-direction:column;align-items:center;padding:10px 4px;border-radius:var(--r-md);background:var(--card2);text-align:center}
+.dp-rv-stats b{font-size:var(--fs-lg)}
+.dp-rv-stats small{font-size:max(11.5px,.74rem);color:color-mix(in srgb,var(--muted) 78%,var(--text))}
+.dp-rv-per{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.dp-rv-per span{padding:4px 10px;border-radius:var(--r-pill);background:var(--card2);font-size:var(--fs-sm)}
+.dp-rv-warn{margin:0 0 10px;color:color-mix(in srgb,var(--amber) 62%,var(--text))}
+.dp-rv-q{margin:14px 0 6px;font-size:var(--fs-md)}
+@media (max-width:760px){.md-plan{order:1}.dp-courses{grid-template-columns:minmax(0,1fr)}.dp-rv-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.dp-sum{gap:12px}}
+@media (prefers-reduced-motion:reduce){.dp-ic,.dp-chip{transition:none}}

@@ -67,9 +67,13 @@
         }
         if(due.length){ var tm = toMin(prefs.tasksAt); if(tm === null) tm = 8 * 60; add(dY + '|tasks', '📝 عندك ' + due.length + ' ' + (due.length === 1 ? 'مهمة' : 'مهام') + ' اليوم', due.slice(0, 3).map(function(t){ return t.title; }).join(' • '), atMin(day, tm)); }
       }
+      /* «خطتي اليوم» (dayplan.js): خطة الصبح + تذكيرات لحد ما تخلص + المراجعة الأسبوعية؛ اليوم الحالي بيتلغى تذكيره أول ما تخلص (إعادة الجدولة مع كل حفظ) */
+      if(prefs.dayplan !== false && typeof o.dayplan === 'function'){
+        try{ (o.dayplan(day, now) || []).forEach(function(n){ if(n && n.at instanceof Date) add(n.key, n.title, n.body, n.at); }); }catch(e){}
+      }
     }
     out.sort(function(a, b){ return a.at - b.at; });
-    return out.slice(0, o.limit || 60);
+    return out.slice(0, o.limit || 80);
   }
   /* لقطة للودجات الأصلية: محاضرات 7 أيام (أوقات epoch) + مهام اليوم + أقرب امتحان. o: { now, entries, space, helpers:{placeOf(e),hueOf(name)}, days } */
   function widgetData(o){
@@ -94,7 +98,8 @@
     var tl = (space.tasks || []).filter(function(t){ return t && !t.done && t.id != null && t.title; }).sort(function(a, b){ var ad = a.due || '9999-99-99', bd = b.due || '9999-99-99'; return ad === bd ? 0 : (ad < bd ? -1 : 1); }).slice(0, 8).map(function(t){
       return { i: String(t.id), t: String(t.title).slice(0, 60), c: String(t.course || '').slice(0, 40), d: String(t.due || '').slice(0, 10) };
     });
-    return { v: 2, at: now.getTime(), exams: exams, tl: tl, lectures: lectures, tasks: { due: due.length, titles: due.slice(0, 3).map(function(t){ return String(t.title || '').slice(0, 50); }) }, exam: exam };
+    var dp = null; if(typeof o.dayplan === 'function'){ try{ dp = o.dayplan(now); }catch(e){ dp = null; } }
+    return { v: 2, at: now.getTime(), exams: exams, tl: tl, dp: dp, lectures: lectures, tasks: { due: due.length, titles: due.slice(0, 3).map(function(t){ return String(t.title || '').slice(0, 50); }) }, exam: exam };
   }
   /* حضور سُجّل من الودجات (طابور من Java: [{n: اسم المادة, s: بداية المحاضرة}]) → ما نضيفه فعلاً لسجل الحضور. applied: مفاتيح سبق تطبيقها (حماية مزدوجة بجانب منع التكرار بالجهاز). */
   function attendItems(items, space, applied){
@@ -148,9 +153,28 @@
       leaveInfo: SA && SA.leaveInfo
     };
   }
-  function buildPlan(){
+  /* skipDp: تذكيرات الخطة مجدولة أصلياً (تطبيق ≥1.8) فما نكررها بـLocalNotifications */
+  function buildPlan(skipDp){
     var entries = W.Schedule && W.Schedule.entries ? W.Schedule.entries() : [];
-    return plan({ now: new Date(), prefs: prefs(), entries: entries, space: W.space || {}, helpers: helpers(), days: 7 });
+    return plan({ now: new Date(), prefs: prefs(), entries: entries, space: W.space || {}, helpers: helpers(), days: 7, dayplan: (!skipDp && W.DayPlan) ? W.DayPlan.notifs : null });
+  }
+  /* تذكيرات «خطتي اليوم» للتطبيق ≥1.8 (PlanAlarmReceiver): بتنفحص عند وقتها فما بتطلع لو خلصت خطتك من الودجت والتطبيق مسكّر.
+     التطبيق الأقدم يرفض الدالة ← نرجع لـLocalNotifications (تنلغي مع إعادة الجدولة عند فتح التطبيق/الحفظ). */
+  function planAlarmItems(){
+    var DP = W.DayPlan, pr = prefs(), out = [], now = new Date(); if(!DP || pr.dayplan === false) return out;
+    for(var off = 0; off < 7; off++){
+      var day = new Date(now.getFullYear(), now.getMonth(), now.getDate() + off);
+      try{ (DP.notifs(day, now) || []).forEach(function(n){
+        if(!n || !(n.at instanceof Date) || n.at.getTime() <= now.getTime() + 20000 || inQuiet(pr, n.at.getHours() * 60 + n.at.getMinutes())) return;
+        out.push({ at: n.at.getTime(), t: String(n.title).slice(0, 120), b: String(n.body).slice(0, 300), d: String(n.key).slice(0, 10), k: /\|dp-am$/.test(n.key) ? 'am' : /\|dp-rev$/.test(n.key) ? 'rev' : 'rem' });
+      }); }catch(e){}
+    }
+    return out.slice(0, 40);
+  }
+  function planAlarms(){
+    var WB = plugin('WidgetBridge'); if(!WB || typeof WB.planAlarms !== 'function') return Promise.resolve(false);
+    return Promise.resolve().then(function(){ return WB.planAlarms({ data: JSON.stringify(planAlarmItems()) }); })
+      .then(function(r){ return !!(r && typeof r.scheduled === 'number'); }, function(){ return false; });
   }
   function widgetHelpers(){
     var CM = W.CampusMap;
@@ -170,7 +194,7 @@
     if(!isNative()) return Promise.resolve({ native: false });
     var WB = plugin('WidgetBridge'); if(!WB) return Promise.resolve({ native: true, plugin: false });
     var entries = W.Schedule && W.Schedule.entries ? W.Schedule.entries() : [];
-    var data = widgetData({ now: new Date(), entries: entries, space: W.space || {}, helpers: widgetHelpers(), days: 7 });
+    var data = widgetData({ now: new Date(), entries: entries, space: W.space || {}, helpers: widgetHelpers(), days: 7, dayplan: W.DayPlan ? W.DayPlan.widget : null });
     return WB.update({ data: JSON.stringify(data) }).then(function(){ return { native: true, lectures: data.lectures.length }; }, function(e){ return { native: true, error: String(e && e.message || e) }; });
   }
   function openWidgetPicker(){
@@ -182,10 +206,19 @@
     box.appendChild(t('div', 'ocri-title', '📱 أضف ودجت للشاشة الرئيسية'));
     box.appendChild(t('div', 'ocri-sub', 'اختر الودجت وبيطلع لك طلب من أندرويد لإضافته. بتتحدّث تلقائياً من جدولك.'));
     var list = t('div', 'wg-list');
-    [['next', '⏭', 'المحاضرة الجاية', 'اسم + عدّاد تنازلي حيّ + القاعة والمبنى + زر ✓ حضرت (2×2)'], ['today', '📅', 'جدول اليوم', 'كل محاضرات اليوم بألوان المواد + المهام (4×3)'], ['actions', '⚡', 'اختصارات سريعة', 'حضرت ✅ · مهمة · الخريطة · الجدول (4×1)'], ['exams', '📝', 'الامتحانات', 'عدّ تنازلي لأقرب امتحاناتك بألوان الاستعجال (4×2)'], ['tasks', '✅', 'المهام', 'مهامك المعلّقة وزر ○ لإنجازها من الشاشة الرئيسية (4×3)'], ['where', '📍', 'أين أنا؟', 'داخل أو خارج حدود الجامعة وأقرب مبنى — اضغط ⟳ للتحديث (4×1)']].forEach(function(x){
+    var AU = plugin('AppUpdater'), PLAN_VC = 9;   /* ودجت الخطة من تطبيق 1.8 (versionCode 9)؛ الأقدم كان بيثبّت «المحاضرة الجاية» بدلها */
+    [['plan', '📚', 'خطتي اليوم', 'شو تدرس من كل مادة + 🔥 السلسلة + زر ○ للتشييك — بيحمرّ بعد 8 م لو ما خلصت (4×3)'], ['next', '⏭', 'المحاضرة الجاية', 'اسم + عدّاد تنازلي حيّ + القاعة والمبنى + زر ✓ حضرت (2×2)'], ['today', '📅', 'جدول اليوم', 'كل محاضرات اليوم بألوان المواد + المهام (4×3)'], ['actions', '⚡', 'اختصارات سريعة', 'حضرت ✅ · مهمة · الخريطة · الجدول (4×1)'], ['exams', '📝', 'الامتحانات', 'عدّ تنازلي لأقرب امتحاناتك بألوان الاستعجال (4×2)'], ['tasks', '✅', 'المهام', 'مهامك المعلّقة وزر ○ لإنجازها من الشاشة الرئيسية (4×3)'], ['where', '📍', 'أين أنا؟', 'داخل أو خارج حدود الجامعة وأقرب مبنى — اضغط ⟳ للتحديث (4×1)']].forEach(function(x){
       var b = t('button', 'wg-opt'); b.type = 'button'; b.setAttribute('data-wg', x[0]);
       b.appendChild(t('span', 'wg-ic', x[1])); var tx = t('span', 'wg-tx'); tx.appendChild(t('b', null, x[2])); tx.appendChild(t('small', null, x[3])); b.appendChild(tx);
       b.addEventListener('click', function(){
+        if(x[0] === 'plan'){
+          var vc = AU && AU.info ? Promise.resolve().then(function(){ return AU.info(); }).then(function(i){ return Number(i && i.versionCode) || 0; }, function(){ return 0; }) : Promise.resolve(0);
+          vc.then(function(v){
+            if(v >= PLAN_VC){ pushWidget(); WB.pin({ type: 'plan' }).then(function(r){ ov.remove(); if(!r || !r.requested){ if(W.toast) W.toast('اضغط مطوّلاً على الشاشة الرئيسية ← الودجات ← مساحتي الدراسية', 'info', 8000); } }, function(){ ov.remove(); }); }
+            else { ov.remove(); if(W.toast) W.toast('ودجت «خطتي اليوم» بيحتاج تحديث التطبيق لـ1.8 — بفحص التحديث هسا', 'info', 5000); checkUpdate(true); }
+          });
+          return;
+        }
         pushWidget(); WB.pin({ type: x[0] }).then(function(r){
           ov.remove();
           if(!r || !r.requested) { if(W.toast) W.toast('جهازك ما بيدعم الإضافة المباشرة — اضغط مطوّلاً على الشاشة الرئيسية ← الودجات ← مساحتي الدراسية', 'info', 8000); }
@@ -271,6 +304,21 @@
       return { applied: n };
     }, function(){ return { error: true }; });
   }
+  /* بنود «خطتي اليوم» شُيّكت من الودجت (طابور {d,k}) → DayPlan.toggle لبنود اليوم المفتوحة فقط (ما بنلغي تشييك) */
+  function pullPlan(){
+    if(!isNative()) return Promise.resolve({ native: false });
+    var WB = plugin('WidgetBridge'); if(!WB || typeof WB.takePendingPlan !== 'function' || !W.DayPlan) return Promise.resolve({ plugin: false });
+    return Promise.resolve().then(function(){ return WB.takePendingPlan(); }).then(function(r){
+      var items = (r && r.items) || [], today = ymd(new Date()), n = 0;
+      items.forEach(function(x){
+        if(!x || x.d !== today || typeof x.k !== 'string') return;
+        var hit = null; W.DayPlan.viewFor(today).courses.forEach(function(c){ c.items.forEach(function(it){ if(it.k === x.k) hit = it; }); });
+        if(hit && !hit.d && W.DayPlan.toggle(hit.k)) n++;
+      });
+      if(n && W.toast) W.toast('✅ سجّلت من الودجت: ' + n + (n === 1 ? ' بند' : ' بنود') + ' بخطة اليوم', 'success', 3500);
+      return { applied: n };
+    }, function(){ return { error: true }; });
+  }
   var permAsked = false, scheduling = false, again = false;
   function schedule(){
     if(!isNative()) return Promise.resolve({ native: false });
@@ -282,10 +330,12 @@
       return st;
     }).then(function(st){
       if(!st || st.display !== 'granted') return { native: true, permission: st && st.display };
-      var items = buildPlan();
-      return LN.getPending().then(function(pend){ var list = (pend && pend.notifications) || []; return list.length ? LN.cancel({ notifications: list.map(function(n){ return { id: n.id }; }) }) : null; }).then(function(){
-        if(!items.length) return { native: true, scheduled: 0 };
-        return LN.schedule({ notifications: items.map(function(n){ return { id: n.id, title: n.title, body: n.body, schedule: { at: (n.at && n.at.toISOString) ? n.at.toISOString() : n.at, allowWhileIdle: true }, smallIcon: 'ic_stat_icon', extra: { key: n.key } }; }) }).then(function(){ return { native: true, scheduled: items.length }; });
+      return planAlarms().then(function(nativeDp){
+        var items = buildPlan(nativeDp);
+        return LN.getPending().then(function(pend){ var list = (pend && pend.notifications) || []; return list.length ? LN.cancel({ notifications: list.map(function(n){ return { id: n.id }; }) }) : null; }).then(function(){
+          if(!items.length) return { native: true, scheduled: 0, planAlarms: nativeDp };
+          return LN.schedule({ notifications: items.map(function(n){ return { id: n.id, title: n.title, body: n.body, schedule: { at: (n.at && n.at.toISOString) ? n.at.toISOString() : n.at, allowWhileIdle: true }, smallIcon: 'ic_stat_icon', extra: { key: n.key } }; }) }).then(function(){ return { native: true, scheduled: items.length, planAlarms: nativeDp }; });
+        });
       });
     }).catch(function(e){ return { native: true, error: String(e && e.message || e) }; }).then(function(r){ scheduling = false; if(again){ again = false; setTimeout(schedule, 1500); } return r; });
     return p;
@@ -318,14 +368,14 @@
     if(!isNative()) return;
     d.documentElement.classList.add('native-app');
     patchDownloads();
-    pullAttendance().then(function(){ return pullTasks(); }).then(function(){ schedule(); pushWidget(); });
+    pullAttendance().then(function(){ return pullTasks(); }).then(function(){ return pullPlan(); }).then(function(){ schedule(); pushWidget(); });
     var ub = d.getElementById('updateBtn'); if(ub && !ub._up){ ub._up = true; ub.addEventListener('click', function(){ if(W.closeSettingsMenu) W.closeSettingsMenu(); checkUpdate(true); }); }
     setTimeout(function(){ checkUpdate(false); }, 6000);
     var wb = d.getElementById('widgetBtn'); if(wb && !wb._wg){ wb._wg = true; wb.addEventListener('click', function(){ if(W.closeSettingsMenu) W.closeSettingsMenu(); openWidgetPicker(); }); }
-    d.addEventListener('visibilitychange', function(){ if(d.visibilityState === 'visible'){ pullAttendance(); pullTasks(); scheduleSoon(); } });
+    d.addEventListener('visibilitychange', function(){ if(d.visibilityState === 'visible'){ pullAttendance(); pullTasks(); pullPlan(); scheduleSoon(); } });
     if(typeof W.saveSpace === 'function' && !W.saveSpace._nb){ var orig = W.saveSpace; W.saveSpace = function(){ var r = orig.apply(this, arguments); scheduleSoon(); return r; }; W.saveSpace._nb = true; }
   }
   if(d.readyState === 'loading') d.addEventListener('DOMContentLoaded', function(){ setTimeout(init, 1500); }); else setTimeout(init, 1500);
 
-  return Object.assign(pure, { pullAttendance: pullAttendance, pullTasks: pullTasks, checkUpdate: checkUpdate, showUpdate: showUpdate, pushWidget: pushWidget, openWidgetPicker: openWidgetPicker, isNative: isNative, schedule: schedule, buildPlan: buildPlan, saveNative: saveNative, patchDownloads: patchDownloads, _plugin: plugin, _reset: function(){ cache = {}; } });
+  return Object.assign(pure, { pullAttendance: pullAttendance, pullTasks: pullTasks, pullPlan: pullPlan, planAlarmItems: planAlarmItems, checkUpdate: checkUpdate, showUpdate: showUpdate, pushWidget: pushWidget, openWidgetPicker: openWidgetPicker, isNative: isNative, schedule: schedule, buildPlan: buildPlan, saveNative: saveNative, patchDownloads: patchDownloads, _plugin: plugin, _reset: function(){ cache = {}; } });
 });
