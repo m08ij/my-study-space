@@ -106,7 +106,7 @@
     }
     (Array.isArray(rec.u) ? rec.u : []).forEach(function(u){ if(u && u.k && u.c && u.t && hid.indexOf(u.k) < 0) C(String(u.c)).items.push({ k: u.k, t: String(u.t), c: String(u.c), kind: 'user', d: !!dm[u.k], pp: !!u.pp }); });
     var res = out.filter(function(c){ return c.items.length; }), okN = 0, all = 0, allDone = 0;
-    res.forEach(function(c){ c.n = c.items.length; c.done = c.items.filter(function(x){ return x.d; }).length; c.ok = c.done > 0; if(c.ok) okN++; all += c.n; allDone += c.done; });
+    res.forEach(function(c){ c.n = c.items.length; c.done = c.items.filter(function(x){ return x.d; }).length; c.ok = c.done > 0; c.fm = isObj(rec.fm) ? (+rec.fm[c.name] || 0) : 0; if(c.ok) okN++; all += c.n; allDone += c.done; });
     return { date: o.date, courses: res, n: res.length, okN: okN, ok: res.length > 0 && okN === res.length, items: all, doneItems: allDone, full: all > 0 && allDone === all };
   }
   /* السلسلة: o = { today, since, days, todayOk, expected(date)->bool } → { cur, best, hist:{date:'done'|'miss'|'freeze'|'rest'|'today'}, freezeWeek } */
@@ -259,15 +259,19 @@
     if(W.Progress && W.Progress.focusCourse) W.Progress.focusCourse(c); else if(W.switchTab) W.switchTab('timer');
   }
   /* جلسة تركيز كاملة: تسكّر البند اللي ضغطت ▶ عليه، أو أول بند مفتوح للمادة المختارة بالمؤقت */
-  d.addEventListener('ss:focus-complete', function(){
+  d.addEventListener('ss:focus-complete', function(ev){
     try{
-      var now = new Date(), t = ymd(now), v = viewFor(t, now), pend = null, it = null;
+      var now = new Date(), t = ymd(now), v = viewFor(t, now), pend = null, it = null, mins = Math.max(1, Math.min(240, parseInt(ev && ev.detail && ev.detail.minutes, 10) || 25));
       try{ pend = JSON.parse(lsGet('ss_dp_focus') || 'null'); }catch(e){}
       var sel = d.getElementById('timerTask'), val = sel ? String(sel.value || '') : '', cn = val.indexOf('course:') === 0 ? val.slice(7) : null;
       if(pend && pend.d === t && (!cn || cn === pend.c)) it = findItem(v, pend.k);
       if(!it && cn){ var c = courseOf(v, cn); if(c) it = c.items.filter(function(x){ return !x.d && x.kind !== 'task'; })[0] || null; }
+      /* دقائق التركيز لكل مادة اليوم (days[ymd].fm) — بتبين جنب المادة بالخطة */
+      var fc = cn || (pend && pend.d === t ? pend.c : null), r = fc ? touch(t) : null;
+      if(r){ if(!isObj(r.fm)) r.fm = {}; r.fm[fc] = (+r.fm[fc] || 0) + mins; }
       lsDel('ss_dp_focus');
       if(it && !it.d && it.kind !== 'task'){ toggle(it.k); toast('✓ «' + it.t + '» — سجّلتها من جلسة التركيز', 'success', 3500); }
+      else if(r) save();
     }catch(e){ console.warn('dayplan focus', e); }
   });
 
@@ -299,7 +303,7 @@
     var hue = W.courseHue ? W.courseHue(c.name) : 210, items = full ? c.items : c.items.slice(0, max), meta = c.why.slice(0, 2).join(' · ');
     return '<div class="dp-course' + (c.ok ? ' ok' : '') + '" style="--h:' + (+hue || 0) + '">' +
       '<div class="dp-ch"><b>' + esc(c.name) + '</b><span class="dp-cp' + (c.ok ? ' ok' : '') + '"><bdi dir="ltr">' + c.done + '/' + c.n + '</bdi></span>' +
-      (meta || c.at ? '<small>' + esc(meta) + (c.at ? (meta ? ' · ' : '') + '⏰ مقترح <bdi dir="ltr">' + esc(c.at) + '</bdi>' : '') + '</small>' : '') + '</div>' +
+      (meta || c.at || c.fm ? '<small>' + (c.fm ? '<span class="dp-fm">⏱️ ' + c.fm + ' د تركيز</span>' + (meta || c.at ? ' · ' : '') : '') + esc(meta) + (c.at ? (meta ? ' · ' : '') + '⏰ مقترح <bdi dir="ltr">' + esc(c.at) + '</bdi>' : '') + '</small>' : '') + '</div>' +
       '<div class="dp-items">' + items.map(function(it){ return itemHtml(it, full); }).join('') +
       (c.items.length > items.length ? '<button type="button" class="dp-more" data-dp="open">+' + (c.items.length - items.length) + ' بنود</button>' : '') + '</div>' +
       (full ? '<form class="dp-add" data-dpc="' + esc(c.name) + '"><input type="text" maxlength="80" enterkeyhint="done" autocomplete="off" placeholder="أضف بند…" aria-label="أضف بند لـ' + esc(c.name) + '"><button type="submit" class="btn btn-sm" aria-label="إضافة">＋</button></form>' +

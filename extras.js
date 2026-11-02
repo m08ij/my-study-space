@@ -611,7 +611,7 @@
     (document.getElementById('slotLms') || dash).appendChild(sec);
 
     var importBtn = document.getElementById('moodleImportBtn');
-    if(importBtn) importBtn.addEventListener('click', function(){ if(window.IcsImport) window.IcsImport.pick(); });
+    if(importBtn) importBtn.addEventListener('click', function(){ window.withModule('IcsImport', 'ics-import.js', function(m){ m.pick(); }); });
   }
 
   /* ============================================================

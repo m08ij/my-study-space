@@ -472,6 +472,7 @@ main{margin-top:calc(max(10px,var(--sat)) + 72px)}
 .dp-ch small{grid-column:1/-1;color:color-mix(in srgb,var(--muted) 78%,var(--text));font-size:max(12px,.78rem);overflow-wrap:anywhere}
 .dp-cp{font-size:var(--fs-sm);font-weight:800;padding:2px 8px;border-radius:var(--r-pill);background:var(--card);color:color-mix(in srgb,var(--muted) 78%,var(--text))}
 .dp-cp.ok{background:var(--tint-green);color:color-mix(in srgb,var(--green) 70%,var(--text))}
+.dp-fm{font-weight:700;color:var(--text)}
 .dp-items{display:flex;flex-direction:column;gap:2px}
 .dp-item{display:flex;align-items:center;gap:10px;min-height:42px}
 .dp-t{flex:1;min-width:0;font-size:var(--fs-sm);line-height:1.45;overflow-wrap:anywhere}

@@ -311,11 +311,12 @@
   };
 
   /* قرار المزامنة عند توفر نسخة سحابية: 'apply' | 'keep-local' | 'conflict' */
-  function decideSync(sd){
+  function decideSync(sd, dirty){
     var serverMs = toMs(sd.updated_at), ver = metaGet('ss_cloud_ver');
+    if(dirty === undefined) dirty = localDirty();
     if(ver !== null && serverMs !== null){
-      if(serverMs === ver) return localDirty() ? 'keep-local' : 'apply';
-      return localDirty() ? 'conflict' : 'apply';
+      if(serverMs === ver) return dirty ? 'keep-local' : 'apply';
+      return dirty ? 'conflict' : 'apply';
     }
     /* لا توجد بصمة مزامنة سابقة (بيانات قديمة): قاعدة التوقيت */
     var lt = parseInt(window.S.get('ss_space_ts', 0), 10) || 0;
@@ -323,12 +324,12 @@
   }
 
   /* تعديل من جهازين: نحفظ النسختين احتياطياً ثم المستخدم يقرر — لا شيء يُستبدل تلقائياً */
-  window.handleSyncConflict = async function(){
+  window.handleSyncConflict = async function(pre){
     if(window._conflictOpen) return;
     window._conflictOpen = true; window.cloudSyncBlocked = true;
     window.setServerStatus('off');
-    var row = null;
-    try{ row = await window.SB.load(); }catch(e){}
+    var row = (pre && pre.data) ? pre : null;   /* نسخة سحابية محمّلة للتو (الإقلاع المتأخر): ما في داعي لطلب ثاني */
+    if(!row){ try{ row = await window.SB.load(); }catch(e){} }
     if(!row || !row.data){
       window._conflictOpen = false;
       window.toast('تعذّر قراءة النسخة السحابية — لم يُرفع شيء', 'warn', 3500);
@@ -522,6 +523,8 @@
       if(raw && typeof raw === 'object' && !Array.isArray(raw)){ window.space = Object.assign({}, window.defaultSpace, raw); if(window.migrateSpace) window.migrateSpace(window.space); }
       else { window.space = Object.assign({}, window.defaultSpace); if(raw !== null) window.dataCorrupted = true; }
     }catch(e){ window.dataCorrupted = true; window.space = Object.assign({}, window.defaultSpace); }
+    /* مساحة جديدة تنختم برقم البنية من أولها (وإلا ينختم بأول إعادة تحميل فتتغيّر البصمة وينعاد رفع كل البيانات بلا تعديل) */
+    if(window.migrateSpace && window.space && window.space.schemaVersion === undefined) window.migrateSpace(window.space);
     if(!Array.isArray(window.space.grades)) window.space.grades = [];
     try{ window.notes = window.S.get('notes', []); if(!Array.isArray(window.notes)){ window.notes = []; window.dataCorrupted = true; } }
     catch(e){ window.notes = []; }
@@ -786,25 +789,82 @@
     if(p && p.snapshot) list.push({ v: 'pr', l: (p.kind === 'cloud-apply' ? 'قبل استبدال بيانات الجهاز ببيانات السحابة ' : 'قبل استعادة ملف ') + fmt(p.at) + ' (' + cnt(p.snapshot) + ' مادة)', snap: p.snapshot });
     return list;
   }
-  window.refreshRestorePrevBtn = function(){
-    var b = document.getElementById('restorePrevBtn'); if(b) b.style.display = prevBackups().length ? '' : 'none';
-  };
-  window.restorePreviousBackup = function(){
-    var list = prevBackups();
-    if(!list.length){ window.toast('لا توجد نسخ سابقة', 'info', 2000); return; }
-    window.showModal('استرجاع نسخة سابقة', [
-      { key: 'v', label: 'اختر النسخة (بياناتك الحالية تُحفظ تلقائياً قبل الاسترجاع)', type: 'select', options: list.map(function(x){ return { v: x.v, l: x.l }; }) }
-    ], { v: list[0].v }, function(data){
-      var pick = list.filter(function(x){ return x.v === data.v; })[0];
-      if(!pick) return false;
-      if(!metaSet('ss_pre_restore_backup', { at: new Date().toISOString(), snapshot: window.gatherSnapshot() }) &&
-         !confirm('تعذّر حفظ نسخة من بياناتك الحالية. المتابعة؟')) return false;
-      window.applyServerData(pick.snap);
-      window.saveSpace();
-      window.toast('✅ تم الاسترجاع', 'success', 2000);
-      setTimeout(function(){ location.reload(); }, 800);
-      return true;
+  /* ===== نسخ تلقائية يومية على هذا الجهاز (IndexedDB «ss_snapshots») =====
+     مرة باليوم (بعد الإقلاع بـ12 ث، أو لما التطبيق يروح للخلفية) لو في بيانات وتغيّرت عن آخر نسخة: آخر 7 نسخ + أحدث نسخة من كل أسبوع لـ4 أسابيع.
+     بتحمي من الغلط (حذف/استيراد/مزامنة غلط) وتنرجع من «استرجاع نسخة سابقة»؛ مش بديل عن السحابة أو ملف النسخة لو انمسحت بيانات المتصفح. */
+  var SNAP_DB = 'ss_snapshots', SNAP_ST = 'snaps', SNAP_DAYS = 7, SNAP_WEEKS = 4;
+  function snapDb(){
+    return new Promise(function(res, rej){
+      if(!window.indexedDB){ rej(new Error('no idb')); return; }
+      var rq; try{ rq = window.indexedDB.open(SNAP_DB, 1); }catch(e){ rej(e); return; }
+      rq.onupgradeneeded = function(){ rq.result.createObjectStore(SNAP_ST); };
+      rq.onsuccess = function(){ res(rq.result); }; rq.onerror = function(){ rej(rq.error || new Error('idb')); };
     });
+  }
+  function snapOp(mode, fn){
+    return snapDb().then(function(db){ return new Promise(function(res, rej){ var tx = db.transaction(SNAP_ST, mode), st = tx.objectStore(SNAP_ST), r = fn(st); tx.oncomplete = function(){ res(r && r.result); }; tx.onerror = tx.onabort = function(){ rej(tx.error || new Error('idb tx')); }; }); });
+  }
+  function snapSum(s){ var sp = (s && s.space) || {}; return { courses: (sp.courses || []).length, tasks: (sp.tasks || []).length, exams: (sp.exams || []).length, notes: (s && s.notes || []).length, lectures: Object.keys(sp.timetable || {}).length }; }
+  function snapWeek(d){ var p = String(d).split('-'), x = new Date(+p[0], +p[1] - 1, +p[2]); x.setDate(x.getDate() - x.getDay()); return x.getFullYear() + '-' + x.getMonth() + '-' + x.getDate(); }
+  /* list: الأحدث أولاً ← أول 7 + أحدث وحدة من كل أسبوع أقدم (حتى 4 أسابيع) */
+  function snapKeep(list){
+    var keep = list.slice(0, SNAP_DAYS), weeks = {};
+    keep.forEach(function(x){ weeks[snapWeek(x.d)] = 1; });
+    list.slice(SNAP_DAYS).forEach(function(x){ var w = snapWeek(x.d); if(!weeks[w] && Object.keys(weeks).length < SNAP_DAYS + SNAP_WEEKS){ weeks[w] = 1; keep.push(x); } });
+    return keep.slice(0, SNAP_DAYS + SNAP_WEEKS);
+  }
+  var snapBusy = null;
+  window.AutoSnap = {
+    take: function(){
+      if(snapBusy) return snapBusy;
+      if(!hasUserData() || window.bootSyncing) return Promise.resolve('skip');
+      var t = window.today(), h = stateHash();
+      snapBusy = snapOp('readonly', function(st){ return st.get('index'); }).then(function(idx){
+        idx = Array.isArray(idx) ? idx : [];
+        if(idx[0] && (idx[0].d === t || idx[0].h === h)) return 'skip';   /* انأخذت اليوم أو ما تغيّر شي من آخر نسخة */
+        var snap = window.gatherSnapshot(), entry = { d: t, at: new Date().toISOString(), h: h, sum: snapSum(snap) };
+        var list = [entry].concat(idx.filter(function(x){ return x && x.d !== t; })), keep = snapKeep(list);
+        var drop = list.filter(function(x){ return keep.indexOf(x) < 0; });
+        return snapOp('readwrite', function(st){ st.put(snap, 'd:' + t); drop.forEach(function(x){ st.delete('d:' + x.d); }); return st.put(keep, 'index'); })
+          .then(function(){ window.refreshRestorePrevBtn(); return 'saved'; });
+      }).catch(function(){ return 'unavailable'; }).then(function(r){ snapBusy = null; return r; });
+      return snapBusy;
+    },
+    list: function(){ return snapOp('readonly', function(st){ return st.get('index'); }).then(function(x){ return Array.isArray(x) ? x : []; }, function(){ return []; }); },
+    get: function(d){ return snapOp('readonly', function(st){ return st.get('d:' + d); }); }
+  };
+  setTimeout(function(){ window.AutoSnap.take(); }, 12000);
+  document.addEventListener('visibilitychange', function(){ if(document.visibilityState === 'hidden') window.AutoSnap.take(); });
+
+  window.refreshRestorePrevBtn = function(){
+    var b = document.getElementById('restorePrevBtn'); if(!b) return;
+    if(prevBackups().length){ b.style.display = ''; return; }
+    window.AutoSnap.list().then(function(l){ b.style.display = l.length ? '' : 'none'; });
+  };
+  function dayLabel(d){ var p = String(d).split('-'), x = new Date(+p[0], +p[1] - 1, +p[2]); return (window.DAYS_AR || [])[x.getDay()] + ' ' + x.getDate() + '/' + (x.getMonth() + 1); }
+  window.restorePreviousBackup = function(){
+    function open(snaps){
+      var list = prevBackups().concat(snaps.map(function(x){ var s = x.sum || {}; return { v: 'as:' + x.d, d: x.d, l: '🗓️ نسخة تلقائية — ' + dayLabel(x.d) + ' (' + (s.courses || 0) + ' مادة، ' + (s.tasks || 0) + ' مهمة، ' + (s.exams || 0) + ' امتحان)' }; }));
+      if(!list.length){ window.toast('لا توجد نسخ سابقة', 'info', 2000); return; }
+      window.showModal('استرجاع نسخة سابقة', [
+        { key: 'v', label: 'اختر النسخة (بياناتك الحالية تُحفظ تلقائياً قبل الاسترجاع)', type: 'select', options: list.map(function(x){ return { v: x.v, l: x.l }; }) }
+      ], { v: list[0].v }, function(data){
+        var pick = list.filter(function(x){ return x.v === data.v; })[0];
+        if(!pick) return false;
+        function apply(snap){
+          if(!snap || !snap.space){ window.toast('تعذّرت قراءة النسخة', 'warn', 3000); return; }
+          if(!metaSet('ss_pre_restore_backup', { at: new Date().toISOString(), snapshot: window.gatherSnapshot() }) &&
+             !confirm('تعذّر حفظ نسخة من بياناتك الحالية. المتابعة؟')) return;
+          window.applyServerData(snap);
+          window.saveSpace();
+          window.toast('✅ تم الاسترجاع', 'success', 2000);
+          setTimeout(function(){ location.reload(); }, 800);
+        }
+        if(pick.snap) apply(pick.snap); else window.AutoSnap.get(pick.d).then(apply, function(){ window.toast('تعذّرت قراءة النسخة', 'warn', 3000); });
+        return true;
+      });
+    }
+    if(!window.indexedDB) open([]); else window.AutoSnap.list().then(open);   /* بلا IndexedDB: النافذة فوراً بالنسخ المحفوظة بالـlocalStorage */
   };
 
   /* ============================================================
@@ -1562,13 +1622,52 @@
     dashApply();
   }
 
+  /* السحابة متأخرة عند الإقلاع (نت ضعيف/شبكة عالقة): نرسم بيانات الجهاز فوراً ونكمّل القرار لما يوصل الرد.
+     الرفع يبقى موقوفاً (bootSyncing) لحد القرار، والتعديل المحلي بعد الرسم يُحسب «تعديل غير مرفوع» فما بينكتب فوقه. */
+  var BOOT_CLOUD_WAIT = 1500, BOOT_CLOUD_WAIT_EMPTY = 8000;
+  function lateBootSync(sd, bootDirty, renderedHash){
+    var changed = stateHash() !== renderedHash, dirty = bootDirty || changed;
+    window._lateBootInfo = { bootDirty: bootDirty, changed: changed };   /* للتشخيص والاختبار */
+    if(sd && sd.data){
+      window.serverOnline = true; window.cloudLoadFailed = false;
+      var decision = decideSync(sd, dirty), serverMs = toMs(sd.updated_at);
+      if(decision === 'apply' && serverMs !== null && serverMs === metaGet('ss_cloud_ver')){ window.bootSyncing = false; window.setServerStatus('ok'); return 'same'; }   /* نفس النسخة: ما في شي نطبّقه */
+      if(decision === 'apply'){
+        window.cloudSyncBlocked = true;   /* لحد إعادة التحميل: ما نرفع النسخة اللي طبّقناها هسا (bootSyncing يضل true) */
+        if(metaGet('ss_cloud_ver') === null) backupBeforeCloudApply();
+        window.applyServerData(sd.data);
+        if(serverMs) window.S.set('ss_space_ts', serverMs);
+        window.markSynced(sd.updated_at);
+        window.toast('☁️ وصلت بيانات أحدث من السحابة — بحدّث الصفحة', 'info', 2500);
+        var tries = 0, iv = setInterval(function(){   /* ما نعيد التحميل فوق نافذة مفتوحة (أقصى دقيقة) */
+          if(document.querySelector('.modal-backdrop,.hub-sheet-backdrop') && ++tries < 60) return;
+          clearInterval(iv); location.reload();
+        }, 1000);
+        return 'apply';
+      }
+      window.bootSyncing = false;
+      if(decision === 'keep-local'){ if(metaGet('ss_cloud_ver') === null) window.markSynced(sd.updated_at, '__dirty__'); window.setServerStatus(); window.doServerSave(); return 'keep-local'; }
+      window.cloudSyncBlocked = true; window.handleSyncConflict(sd); return 'conflict';
+    }
+    window.bootSyncing = false; window.serverOnline = false;
+    if(window.SB && window.SB.lastLoadStatus === 'error'){ window.cloudSyncBlocked = true; window.cloudLoadFailed = true; }
+    else if(window.SB && window.SB.lastLoadStatus === 'empty') window.doServerSave();
+    window.setServerStatus();
+    return window.SB ? window.SB.lastLoadStatus : 'none';
+  }
+
   window.boot = async function(){
     console.log('🚀 Booting...');
     safeRun('Load local data', window.loadAllData);
 
-    var serverData = null;
+    var serverData = null, latePromise = null, bootDirty = false;
     if(window.SB){
-      try{ serverData = await window.SB.load(); }catch(e){}
+      bootDirty = localDirty();
+      var loadP = Promise.resolve().then(function(){ return window.SB.load(); }).catch(function(){ return null; });
+      var wait = (typeof navigator !== 'undefined' && navigator.onLine === false) ? 0 : (hasUserData() ? BOOT_CLOUD_WAIT : BOOT_CLOUD_WAIT_EMPTY);
+      var first = await Promise.race([loadP.then(function(d){ return { d: d }; }), new Promise(function(r){ setTimeout(function(){ r(null); }, wait); })]);
+      if(first) serverData = first.d;
+      else { latePromise = loadP; console.log('⏳ السحابة متأخرة — رسم بيانات الجهاز أولاً'); }
     }
 
     var pushLocalAfterBoot = false, conflictAfterBoot = false;
@@ -1667,6 +1766,12 @@
     });
 
     safeRun('Initial sync', function(){
+      if(latePromise){
+        var renderedHash = stateHash();
+        window.setServerStatus();
+        latePromise.then(function(sd){ try{ window._lateBoot = lateBootSync(sd, bootDirty, renderedHash); }catch(e){ window.bootSyncing = false; console.error('late sync', e); } });
+        return;
+      }
       window.bootSyncing = false;
       window.setServerStatus(window.serverOnline ? 'ok' : 'off');
       if(conflictAfterBoot) setTimeout(function(){ window._conflictOpen = false; window.handleSyncConflict(); }, 600);
