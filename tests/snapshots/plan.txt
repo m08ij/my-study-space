@@ -1,0 +1,1628 @@
+<section class=section tab-play active id=plan>
+  <div class=page-head>
+    <h2 class=page-title>
+      "📖 الخطة والمواد"
+    <p class=page-sub>
+      "خطة هندسة الحاسوب + وصف المواد"
+  <div class=section-tabs>
+    <button class=section-tab active data-plan-tab=plan>
+      "📖 الخطة الدراسية"
+    <button class=section-tab data-plan-tab=tree>
+      "🌳 الخطة الشجرية"
+    <button class=section-tab data-plan-tab=desc>
+      "📕 وصف المواد"
+    <button class=section-tab data-plan-tab=simulator>
+      "🎓 محاكي الترم الجاي"
+  <div class=subsection active data-plan-sub=plan>
+    <div class=controls>
+      <button class=chip active data-filter=all>
+        "الكل"
+      <button class=chip data-filter=1>
+        "سنة 1"
+      <button class=chip data-filter=2>
+        "سنة 2"
+      <button class=chip data-filter=3>
+        "سنة 3"
+      <button class=chip data-filter=4>
+        "سنة 4"
+      <button class=chip data-filter=5>
+        "سنة 5"
+    <div id=semesters>
+      <div class=plan-hours id=planHoursBar>
+        <div class=plan-hours-row>
+          <b>
+            "الساعات المنجزة"
+          <span>
+            "0 / 160 (0%)"
+        <div aria-label=منجز 0 ومسجّل حالياً 0 من 160 aria-valuemax=160 aria-valuemin=0 aria-valuenow=0 class=plan-hours-track role=progressbar>
+          <i class=d>
+          <i class=c>
+        <div class=plan-hours-row>
+          <b>
+            "المسجّل حالياً (موادي)"
+          <span class=>
+            "6 ساعة"
+        <div class=plan-hours-row>
+          <b>
+            "الإجمالي لو أنهيتها"
+          <span>
+            "0 / 160"
+        <div class=plan-chips>
+          <span class=plan-chip title=جامعة إجباري: منجز 0>
+            "جامعة إجباري"
+            <b>
+              "0/18"
+          <span class=plan-chip title=جامعة اختياري: منجز 0>
+            "جامعة اختياري"
+            <b>
+              "0/6"
+          <span class=plan-chip title=كلية: منجز 0>
+            "كلية"
+            <b>
+              "0/33"
+          <span class=plan-chip title=تخصص إجباري: منجز 0>
+            "تخصص إجباري"
+            <b>
+              "0/88"
+          <span class=plan-chip title=تخصص اختياري: منجز 0>
+            "تخصص اختياري"
+            <b>
+              "0/15"
+        <div class=plan-hint>
+          "المنجز = مواد علّمتها منجزة من «محاكي الترم الجاي». المواد اللي تضيفها بتظهر كـ«مسجّلة حالياً» (الجزء الفاتح بالشريط) لحتى تنهيها."
+      <div class=card data-year=1>
+        <div class=sem-head>
+          <div>
+            <span>
+              "سنة 1"
+            <h3>
+              "الفصل الأول"
+          <div>
+            <span>
+              "17 ساعة"
+            <span class=arrow>
+              "▼"
+        <div class=sem-body>
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=0110108101 data-course-name=تفاضل وتكامل (1) data-hours=3 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "تفاضل وتكامل (1)"
+              <span class=u-mono>
+                "0110108101"
+            <button aria-label=علّم تفاضل وتكامل (1) منجزة class=plan-done-btn data-done=تفاضل وتكامل (1) title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "3 س"
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=0110102101 data-course-name=فيزياء عامة (1) data-hours=3 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "فيزياء عامة (1)"
+              <span class=u-mono>
+                "0110102101"
+            <button aria-label=علّم فيزياء عامة (1) منجزة class=plan-done-btn data-done=فيزياء عامة (1) title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "3 س"
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=2116011101 data-course-name=مهارات التواصل باللغة العربية data-hours=3 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "مهارات التواصل باللغة العربية"
+              <span class=u-mono>
+                "2116011101"
+            <button aria-label=علّم مهارات التواصل باللغة العربية منجزة class=plan-done-btn data-done=مهارات التواصل باللغة العربية title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "3 س"
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=0110103107 data-course-name=اساسيات الكيمياء العامة data-hours=3 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "اساسيات الكيمياء العامة"
+              <span class=u-mono>
+                "0110103107"
+            <button aria-label=علّم اساسيات الكيمياء العامة منجزة class=plan-done-btn data-done=اساسيات الكيمياء العامة title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "3 س"
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=0110400201 data-course-name=رسم هندسي يدوي data-hours=2 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "رسم هندسي يدوي"
+              <span class=u-mono>
+                "0110400201"
+            <button aria-label=علّم رسم هندسي يدوي منجزة class=plan-done-btn data-done=رسم هندسي يدوي title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "2 س"
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=2116021101 data-course-name=مهارات التواصل باللغة الانجليزية data-hours=3 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "مهارات التواصل باللغة الانجليزية"
+              <span class=u-mono>
+                "2116021101"
+            <button aria-label=علّم مهارات التواصل باللغة الانجليزية منجزة class=plan-done-btn data-done=مهارات التواصل باللغة الانجليزية title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "3 س"
+      <div class=card data-year=1>
+        <div class=sem-head>
+          <div>
+            <span>
+              "سنة 1"
+            <h3>
+              "الفصل الثاني"
+          <div>
+            <span>
+              "15 ساعة"
+            <span class=arrow>
+              "▼"
+        <div class=sem-body>
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=0110101102 data-course-name=تفاضل وتكامل (2) data-hours=3 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "تفاضل وتكامل (2)"
+              <span class=u-mono>
+                "0110101102"
+              <span class=plan-lock title=متطلب سابق لم تنجزه>
+                "🔒 يتطلب: تفاضل وتكامل (1)"
+            <button aria-label=علّم تفاضل وتكامل (2) منجزة class=plan-done-btn data-done=تفاضل وتكامل (2) title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "3 س"
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=0110102102 data-course-name=فيزياء عامة (2) data-hours=3 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "فيزياء عامة (2)"
+              <span class=u-mono>
+                "0110102102"
+              <span class=plan-lock title=متطلب سابق لم تنجزه>
+                "🔒 يتطلب: فيزياء عامة (1)"
+            <button aria-label=علّم فيزياء عامة (2) منجزة class=plan-done-btn data-done=فيزياء عامة (2) title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "3 س"
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=0110400102 data-course-name=برمجة الحاسوب data-hours=3 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "برمجة الحاسوب"
+              <span class=u-mono>
+                "0110400102"
+            <button aria-label=علّم برمجة الحاسوب منجزة class=plan-done-btn data-done=برمجة الحاسوب title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "3 س"
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=0110103108 data-course-name=اساسيات الكيمياء العامة العملية data-hours=1 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "اساسيات الكيمياء العامة العملية"
+              <span class=u-mono>
+                "0110103108"
+              <span class=plan-lock title=متطلب سابق لم تنجزه>
+                "🔒 يتطلب: اساسيات الكيمياء العامة"
+              <span>
+                "مختبر"
+            <button aria-label=علّم اساسيات الكيمياء العامة العملية منجزة class=plan-done-btn data-done=اساسيات الكيمياء العامة العملية title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "1 س"
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=0110102103 data-course-name=فيزياء عامة عملية (1) data-hours=1 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "فيزياء عامة عملية (1)"
+              <span class=u-mono>
+                "0110102103"
+              <span>
+                "مختبر"
+            <button aria-label=علّم فيزياء عامة عملية (1) منجزة class=plan-done-btn data-done=فيزياء عامة عملية (1) title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "1 س"
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=0110400101 data-course-name=مشاغل هندسية data-hours=1 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "مشاغل هندسية"
+              <span class=u-mono>
+                "0110400101"
+            <button aria-label=علّم مشاغل هندسية منجزة class=plan-done-btn data-done=مشاغل هندسية title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "1 س"
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=2214041117 data-course-name=علوم عسكرية data-hours=3 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "علوم عسكرية"
+              <span class=u-mono>
+                "2214041117"
+            <button aria-label=علّم علوم عسكرية منجزة class=plan-done-btn data-done=علوم عسكرية title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "3 س"
+      <div class=card data-year=2>
+        <div class=sem-head>
+          <div>
+            <span>
+              "سنة 2"
+            <h3>
+              "الفصل الثالث"
+          <div>
+            <span>
+              "16 ساعة"
+            <span class=arrow>
+              "▼"
+        <div class=sem-body>
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=0110101152 data-course-name=رياضيات متقطعة data-hours=3 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "رياضيات متقطعة"
+              <span class=u-mono>
+                "0110101152"
+            <button aria-label=علّم رياضيات متقطعة منجزة class=plan-done-btn data-done=رياضيات متقطعة title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "3 س"
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=0110101203 data-course-name=معادلات تفاضلية عادية (1) data-hours=3 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "معادلات تفاضلية عادية (1)"
+              <span class=u-mono>
+                "0110101203"
+              <span class=plan-lock title=متطلب سابق لم تنجزه>
+                "🔒 يتطلب: تفاضل وتكامل (2)"
+            <button aria-label=علّم معادلات تفاضلية عادية (1) منجزة class=plan-done-btn data-done=معادلات تفاضلية عادية (1) title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "3 س"
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=1714041118 data-course-name=تربية وطنية data-hours=3 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "تربية وطنية"
+              <span class=u-mono>
+                "1714041118"
+            <button aria-label=علّم تربية وطنية منجزة class=plan-done-btn data-done=تربية وطنية title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "3 س"
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=0110406229 data-course-name=اساسيات الدوائر الكهربائية data-hours=3 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "اساسيات الدوائر الكهربائية"
+              <span class=u-mono>
+                "0110406229"
+              <span class=plan-lock title=متطلب سابق لم تنجزه>
+                "🔒 يتطلب: فيزياء عامة (2)، تفاضل وتكامل (2)"
+            <button aria-label=علّم اساسيات الدوائر الكهربائية منجزة class=plan-done-btn data-done=اساسيات الدوائر الكهربائية title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "3 س"
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=0110408220 data-course-name=منطق رقمي data-hours=3 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "منطق رقمي"
+              <span class=u-mono>
+                "0110408220"
+              <span class=plan-lock title=متطلب سابق لم تنجزه>
+                "🔒 يتطلب: تفاضل وتكامل (2)"
+            <button aria-label=علّم منطق رقمي منجزة class=plan-done-btn data-done=منطق رقمي title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "3 س"
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=0110400202 data-course-name=رسم هندسي بالحاسوب data-hours=1 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "رسم هندسي بالحاسوب"
+              <span class=u-mono>
+                "0110400202"
+              <span class=plan-lock title=متطلب سابق لم تنجزه>
+                "🔒 يتطلب: رسم هندسي يدوي"
+              <span>
+                "مختبر"
+            <button aria-label=علّم رسم هندسي بالحاسوب منجزة class=plan-done-btn data-done=رسم هندسي بالحاسوب title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "1 س"
+      <div class=card data-year=2>
+        <div class=sem-head>
+          <div>
+            <span>
+              "سنة 2"
+            <h3>
+              "الفصل الرابع"
+          <div>
+            <span>
+              "17 ساعة"
+            <span class=arrow>
+              "▼"
+        <div class=sem-body>
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=0110101201 data-course-name=تفاضل وتكامل (3) data-hours=3 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "تفاضل وتكامل (3)"
+              <span class=u-mono>
+                "0110101201"
+              <span class=plan-lock title=متطلب سابق لم تنجزه>
+                "🔒 يتطلب: تفاضل وتكامل (2)"
+            <button aria-label=علّم تفاضل وتكامل (3) منجزة class=plan-done-btn data-done=تفاضل وتكامل (3) title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "3 س"
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=0110403242 data-course-name=الاحصاء والاحتمالات data-hours=3 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "الاحصاء والاحتمالات"
+              <span class=u-mono>
+                "0110403242"
+              <span class=plan-lock title=متطلب سابق لم تنجزه>
+                "🔒 يتطلب: تفاضل وتكامل (2)"
+            <button aria-label=علّم الاحصاء والاحتمالات منجزة class=plan-done-btn data-done=الاحصاء والاحتمالات title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "3 س"
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=0110408213 data-course-name=هيكلية البيانات data-hours=3 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "هيكلية البيانات"
+              <span class=u-mono>
+                "0110408213"
+              <span class=plan-lock title=متطلب سابق لم تنجزه>
+                "🔒 يتطلب: برمجة الحاسوب"
+            <button aria-label=علّم هيكلية البيانات منجزة class=plan-done-btn data-done=هيكلية البيانات title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "3 س"
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=0110409240 data-course-name=الكترونيات (1) data-hours=3 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "الكترونيات (1)"
+              <span class=u-mono>
+                "0110409240"
+              <span class=plan-lock title=متطلب سابق لم تنجزه>
+                "🔒 يتطلب: اساسيات الدوائر الكهربائية"
+            <button aria-label=علّم الكترونيات (1) منجزة class=plan-done-btn data-done=الكترونيات (1) title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "3 س"
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=0110409260 data-course-name=مختبر أساسيات الدوائر الكهربائية data-hours=1 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "مختبر أساسيات الدوائر الكهربائية"
+              <span class=u-mono>
+                "0110409260"
+              <span class=plan-lock title=متطلب سابق لم تنجزه>
+                "🔒 يتطلب: فيزياء عامة عملية (1)، اساسيات الدوائر الكهربائية"
+              <span>
+                "مختبر"
+            <button aria-label=علّم مختبر أساسيات الدوائر الكهربائية منجزة class=plan-done-btn data-done=مختبر أساسيات الدوائر الكهربائية title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "1 س"
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=0110408221 data-course-name=مختبر منطق رقمي data-hours=1 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "مختبر منطق رقمي"
+              <span class=u-mono>
+                "0110408221"
+              <span class=plan-lock title=متطلب سابق لم تنجزه>
+                "🔒 يتطلب: منطق رقمي"
+              <span>
+                "مختبر"
+            <button aria-label=علّم مختبر منطق رقمي منجزة class=plan-done-btn data-done=مختبر منطق رقمي title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "1 س"
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=1704001303 data-course-name=تحليل عددي data-hours=3 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "تحليل عددي"
+              <span class=u-mono>
+                "1704001303"
+              <span class=plan-lock title=متطلب سابق لم تنجزه>
+                "🔒 يتطلب: معادلات تفاضلية عادية (1)، برمجة الحاسوب"
+            <button aria-label=علّم تحليل عددي منجزة class=plan-done-btn data-done=تحليل عددي title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "3 س"
+      <div class=card data-year=3>
+        <div class=sem-head>
+          <div>
+            <span>
+              "سنة 3"
+            <h3>
+              "الفصل الخامس"
+          <div>
+            <span>
+              "15 ساعة"
+            <span class=arrow>
+              "▼"
+        <div class=sem-body>
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=0110405331 data-course-name=تحكم آلي data-hours=3 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "تحكم آلي"
+              <span class=u-mono>
+                "0110405331"
+              <span class=plan-lock title=متطلب سابق لم تنجزه>
+                "🔒 يتطلب: معادلات تفاضلية عادية (1)"
+            <button aria-label=علّم تحكم آلي منجزة class=plan-done-btn data-done=تحكم آلي title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "3 س"
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=2104091322 data-course-name=إشارات وأنظمة data-hours=3 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "إشارات وأنظمة"
+              <span class=u-mono>
+                "2104091322"
+              <span class=plan-lock title=متطلب سابق لم تنجزه>
+                "🔒 يتطلب: رياضيات متقطعة، معادلات تفاضلية عادية (1)"
+            <button aria-label=علّم إشارات وأنظمة منجزة class=plan-done-btn data-done=إشارات وأنظمة title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "3 س"
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=2104081311 data-course-name=البرمجة الكينونية data-hours=3 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "البرمجة الكينونية"
+              <span class=u-mono>
+                "2104081311"
+              <span class=plan-lock title=متطلب سابق لم تنجزه>
+                "🔒 يتطلب: برمجة الحاسوب"
+            <button aria-label=علّم البرمجة الكينونية منجزة class=plan-done-btn data-done=البرمجة الكينونية title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "3 س"
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=2104031302 data-course-name=اقتصاد هندسي data-hours=2 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "اقتصاد هندسي"
+              <span class=u-mono>
+                "2104031302"
+              <span class=plan-lock title=متطلب سابق لم تنجزه>
+                "🔒 يتطلب: تفاضل وتكامل (2)"
+            <button aria-label=علّم اقتصاد هندسي منجزة class=plan-done-btn data-done=اقتصاد هندسي title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "2 س"
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=0110408327 data-course-name=الالكترونيات الرقمية والدارات المتكاملة data-hours=3 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "الالكترونيات الرقمية والدارات المتكاملة"
+              <span class=u-mono>
+                "0110408327"
+              <span class=plan-lock title=متطلب سابق لم تنجزه>
+                "🔒 يتطلب: الكترونيات (1)، منطق رقمي"
+            <button aria-label=علّم الالكترونيات الرقمية والدارات المتكاملة منجزة class=plan-done-btn data-done=الالكترونيات الرقمية والدارات المتكاملة title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "3 س"
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=2104081314 data-course-name=مختبر تطبيقات الحاسوب data-hours=1 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "مختبر تطبيقات الحاسوب"
+              <span class=u-mono>
+                "2104081314"
+              <span class=plan-lock title=متطلب سابق لم تنجزه>
+                "🔒 يتطلب: برمجة الحاسوب"
+              <span>
+                "مختبر"
+            <button aria-label=علّم مختبر تطبيقات الحاسوب منجزة class=plan-done-btn data-done=مختبر تطبيقات الحاسوب title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "1 س"
+      <div class=card data-year=3>
+        <div class=sem-head>
+          <div>
+            <span>
+              "سنة 3"
+            <h3>
+              "الفصل السادس"
+          <div>
+            <span>
+              "15 ساعة"
+            <span class=arrow>
+              "▼"
+        <div class=sem-body>
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=0110408303 data-course-name=اساسيات الاتصالات data-hours=3 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "اساسيات الاتصالات"
+              <span class=u-mono>
+                "0110408303"
+              <span class=plan-lock title=متطلب سابق لم تنجزه>
+                "🔒 يتطلب: الاحصاء والاحتمالات، إشارات وأنظمة"
+            <button aria-label=علّم اساسيات الاتصالات منجزة class=plan-done-btn data-done=اساسيات الاتصالات title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "3 س"
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=2304081362 data-course-name=انظمة مضمنة data-hours=3 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "انظمة مضمنة"
+              <span class=u-mono>
+                "2304081362"
+              <span class=plan-lock title=متطلب سابق لم تنجزه>
+                "🔒 يتطلب: تنظيم حاسوب"
+            <button aria-label=علّم انظمة مضمنة منجزة class=plan-done-btn data-done=انظمة مضمنة title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "3 س"
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=2304081326 data-course-name=مختبر الأنظمة المضمنة data-hours=1 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "مختبر الأنظمة المضمنة"
+              <span class=u-mono>
+                "2304081326"
+              <span class=plan-lock title=متطلب سابق لم تنجزه>
+                "🔒 يتطلب: انظمة مضمنة"
+              <span>
+                "مختبر"
+            <button aria-label=علّم مختبر الأنظمة المضمنة منجزة class=plan-done-btn data-done=مختبر الأنظمة المضمنة title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "1 س"
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=2304081333 data-course-name=معالجات دقيقة data-hours=1 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "معالجات دقيقة"
+              <span class=u-mono>
+                "2304081333"
+              <span class=plan-lock title=متطلب سابق لم تنجزه>
+                "🔒 يتطلب: تنظيم حاسوب، مختبر منطق رقمي"
+            <button aria-label=علّم معالجات دقيقة منجزة class=plan-done-btn data-done=معالجات دقيقة title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "1 س"
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=2304081330 data-course-name=تنظيم حاسوب data-hours=3 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "تنظيم حاسوب"
+              <span class=u-mono>
+                "2304081330"
+              <span class=plan-lock title=متطلب سابق لم تنجزه>
+                "🔒 يتطلب: الكترونيات (1)، منطق رقمي"
+            <button aria-label=علّم تنظيم حاسوب منجزة class=plan-done-btn data-done=تنظيم حاسوب title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "3 س"
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=2104091352 data-course-name=مختبر الدوائر الالكترونية data-hours=1 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "مختبر الدوائر الالكترونية"
+              <span class=u-mono>
+                "2104091352"
+              <span class=plan-lock title=متطلب سابق لم تنجزه>
+                "🔒 يتطلب: مختبر أساسيات الدوائر الكهربائية، الكترونيات (1)"
+              <span>
+                "مختبر"
+            <button aria-label=علّم مختبر الدوائر الالكترونية منجزة class=plan-done-btn data-done=مختبر الدوائر الالكترونية title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "1 س"
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=2304081415 data-course-name=هندسة البرمجيات data-hours=3 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "هندسة البرمجيات"
+              <span class=u-mono>
+                "2304081415"
+              <span class=plan-lock title=متطلب سابق لم تنجزه>
+                "🔒 يتطلب: البرمجة الكينونية"
+            <button aria-label=علّم هندسة البرمجيات منجزة class=plan-done-btn data-done=هندسة البرمجيات title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "3 س"
+      <div class=card data-year=4>
+        <div class=sem-head>
+          <div>
+            <span>
+              "سنة 4"
+            <h3>
+              "الفصل السابع"
+          <div>
+            <span>
+              "18 ساعة"
+            <span class=arrow>
+              "▼"
+        <div class=sem-body>
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=0110408450 data-course-name=شبكات حاسوب data-hours=3 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "شبكات حاسوب"
+              <span class=u-mono>
+                "0110408450"
+              <span class=plan-lock title=متطلب سابق لم تنجزه>
+                "🔒 يتطلب: اساسيات الاتصالات"
+            <button aria-label=علّم شبكات حاسوب منجزة class=plan-done-btn data-done=شبكات حاسوب title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "3 س"
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=0110408300 data-course-name=خوارزميات data-hours=3 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "خوارزميات"
+              <span class=u-mono>
+                "0110408300"
+              <span class=plan-lock title=متطلب سابق لم تنجزه>
+                "🔒 يتطلب: هيكلية البيانات، رياضيات متقطعة"
+            <button aria-label=علّم خوارزميات منجزة class=plan-done-btn data-done=خوارزميات title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "3 س"
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=0111002240 data-course-name=نظم قواعد البيانات data-hours=3 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "نظم قواعد البيانات"
+              <span class=u-mono>
+                "0111002240"
+              <span class=plan-lock title=متطلب سابق لم تنجزه>
+                "🔒 يتطلب: هيكلية البيانات"
+            <button aria-label=علّم نظم قواعد البيانات منجزة class=plan-done-btn data-done=نظم قواعد البيانات title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "3 س"
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=0110408442 data-course-name=مختبر صيانة وتشغيل الحاسوب data-hours=1 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "مختبر صيانة وتشغيل الحاسوب"
+              <span class=u-mono>
+                "0110408442"
+              <span class=plan-lock title=متطلب سابق لم تنجزه>
+                "🔒 يتطلب: الكترونيات (1)"
+              <span>
+                "مختبر"
+            <button aria-label=علّم مختبر صيانة وتشغيل الحاسوب منجزة class=plan-done-btn data-done=مختبر صيانة وتشغيل الحاسوب title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "1 س"
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=2304081443 data-course-name=معمارية حواسيب data-hours=3 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "معمارية حواسيب"
+              <span class=u-mono>
+                "2304081443"
+              <span class=plan-lock title=متطلب سابق لم تنجزه>
+                "🔒 يتطلب: تنظيم حاسوب"
+            <button aria-label=علّم معمارية حواسيب منجزة class=plan-done-btn data-done=معمارية حواسيب title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "3 س"
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=0110408455 data-course-name=انظمة تشغيل data-hours=3 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "انظمة تشغيل"
+              <span class=u-mono>
+                "0110408455"
+              <span class=plan-lock title=متطلب سابق لم تنجزه>
+                "🔒 يتطلب: تنظيم حاسوب"
+            <button aria-label=علّم انظمة تشغيل منجزة class=plan-done-btn data-done=انظمة تشغيل title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "3 س"
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=2114041123 data-course-name=القيادة والمسؤولية المجتمعية data-hours=2 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "القيادة والمسؤولية المجتمعية"
+              <span class=u-mono>
+                "2114041123"
+            <button aria-label=علّم القيادة والمسؤولية المجتمعية منجزة class=plan-done-btn data-done=القيادة والمسؤولية المجتمعية title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "2 س"
+      <div class=card data-year=4>
+        <div class=sem-head>
+          <div>
+            <span>
+              "سنة 4"
+            <h3>
+              "الفصل الثامن"
+          <div>
+            <span>
+              "18 ساعة"
+            <span class=arrow>
+              "▼"
+        <div class=sem-body>
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=0110408457 data-course-name=الشبكات اللاسلكية data-hours=3 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "الشبكات اللاسلكية"
+              <span class=u-mono>
+                "0110408457"
+              <span class=plan-lock title=متطلب سابق لم تنجزه>
+                "🔒 يتطلب: شبكات حاسوب"
+            <button aria-label=علّم الشبكات اللاسلكية منجزة class=plan-done-btn data-done=الشبكات اللاسلكية title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "3 س"
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=0110408454 data-course-name=مختبر شبكات الحاسوب data-hours=1 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "مختبر شبكات الحاسوب"
+              <span class=u-mono>
+                "0110408454"
+              <span class=plan-lock title=متطلب سابق لم تنجزه>
+                "🔒 يتطلب: شبكات حاسوب"
+              <span>
+                "مختبر"
+            <button aria-label=علّم مختبر شبكات الحاسوب منجزة class=plan-done-btn data-done=مختبر شبكات الحاسوب title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "1 س"
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=0110408456 data-course-name=امن الحاسوب data-hours=3 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "امن الحاسوب"
+              <span class=u-mono>
+                "0110408456"
+              <span class=plan-lock title=متطلب سابق لم تنجزه>
+                "🔒 يتطلب: شبكات حاسوب، خوارزميات"
+            <button aria-label=علّم امن الحاسوب منجزة class=plan-done-btn data-done=امن الحاسوب title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "3 س"
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=2104081374 data-course-name=الذكاء الاصطناعي وتعلم الآلة data-hours=3 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "الذكاء الاصطناعي وتعلم الآلة"
+              <span class=u-mono>
+                "2104081374"
+              <span class=plan-lock title=متطلب سابق لم تنجزه>
+                "🔒 يتطلب: خوارزميات"
+            <button aria-label=علّم الذكاء الاصطناعي وتعلم الآلة منجزة class=plan-done-btn data-done=الذكاء الاصطناعي وتعلم الآلة title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "3 س"
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=2104081410 data-course-name=علم الانظمة و البيانات data-hours=3 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "علم الانظمة و البيانات"
+              <span class=u-mono>
+                "2104081410"
+              <span class=plan-lock title=متطلب سابق لم تنجزه>
+                "🔒 يتطلب: خوارزميات، شبكات حاسوب"
+            <button aria-label=علّم علم الانظمة و البيانات منجزة class=plan-done-btn data-done=علم الانظمة و البيانات title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "3 س"
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=0110400203 data-course-name=أخلاقيات و مهارات اتصال data-hours=3 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "أخلاقيات و مهارات اتصال"
+              <span class=u-mono>
+                "0110400203"
+            <button aria-label=علّم أخلاقيات و مهارات اتصال منجزة class=plan-done-btn data-done=أخلاقيات و مهارات اتصال title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "3 س"
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=2114041125 data-course-name=المهارات الحياتية data-hours=2 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "المهارات الحياتية"
+              <span class=u-mono>
+                "2114041125"
+            <button aria-label=علّم المهارات الحياتية منجزة class=plan-done-btn data-done=المهارات الحياتية title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "2 س"
+      <div class=card data-year=5>
+        <div class=sem-head>
+          <div>
+            <span>
+              "سنة 5"
+            <h3>
+              "الفصل التاسع"
+          <div>
+            <span>
+              "1 ساعة"
+            <span class=arrow>
+              "▼"
+        <div class=sem-body>
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=0110408591 data-course-name=مشروع تخرج (1) data-hours=1 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "مشروع تخرج (1)"
+              <span class=u-mono>
+                "0110408591"
+            <button aria-label=علّم مشروع تخرج (1) منجزة class=plan-done-btn data-done=مشروع تخرج (1) title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "1 س"
+      <div class=card data-year=5>
+        <div class=sem-head>
+          <div>
+            <span>
+              "سنة 5"
+            <h3>
+              "الفصل العاشر"
+          <div>
+            <span>
+              "7 ساعة"
+            <span class=arrow>
+              "▼"
+        <div class=sem-body>
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=0110408592 data-course-name=مشروع تخرج (2) data-hours=2 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "مشروع تخرج (2)"
+              <span class=u-mono>
+                "0110408592"
+              <span class=plan-lock title=متطلب سابق لم تنجزه>
+                "🔒 يتطلب: مشروع تخرج (1)"
+            <button aria-label=علّم مشروع تخرج (2) منجزة class=plan-done-btn data-done=مشروع تخرج (2) title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "2 س"
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=2004081480 data-course-name=التدريب العملي data-hours=3 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "التدريب العملي"
+              <span class=u-mono>
+                "2004081480"
+              <span class=plan-lock title=متطلب سابق لم تنجزه>
+                "🔒 يتطلب: أخلاقيات و مهارات اتصال"
+            <button aria-label=علّم التدريب العملي منجزة class=plan-done-btn data-done=التدريب العملي title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "3 س"
+          <div class=plan-course-row>
+            <button class=unified-course-btn not-added data-code=2114041124 data-course-name=الريادة والابتكار data-hours=2 title=إضافة إلى موادي type=button>
+              "+"
+            <div>
+              <span>
+                "الريادة والابتكار"
+              <span class=u-mono>
+                "2114041124"
+            <button aria-label=علّم الريادة والابتكار منجزة class=plan-done-btn data-done=الريادة والابتكار title=علّمها منجزة type=button>
+              "✓"
+            <span>
+              "2 س"
+  <div class=subsection data-plan-sub=tree>
+    <div id=planTree>
+  <div class=subsection data-plan-sub=desc>
+    <div class=controls>
+      <input aria-label=بحث بالمواد id=cdSearch placeholder=🔍 ابحث... type=search>
+      <button class=chip active data-cd-year=all>
+        "الكل"
+      <button class=chip data-cd-year=1>
+        "سنة 1"
+      <button class=chip data-cd-year=2>
+        "سنة 2"
+      <button class=chip data-cd-year=3>
+        "سنة 3"
+      <button class=chip data-cd-year=4>
+        "سنة 4"
+      <button class=chip data-cd-year=5>
+        "سنة 5"
+    <div id=cdList>
+      <div>
+        "عدد المواد: 57"
+      <div class=cd-semester>
+        <div class=cd-semester-title>
+          "📚 سنة 1 — الفصل الأول"
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 تفاضل وتكامل (1)"
+            <span class=badge>
+              "3 ساعات"
+          <div class=cd-code>
+            "كود: 0110108101"
+          <div class=cd-desc>
+            "النهايات، الاشتقاق، التكامل."
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 فيزياء عامة (1)"
+            <span class=badge>
+              "3 ساعات"
+          <div class=cd-code>
+            "كود: 0110102101"
+          <div class=cd-desc>
+            "الميكانيكا والحركة."
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 مهارات التواصل باللغة العربية"
+            <span class=badge>
+              "3 ساعات"
+          <div class=cd-code>
+            "كود: 2116011101"
+          <div class=cd-desc>
+            "تنمية المهارات اللغوية في الكتابة والتحدث والاستماع."
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 اساسيات الكيمياء العامة"
+            <span class=badge>
+              "3 ساعات"
+          <div class=cd-code>
+            "كود: 0110103107"
+          <div class=cd-desc>
+            "التركيب الذري، الروابط، التفاعلات."
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 رسم هندسي يدوي"
+            <span class=badge>
+              "2 ساعات"
+          <div class=cd-code>
+            "كود: 0110400201"
+          <div class=cd-desc>
+            "الإسقاطات والمساقط."
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 مهارات التواصل باللغة الانجليزية"
+            <span class=badge>
+              "3 ساعات"
+          <div class=cd-code>
+            "كود: 2116021101"
+          <div class=cd-desc>
+            "تنمية مهارات اللغة الإنجليزية."
+      <div class=cd-semester>
+        <div class=cd-semester-title>
+          "📚 سنة 1 — الفصل الثاني"
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 تفاضل وتكامل (2)"
+            <span class=badge>
+              "3 ساعات"
+          <div class=cd-code>
+            "كود: 0110101102"
+          <div class=cd-desc>
+            "طرق التكامل، المتسلسلات."
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 فيزياء عامة (2)"
+            <span class=badge>
+              "3 ساعات"
+          <div class=cd-code>
+            "كود: 0110102102"
+          <div class=cd-desc>
+            "الكهرباء والمغناطيسية."
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 برمجة الحاسوب"
+            <span class=badge>
+              "3 ساعات"
+          <div class=cd-code>
+            "كود: 0110400102"
+          <div class=cd-desc>
+            "أساسيات البرمجة."
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 اساسيات الكيمياء العامة العملية"
+            <span class=badge>
+              "1 ساعات"
+          <div class=cd-code>
+            "كود: 0110103108"
+          <div class=cd-desc>
+            "تجارب مخبرية في الكيمياء."
+          <span class=badge>
+            "مختبر"
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 فيزياء عامة عملية (1)"
+            <span class=badge>
+              "1 ساعات"
+          <div class=cd-code>
+            "كود: 0110102103"
+          <div class=cd-desc>
+            "تجارب مخبرية في الفيزياء."
+          <span class=badge>
+            "مختبر"
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 مشاغل هندسية"
+            <span class=badge>
+              "1 ساعات"
+          <div class=cd-code>
+            "كود: 0110400101"
+          <div class=cd-desc>
+            "تدريب على الأدوات الهندسية."
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 علوم عسكرية"
+            <span class=badge>
+              "3 ساعات"
+          <div class=cd-code>
+            "كود: 2214041117"
+          <div class=cd-desc>
+            "التوعية العسكرية والانتماء الوطني."
+      <div class=cd-semester>
+        <div class=cd-semester-title>
+          "📚 سنة 2 — الفصل الثالث"
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 رياضيات متقطعة"
+            <span class=badge>
+              "3 ساعات"
+          <div class=cd-code>
+            "كود: 0110101152"
+          <div class=cd-desc>
+            "المجموعات، العلاقات، المنطق، الرسومات."
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 معادلات تفاضلية عادية (1)"
+            <span class=badge>
+              "3 ساعات"
+          <div class=cd-code>
+            "كود: 0110101203"
+          <div class=cd-desc>
+            "المعادلات التفاضلية."
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 تربية وطنية"
+            <span class=badge>
+              "3 ساعات"
+          <div class=cd-code>
+            "كود: 1714041118"
+          <div class=cd-desc>
+            "مفاهيم المواطنة والانتماء."
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 اساسيات الدوائر الكهربائية"
+            <span class=badge>
+              "3 ساعات"
+          <div class=cd-code>
+            "كود: 0110406229"
+          <div class=cd-desc>
+            "كيرشوف، تحليل الشبكات."
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 منطق رقمي"
+            <span class=badge>
+              "3 ساعات"
+          <div class=cd-code>
+            "كود: 0110408220"
+          <div class=cd-desc>
+            "أنظمة الأعداد، الجبر البولي."
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 رسم هندسي بالحاسوب"
+            <span class=badge>
+              "1 ساعات"
+          <div class=cd-code>
+            "كود: 0110400202"
+          <div class=cd-desc>
+            "AutoCAD."
+          <span class=badge>
+            "مختبر"
+      <div class=cd-semester>
+        <div class=cd-semester-title>
+          "📚 سنة 2 — الفصل الرابع"
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 تفاضل وتكامل (3)"
+            <span class=badge>
+              "3 ساعات"
+          <div class=cd-code>
+            "كود: 0110101201"
+          <div class=cd-desc>
+            "المتجهات، التفاضل الجزئي، التكامل المتعدد."
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 الاحصاء والاحتمالات"
+            <span class=badge>
+              "3 ساعات"
+          <div class=cd-code>
+            "كود: 0110403242"
+          <div class=cd-desc>
+            "الاحتمالات، التوزيعات، الإحصاء."
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 هيكلية البيانات"
+            <span class=badge>
+              "3 ساعات"
+          <div class=cd-code>
+            "كود: 0110408213"
+          <div class=cd-desc>
+            "المداخن والطوابير والأشجار."
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 الكترونيات (1)"
+            <span class=badge>
+              "3 ساعات"
+          <div class=cd-code>
+            "كود: 0110409240"
+          <div class=cd-desc>
+            "أشباه الموصلات، الترانزستورات."
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 مختبر أساسيات الدوائر الكهربائية"
+            <span class=badge>
+              "1 ساعات"
+          <div class=cd-code>
+            "كود: 0110409260"
+          <div class=cd-desc>
+            "قياس الجهد والتيار."
+          <span class=badge>
+            "مختبر"
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 مختبر منطق رقمي"
+            <span class=badge>
+              "1 ساعات"
+          <div class=cd-code>
+            "كود: 0110408221"
+          <div class=cd-desc>
+            "البوابات المنطقية."
+          <span class=badge>
+            "مختبر"
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 تحليل عددي"
+            <span class=badge>
+              "3 ساعات"
+          <div class=cd-code>
+            "كود: 1704001303"
+          <div class=cd-desc>
+            "حل المعادلات عددياً."
+      <div class=cd-semester>
+        <div class=cd-semester-title>
+          "📚 سنة 3 — الفصل الخامس"
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 تحكم آلي"
+            <span class=badge>
+              "3 ساعات"
+          <div class=cd-code>
+            "كود: 0110405331"
+          <div class=cd-desc>
+            "أنظمة التحكم، لابلاس."
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 إشارات وأنظمة"
+            <span class=badge>
+              "3 ساعات"
+          <div class=cd-code>
+            "كود: 2104091322"
+          <div class=cd-desc>
+            "لابلاس وفورييه."
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 البرمجة الكينونية"
+            <span class=badge>
+              "3 ساعات"
+          <div class=cd-code>
+            "كود: 2104081311"
+          <div class=cd-desc>
+            "OOP، UML، Java/C#."
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 اقتصاد هندسي"
+            <span class=badge>
+              "2 ساعات"
+          <div class=cd-code>
+            "كود: 2104031302"
+          <div class=cd-desc>
+            "التكاليف، القيمة الزمنية."
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 الالكترونيات الرقمية والدارات المتكاملة"
+            <span class=badge>
+              "3 ساعات"
+          <div class=cd-code>
+            "كود: 0110408327"
+          <div class=cd-desc>
+            "البوابات المنطقية والدارات المتكاملة."
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 مختبر تطبيقات الحاسوب"
+            <span class=badge>
+              "1 ساعات"
+          <div class=cd-code>
+            "كود: 2104081314"
+          <div class=cd-desc>
+            "تطوير الويب والهاتف."
+          <span class=badge>
+            "مختبر"
+      <div class=cd-semester>
+        <div class=cd-semester-title>
+          "📚 سنة 3 — الفصل السادس"
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 اساسيات الاتصالات"
+            <span class=badge>
+              "3 ساعات"
+          <div class=cd-code>
+            "كود: 0110408303"
+          <div class=cd-desc>
+            "الإرسال التناظري والرقمي."
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 انظمة مضمنة"
+            <span class=badge>
+              "3 ساعات"
+          <div class=cd-code>
+            "كود: 2304081362"
+          <div class=cd-desc>
+            "العتاد والبرمجيات."
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 مختبر الأنظمة المضمنة"
+            <span class=badge>
+              "1 ساعات"
+          <div class=cd-code>
+            "كود: 2304081326"
+          <div class=cd-desc>
+            "برمجة Arduino و PIC."
+          <span class=badge>
+            "مختبر"
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 معالجات دقيقة"
+            <span class=badge>
+              "1 ساعات"
+          <div class=cd-code>
+            "كود: 2304081333"
+          <div class=cd-desc>
+            "RISC-V / 8088."
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 تنظيم حاسوب"
+            <span class=badge>
+              "3 ساعات"
+          <div class=cd-code>
+            "كود: 2304081330"
+          <div class=cd-desc>
+            "مجموعة الأوامر والذاكرة."
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 مختبر الدوائر الالكترونية"
+            <span class=badge>
+              "1 ساعات"
+          <div class=cd-code>
+            "كود: 2104091352"
+          <div class=cd-desc>
+            "تجارب الإلكترونيات."
+          <span class=badge>
+            "مختبر"
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 هندسة البرمجيات"
+            <span class=badge>
+              "3 ساعات"
+          <div class=cd-code>
+            "كود: 2304081415"
+          <div class=cd-desc>
+            "UML، SDLC."
+      <div class=cd-semester>
+        <div class=cd-semester-title>
+          "📚 سنة 4 — الفصل السابع"
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 شبكات حاسوب"
+            <span class=badge>
+              "3 ساعات"
+          <div class=cd-code>
+            "كود: 0110408450"
+          <div class=cd-desc>
+            "OSI، TCP/IP."
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 خوارزميات"
+            <span class=badge>
+              "3 ساعات"
+          <div class=cd-code>
+            "كود: 0110408300"
+          <div class=cd-desc>
+            "تصميم وتحليل الخوارزميات."
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 نظم قواعد البيانات"
+            <span class=badge>
+              "3 ساعات"
+          <div class=cd-code>
+            "كود: 0111002240"
+          <div class=cd-desc>
+            "ER، SQL، التطبيع."
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 مختبر صيانة وتشغيل الحاسوب"
+            <span class=badge>
+              "1 ساعات"
+          <div class=cd-code>
+            "كود: 0110408442"
+          <div class=cd-desc>
+            "صيانة الأجهزة الشخصية."
+          <span class=badge>
+            "مختبر"
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 معمارية حواسيب"
+            <span class=badge>
+              "3 ساعات"
+          <div class=cd-code>
+            "كود: 2304081443"
+          <div class=cd-desc>
+            "خطوط الأنابيب، التسلسل الهرمي."
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 انظمة تشغيل"
+            <span class=badge>
+              "3 ساعات"
+          <div class=cd-code>
+            "كود: 0110408455"
+          <div class=cd-desc>
+            "الخيوط، الجدولة، إدارة الذاكرة."
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 القيادة والمسؤولية المجتمعية"
+            <span class=badge>
+              "2 ساعات"
+          <div class=cd-code>
+            "كود: 2114041123"
+          <div class=cd-desc>
+            "مفاهيم القيادة والعمل التطوعي."
+      <div class=cd-semester>
+        <div class=cd-semester-title>
+          "📚 سنة 4 — الفصل الثامن"
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 الشبكات اللاسلكية"
+            <span class=badge>
+              "3 ساعات"
+          <div class=cd-code>
+            "كود: 0110408457"
+          <div class=cd-desc>
+            "WLAN، معايير 802.11."
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 مختبر شبكات الحاسوب"
+            <span class=badge>
+              "1 ساعات"
+          <div class=cd-code>
+            "كود: 0110408454"
+          <div class=cd-desc>
+            "الراوتر والقاطعات."
+          <span class=badge>
+            "مختبر"
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 امن الحاسوب"
+            <span class=badge>
+              "3 ساعات"
+          <div class=cd-code>
+            "كود: 0110408456"
+          <div class=cd-desc>
+            "الأمن السيبراني، التشفير."
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 الذكاء الاصطناعي وتعلم الآلة"
+            <span class=badge>
+              "3 ساعات"
+          <div class=cd-code>
+            "كود: 2104081374"
+          <div class=cd-desc>
+            "المنطق الضبابي، الشبكات العصبية."
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 علم الانظمة و البيانات"
+            <span class=badge>
+              "3 ساعات"
+          <div class=cd-code>
+            "كود: 2104081410"
+          <div class=cd-desc>
+            "Python، Pandas، التحليل."
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 أخلاقيات و مهارات اتصال"
+            <span class=badge>
+              "3 ساعات"
+          <div class=cd-code>
+            "كود: 0110400203"
+          <div class=cd-desc>
+            "أخلاقيات المهنة والتواصل."
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 المهارات الحياتية"
+            <span class=badge>
+              "2 ساعات"
+          <div class=cd-code>
+            "كود: 2114041125"
+          <div class=cd-desc>
+            "المهارات الشخصية والحياتية."
+      <div class=cd-semester>
+        <div class=cd-semester-title>
+          "📚 سنة 5 — الفصل التاسع"
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 مشروع تخرج (1)"
+            <span class=badge>
+              "1 ساعات"
+          <div class=cd-code>
+            "كود: 0110408591"
+          <div class=cd-desc>
+            "مشروع تخرج - الجزء الأول."
+      <div class=cd-semester>
+        <div class=cd-semester-title>
+          "📚 سنة 5 — الفصل العاشر"
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 مشروع تخرج (2)"
+            <span class=badge>
+              "2 ساعات"
+          <div class=cd-code>
+            "كود: 0110408592"
+          <div class=cd-desc>
+            "مشروع تخرج - الجزء الثاني."
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 التدريب العملي"
+            <span class=badge>
+              "3 ساعات"
+          <div class=cd-code>
+            "كود: 2004081480"
+          <div class=cd-desc>
+            "تدريب ميداني 8 أسابيع."
+        <div class=cd-course>
+          <div class=cd-head>
+            <div class=cd-name>
+              "📘 الريادة والابتكار"
+            <span class=badge>
+              "2 ساعات"
+          <div class=cd-code>
+            "كود: 2114041124"
+          <div class=cd-desc>
+            "ريادة الأعمال والابتكار."
+  <div class=subsection data-plan-sub=simulator>
+    <div id=planSimulatorBody>

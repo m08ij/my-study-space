@@ -1,0 +1,1 @@
+﻿{ "name": "study-space-tests", "private": true, "description": "اختبارات jsdom لمشروع مساحتي الدراسية (تشغيل: npm test)", "scripts": { "test": "node run-all.js" }, "dependencies": { "jsdom": "^30.1.1" } }

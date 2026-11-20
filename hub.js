@@ -1,0 +1,834 @@
+/* ============================================================
+   🧭 hub.js — يومي الجامعي + تفاصيل المحاضرة + مركز المواد
+   - يعتمد على البيانات والدوال الموجودة (space / S / switchTab / showModal ...)
+   - كل الألوان من متغيرات الثيم؛ لا بيانات وهمية
+   ============================================================ */
+(function(){
+  'use strict';
+  if(window._hubLoaded) return;
+  window._hubLoaded = true;
+
+  /* ============ أدوات ============ */
+  function sp(){ return window.space || {}; }
+  function esc(s){ return window.esc ? window.esc(s) : String(s == null ? '' : s); }
+  function toast(m, t, d){ if(window.toast) window.toast(m, t, d); }
+  function $(s, r){ return (r || document).querySelector(s); }
+  function DE(){ return window.DAYS_EN || ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']; }
+  function DA(){ return window.DAYS_AR || ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت']; }
+  function todayStr(){ return window.today ? window.today() : ''; }
+  function pm(t){
+    if(window.ttMin) return window.ttMin(t);
+    var p = String(t || '').split(':'), h = parseInt(p[0], 10);
+    return isNaN(h) ? null : h * 60 + (parseInt(p[1], 10) || 0);
+  }
+  function pad(m){
+    m = ((Math.round(m) % 1440) + 1440) % 1440;
+    return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
+  }
+  function dur(m){
+    m = Math.max(1, Math.round(m));
+    if(window.ttDur) return window.ttDur(m);
+    return m + ' د';
+  }
+  /* مدة حتى حدث: دقائق/ساعات/أيام */
+  function until(min){
+    min = Math.max(0, min);
+    if(min < 60) return Math.max(1, Math.ceil(min)) + ' د';
+    if(min < 1440){ var h = Math.floor(min / 60), m = Math.round(min % 60); return m ? h + 'س ' + m + 'د' : h + ' س'; }
+    var d = Math.floor(min / 1440), hh = Math.round((min % 1440) / 60);
+    return d + ' يوم' + (hh ? ' و' + hh + 'س' : '');
+  }
+    function foldersOf(c){
+    var out = [c.id];
+    (c.filesFrom || []).forEach(function(f){ if(f && out.indexOf(f) === -1) out.push(f); });
+    return out;
+  }
+  function findCourse(ref){
+    var list = sp().courses || [];
+    for(var i = 0; i < list.length; i++){ if(list[i].id === ref) return list[i]; }
+    for(var j = 0; j < list.length; j++){ if(list[j].name === ref) return list[j]; }
+    return null;
+  }
+  function parseExamDate(e){
+    if(!e || !/^\d{4}-\d{2}-\d{2}$/.test(e.date || '')) return null;
+    var p = e.date.split('-'), hh = 23, mm = 59;
+    var m = String(e.time || '').match(/^(\d{1,2}):(\d{2})/);
+    if(m){ hh = parseInt(m[1], 10); mm = parseInt(m[2], 10); }
+    return new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10), hh, mm, 0);
+  }
+  function daysFromToday(d){
+    var n = new Date(), a = new Date(n.getFullYear(), n.getMonth(), n.getDate());
+    var b = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    return Math.round((b - a) / 86400000);
+  }
+  function dayWord(n){ return n === 0 ? 'اليوم' : n === 1 ? 'غداً' : n === 2 ? 'بعد غد' : 'بعد ' + n + ' يوم'; }
+  function afterChange(){
+    try{ if(window.renderDashboard) window.renderDashboard(); }catch(e){}
+    refreshActiveCourse();
+  }
+
+  /* ============================================================
+     1) Schedule — حسابات الجدول (مصدر واحد للوقت الحالي/القادم)
+     ============================================================ */
+  var Schedule = {
+    /* محاضرات الجدول كقائمة موحّدة. المحاضرة بلا وقت نهاية تُعامل ساعة واحدة (hasEnd=false) */
+    entries: function(){
+      var tt = sp().timetable || {}, out = [], de = DE();
+      Object.keys(tt).forEach(function(k){
+        var i = k.indexOf('-'); if(i < 0) return;
+        var day = k.slice(0, i), s = pm(k.slice(i + 1)), c = tt[k];
+        if(s === null || !c || !c.name) return;
+        var dayIdx = de.indexOf(day); if(dayIdx < 0) return;
+        var e = pm(c.end), hasEnd = e !== null && e > s;
+        out.push({ key: k, day: day, dayIdx: dayIdx, start: s, end: hasEnd ? e : s + 60, hasEnd: hasEnd,
+          name: c.name, room: c.room || '', building: c.building || '', instructor: c.instructor || '' });
+      });
+      return out;
+    },
+    forCourse: function(name){
+      return Schedule.entries().filter(function(e){ return e.name === name; })
+        .sort(function(a, b){ return a.dayIdx - b.dayIdx || a.start - b.start; });
+    },
+    place: function(e){ return (e.building ? e.building + (e.room ? ' · ' : '') : '') + (e.room || ''); },
+    status: function(now){
+      now = now || new Date();
+      var nowMin = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60, dayIdx = now.getDay();
+      var all = Schedule.entries();
+      var today = all.filter(function(e){ return e.dayIdx === dayIdx; }).sort(function(a, b){ return a.start - b.start; });
+      today.forEach(function(e){ e.state = nowMin >= e.end ? 'done' : (nowMin >= e.start ? 'now' : 'up'); });
+      var current = null, next = null;
+      today.forEach(function(e){ if(e.state === 'now') current = e; });
+      for(var i = 0; i < today.length; i++){ if(today[i].state === 'up'){ next = today[i]; break; } }
+      var later = null;
+      if(!next){
+        for(var d = 1; d <= 7 && !later; d++){
+          var idx = (dayIdx + d) % 7;
+          var list = all.filter(function(e){ return e.dayIdx === idx; }).sort(function(a, b){ return a.start - b.start; });
+          if(list.length) later = { entry: list[0], daysAhead: d, minutesUntil: d * 1440 - nowMin + list[0].start };
+        }
+      }
+      return { now: now, nowMin: nowMin, dayIdx: dayIdx, today: today, current: current, next: next, later: later,
+        doneCount: today.filter(function(e){ return e.state === 'done'; }).length };
+    }
+  };
+  window.Schedule = Schedule;
+
+  /* ============================================================
+     أرضية النوافذ الجانبية (Sheet) — طبقة خاصة فوق المحتوى وتحت مودالات التعديل
+     ============================================================ */
+  var sheets = [];
+  function openSheet(opts){
+    var bd = document.createElement('div');
+    bd.className = 'hub-sheet-backdrop';
+    bd.innerHTML = '<div class="hub-sheet" role="dialog" aria-modal="true" aria-label="' + esc(opts.title || '') + '" tabindex="-1">' +
+      '<div class="hub-sheet-head"><h3 class="hub-sheet-title"></h3><button type="button" class="hub-x" aria-label="إغلاق">✕</button></div>' +
+      '<div class="hub-sheet-body"></div></div>';
+    document.body.appendChild(bd);
+    var s = { el: bd, panel: bd.querySelector('.hub-sheet'), body: bd.querySelector('.hub-sheet-body'),
+      opener: document.activeElement, onClose: opts.onClose, closed: false };
+    s.setTitle = function(t){ bd.querySelector('.hub-sheet-title').textContent = t; s.panel.setAttribute('aria-label', t); };
+    s.setTitle(opts.title || '');
+    s.close = function(){
+      if(s.closed) return; s.closed = true;
+      var i = sheets.indexOf(s); if(i > -1) sheets.splice(i, 1);
+      bd.remove();
+      if(s.onClose){ try{ s.onClose(); }catch(e){} }
+      if(s.opener && s.opener.focus && document.contains(s.opener)){ try{ s.opener.focus(); }catch(e){} }
+    };
+    bd.addEventListener('click', function(e){ if(e.target === bd) s.close(); });
+    bd.querySelector('.hub-x').addEventListener('click', s.close);
+    /* حبس التركيز داخل النافذة (Tab/Shift+Tab) */
+    s.panel.addEventListener('keydown', function(e){
+      if(e.key !== 'Tab') return;
+      var f = s.panel.querySelectorAll('button:not([disabled]),[href],input:not([disabled]),select,textarea,[tabindex]:not([tabindex="-1"])');
+      if(!f.length) return;
+      var first = f[0], last = f[f.length - 1];
+      if(e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
+      else if(!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
+    });
+    sheets.push(s);
+    setTimeout(function(){ if(!s.closed) s.panel.focus(); }, 30);
+    return s;
+  }
+
+  /* ============================================================
+     2) يومي الجامعي (لوحة اليوم)
+     ============================================================ */
+  var myDayLast = '';
+  function renderMyDay(){}
+    /* تحديث تلقائي: كل 20 ثانية والصفحة ظاهرة، وعند العودة للتبويب، وبعد أي تغيير بيانات (renderDashboard) */
+  setInterval(function(){
+    if(document.visibilityState === 'hidden') return;
+    var el = document.getElementById('myDay');
+    if(el && el.offsetParent !== null) renderMyDay();
+  }, 20000);
+  document.addEventListener('visibilitychange', function(){ if(document.visibilityState === 'visible') renderMyDay(); });
+
+  /* ============================================================
+     تفاصيل المحاضرة (عند الضغط على محاضرة بالجدول)
+     ============================================================ */
+  window.showClassDetails = function(key){
+    var tt = sp().timetable || {}, cls = tt[key];
+    if(!cls){ return; }
+    var e = null, all = Schedule.entries();
+    for(var i = 0; i < all.length; i++){ if(all[i].key === key){ e = all[i]; break; } }
+    if(!e) return;
+    var st = Schedule.status(), state = '';
+    if(e.dayIdx === st.dayIdx){
+      if(st.nowMin >= e.end) state = '<span class="hub-pill muted">انتهت اليوم</span>';
+      else if(st.nowMin >= e.start) state = '<span class="hub-pill danger">🔴 جارية — ' + (e.hasEnd ? 'باقي ' + until(e.end - st.nowMin) : 'بدأت منذ ' + dur(st.nowMin - e.start)) + '</span>';
+      else state = '<span class="hub-pill ok">اليوم — بعد ' + until(e.start - st.nowMin) + '</span>';
+    } else {
+      var ahead = (e.dayIdx - st.dayIdx + 7) % 7;
+      state = '<span class="hub-pill muted">' + (ahead === 1 ? 'غداً' : DA()[e.dayIdx]) + ' · بعد ' + until(ahead * 1440 - st.nowMin + e.start) + '</span>';
+    }
+    var conf = window.getTimetableConflicts ? window.getTimetableConflicts().keys[key] : false;
+    var course = findCourse(e.name);
+    var place = Schedule.place(e);
+    var s = openSheet({ title: e.name });
+    s.body.innerHTML =
+      '<div class="hub-rows">' +
+        '<div class="hub-row"><span>🗓 اليوم</span><b>' + DA()[e.dayIdx] + '</b></div>' +
+        '<div class="hub-row"><span>⏰ الوقت</span><b><bdi dir="ltr">' + pad(e.start) + (e.hasEnd ? '–' + pad(e.end) : '') + '</bdi></b></div>' +
+        '<div class="hub-row"><span>⌛ المدة</span><b>' + (e.hasEnd ? dur(e.end - e.start) : 'غير محددة (وقت النهاية غير مسجّل)') + '</b></div>' +
+        (place ? '<div class="hub-row"><span>📍 المكان</span><b>' + esc(place) + '</b></div>' : '') +
+        (e.instructor ? '<div class="hub-row"><span>👤 الدكتور</span><b>' + esc(e.instructor) + '</b></div>' : '') +
+        '<div class="hub-row"><span>الحالة</span><b>' + state + '</b></div>' +
+      '</div>' +
+      (conf ? '<div class="hub-warn">⚠️ هذه المحاضرة متعارضة مع محاضرة ثانية بنفس اليوم.</div>' : '') +
+      '<div class="hub-actions">' +
+        (course ? '<button type="button" class="btn" data-ca="course">📚 فتح المادة</button>'
+                : '<button type="button" class="btn" data-ca="addcourse">➕ إضافة إلى موادي</button>') +
+        '<button type="button" class="btn btn-ghost" data-ca="edit">✏️ تعديل المحاضرة</button>' +
+        '<button type="button" class="btn btn-danger" data-ca="del">🗑 حذف المحاضرة</button>' +
+      '</div>';
+    /* ملاحظات المحاضرة: تُحفظ في قائمة الملاحظات العامة (notes) بحقول إضافية lecture/course/date — تظهر أيضاً بصفحة الملاحظات */
+    var ln = document.createElement('div'); ln.className = 'hub-sec'; ln.id = 'lecNotes'; s.body.appendChild(ln);
+    function drawLecNotes(){
+      var list = (window.notes || []).filter(function(n){ return n && n.lecture === key; }).sort(function(a, b){ return (b.ts || 0) - (a.ts || 0); });
+      ln.innerHTML = '<h4>📔 ملاحظات المحاضرة <span class="muted">' + (list.length ? list.length : '') + '</span></h4>' +
+        (list.length ? '<div class="hub-list">' + list.slice(0, 5).map(function(n){
+          return '<div class="hub-li"><span class="hub-li-main">' + esc(n.title || 'بدون عنوان') + '<small>' + esc(n.date || '') + (n.body ? ' · ' + esc(String(n.body).slice(0, 70)) : '') + '</small></span></div>';
+        }).join('') + '</div>' : '<div class="hub-empty">ما في ملاحظات لهذه المحاضرة بعد</div>') +
+        '<div class="hub-actions inline"><button type="button" class="btn btn-sm" data-ln="add">➕ ملاحظة</button>' +
+        (list.length ? '<button type="button" class="btn btn-sm btn-ghost" data-ln="all">كل الملاحظات ←</button>' : '') + '</div>';
+    }
+    drawLecNotes();
+    ln.addEventListener('click', function(ev){
+      var b = ev.target.closest ? ev.target.closest('[data-ln]') : null; if(!b) return;
+      if(b.getAttribute('data-ln') === 'all'){ var lc = findCourse(e.name); s.close(); window.switchTab('courses'); if(lc) openCourse(lc.id, 'notes'); return; }
+      window.showModal('ملاحظة — ' + e.name, [ { key: 'title', label: 'العنوان' }, { key: 'body', label: 'الملاحظة', type: 'textarea' } ],
+        { title: e.name + ' — ' + todayStr(), body: '' }, function(data){
+          if(!data.title && !data.body){ toast('اكتب عنواناً أو نصاً', 'warn', 2000); return false; }
+          window.notes = window.notes || [];
+          window.notes.unshift({ title: (data.title || data.body).slice(0, 60), body: data.body || '', ts: Date.now(), course: e.name, lecture: key, date: todayStr() });
+          window.S.set('notes', window.notes);
+          drawLecNotes();
+          toast('✓ حُفظت الملاحظة', 'success', 1500);
+          return true;
+        });
+    });
+    s.body.querySelector('[data-ca="edit"]').addEventListener('click', function(){ s.close(); if(window.editClassSlot) window.editClassSlot(key); });
+    s.body.querySelector('[data-ca="del"]').addEventListener('click', function(){
+      var run = function(){
+        delete sp().timetable[key]; window.saveSpace();
+        if(window.renderTimetable) window.renderTimetable();
+        if(window.renderDashboard) window.renderDashboard();
+        toast('🗑 حُذفت المحاضرة', 'success', 1800);
+        s.close();
+      };
+      if(window.customConfirm) window.customConfirm('حذف محاضرة "' + e.name + '" (' + DA()[e.dayIdx] + ' ' + pad(e.start) + ')؟', run); else if(confirm('حذف المحاضرة؟')) run();
+    });
+    var cb = s.body.querySelector('[data-ca="course"]');
+    if(cb) cb.addEventListener('click', function(){ s.close(); window.switchTab('courses'); openCourse(course.id); });
+    var ab = s.body.querySelector('[data-ca="addcourse"]');
+    if(ab) ab.addEventListener('click', function(){
+      var known = (window.COURSES_DB || {})[e.name];
+      var ok = window.addCourseEverywhere ? window.addCourseEverywhere(e.name, known ? known.code : '', known ? known.h : 3, { silent: true }) : false;
+      if(ok === false) toast('المادة موجودة أصلاً', 'info', 2000); else toast('✅ أُضيفت "' + e.name + '" إلى موادي', 'success', 2000);
+      s.close();
+      var c2 = findCourse(e.name); if(c2){ window.switchTab('courses'); openCourse(c2.id); }
+    });
+  };
+
+  /* ============================================================
+     3) مركز إدارة المواد
+     ============================================================ */
+  var hub = { q: '', filter: 'all', sort: 'name' };
+  var FILTERS = [
+    { id: 'all', label: 'الكل' }, { id: 'today', label: '🎓 محاضرات اليوم' }, { id: 'tasks', label: '📝 عليها مهام' },
+    { id: 'exam', label: '⏳ امتحان قريب' }, { id: 'lowatt', label: '⚠️ حضور منخفض' }, { id: 'nosched', label: '🗓 بدون جدول' }
+  ];
+  var SORTS = [ { id: 'name', label: 'الاسم' }, { id: 'exam', label: 'أقرب امتحان' }, { id: 'tasks', label: 'الأكثر مهام' } ];
+
+          
+  
+  var hubObserver = null;
+  function loadFileBadge(c){
+    var els = document.querySelectorAll('[data-files-badge="' + c.id + '"]');
+    if(!els.length) return;
+    if(!window.SB || !window.SB.listCourseFilesMulti){ els.forEach(function(n){ n.textContent = '—'; }); return; }
+    window.SB.listCourseFilesMulti(foldersOf(c)).then(function(files){
+      document.querySelectorAll('[data-files-badge="' + c.id + '"]').forEach(function(n){ n.textContent = files === null ? '—' : String(files.length); if(n.parentNode && n.parentNode.classList) n.parentNode.setAttribute('data-zero', files && !files.length ? '1' : '0'); });
+    }, function(){});
+  }
+
+  function renderCourses(){}
+  window.renderCourses = renderCourses;
+
+  /* ---------- نافذة المادة ---------- */
+  var activeCourse = null;   /* { sheet, id } */
+  function openCourse(ref, section){
+    var c = findCourse(ref); if(!c) return;
+    if(activeCourse && !activeCourse.sheet.closed) activeCourse.sheet.close();
+    var sheet = openSheet({ title: c.name, onClose: function(){
+      var cur = findCourse(activeCourse && activeCourse.id); activeCourse = null;
+      if(cur) loadFileBadge(cur);
+    } });
+    sheet.el.classList.add('hub-course-sheet');
+    activeCourse = { sheet: sheet, id: c.id };
+    renderCourseSheet(section);
+  }
+  window.Hub = window.Hub || {};
+  window.Hub.openCourse = openCourse;
+  window.Hub.renderCourses = renderCourses;
+  window.Hub.refreshActive = function(){ refreshActiveCourse(); };
+  window.Hub.refreshFiles = function(id){ var c = findCourse(id); if(c) loadFileBadge(c); };
+
+  function refreshActiveCourse(){
+    if(activeCourse && !activeCourse.sheet.closed) renderCourseSheet();
+  }
+
+  /* أي قسم بأي تبويب (لـscrollTo القادم من أماكن ثانية) */
+  var SEC_TAB = { over: 'over', plan: 'plan', sched: 'plan', files: 'files', tasks: 'work', exams: 'work', grades: 'marks', att: 'marks', notes: 'notes' };
+  function setCourseTab(sheet, tab){
+    if(!activeCourse || !activeCourse.sheet || activeCourse.sheet !== sheet) return;
+    activeCourse.tab = tab; sheet.body.setAttribute('data-ctab', tab);
+    [].forEach.call(sheet.body.querySelectorAll('.hub-ctab'), function(b){ var on = b.getAttribute('data-jump') === tab; b.classList.toggle('active', on); b.setAttribute('aria-selected', on ? 'true' : 'false'); });
+    sheet.body.scrollTop = 0;
+  }
+  /* بطاقات «نظرة»: المحاضرة الجاية، أسبوع الخطة، المهام، الامتحان، الحضور، العلامات + إجراءات سريعة */
+  function overviewHtml(c, x){
+    var st = Schedule.status(), name = c.name, cards = [], today = todayStr();
+    function card(tab, k, v, sub, cls){ cards.push('<button type="button" class="hub-ov-card ' + (cls || '') + '" data-go-tab="' + tab + '"><span class="hub-ov-k">' + k + '</span><b class="hub-ov-v">' + v + '</b>' + (sub ? '<small>' + sub + '</small>' : '') + '</button>'); }
+    /* المحاضرة الجاية */
+    var best = null;
+    x.sched.forEach(function(en){ var d = ((en.dayIdx - st.dayIdx + 7) % 7) * 1440 + en.start - st.nowMin; if(d < 0) d += 10080; if(!best || d < best.d) best = { en: en, d: d }; });
+    if(st.current && st.current.name === name) card('plan', '🗓 المحاضرة', '🔴 جارية الآن', st.current.hasEnd ? 'باقي ' + until(st.current.end - st.nowMin) : '', 'now');
+    else if(best){
+      var en = best.en, place = Schedule.place(en), rb = window.CampusMap && window.CampusMap.resolve ? window.CampusMap.resolve(en) : null;
+      card('plan', '🗓 المحاضرة الجاية', (best.d < 1440 && en.dayIdx === st.dayIdx ? 'اليوم' : DA()[en.dayIdx]) + ' <bdi dir="ltr">' + pad(en.start) + '</bdi>', 'بعد ' + until(best.d) + (place ? ' · ' + esc(place) : ''));
+      if(rb && rb.b) cards.push('<button type="button" class="hub-ov-card map" data-ov-act="map" data-b="' + rb.b.id + '"><span class="hub-ov-k">🗺️ وين</span><b class="hub-ov-v">' + esc(rb.b.n) + '</b><small>' + (rb.fl ? 'الطابق ' + rb.fl + ' · ' : '') + 'اعرضها على الخريطة</small></button>');
+    } else card('plan', '🗓 المحاضرات', '—', 'ما في محاضرات بالجدول');
+    /* أسبوع الخطة */
+    var wb = window.Syllabus && window.Syllabus.weekBrief ? window.Syllabus.weekBrief(c) : null;
+    if(wb) card('plan', '🧾 أسبوع ' + wb.wk + ' من ' + wb.last, esc(wb.first), wb.more ? '+' + wb.more + ' مواضيع أخرى' : (wb.secs ? 'الأقسام ' + esc(wb.secs) : ''));
+    else if(c.syllabus) card('plan', '🧾 خطة المادة', 'محفوظة', 'حدّد بداية الفصل لأعرض أسبوعك');
+    else card('plan', '🧾 خطة المادة', 'ما انرفعت', 'ارفعها لأطلّع الأسابيع والحضور', 'hint');
+    /* المهام */
+    var pend = x.tasks.filter(function(t){ return !t.done; }), late = pend.filter(function(t){ return t.due && t.due < today; });
+    card('work', '📝 المهام', pend.length + ' متبقية', late.length ? '<span class="bad">' + late.length + ' متأخرة</span>' : (pend[0] && pend[0].due ? 'أقرب: ' + esc(pend[0].due) : (pend.length ? '' : 'خالص ✓')), late.length ? 'danger' : '');
+    /* الامتحان */
+    var nx = null; x.exams.forEach(function(e){ var dt = parseExamDate(e); if(dt && dt.getTime() >= Date.now() && (!nx || dt < nx.dt)) nx = { e: e, dt: dt }; });
+    if(nx){ var dd = daysFromToday(nx.dt); card('work', '⏳ أقرب امتحان', dayWord(dd), esc(nx.e.name) + (nx.e.date ? ' · ' + esc(nx.e.date) : ''), dd <= 3 ? 'danger' : ''); }
+    else card('work', '⏳ الامتحانات', '—', 'ما في امتحان قادم');
+    /* الحضور والعلامات */
+    card('marks', '✅ الحضور', x.ap === null ? '—' : x.ap + '%', 'غبت ' + (x.att.absent || 0) + ' مرة', x.ap !== null && x.ap < 75 ? 'danger' : '');
+    var gi = (x.g && x.g.items) || [], gt = 0, ge = 0; gi.forEach(function(it){ gt += parseFloat(it.weight) || 0; ge += parseFloat(it.score) || 0; });
+    card('marks', '📊 العلامات', gt > 0 ? ge + ' / ' + gt : '—', gt > 0 ? Math.round(ge / gt * 100) + '%' : 'ما في علامات بعد');
+    return '<section class="hub-sec hub-over" id="hs-over" data-ctabs="over"><div class="hub-ov-grid">' + cards.join('') + '</div>' +
+      '<div class="hub-ov-actions"><button type="button" class="btn btn-sm" data-ov-act="addtask">+ مهمة</button><button type="button" class="btn btn-sm btn-ghost" data-ov-act="upload">📤 رفع ملف</button><button type="button" class="btn btn-sm btn-ghost" data-ov-act="addnote">📔 ملاحظة</button></div></section>';
+  }
+
+  function renderCourseSheet(scrollTo){
+    if(!activeCourse) return;
+    var sheet = activeCourse.sheet, c = findCourse(activeCourse.id);
+    if(!c){ sheet.close(); return; }          /* المادة انحذفت */
+    var name = c.name, id = c.id, today = todayStr();
+    var scroll = sheet.body.scrollTop;
+    sheet.setTitle(name);
+
+    var sched = Schedule.forCourse(name);
+    var tasks = (sp().tasks || []).filter(function(t){ return t.course === name; });
+    tasks.sort(function(a, b){
+      if(!!a.done !== !!b.done) return a.done ? 1 : -1;
+      return String(a.due || '9999').localeCompare(String(b.due || '9999'));
+    });
+    var exams = (sp().exams || []).filter(function(e){ return e.course === name; }).sort(function(a, b){ return String(a.date || '').localeCompare(String(b.date || '')); });
+    var g = (sp().grades || []).filter(function(x){ return x.name === name; })[0];
+    var att = (sp().attendance || {})[name] || { present: 0, absent: 0 };
+    var attTot = (att.present || 0) + (att.absent || 0), ap = attTot ? Math.round((att.present || 0) / attTot * 100) : null;
+    var notes = []; (window.notes || []).forEach(function(n, i){ if(n && n.course === name) notes.push({ n: n, i: i }); });
+
+    var h = '';
+    h += '<div class="hub-course-top">' +
+      '<div class="hub-chips">' + (window.Coach ? window.Coach.healthPill(c.name) : '') + (c.code ? '<span class="badge mono">' + esc(c.code) + '</span>' : '') + '<span class="badge">' + (c.hours || 3) + ' ساعات</span>' +
+        (c.instructor ? '<span class="badge">👤 ' + esc(c.instructor) + '</span>' : '') + (c.room ? '<span class="badge">📍 ' + esc(c.room) + '</span>' : '') + '</div>' +
+      '<div class="hub-actions inline"><button type="button" class="btn btn-sm" data-act="focus">⏱️ جلسة تركيز</button><button type="button" class="btn btn-sm btn-ghost" data-act="edit">✏️ تعديل</button><button type="button" class="btn btn-sm btn-danger hub-del" data-act="delete" aria-label="حذف المادة" title="حذف المادة">🗑</button></div></div>';
+    var CTABS = [['over', '🏠 نظرة'], ['plan', '🧾 الخطة'], ['files', '📎 الملفات'], ['work', '📝 المهام والامتحانات'], ['marks', '📊 العلامات والحضور'], ['notes', '📔 الملاحظات']];
+    var curTab = (scrollTo && SEC_TAB[scrollTo]) || activeCourse.tab || 'over'; activeCourse.tab = curTab;
+    sheet.body.setAttribute('data-ctab', curTab);
+    h += '<nav class="hub-secnav hub-ctabs" role="tablist" aria-label="أقسام المادة">' + CTABS.map(function(s2){
+      var cnt = s2[0] === 'work' ? (tasks.filter(function(t){ return !t.done; }).length + exams.filter(function(e){ var dt = parseExamDate(e); return dt && dt.getTime() >= Date.now(); }).length) : 0;
+      return '<button type="button" class="hub-chip hub-ctab' + (s2[0] === curTab ? ' active' : '') + '" role="tab" aria-selected="' + (s2[0] === curTab) + '" data-jump="' + s2[0] + '">' + s2[1] + (cnt ? ' <b class="hub-ctab-n">' + cnt + '</b>' : '') + '</button>';
+    }).join('') + '</nav>';
+
+    /* نظرة عامة */
+    h += overviewHtml(c, { sched: sched, tasks: tasks, exams: exams, g: g, att: att, ap: ap });
+
+    /* خطة المادة + الكتاب (syllabus.js) */
+    if(window.Syllabus && window.Syllabus.sectionHtml) h += window.Syllabus.sectionHtml(c);
+
+    /* الجدول */
+    h += '<section class="hub-sec" id="hs-sched" data-ctabs="plan"><h4>🗓 محاضرات المادة</h4>';
+    if(sched.length) h += '<div class="hub-list">' + sched.map(function(en){
+      return '<button type="button" class="hub-li" data-sched-day="' + en.day + '"><span><b>' + DA()[en.dayIdx] + '</b> <bdi dir="ltr">' + pad(en.start) + (en.hasEnd ? '–' + pad(en.end) : '') + '</bdi></span><span class="muted">' + esc(Schedule.place(en) || '') + '</span></button>';
+    }).join('') + '</div>';
+    else h += '<div class="hub-empty">ما في محاضرات لهذه المادة بالجدول. <button type="button" class="hub-link" data-act="addclass">إضافة محاضرة</button></div>';
+    h += '</section>';
+
+    /* الملفات (نفس السمات التي تستخدمها دوال الرفع/التحميل الحالية) */
+    h += '<section class="hub-sec" id="hs-files" data-ctabs="files"><h4>📎 الملفات <span class="muted" data-files-count="' + esc(id) + '">—</span></h4>' +
+      '<div class="course-files-list" data-files-list="' + esc(id) + '"><div class="hub-empty">جاري التحميل…</div></div>' +
+      '<button type="button" class="upload-course-btn" data-upload-course="' + esc(id) + '">📤 رفع ملف</button>' +
+      '<div class="cf-drop-hint">أو اسحب الملفات وأفلتها هنا</div>' +
+      '<input type="file" multiple style="display:none" data-file-input="' + esc(id) + '">' +
+      '<div class="upload-progress-bar" data-upload-progress="' + esc(id) + '"><div class="inner"></div></div></section>';
+
+    /* المهام */
+    h += '<section class="hub-sec" id="hs-tasks" data-ctabs="work"><h4>📝 المهام <span class="muted">' + tasks.filter(function(t){ return !t.done; }).length + ' متبقية</span></h4>';
+    if(tasks.length) h += '<div class="hub-list">' + tasks.slice(0, 10).map(function(t){
+      var late = !t.done && t.due && t.due < today;
+      return '<div class="hub-li task' + (t.done ? ' done' : '') + '"><button type="button" class="hub-check" data-task-toggle="' + esc(t.id) + '" aria-label="' + (t.done ? 'إلغاء الإكمال' : 'إكمال') + '">' + (t.done ? '☑' : '☐') + '</button>' +
+        '<span class="hub-li-main">' + esc(t.title) + (t.due ? '<small class="' + (late ? 'bad' : '') + '">' + esc(t.due) + (late ? ' · متأخرة' : '') + '</small>' : '') + '</span>' +
+        '<button type="button" class="hub-mini" data-task-edit="' + esc(t.id) + '" aria-label="تعديل المهمة">✏️</button></div>';
+    }).join('') + (tasks.length > 10 ? '<button type="button" class="hub-link" data-act="alltasks">عرض كل المهام (' + tasks.length + ')</button>' : '') + '</div>';
+    else h += '<div class="hub-empty">لا مهام لهذه المادة.</div>';
+    h += '<button type="button" class="btn btn-sm" data-act="addtask">+ مهمة</button></section>';
+
+    /* الامتحانات */
+    h += '<section class="hub-sec" id="hs-exams" data-ctabs="work"><h4>⏳ الامتحانات</h4>';
+    if(exams.length) h += '<div class="hub-list">' + exams.map(function(e){
+      var dt = parseExamDate(e), dd = dt ? daysFromToday(dt) : null, past = dt && dt.getTime() < Date.now();
+      return '<div class="hub-li' + (past ? ' done' : '') + '"><span class="hub-li-main">' + esc(e.name) + '<small>' + esc(e.date || '') + (e.time ? ' · ' + esc(e.time) : '') + (e.room ? ' · ' + esc(e.room) : '') + '</small></span>' +
+        '<span class="hub-pill ' + (past ? 'muted' : (dd !== null && dd <= 3 ? 'danger' : 'ok')) + '">' + (past ? 'انتهى' : (dd === null ? '' : dayWord(dd))) + '</span>' +
+        '<button type="button" class="hub-mini" data-exam-edit="' + esc(e.id) + '" aria-label="تعديل الامتحان">✏️</button></div>';
+    }).join('') + '</div>';
+    else h += '<div class="hub-empty">لا امتحانات مسجّلة لهذه المادة.</div>';
+    h += '<button type="button" class="btn btn-sm" data-act="addexam">+ امتحان</button>' + (window.Syllabus && window.Syllabus.examButtons ? window.Syllabus.examButtons(c) : '') + '</section>';
+
+    /* العلامات */
+    var gItems = (g && g.items) || [], gt = 0, ge = 0; gItems.forEach(function(it){ gt += parseFloat(it.weight) || 0; ge += parseFloat(it.score) || 0; });
+    h += '<section class="hub-sec" id="hs-grades" data-ctabs="marks"><h4>📊 العلامات ' + (gt > 0 ? '<span class="muted">' + ge + ' / ' + gt + ' (' + Math.round(ge / gt * 100) + '%)</span>' : '') + '</h4>';
+    if(gItems.length) h += '<div class="hub-list">' + gItems.map(function(it, i){
+      return '<div class="hub-li"><span class="hub-li-main">' + esc(it.name) + '</span><b>' + esc(it.score) + ' / ' + esc(it.weight) + '</b><button type="button" class="hub-mini" data-grade-del="' + i + '" aria-label="حذف العلامة">✕</button></div>';
+    }).join('') + '</div>'; else h += '<div class="hub-empty">ما في علامات مسجّلة بعد.</div>';
+    h += '<div class="hub-actions inline"><button type="button" class="btn btn-sm" data-act="addgrade">+ علامة</button><button type="button" class="btn btn-sm btn-ghost" data-act="gradecalc">حاسبة العلامات ‹</button></div></section>';
+
+    /* الحضور */
+    h += '<section class="hub-sec" id="hs-att" data-ctabs="marks"><h4>✅ الحضور ' + (ap !== null ? '<span class="muted ' + (ap >= 85 ? 'ok' : ap >= 75 ? 'warn' : 'bad') + '">' + ap + '%</span>' : '') + '</h4>' +
+      '<div class="hub-rows"><div class="hub-row"><span>حاضر</span><b>' + (att.present || 0) + '</b></div><div class="hub-row"><span>غائب</span><b>' + (att.absent || 0) + '</b></div></div>' +
+      '<div class="hub-actions inline"><button type="button" class="btn btn-sm" data-att="present">+ حاضر</button><button type="button" class="btn btn-sm btn-ghost" data-att="absent">+ غائب</button></div></section>';
+
+    /* الملاحظات */
+    h += '<section class="hub-sec" id="hs-notes" data-ctabs="notes"><h4>📔 ملاحظات المادة</h4>';
+    if(notes.length) h += '<div class="hub-list">' + notes.map(function(x){
+      return '<div class="hub-li hub-note"><button type="button" class="hub-li-main hub-note-main" data-note-edit="' + x.i + '"><b>' + esc(x.n.title || '(بدون عنوان)') + '</b><small>' + esc(String(x.n.body || '').slice(0, 90)) + '</small></button>' +
+        '<button type="button" class="hub-note-del" data-note-del="' + x.i + '" aria-label="حذف الملاحظة" title="حذف">🗑</button></div>';
+    }).join('') + '</div>'; else h += '<div class="hub-empty">لا ملاحظات مرتبطة بهذه المادة.</div>';
+    h += '<button type="button" class="btn btn-sm" data-act="addnote">+ ملاحظة</button></section>';
+
+    sheet.body.innerHTML = h;
+    bindCourseSheet(sheet, c);
+    if(window.loadCourseFilesForCard) window.loadCourseFilesForCard(id);
+    if(scrollTo){ var t = sheet.body.querySelector('#hs-' + scrollTo); if(t) t.scrollIntoView({ block: 'start' }); else sheet.body.scrollTop = 0; }
+    else sheet.body.scrollTop = scroll;
+  }
+
+  function bindCourseSheet(sheet, c){
+    var b = sheet.body, name = c.name, id = c.id;
+    function on(sel, fn){ b.querySelectorAll(sel).forEach(function(el){ el.addEventListener('click', function(e){ fn(el, e); }); }); }
+    on('[data-act="focus"]', function(){ sheet.close(); if(window.Progress && window.Progress.focusCourse) window.Progress.focusCourse(name); });
+    on('[data-act="edit"]', function(){ window.editCourseDialog(id); });
+    on('[data-act="delete"]', function(){ window.confirmRemoveCourse(name); });
+    on('[data-act="addclass"]', function(){ sheet.close(); if(window.addClassSlot) window.addClassSlot(); });
+    on('[data-act="alltasks"]', function(){ sheet.close(); window.switchTab('tasks'); });
+    on('[data-act="gradecalc"]', function(){ sheet.close(); window.switchTab('gradecalc'); });
+    on('[data-jump]', function(el){ setCourseTab(sheet, el.getAttribute('data-jump')); });
+    on('[data-go-tab]', function(el){ setCourseTab(sheet, el.getAttribute('data-go-tab')); });
+    on('[data-ov-act]', function(el){
+      var a = el.getAttribute('data-ov-act');
+      if(a === 'addtask') addTaskFor(name); else if(a === 'addnote') addNoteFor(name);
+      else if(a === 'upload'){ setCourseTab(sheet, 'files'); var ub = b.querySelector('[data-upload-course]'); if(ub) ub.click(); }
+      else if(a === 'map' && window.CampusMap){ sheet.close(); window.switchTab('campus'); window.CampusMap.select(el.getAttribute('data-b'), true); }
+    });
+    on('[data-sched-day]', function(el){ try{ localStorage.setItem('tt_view', el.getAttribute('data-sched-day')); }catch(e){} sheet.close(); window.switchTab('timetable'); });
+    on('[data-task-toggle]', function(el){ window.toggleTask(el.getAttribute('data-task-toggle')); });
+    on('[data-task-edit]', function(el){ window.editTask(el.getAttribute('data-task-edit')); });
+    on('[data-exam-edit]', function(el){ window.editExam(el.getAttribute('data-exam-edit')); });
+    on('[data-att]', function(el){ window.markAttendance(name, el.getAttribute('data-att')); });
+    on('[data-note-edit]', function(el){ editNoteAt(parseInt(el.getAttribute('data-note-edit'), 10)); });
+    on('[data-note-del]', function(el){ deleteNoteAt(parseInt(el.getAttribute('data-note-del'), 10)); });
+    on('[data-grade-del]', function(el){
+      var g = (sp().grades || []).filter(function(x){ return x.name === name; })[0]; if(!g) return;
+      g.items.splice(parseInt(el.getAttribute('data-grade-del'), 10), 1); window.saveSpace();
+      if(window.renderGradeCalc) window.renderGradeCalc(); afterChange();
+    });
+    on('[data-act="addtask"]', function(){ addTaskFor(name); });
+    on('[data-act="addexam"]', function(){ window.addExamForCourse(name); });
+    on('[data-act="addgrade"]', function(){ addGradeFor(name); });
+    on('[data-act="addnote"]', function(){ addNoteFor(name); });
+    /* رفع الملفات: نفس منطق الرفع الحالي */
+    window.bindCourseUpload(b, id, b.querySelector('#hs-files'));
+    if(window.Syllabus && window.Syllabus.bindSection) window.Syllabus.bindSection(b, c);
+  }
+
+  function addTaskFor(name){
+    window.showModal('مهمة جديدة — ' + name, [
+      { key: 'title', label: 'العنوان' },
+      { key: 'type', label: 'النوع', type: 'select', options: [{ v: 'task', l: 'مهمة' }, { v: 'assignment', l: 'واجب' }, { v: 'quiz', l: 'كويز' }, { v: 'project', l: 'مشروع' }] },
+      { key: 'due', label: 'تاريخ التسليم', type: 'date' }
+    ], { title: '', type: 'task', due: '' }, function(data){
+      if(!data.title){ toast('أدخل عنوانًا', 'warn'); return false; }
+      if(!sp().tasks) window.space.tasks = [];
+      window.space.tasks.push({ id: window.uid ? window.uid() : Date.now().toString(36), title: data.title, type: data.type, course: name, due: data.due, done: false });
+      window.saveSpace(); if(window.renderTasks) window.renderTasks(); afterChange();
+      return true;
+    });
+  }
+  function addGradeFor(name){
+    window.showModal('علامة — ' + name, [
+      { key: 'name', label: 'اسم التقييم (مثل: امتحان 1)' },
+      { key: 'score', label: 'العلامة', type: 'number' },
+      { key: 'weight', label: 'من (الوزن)', type: 'number' }
+    ], { name: '', score: 0, weight: 10 }, function(data){
+      if(!data.name){ toast('أدخل اسمًا', 'warn'); return false; }
+      var score = parseFloat(data.score) || 0, weight = parseFloat(data.weight) || 0;
+      if(score > weight){ toast('⚠️ العلامة أكبر من الوزن', 'warn', 2500); return { field: 'score' }; }
+      if(!Array.isArray(sp().grades)) window.space.grades = [];
+      var g = window.space.grades.filter(function(x){ return x.name === name; })[0];
+      if(!g){ g = { name: name, items: [] }; window.space.grades.push(g); }
+      if(!Array.isArray(g.items)) g.items = [];
+      g.items.push({ name: data.name, score: score, weight: weight });
+      window.saveSpace(); if(window.renderGradeCalc) window.renderGradeCalc(); afterChange();
+      return true;
+    });
+  }
+  function noteSaved(){ if(window.S) window.S.set('notes', window.notes); afterChange(); }
+  function addNoteFor(name, body){
+    window.showModal('ملاحظة — ' + name, [
+      { key: 'title', label: 'العنوان' },
+      { key: 'body', label: 'النص', type: 'textarea' }
+    ], { title: '', body: body || '' }, function(data){
+      if(!data.title && !data.body){ toast('اكتب عنواناً أو نصاً', 'warn'); return false; }
+      if(!Array.isArray(window.notes)) window.notes = [];
+      window.notes.unshift({ title: data.title, body: data.body, ts: Date.now(), course: name });
+      noteSaved();
+      return true;
+    });
+  }
+  function editNoteAt(i){
+    var n = (window.notes || [])[i]; if(!n) return;
+    window.showModal('تعديل الملاحظة' + (n.course ? ' — ' + n.course : ''), [
+      { key: 'title', label: 'العنوان' },
+      { key: 'body', label: 'النص', type: 'textarea' }
+    ], { title: n.title || '', body: n.body || '' }, function(data){
+      if(!data.title && !data.body){ toast('اكتب عنواناً أو نصاً', 'warn'); return false; }
+      n.title = data.title; n.body = data.body; noteSaved();
+      return true;
+    });
+  }
+  function deleteNoteAt(i){
+    var n = (window.notes || [])[i]; if(!n) return;
+    window.notes.splice(i, 1); noteSaved();
+    if(window.toastUndo) window.toastUndo('حُذفت الملاحظة', function(){
+      if(window.notes.indexOf(n) > -1) return;
+      window.notes.splice(Math.min(i, window.notes.length), 0, n); noteSaved();
+    });
+  }
+  /* ملاحظة جديدة من أي مكان (زر الإضافة العائم / Alt+N / الإضافة السريعة): الملاحظات صارت لكل مادة فنسأل «لأي مادة؟» */
+  function addCourseNote(name, body){
+    var list = sp().courses || [];
+    if(name){ addNoteFor(name, body); return; }
+    if(!list.length){ toast('أضف مادة أولاً لتكتب عليها ملاحظة', 'warn', 2500); return; }
+    if(list.length === 1){ addNoteFor(list[0].name, body); return; }
+    window.showModal('ملاحظة جديدة', [
+      { key: 'course', label: 'المادة', type: 'select', options: list.map(function(c){ return { v: c.name, l: c.name }; }) },
+      { key: 'title', label: 'العنوان' },
+      { key: 'body', label: 'النص', type: 'textarea' }
+    ], { course: list[0].name, title: '', body: body || '' }, function(data){
+      if(!data.title && !data.body){ toast('اكتب عنواناً أو نصاً', 'warn'); return false; }
+      if(!Array.isArray(window.notes)) window.notes = [];
+      window.notes.unshift({ title: data.title, body: data.body, ts: Date.now(), course: data.course || list[0].name });
+      noteSaved();
+      return true;
+    });
+  }
+  window.addCourseNote = addCourseNote;
+
+  /* ============================================================
+     4) الإضافة السريعة السياقية
+     ============================================================ */
+  var TAB_ADD = {
+    courses: { fab: 'course', run: function(){ window.addMyCourse(); } },
+    tasks: { fab: 'task', run: function(){ window.addTask(); } },
+    exams: { fab: 'exam', run: function(){ window.addExam(); } },
+    budget: { fab: 'budget', run: function(){ window.addBudgetItem('expense'); } },
+    timetable: { fab: 'quick', run: function(){ window.addClassSlot(); } },
+    attendance: { fab: 'quick', run: function(){ window.addAttendanceCourse(); } }
+  };
+  function currentTab(){ var v = window.FocusUI && window.FocusUI.view ? window.FocusUI.view() : 'today'; return v === 'today' ? 'dashboard' : v; }
+  function quickAddHere(){
+    var t = TAB_ADD[currentTab()];
+    if(t) t.run(); else if(window.openQuickCapture) window.openQuickCapture();
+  }
+  window.quickAddHere = quickAddHere;
+  function markFab(){
+    var ctx = TAB_ADD[currentTab()], fab = ctx ? ctx.fab : 'quick';
+    document.querySelectorAll('.fab-action[data-fab]').forEach(function(b){ b.classList.toggle('ctx', b.getAttribute('data-fab') === fab); });
+  }
+  /* switchTab يُعرَّف في app.js (يُحمَّل بعد hub.js) — نغلّفه من initUI بعد اكتمال التحميل */
+  function wrapSwitchTab(){
+    if(typeof window.switchTab !== 'function' || window._hubSwitchWrapped) return;
+    var origSwitch = window.switchTab;
+    window.switchTab = function(){
+      var r = origSwitch.apply(this, arguments);
+      setTimeout(markFab, 0);
+      return r;
+    };
+    window._hubSwitchWrapped = true;
+  }
+
+
+  /* Esc يغلق أعلى نافذة جانبية تابعة للـ hub */
+  window.HubUI = { openSheet: openSheet, closeTop: function(){
+    var s = sheets[sheets.length - 1];
+    if(s){ s.close(); return true; }
+    return false;
+  } };
+
+  /* اختصار: Alt+A (أضف هنا حسب الصفحة الحالية). لا يتعارض مع اختصارات المتصفح */
+  document.addEventListener('keydown', function(e){
+    var tag = ((document.activeElement || {}).tagName || '').toUpperCase();
+    var typing = ['INPUT', 'TEXTAREA', 'SELECT'].indexOf(tag) > -1 || (document.activeElement && document.activeElement.isContentEditable);
+    if(typing) return;
+    if(e.altKey && !e.ctrlKey && !e.metaKey && String(e.key).toLowerCase() === 'a'){ e.preventDefault(); quickAddHere(); }
+  });
+
+  /* ============================================================
+     3) تخصيص لوحة التحكم (DashLayout)
+     - الترتيب الافتراضي هو ترتيب DASH_SECTIONS أدناه (يُطبَّق عند الإقلاع على عناصر data-dsec بـ index.html).
+     - التخصيص يُحفظ محلياً فقط في localStorage['dash_layout'] = {v, order, hidden}؛ لا يدخل في المزامنة ولا يمس أي بيانات.
+     - order يشمل كل الأقسام (المخفية أيضاً) فتعود لمكانها عند إظهارها. أقسام جديدة بإصدار لاحق تُدرج بعد سابقها الافتراضي.
+     ============================================================ */
+  var DASH_KEY = 'dash_layout';
+  var DASH_SECTIONS = [
+    { id: 'quote', name: 'الاقتباس اليومي', icon: '💬' },
+    { id: 'myday', name: 'يومي الجامعي', icon: '🧭' },
+    { id: 'term', name: 'تقدم الترم', icon: '🎓' },
+    { id: 'stats', name: 'الأرقام الرئيسية', icon: '🔢' },
+    { id: 'analytics', name: 'إحصائياتي (أسبوعي · متقدمة · تحليلات)', icon: '📊' },
+    { id: 'timer', name: 'مؤقت التركيز', icon: '⏱️' },
+    { id: 'budget', name: 'نظرة الميزانية', icon: '💰' },
+    { id: 'qspend', name: 'مصروف سريع', icon: '💸' },
+    { id: 'lms', name: 'روابط LMS HU السريعة', icon: '🔗' }
+  ];
+  /* الافتراضي أبسط (134): الاقتباس والمصروف السريع وروابط LMS مخفية (كلها بـ«تخصيص لوحة التحكم» وبتبويباتها) */
+  var DASH_HIDDEN_DEFAULT = ['quote', 'qspend', 'lms'];
+  var dsById = {}; DASH_SECTIONS.forEach(function(s){ dsById[s.id] = s; });
+  var dsState = null;
+
+  function dsDefault(){ return { order: DASH_SECTIONS.map(function(s){ return s.id; }), hidden: DASH_HIDDEN_DEFAULT.slice() }; }
+  function dsClone(st){ return { order: st.order.slice(), hidden: st.hidden.slice() }; }
+  function dsEqual(a, b){ return a.order.join() === b.order.join() && a.hidden.slice().sort().join() === b.hidden.slice().sort().join(); }
+  /* تنظيف أي تخصيص محفوظ: يتجاهل المجهول والمكرر، ويضيف الأقسام الجديدة بأماكنها الافتراضية */
+  function dsNormalize(raw){
+    var order = [], seen = {};
+    if(raw && Array.isArray(raw.order)) raw.order.forEach(function(id){ if(dsById[id] && !seen[id]){ seen[id] = true; order.push(id); } });
+    DASH_SECTIONS.forEach(function(s, i){
+      if(seen[s.id]) return;
+      seen[s.id] = true;
+      var at = 0;
+      if(i > 0){ var p = order.indexOf(DASH_SECTIONS[i - 1].id); at = p > -1 ? p + 1 : order.length; }
+      order.splice(at, 0, s.id);
+    });
+    var hidden = [], hs = {};
+    if(raw && Array.isArray(raw.hidden)) raw.hidden.forEach(function(id){ if(dsById[id] && !hs[id]){ hs[id] = true; hidden.push(id); } });
+    return { order: order, hidden: hidden };
+  }
+  function dsLoad(){
+    try{ var v = localStorage.getItem(DASH_KEY); if(v) return dsNormalize(JSON.parse(v)); }catch(e){}
+    return dsDefault();
+  }
+  function dsSave(st){
+    try{
+      if(dsEqual(st, dsDefault())) localStorage.removeItem(DASH_KEY);
+      else localStorage.setItem(DASH_KEY, JSON.stringify({ v: 1, order: st.order, hidden: st.hidden }));
+      return true;
+    }catch(e){ return false; }
+  }
+    /* تطبيق الحالة على الـ DOM: إعادة ترتيب العقد نفسها (بدون إعادة بناء) + إخفاء العرض فقط */
+  function dsApply(st){}
+  function dsReset(){ try{ localStorage.removeItem(DASH_KEY); }catch(e){} dsApply(dsDefault()); }
+
+  function dsConfirmReset(done){
+    var run = function(){ dsReset(); if(window.toast) window.toast('تمت استعادة الترتيب الافتراضي', 'success'); if(done) done(); };
+    if(window.customConfirm) window.customConfirm('استعادة الترتيب الافتراضي وإظهار كل الأقسام التي أخفيتها؟', run, { title: 'استعادة الترتيب', icon: '↺', okLabel: 'استعادة', danger: false }); else if(confirm('استعادة الترتيب الافتراضي؟')) run();
+  }
+
+  /* --- نافذة التخصيص --- */
+  function dsOpenEditor(){
+    if(document.querySelector('.dl-editor')) return;
+    var snapshot = dsClone(dsState || dsLoad()), work = dsClone(snapshot), saved = false, drag = null;
+    var sheet = openSheet({ title: 'تخصيص لوحة التحكم', onClose: function(){ if(!saved) dsApply(snapshot); } });
+    sheet.body.classList.add('dl-editor');
+    function visIds(){ return work.order.filter(function(id){ return work.hidden.indexOf(id) < 0; }); }
+    function hidIds(){ return work.order.filter(function(id){ return work.hidden.indexOf(id) > -1; }); }
+    function commit(focus){ dsApply(work); render(focus); }
+    function move(id, dir){
+      var v = visIds(), i = v.indexOf(id), t = v[i + dir]; if(i < 0 || !t) return;
+      var a = work.order.indexOf(id), b = work.order.indexOf(t); work.order[a] = t; work.order[b] = id;
+      commit('h:' + id);
+    }
+    function moveTo(id, targetId, before){
+      if(id === targetId) return;
+      work.order.splice(work.order.indexOf(id), 1);
+      var t = work.order.indexOf(targetId); work.order.splice(before ? t : t + 1, 0, id);
+      commit('h:' + id);
+    }
+    function row(id, off){
+      var s = dsById[id], v = visIds(), i = v.indexOf(id);
+      if(off) return '<li class="dl-row off" data-id="' + id + '"><span class="dl-name">' + s.icon + ' ' + esc(s.name) + '</span>' +
+        '<button type="button" class="dl-btn" data-act="show" data-id="' + id + '" data-f="s:' + id + '" aria-label="إضافة ' + esc(s.name) + ' للوحة">＋ إضافة</button></li>';
+      return '<li class="dl-row" data-id="' + id + '"><button type="button" class="dl-handle" data-handle="' + id + '" data-f="h:' + id + '" aria-label="نقل ' + esc(s.name) + ' (اسحب، أو استخدم أسهم لوحة المفاتيح)" title="اسحب لإعادة الترتيب">⠿</button>' +
+        '<span class="dl-name">' + s.icon + ' ' + esc(s.name) + '</span>' +
+        '<button type="button" class="dl-btn" data-act="up" data-id="' + id + '" data-f="u:' + id + '" aria-label="تحريك ' + esc(s.name) + ' للأعلى"' + (i === 0 ? ' disabled' : '') + '>▲</button>' +
+        '<button type="button" class="dl-btn" data-act="down" data-id="' + id + '" data-f="d:' + id + '" aria-label="تحريك ' + esc(s.name) + ' للأسفل"' + (i === v.length - 1 ? ' disabled' : '') + '>▼</button>' +
+        '<button type="button" class="dl-btn" data-act="hide" data-id="' + id + '" data-f="x:' + id + '" aria-label="إخفاء ' + esc(s.name) + '">🙈 إخفاء</button></li>';
+    }
+    function render(focus){
+      var v = visIds(), h = hidIds(), dirty = !dsEqual(work, snapshot);
+      sheet.body.innerHTML =
+        '<p class="dl-note">اسحب المقبض ⠿ (أو اضغط عليه واستخدم الأسهم ↑ ↓) لترتيب الأقسام. الإخفاء يخفي العرض فقط ولا يحذف أي بيانات.</p>' +
+        '<div class="dl-group">الأقسام الظاهرة (' + v.length + ')</div>' +
+        (v.length ? '<ul class="dl-list" id="dlVisible">' + v.map(function(id){ return row(id, false); }).join('') + '</ul>' : '<div class="dl-empty">لا توجد أقسام ظاهرة — أضف قسماً من القائمة بالأسفل.</div>') +
+        '<div class="dl-group">الأقسام المخفية (' + h.length + ')</div>' +
+        (h.length ? '<ul class="dl-list">' + h.map(function(id){ return row(id, true); }).join('') + '</ul>' : '<div class="dl-empty">لا توجد أقسام مخفية.</div>') +
+        '<div class="dl-foot"><div class="grp"><button type="button" class="btn" data-act="save">✓ حفظ التغييرات</button>' +
+        '<button type="button" class="btn btn-ghost" data-act="cancel">إلغاء' + (dirty ? ' التعديلات' : '') + '</button></div>' +
+        '<button type="button" class="btn btn-ghost" data-act="reset">↺ استعادة الترتيب الافتراضي</button></div>';
+      if(focus){ var f = sheet.body.querySelector('[data-f="' + focus + '"]'); if(f && !f.disabled) f.focus(); else { var a = sheet.body.querySelector('[data-f="' + focus.replace(/^[udhx]:/, 'h:') + '"]'); if(a) a.focus(); } }
+    }
+    sheet.body.addEventListener('click', function(e){
+      var b = e.target.closest ? e.target.closest('[data-act]') : null; if(!b) return;
+      var act = b.getAttribute('data-act'), id = b.getAttribute('data-id');
+      if(act === 'up') move(id, -1);
+      else if(act === 'down') move(id, 1);
+      else if(act === 'hide'){ var v = visIds(), nx = v[v.indexOf(id) + 1] || v[v.indexOf(id) - 1]; if(work.hidden.indexOf(id) < 0) work.hidden.push(id); commit(nx ? 'h:' + nx : null); }
+      else if(act === 'show'){ work.hidden = work.hidden.filter(function(x){ return x !== id; }); commit('h:' + id); }
+      else if(act === 'save'){
+        if(!dsSave(work)){ if(window.toast) window.toast('تعذر حفظ التخصيص (التخزين المحلي غير متاح)', 'error'); return; }
+        saved = true; dsApply(work); sheet.close(); if(window.toast) window.toast('تم حفظ تخصيص اللوحة', 'success');
+      }
+      else if(act === 'cancel') sheet.close();
+      else if(act === 'reset'){
+        dsConfirmReset(function(){ snapshot = dsDefault(); work = dsClone(snapshot); saved = false; render('h:' + work.order[0]); });
+      }
+    });
+    /* بديل لوحة المفاتيح للسحب: ↑ ↓ على المقبض */
+    sheet.body.addEventListener('keydown', function(e){
+      var h = e.target.closest ? e.target.closest('[data-handle]') : null; if(!h || e.altKey || e.ctrlKey || e.metaKey) return;
+      if(e.key === 'ArrowUp' || e.key === 'ArrowDown'){ e.preventDefault(); move(h.getAttribute('data-handle'), e.key === 'ArrowUp' ? -1 : 1); }
+    });
+    /* السحب بالمؤشر (ماوس/لمس/قلم) عبر Pointer Events */
+    function clearMarks(){ sheet.body.querySelectorAll('.drop-before,.drop-after,.dragging').forEach(function(r){ r.classList.remove('drop-before', 'drop-after', 'dragging'); }); }
+    sheet.body.addEventListener('pointerdown', function(e){
+      var h = e.target.closest ? e.target.closest('[data-handle]') : null; if(!h || (e.button !== undefined && e.button > 0)) return;
+      e.preventDefault();
+      drag = { id: h.getAttribute('data-handle'), target: null, before: true, pid: e.pointerId, h: h };
+      try{ h.setPointerCapture(e.pointerId); }catch(err){}
+      h.closest('.dl-row').classList.add('dragging');
+    });
+    sheet.body.addEventListener('pointermove', function(e){
+      if(!drag || e.pointerId !== drag.pid) return;
+      var under = document.elementFromPoint(e.clientX, e.clientY), r = under && under.closest ? under.closest('#dlVisible .dl-row') : null;
+      sheet.body.querySelectorAll('.drop-before,.drop-after').forEach(function(x){ x.classList.remove('drop-before', 'drop-after'); });
+      if(!r || r.getAttribute('data-id') === drag.id){ drag.target = null; return; }
+      var b = r.getBoundingClientRect(); drag.before = e.clientY < b.top + b.height / 2; drag.target = r.getAttribute('data-id');
+      r.classList.add(drag.before ? 'drop-before' : 'drop-after');
+    });
+    function endDrag(e, apply){
+      if(!drag || (e && e.pointerId !== drag.pid)) return;
+      var d = drag; drag = null; clearMarks();
+      try{ d.h.releasePointerCapture(d.pid); }catch(err){}
+      if(apply && d.target) moveTo(d.id, d.target, d.before);
+    }
+    sheet.body.addEventListener('pointerup', function(e){ endDrag(e, true); });
+    sheet.body.addEventListener('pointercancel', function(e){ endDrag(e, false); });
+    render('h:' + (visIds()[0] || ''));
+  }
+
+  /* --- قائمة ⋯ الصغيرة في عنوان لوحة التحكم --- */
+  function dsBuildMenu(){
+    var head = document.querySelector('#dashboard > .page-head'); if(!head || document.getElementById('dashMore')) return;
+    var wrap = document.createElement('div'); wrap.className = 'dash-more'; wrap.id = 'dashMore';
+    wrap.innerHTML = '<button type="button" class="dash-more-btn" id="dashMoreBtn" aria-haspopup="menu" aria-expanded="false" aria-controls="dashMoreMenu" aria-label="خيارات لوحة التحكم" title="خيارات لوحة التحكم">⋯</button>' +
+      '<div class="dash-more-menu" id="dashMoreMenu" role="menu" hidden>' +
+      '<button type="button" role="menuitem" data-m="edit">✏️ تخصيص لوحة التحكم</button>' +
+      '<button type="button" role="menuitem" data-m="reset">↺ استعادة الترتيب الافتراضي</button></div>';
+    head.appendChild(wrap);
+    var btn = wrap.querySelector('#dashMoreBtn'), menu = wrap.querySelector('#dashMoreMenu');
+    function close(focusBtn){ menu.hidden = true; btn.setAttribute('aria-expanded', 'false'); if(focusBtn) btn.focus(); }
+    function open(){ menu.hidden = false; btn.setAttribute('aria-expanded', 'true'); var f = menu.querySelector('button'); if(f) f.focus(); }
+    btn.addEventListener('click', function(){ if(menu.hidden) open(); else close(); });
+    menu.addEventListener('click', function(e){
+      var b = e.target.closest ? e.target.closest('[data-m]') : null; if(!b) return;
+      var m = b.getAttribute('data-m'); close(false);
+      if(m === 'edit') dsOpenEditor(); else dsConfirmReset();
+    });
+    wrap.addEventListener('keydown', function(e){
+      if(e.key === 'Escape' && !menu.hidden){ e.stopPropagation(); close(true); return; }
+      if(menu.hidden) return;
+      var items = Array.prototype.slice.call(menu.querySelectorAll('button')), i = items.indexOf(document.activeElement);
+      if(e.key === 'ArrowDown'){ e.preventDefault(); items[(i + 1) % items.length].focus(); }
+      else if(e.key === 'ArrowUp'){ e.preventDefault(); items[(i - 1 + items.length) % items.length].focus(); }
+    });
+    document.addEventListener('click', function(e){ if(!menu.hidden && !wrap.contains(e.target)) close(false); });
+  }
+  window.DashLayout = { sections: DASH_SECTIONS, load: dsLoad, apply: dsApply, reset: dsReset, edit: dsOpenEditor, state: function(){ return dsState ? dsClone(dsState) : null; } };
+  /* ============================================================
+     ربط مع التطبيق: تحديث لوحة اليوم مع renderDashboard، وزر لوحة الأوامر بالإعدادات
+     ============================================================ */
+  if(typeof window.renderDashboard === 'function' && !window._hubDashWrapped){
+    var origDash = window.renderDashboard;
+        window._hubDashWrapped = true;
+  }
+  window.renderMyDay = renderMyDay;
+  /* إضافة/تعديل/حذف امتحان يمرّ عبر renderExams فقط: نحدّث صفحة المادة المفتوحة أيضاً */
+  if(typeof window.renderExams === 'function' && !window._hubExamsWrapped){
+    var origExams = window.renderExams;
+        window._hubExamsWrapped = true;
+  }
+
+  function initUI(){
+    wrapSwitchTab();
+    markFab();
+    dsBuildMenu();
+    bindStatTabs();
+    dsApply(dsLoad());
+  }
+  /* تبويبات «إحصائياتي»: لوحة وحدة ظاهرة (الباقي مخفي بـCSS) وتُحفظ آخر لوحة (ss_stat_tab) */
+  function bindStatTabs(){
+    var box = document.getElementById('statTabs'); if(!box || box._st) return; box._st = true;
+    function go(k, save){
+      if(['weekly', 'enhanced', 'insights'].indexOf(k) < 0) k = 'weekly';
+      box.setAttribute('data-st', k);
+      Array.prototype.forEach.call(box.querySelectorAll('.st-tab'), function(b){ var on = b.getAttribute('data-st-go') === k; b.classList.toggle('active', on); b.setAttribute('aria-selected', on ? 'true' : 'false'); });
+      if(save){ try{ localStorage.setItem('ss_stat_tab', k); }catch(e){} }
+    }
+    box.addEventListener('click', function(e){ var b = e.target.closest ? e.target.closest('[data-st-go]') : null; if(b) go(b.getAttribute('data-st-go'), true); });
+    var v = null; try{ v = localStorage.getItem('ss_stat_tab'); }catch(e){} go(v, false);
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initUI); else initUI();
+
+})();

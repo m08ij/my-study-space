@@ -1,0 +1,79 @@
+<section class=section tab-play active id=campus>
+  <div class=page-head>
+    <h2 class=page-title>
+      "🗺️ خريطة الجامعة"
+    <p class=page-sub>
+      "اعرف وين محاضراتك على الخريطة، وابحث عن أي مبنى أو مختبر"
+  <div id=campusRoot>
+    <div aria-label=وين أروح؟ class=cm-guide role=region>
+      <button class=cm-guide-btn data-g=go type=button>
+        <span aria-hidden=true class=cm-guide-ic>
+          "📍"
+        <span class=cm-guide-tx>
+          <b>
+            "وين أروح؟"
+          <small>
+            "اضغط وبقول لك وين محاضرتك الجاية وكم بتمشي"
+    <div class=cm-bar>
+      <div class=cm-search>
+        <span aria-hidden=true>
+          "🔎"
+        <input aria-label=بحث بالخريطة autocomplete=off id=cmQ placeholder=ابحث عن مبنى أو مختبر (مثلاً: المكتبة، ابن سينا، ح.ب) type=search value=>
+      <div class=cm-now next>
+        "⏭️ التالية:"
+        <b>
+          "البرمجة بلغة C++"
+        "— الشرقي (11:00)"
+    <div class=cm-wrap>
+      <div class=cm-mapcard>
+        <div aria-label=التحكم بالخريطة class=cm-zoom role=group>
+          <button aria-label=تكبير data-z=in type=button>
+            "＋"
+          <button aria-label=تصغير data-z=out type=button>
+            "－"
+          <button aria-label=إعادة الضبط data-z=reset type=button>
+            "⟲"
+        <div aria-label=الطبقات class=cm-layers role=group>
+          <button aria-pressed=true data-layer=pins type=button>
+            "📍 دبابيسي"
+          <button aria-pressed=true data-layer=gates type=button>
+            "🚪 البوابات"
+          <button aria-pressed=true data-layer=park type=button>
+            "🅿️ المواقف"
+        <svg aria-label=خريطة الجامعة الهاشمية class=cm-svg zfar id=cmSvg preserveAspectRatio=xMidYMid meet role=group viewBox=0 0 740 1010>
+        <div class=cm-hint>
+          "اسحب لتحريك الخريطة · عجلة الماوس أو اقرص للتكبير"
+      <aside class=cm-side>
+        <div class=cm-tabs role=tablist>
+          <button aria-selected=true class=cm-tab data-tab=mine role=tab type=button>
+            "🎒 موادي"
+          <button aria-selected=false class=cm-tab data-tab=route role=tab type=button>
+            "🧭 مساري"
+          <button aria-selected=false class=cm-tab data-tab=places role=tab type=button>
+            "🏛️ المباني"
+          <button aria-selected=false class=cm-tab data-tab=legend role=tab type=button>
+            "🎨 الدليل"
+        <div class=cm-panel role=tabpanel>
+          <div aria-label=عرض class=cm-chips role=group>
+            <button aria-pressed=true class=cm-chip data-day=all type=button>
+              "كل الأسبوع"
+            <button aria-pressed=false class=cm-chip data-day=today type=button>
+              "اليوم فقط"
+          <div class=cm-sum>
+            "2 مادة · كلها محدّدة الموقع ✓"
+          <div class=cm-course>
+            <button class=cm-course-main data-go=hb type=button>
+              <b>
+                "حساب التفاضل والتكامل 1"
+              <small>
+                "الأربعاء 09:00–10:00"
+            <span class=cm-loc>
+              "📍 الحسين الباني · ط1"
+          <div class=cm-course>
+            <button class=cm-course-main data-go=east type=button>
+              <b>
+                "البرمجة بلغة C++"
+              <small>
+                "الأحد 09:00–10:00 · الأربعاء 11:00–12:00"
+            <span class=cm-loc>
+              "📍 الشرقي · ط2"

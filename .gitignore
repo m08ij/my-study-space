@@ -1,0 +1,15 @@
+node_modules/
+*.apk
+!apk/StudySpace.apk
+app.bundle.js
+app.bundle.css
+*.log
+.DS_Store
+Thumbs.db
+
+# نسخة النشر المبنية (tools/build-site.js)
+_site/
+
+# ملاحظات عمل خاصة ومختبر OCR (صور تجريبية) — مش للمستودع العام
+CLAUDE.md
+tools/ocr-lab/

@@ -1,0 +1,109 @@
+<section class=section tab-play active id=tasks>
+  <div class=page-head>
+    <h2 class=page-title>
+      "📝 المهام"
+    <p class=page-sub>
+      "تابع واجباتك"
+  <div class=controls>
+    <button class=btn id=btnAddTask>
+      "+ مهمة"
+    <button class=btn btn-ghost id=btnNextTask type=button>
+      "🎯 شو أبدأ؟"
+    <button class=chip active data-label=الكل data-tf=all>
+      "الكل (3)"
+    <button class=chip data-label=قيد الانتظار data-tf=pending>
+      "قيد الانتظار (3)"
+    <button class=chip data-label=متأخرة data-tf=overdue>
+      "متأخرة (1)"
+    <button class=chip data-label=مكتملة data-tf=done>
+      "مكتملة (0)"
+    <label class=task-sort>
+      <span>
+        "الترتيب"
+      <select aria-label=ترتيب المهام id=taskSort>
+        <option value=due>
+          "حسب الموعد"
+        <option value=priority>
+          "حسب الأولوية"
+        <option value=manual>
+          "يدوي"
+  <form autocomplete=off class=task-quick id=taskQuickForm>
+    <input aria-label=إضافة مهمة سريعة id=taskQuick maxlength=200 placeholder=أضف مهمة سريعة… مثال: واجب شبكات غدًا type=text>
+    <button class=btn btn-sm type=submit>
+      "+ أضف"
+  <div id=tasksList>
+    <div class=task-group over>
+      <span>
+        "⚠️ متأخرة"
+      <b>
+        "1"
+    <div class=task overdue data-task-id=t3>
+      <div aria-checked=false aria-label=إكمال: تقرير قديم class=task-check data-toggle-task=t3 role=checkbox>
+      <div class=task-body>
+        <div class=task-title>
+          "تقرير قديم"
+        <div class=task-meta>
+          <span class=badge task>
+            "مهمة"
+          <span class=due-chip over>
+            "📅"
+            <bdi dir=ltr>
+              "2026-10-05"
+            "· متأخرة 9 يوم"
+      <div class=task-actions>
+        <button aria-label=تعديل class=btn btn-sm btn-ghost data-edit-task=t3 type=button>
+          "✏️"
+        <button aria-label=حذف class=btn btn-sm btn-danger data-del-task=t3 type=button>
+          "🗑"
+    <div class=task-group today>
+      <span>
+        "📌 اليوم"
+      <b>
+        "1"
+    <div class=task urgent data-task-id=t1>
+      <div aria-checked=false aria-label=إكمال: واجب التكامل 3 class=task-check data-toggle-task=t1 role=checkbox>
+      <div class=task-body>
+        <div class=task-title>
+          "واجب التكامل 3"
+        <div class=task-meta>
+          <span class=badge assignment>
+            "واجب"
+          <span>
+            <span class=course-link data-open-course=حساب التفاضل والتكامل 1 role=link title=فتح صفحة المادة>
+              "📚 حساب التفاضل والتكامل 1"
+          <span class=due-chip soon>
+            "📅"
+            <bdi dir=ltr>
+              "2026-10-14"
+            "· اليوم"
+      <div class=task-actions>
+        <button aria-label=تعديل class=btn btn-sm btn-ghost data-edit-task=t1 type=button>
+          "✏️"
+        <button aria-label=حذف class=btn btn-sm btn-danger data-del-task=t1 type=button>
+          "🗑"
+    <div class=task-group>
+      <span>
+        "📅 خلال 7 أيام"
+      <b>
+        "1"
+    <div class=task data-task-id=t2>
+      <div aria-checked=false aria-label=إكمال: مشروع C++ class=task-check data-toggle-task=t2 role=checkbox>
+      <div class=task-body>
+        <div class=task-title>
+          "مشروع C++"
+        <div class=task-meta>
+          <span class=badge project>
+            "مشروع"
+          <span>
+            <span class=course-link data-open-course=البرمجة بلغة C++ role=link title=فتح صفحة المادة>
+              "📚 البرمجة بلغة C++"
+          <span class=due-chip>
+            "📅"
+            <bdi dir=ltr>
+              "2026-10-20"
+            "· بعد 6 أيام"
+      <div class=task-actions>
+        <button aria-label=تعديل class=btn btn-sm btn-ghost data-edit-task=t2 type=button>
+          "✏️"
+        <button aria-label=حذف class=btn btn-sm btn-danger data-del-task=t2 type=button>
+          "🗑"

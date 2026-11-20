@@ -1,0 +1,137 @@
+<section class=section tab-play active id=courses>
+  <div class=page-head>
+    <h2 class=page-title>
+      "📚 موادي"
+    <p class=page-sub>
+      "موادك الدراسية"
+  <div class=controls>
+    <button class=btn id=btnAddCourse>
+      "+ مادة"
+    <button class=btn btn-ghost id=btnUploadHub type=button>
+      "📤 رفع ملفات"
+    <details class=more-menu>
+      <summary aria-label=المزيد من الإجراءات class=btn btn-ghost>
+        "⋯ المزيد"
+      <div class=more-pop>
+        <button class=btn btn-ghost id=btnImportPlan type=button>
+          "📥 استيراد من الخطة"
+        <button class=btn btn-ghost id=btnCloseSem type=button>
+          "📦 إغلاق الفصل"
+        <button class=btn btn-ghost id=btnSemArchive type=button>
+          "🗂 أرشيف الفصول"
+  <div class=hub-bar id=hubBar>
+    <div class=hub-search>
+      <input aria-label=بحث في المواد autocomplete=off id=hubSearch placeholder=🔎 ابحث بالاسم أو الكود أو الدكتور أو القاعة… type=search>
+    <div aria-label=تصفية المواد class=hub-filters id=hubFilters role=group>
+      <button aria-pressed=true class=hub-chip active data-hf=all type=button>
+        "الكل"
+      <button aria-pressed=false class=hub-chip data-hf=today type=button>
+        "🎓 محاضرات اليوم"
+      <button aria-pressed=false class=hub-chip data-hf=tasks type=button>
+        "📝 عليها مهام"
+      <button aria-pressed=false class=hub-chip data-hf=exam type=button>
+        "⏳ امتحان قريب"
+      <button aria-pressed=false class=hub-chip data-hf=lowatt type=button>
+        "⚠️ حضور منخفض"
+      <button aria-pressed=false class=hub-chip data-hf=nosched type=button>
+        "🗓 بدون جدول"
+    <div class=hub-sortrow>
+      <label for=hubSort>
+        "ترتيب:"
+      <select id=hubSort>
+        <option value=name>
+          "الاسم"
+        <option value=exam>
+          "أقرب امتحان"
+        <option value=tasks>
+          "الأكثر مهام"
+      <span aria-live=polite class=hub-count id=hubCount>
+        "2 مادة"
+  <div class=grid grid-2 id=myCoursesGrid>
+    <div aria-label=فتح مادة البرمجة بلغة C++ class=card hub-card data-course-card=c2 role=button>
+      <div class=hub-card-head>
+        <div class=hub-card-title>
+          <b>
+            "البرمجة بلغة C++"
+          <small>
+            "CE102"
+        <div class=hub-card-actions>
+          <button aria-label=رفع ملفات إلى البرمجة بلغة C++ class=btn btn-sm btn-ghost data-card-upload=c2 title=رفع ملفات لهذه المادة type=button>
+            "📤"
+          <input aria-hidden=true data-card-file=c2 hidden= multiple= type=file>
+          <button aria-label=تعديل البرمجة بلغة C++ class=btn btn-sm btn-ghost data-edit-course=c2 title=تعديل المادة type=button>
+            "✏️"
+          <button aria-label=حذف البرمجة بلغة C++ class=unified-course-btn added data-course-name=البرمجة بلغة C++ title=حذف من كل الأماكن type=button>
+            "🗑"
+      <div class=hub-chips>
+        <span class=hub-health h-good title=ما في شي مقلق>
+          "🟢 مستقرة"
+        <span class=badge>
+          "3 ساعات"
+        <span class=badge>
+          "👤 د. سامر"
+        <span class=badge>
+          "📍 م.ش 205"
+      <div class=hub-sched>
+        "🗓 الأحد"
+        <bdi dir=ltr>
+          "09:00–10:00"
+        "· الأربعاء"
+        <bdi dir=ltr>
+          "11:00–12:00"
+      <div class=hub-stats>
+        <span class=hub-stat ok title=الحضور>
+          "✅ 100%"
+        <span class=hub-stat sec title=العلامة حتى الآن>
+          "📊 بلا علامات"
+        <span class=hub-stat warn title=مهام متبقية>
+          "📝 1"
+        <span class=hub-stat sec title=ملفات المادة>
+          "📎"
+          <span data-files-badge=c2>
+            "…"
+      <div class=hub-open>
+        "فتح المادة ‹"
+    <div aria-label=فتح مادة حساب التفاضل والتكامل 1 class=card hub-card data-course-card=c1 role=button>
+      <div class=hub-card-head>
+        <div class=hub-card-title>
+          <b>
+            "حساب التفاضل والتكامل 1"
+          <small>
+            "MA101"
+        <div class=hub-card-actions>
+          <button aria-label=رفع ملفات إلى حساب التفاضل والتكامل 1 class=btn btn-sm btn-ghost data-card-upload=c1 title=رفع ملفات لهذه المادة type=button>
+            "📤"
+          <input aria-hidden=true data-card-file=c1 hidden= multiple= type=file>
+          <button aria-label=تعديل حساب التفاضل والتكامل 1 class=btn btn-sm btn-ghost data-edit-course=c1 title=تعديل المادة type=button>
+            "✏️"
+          <button aria-label=حذف حساب التفاضل والتكامل 1 class=unified-course-btn added data-course-name=حساب التفاضل والتكامل 1 title=حذف من كل الأماكن type=button>
+            "🗑"
+      <div class=hub-chips>
+        <span class=hub-health h-good title=ما في شي مقلق>
+          "🟢 مستقرة"
+        <span class=badge>
+          "3 ساعات"
+        <span class=badge>
+          "👤 د. أحمد"
+        <span class=badge>
+          "📍 ح.ب 104"
+      <div class=hub-sched>
+        "🗓 الأربعاء"
+        <bdi dir=ltr>
+          "09:00–10:00"
+      <div class=hub-stats>
+        <span class=hub-stat ok title=الحضور>
+          "✅ 89%"
+        <span class=hub-stat sec title=العلامة حتى الآن>
+          "📊 بلا علامات"
+        <span class=hub-stat warn title=مهام متبقية>
+          "📝 1"
+        <span class=hub-stat  title=نصفي التفاضل>
+          "⏳ بعد 7 يوم"
+        <span class=hub-stat sec title=ملفات المادة>
+          "📎"
+          <span data-files-badge=c1>
+            "…"
+      <div class=hub-open>
+        "فتح المادة ‹"

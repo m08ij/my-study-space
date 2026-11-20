@@ -1,0 +1,54 @@
+<section class=section tab-play active id=exams>
+  <div class=page-head>
+    <h2 class=page-title>
+      "⏳ الامتحانات"
+    <p class=page-sub>
+      "مواعيد امتحاناتك"
+  <div class=controls>
+    <button class=btn id=btnAddExam>
+      "+ امتحان"
+    <button class=btn btn-ghost id=btnExamPlan type=button>
+      "🧠 خطة مراجعة"
+  <div id=examsList>
+    <div class=card>
+      <div>
+        <div>
+          <div>
+            <span class=course-link data-open-course=حساب التفاضل والتكامل 1 role=link title=فتح صفحة المادة>
+              "📚 حساب التفاضل والتكامل 1"
+          <div>
+            "1 امتحان مسجل"
+        <button class=btn btn-sm data-add-exam=حساب التفاضل والتكامل 1>
+          "+ امتحان"
+      <div class=exam-card>
+        <div class=exam-info>
+          <div class=title>
+            "📝 نصفي التفاضل"
+          <div class=meta>
+            "📅"
+            <bdi dir=ltr>
+              "2026-10-21"
+            "· ⏰"
+            <bdi dir=ltr>
+              "10:00"
+        <div aria-label=المتبقي بعد 7 أيام class=exam-countdown urgent role=status>
+          "7 يوم"
+          <div class=lbl>
+            "متبقي"
+        <div>
+          <button class=btn btn-sm ecs-btn title=العد التنازلي>
+            "⏳"
+          <button aria-label=تعديل الامتحان class=btn btn-sm btn-ghost data-edit-exam=e1 type=button>
+            "✏️"
+          <button aria-label=حذف الامتحان class=btn btn-sm btn-danger data-del-exam=e1 type=button>
+            "🗑"
+    <div class=card ex-empty-card>
+      <div>
+        "مواد بدون امتحانات مسجّلة (1)"
+      <div class=ex-empty-list>
+        <div class=ex-empty-row>
+          <span>
+            <span class=course-link data-open-course=البرمجة بلغة C++ role=link title=فتح صفحة المادة>
+              "📚 البرمجة بلغة C++"
+          <button class=btn btn-sm btn-ghost data-add-exam=البرمجة بلغة C++>
+            "+ امتحان"

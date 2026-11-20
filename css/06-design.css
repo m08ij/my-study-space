@@ -1,0 +1,226 @@
+/* ============================================================
+   06-design.css (نسخة V4-design): توحيد التصميم + ثيم «أبيض» + قائمة جانبية دائرية الأيقونات والإعدادات بأسفلها + لوحة تحكم بشبكة بطاقات
+   يُحمَّل آخر شيء؛ كله إضافات فوق الملفات السابقة (لا يحذف ولا يعيد تسمية شيء)، والثيمات الأخرى تحتفظ بألوانها كما هي.
+   ============================================================ */
+
+/* ---------- 1) توكنز مشتركة (كل الثيمات) ---------- */
+:root{
+  --ic-bg:color-mix(in srgb,var(--accent) 11%,var(--card));
+  --ic-bg-hover:color-mix(in srgb,var(--accent) 20%,var(--card));
+  --tint-red:color-mix(in srgb,var(--red) 14%,var(--card));
+  --tint-amber:color-mix(in srgb,var(--amber) 16%,var(--card));
+  --tint-blue:color-mix(in srgb,var(--accent) 13%,var(--card));
+  --tint-green:color-mix(in srgb,var(--green) 15%,var(--card));
+  --success:var(--green);--warning:var(--amber);--danger:var(--red);
+  --card-pad:18px;--card-gap:12px;
+  --hero-bg:var(--grad-soft),var(--card);--hero-fg:var(--text);--hero-muted:var(--muted);--hero-accent:var(--accent);
+  --hero-btn-bg:var(--card);--hero-btn-fg:var(--text);
+}
+/* حالات موحّدة: تركيز لوحة المفاتيح + تعطيل */
+:where(button,a,input,select,textarea,summary,[tabindex]):focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+:where(button,.btn,input,select,textarea):disabled{opacity:.5;cursor:not-allowed}
+
+/* ---------- 2) الشريط العلوي: أزرار دائرية ---------- */
+.icon-circle{width:42px;height:42px}
+.icon-circle .ico{width:20px;height:20px}
+.icon-btn[aria-expanded="true"]{border-color:var(--accent);background:var(--tint-blue);color:var(--accent)}
+
+/* ---------- 3) القائمة الجانبية: تنقل قابل للتمرير + «الإعدادات» مثبّتة بأسفلها (Flexbox بدون position:fixed إضافي) ---------- */
+.sidebar{display:flex;flex-direction:column;overflow:hidden;padding:12px var(--sp-3) 0}
+.nav-item .ic{width:36px;height:36px;border-radius:50%;border:0;background:var(--ic-bg);color:var(--accent)}
+.nav-item .ic .ico{width:20px;height:20px}
+.nav-item:hover .ic{background:var(--ic-bg-hover);color:var(--accent);border-color:transparent}
+.nav-item.active .ic{background:var(--grad);color:var(--on-accent)}
+.nav-item.active{box-shadow:inset 0 0 0 1px var(--border2)}
+@media (max-width:900px){
+  .sidebar{padding-bottom:0}
+  }
+
+/* ---------- 4) لوحة التحكم: شبكة 12 عموداً ---------- */
+#dashboard.active{grid-template-columns:repeat(12,minmax(0,1fr));grid-auto-flow:row dense}
+#dashboard > [data-half]:not(.dash-solo){grid-column:span 6}
+@media (max-width:760px){#dashboard > [data-half]:not(.dash-solo){grid-column:1/-1}}
+
+.md-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--sh-sm);padding:var(--card-pad);min-width:0;align-self:stretch}
+.md-card-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:var(--card-gap)}
+.md-card-head h4{font-size:var(--fs-md);font-weight:800;margin:0}
+.md-link{background:none;border:0;color:var(--accent);font:inherit;font-size:var(--fs-sm);font-weight:700;cursor:pointer;padding:6px 4px;min-height:32px;border-radius:var(--r-sm)}
+.md-link:hover{text-decoration:underline}
+.md-more{background:none;border:0;color:var(--accent);font:inherit;font-size:var(--fs-sm);font-weight:700;cursor:pointer;margin-top:8px;padding:6px 0}
+
+/* #myDay: على الشاشات العريضة بطاقاته تصير عناصر مباشرة في شبكة اللوحة (فتأخذ «تقدم الترم» الفراغ بجانب الامتحان) */
+.myday{display:contents}
+@media (max-width:1100px){
+  /* لوحي: بطاقات «يومي» بشبكة داخلية، و«تقدم الترم» تحتها بعرض كامل */
+  .myday{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:var(--gap);grid-column:1/-1;background:none;border:0;box-shadow:none;padding:0;margin:0;border-radius:0}
+  }
+@media (max-width:760px){
+  /* هاتف: عمود واحد بالأولوية: المحاضرة ← المهام ← الامتحان ← الجدول ← الإجراءات ← المواعيد */
+  .myday{display:flex;flex-direction:column;gap:var(--gap);padding:0}
+    .md-card{padding:14px}
+  }
+
+/* بطاقة المحاضرة القادمة (الأبرز) */
+
+/* بطاقة الامتحان القادم */
+
+/* بطاقة مهام اليوم */
+.md-check{position:relative;width:22px;height:22px;flex:none;border-radius:50%;border:2px solid var(--border2);background:transparent;cursor:pointer;padding:0}
+.md-check::after{content:'';position:absolute;inset:-11px}
+.md-check[aria-checked="true"]{background:var(--green);border-color:var(--green)}
+.md-check[aria-checked="true"]::before{content:'';position:absolute;inset:3px 6px 6px 6px;border:solid var(--on-accent);border-width:0 2px 2px 0;transform:rotate(40deg)}
+
+/* جدول اليوم المختصر */
+
+/* إجراءات سريعة */
+
+/* أهم المواعيد القادمة */
+
+/* تقدم الترم: دائرة نسبة + تسمية */
+/* عرض متوسط (1101–1399): «تقدم الترم» بصف كامل تحت المحاضرة والامتحان بدل عمود ضيّق */
+
+/* ---------- 5) ثيمات الزجاج: البطاقات الجديدة تتبع نفس مظهر البطاقات ---------- */
+[data-theme^="glass"] .md-card{background:var(--lg-spec),var(--lg-fill);-webkit-backdrop-filter:blur(var(--lg-blur,22px)) saturate(var(--lg-sat,160%));backdrop-filter:blur(var(--lg-blur,22px)) saturate(var(--lg-sat,160%));border:1px solid var(--lg-edge-in);border-top-color:var(--lg-edge-hi);box-shadow:inset 0 1px 1px var(--lg-edge-hi),0 6px 18px rgba(var(--lg-ink),.14)}
+@media (prefers-reduced-transparency:reduce){[data-theme^="glass"] .md-card{background:var(--card);-webkit-backdrop-filter:none;backdrop-filter:none}}
+
+/* ---------- 6) ثيم «أبيض»: خلفية فاتحة هادئة، بطاقات بيضاء بحدود خفيفة وظل خفيف، بدون ضبابية أو توهّج ---------- */
+[data-theme="white"]{
+  color-scheme:light;
+  --on-accent:#ffffff;--blob-opacity:0;
+  --bg:#f4f6fb;--bg2:#eef1f8;--card:#ffffff;--card2:#f6f8fc;--border:#e3e8f2;--border2:#ccd5e6;
+  --text:#0f1b33;--muted:#4f5d7a;--muted2:#5a6785;
+  --cyan:#1f55e0;--purple:#6a3fd0;--green:#0f7a52;--amber:#8a5506;--red:#b91c1c;--pink:#b8185d;
+  --grad:linear-gradient(135deg,#1f55e0,#1a46c4);--grad-soft:linear-gradient(135deg,rgba(31,85,224,.07),rgba(31,85,224,.03));
+  --shadow:0 4px 16px rgba(15,27,51,.06);--shadow-lg:0 14px 40px rgba(15,27,51,.14);--glow:rgba(31,85,224,.16);
+  --topbar-bg:rgba(255,255,255,.94);
+  --sh-sm:0 1px 2px rgba(15,27,51,.05),0 1px 3px rgba(15,27,51,.05);--sh-md:0 6px 20px rgba(15,27,51,.08);
+  --r-md:12px;--r-lg:16px;--r-xl:22px;--radius:14px;--radius-lg:20px;
+  --hero-bg:linear-gradient(135deg,#0f2a5c 0%,#1d4ed8 100%);--hero-fg:#ffffff;--hero-muted:rgba(255,255,255,.84);--hero-accent:#c3d5ff;
+  --hero-btn-bg:#ffffff;--hero-btn-fg:#0f2a5c;
+  --ic-bg:#eaf0fe;--ic-bg-hover:#dbe6fd;
+}
+[data-theme="white"] body{background:var(--bg)}
+[data-theme="white"] body::before,[data-theme="white"] body::after{opacity:0}
+[data-theme="white"] .sidebar{background:var(--card);box-shadow:none;border-left:1px solid var(--border)}
+[data-theme="white"] .nav-item.active{background:var(--ic-bg);box-shadow:none}
+[data-theme="white"] .nav-item.active::before{box-shadow:none}
+[data-theme="white"] .nav-item:hover{background:var(--card2)}
+[data-theme="white"] .card,[data-theme="white"] .task,[data-theme="white"] .exam-card{box-shadow:var(--sh-sm)}
+[data-theme="white"] .card:hover{box-shadow:var(--sh-md)}
+[data-theme="white"] .btn:not(.btn-ghost):not(.btn-danger){box-shadow:none}
+[data-theme="white"] .badge.exam,[data-theme="white"] .badge.assignment,[data-theme="white"] .badge.quiz,[data-theme="white"] .badge.project,[data-theme="white"] .badge.task{background:rgba(120,120,120,.09)}
+[data-theme="white"] .badge.project{color:#0b5326}
+[data-theme="white"] .modal,[data-theme="white"] .sm-dialog,[data-theme="white"] .hub-sheet{box-shadow:var(--shadow-lg)}
+
+/* ---------- 7) شريط التمرير: مخفي بالقائمة الجانبية، وبباقي المواضع إبهام دائري يظهر بس عند التمرير فوق المنطقة ----------
+   سبب الشكل القديم (خط بزوايا حادة وأسهم): scrollbar-color/scrollbar-width القياسيان بالملفات السابقة تتغلّب على ::-webkit-scrollbar بكروم الحديث.
+   فنلغيهما بكروم/سفاري (Firefox يبقى على القياسي). الشرائط المخفية عمداً (.qs-chips/.st-tabs/.sidebar-nav) تبقى مخفية (التمرير بالعجلة/اللمس يشتغل). */
+.sidebar{scrollbar-width:none}
+.sidebar::-webkit-scrollbar{display:none}
+@supports selector(::-webkit-scrollbar){
+  *:not(.qs-chips):not(.st-tabs):not(.sidebar):not(.sidebar-nav){scrollbar-color:auto;scrollbar-width:auto}
+  ::-webkit-scrollbar{width:12px;height:12px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:transparent;border:3px solid transparent;background-clip:padding-box;border-radius:99px;min-height:36px;min-width:36px}
+  :hover::-webkit-scrollbar-thumb{background:color-mix(in srgb,var(--muted2) 45%,transparent);background-clip:padding-box}
+  ::-webkit-scrollbar-thumb:hover{background:color-mix(in srgb,var(--muted2) 75%,transparent);background-clip:padding-box}
+  ::-webkit-scrollbar-thumb:active{background:var(--accent);background-clip:padding-box}
+  ::-webkit-scrollbar-button{display:none;width:0;height:0}
+  ::-webkit-scrollbar-corner{background:transparent}
+      }
+
+/* ---------- 8) القائمة الجانبية: لوح عائم بحواف دائرية + عناصر حبّة تفاعلية ---------- */
+.sidebar{border-radius:28px;border:1px solid var(--border);box-shadow:var(--sh-md)}
+@media (min-width:901px){
+  .sidebar{top:80px;right:14px;bottom:14px}
+  main{margin-right:calc(var(--sidebar-w) + 28px)}
+}
+@media (max-width:900px){
+  .sidebar{border-radius:28px 0 0 28px;right:0}
+}
+.nav-item{border-radius:999px;transition:background var(--dur-2) ease,color var(--dur-2) ease,transform var(--dur-2) var(--ease),box-shadow var(--dur-2) ease}
+.nav-item::after{border-radius:999px}
+.nav-item.active::before{display:none}
+.nav-item .ic{transition:transform var(--dur-2) var(--ease),background var(--dur-2) ease,box-shadow var(--dur-2) ease,color var(--dur-2) ease}
+.nav-item:hover{transform:translateX(-4px)}
+.nav-item:hover .ic{transform:scale(1.1) rotate(-4deg)}
+.nav-item:active{transform:scale(.97)}
+.nav-item.active{transform:none;box-shadow:inset 0 0 0 1px var(--border2),var(--sh-sm)}
+.nav-item.active .ic{box-shadow:0 4px 12px var(--glow)}
+.nav-item.active .label{color:var(--text)}
+[data-theme="white"] .sidebar{border:1px solid var(--border);box-shadow:var(--sh-sm)}
+@media (prefers-reduced-motion:reduce){.nav-item:hover,.nav-item:hover .ic{transform:none}}
+
+/* ---------- 9) ملاحظات المادة (داخل ورقة المادة؛ تبويب الملاحظات العام حُذف) ---------- */
+.hub-note{display:flex;align-items:center;gap:8px}
+.hub-note-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;text-align:start;background:none;border:0;color:inherit;font:inherit;cursor:pointer;padding:2px 0}
+.hub-note-main b{font-size:var(--fs-md);overflow-wrap:anywhere}
+.hub-note-main small{color:var(--muted);font-size:var(--fs-xs);overflow-wrap:anywhere}
+.hub-note-del{flex:none;width:36px;height:36px;border-radius:50%;border:0;background:transparent;cursor:pointer;font-size:1rem;opacity:.65;transition:background var(--dur-1) ease,opacity var(--dur-1) ease}
+.hub-note-del:hover{background:var(--tint-red);opacity:1}
+
+
+/* ---------- 10) تحسين لوحة التحكم: توازن الأحجام، حالات فراغ واضحة، امتحانات/مواعيد أوضح، نصوص صغيرة أوضح ---------- */
+.md-card{display:flex;flex-direction:column}
+.md-empty-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;padding:10px 8px;min-height:120px}
+.md-empty-state b{font-size:var(--fs-md);color:var(--text)}
+.md-empty-state small{max-width:30ch;line-height:1.6}
+.md-empty-ic{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;font-size:1.4rem;background:var(--tint-blue);margin-bottom:2px}
+.md-empty-state .btn{margin-top:6px}
+
+/* الامتحان: درجة الاستعجال بالألوان + صف معلومات */
+
+/* المواعيد القادمة: شارة أيام بدرجة استعجال */
+
+/* إجراءات سريعة: قائمة مضغوطة بأيقونة دائرية (تقل الارتفاع) */
+@media (max-width:760px){
+        .md-empty-state{min-height:96px}
+}
+
+/* نصوص صغيرة أوضح: حجم أدنى 12.5px وتباين أعلى (أغمق من --muted قليلاً) */
+.md-card small{font-size:max(12.5px,.8rem);color:color-mix(in srgb,var(--muted) 78%,var(--text))}
+.md-link{font-size:max(13px,.84rem)}
+[data-theme="white"] .md-empty-ic{background:#eaf0fe}
+/* البطاقات القصيرة تلتف حول محتواها بدل التمدد بفراغ (المحاضرة/المهام/المواعيد تحدّد ارتفاع الصف) */
+
+/* ---------- 11) اقتراحات لك (Coach) + صحة المادة ---------- */
+.md-coach{grid-column:1/-1}
+.cc-list{display:flex;flex-direction:column;gap:8px}
+.cc-row{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r-lg);background:var(--card2);border-inline-start:4px solid var(--accent)}
+.cc-row.tone-bad{border-inline-start-color:var(--red);background:color-mix(in srgb,var(--red) 7%,var(--card))}
+.cc-row.tone-warn{border-inline-start-color:var(--amber);background:color-mix(in srgb,var(--amber) 8%,var(--card))}
+.cc-ic{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:var(--card);font-size:1.15rem;flex:none}
+.cc-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.cc-body b{font-size:var(--fs-md);overflow-wrap:anywhere}
+.cc-body small{color:color-mix(in srgb,var(--muted) 78%,var(--text));font-size:max(12.5px,.8rem);overflow-wrap:anywhere}
+.cc-x{flex:none;width:30px;height:30px;border-radius:50%;border:0;background:transparent;color:var(--muted);cursor:pointer}
+.cc-x:hover{background:var(--card);color:var(--text)}
+.cc-more{font-size:max(12.5px,.8rem);color:var(--muted)}
+@media (max-width:760px){.cc-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"ic body x" "btn btn btn";gap:8px 10px}.cc-ic{grid-area:ic}.cc-body{grid-area:body}.cc-x{grid-area:x}.cc-row .btn{grid-area:btn;justify-self:stretch;min-height:40px}.md-coach{order:2}}
+.hub-health{display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:99px;font-size:max(12px,.78rem);font-weight:700;background:var(--card2);color:var(--text)}
+.hub-health.h-good{background:color-mix(in srgb,var(--green) 14%,var(--card));color:var(--green)}
+.hub-health.h-warn{background:color-mix(in srgb,var(--amber) 16%,var(--card));color:var(--amber)}
+.hub-health.h-risk{background:color-mix(in srgb,var(--red) 14%,var(--card));color:var(--red)}
+[data-theme="white"] .hub-health.h-good{background:#e1f4ea}[data-theme="white"] .hub-health.h-warn{background:#fdf0d8}[data-theme="white"] .hub-health.h-risk{background:#fde8e8}
+
+/* ---------- 12) استيراد الجدول من صورة: زر الصفحة + شاشة النتيجة + إعداد المفتاح ---------- */
+.ocri-page{display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:12px;width:100%}
+.ocri-page-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;width:100%}
+.ocri-page-row .btn{min-height:44px;justify-content:center}
+#btnOcrTimetable{background:var(--card);color:var(--accent);border:1.5px solid var(--accent);font-weight:800;flex:1 1 220px;max-width:320px}
+#btnOcrTimetable:hover{background:var(--tint-blue)}
+.ocri-page-hint{max-width:420px;text-align:center;color:color-mix(in srgb,var(--muted) 78%,var(--text));font-size:max(12.5px,.8rem);line-height:1.7}
+.ocri-result{max-width:560px;text-align:start;max-height:92vh;overflow:auto}
+.ocri-thumbs{display:flex;gap:8px;overflow-x:auto;margin:8px 0;padding-bottom:4px}
+.ocri-thumbs img{height:120px;width:auto;border-radius:var(--r-md);border:1px solid var(--border);flex:none}
+.ocri-rowsum{display:flex;flex-direction:column;gap:6px;max-height:36vh;overflow-y:auto;margin:8px 0}
+.ocri-rs{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 10px;border-radius:var(--r-md);background:var(--card2);border-inline-start:4px solid var(--green)}
+.ocri-rs.medium{border-inline-start-color:var(--amber)}
+.ocri-rs.review{border-inline-start-color:var(--red);background:color-mix(in srgb,var(--red) 8%,var(--card))}
+.ocri-dot{width:9px;height:9px;border-radius:50%;background:var(--green);flex:none}
+.ocri-rs.medium .ocri-dot{background:var(--amber)}.ocri-rs.review .ocri-dot{background:var(--red)}
+.ocri-rs b{font-size:var(--fs-md)}
+.ocri-rs small{margin-inline-start:auto;color:color-mix(in srgb,var(--muted) 78%,var(--text));font-size:max(12.5px,.8rem)}
+.ocri-intro{padding:8px 10px;border-radius:var(--r-md);background:var(--tint-blue);color:var(--text)}
+.ocri-test{margin-top:6px}
+.ocri-testres{min-height:1.4em;margin-top:4px}

@@ -1,0 +1,71 @@
+# فحص + بناء + نشر على GitHub Pages مع كل push على main
+name: Test & Deploy
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['**.md', 'n8n/**', 'docs/**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Tests (jsdom)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            tests/package-lock.json
+            tools/package-lock.json
+      - run: npm ci
+        working-directory: tests
+      - run: npm ci   # terser/csso لاختبار الحزمة (bundle1)
+        working-directory: tools
+      - name: Quick suite
+        run: node run-all.js quick
+        working-directory: tests
+        env:
+          TZ: Asia/Amman
+
+  build:
+    name: Build bundle
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: tools/package-lock.json
+      - run: npm ci
+        working-directory: tools
+      - run: node tools/build-site.js _site
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

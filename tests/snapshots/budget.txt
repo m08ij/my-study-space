@@ -1,0 +1,250 @@
+<section class=section tab-play active id=budget>
+  <div class=page-head>
+    <h2 class=page-title>
+      "💰 الميزانية"
+    <p class=page-sub>
+      "دخلك ومصاريفك"
+  <div class=budget-summary id=budgetSummary>
+    <div class=budget-card income>
+      <div class=bc-icon>
+        "📈"
+      <div class=bc-val>
+        "150 د"
+      <div class=bc-lbl>
+        "إجمالي الدخل"
+    <div class=budget-card expense>
+      <div class=bc-icon>
+        "📉"
+      <div class=bc-val>
+        "0 د"
+      <div class=bc-lbl>
+        "إجمالي المصاريف"
+    <div class=budget-card balance >
+      <div class=bc-icon>
+        "💼"
+      <div class=bc-val>
+        "150 د"
+      <div class=bc-lbl>
+        "الرصيد"
+  <div class=controls>
+    <button class=btn id=btnAddIncome>
+      "+ دخل"
+    <button class=btn id=btnAddExpense>
+      "+ مصروف"
+    <button class=btn btn-sm btn-danger id=btnClearBudget>
+      "🗑 مسح"
+  <div class=card bp id=budgetPlan>
+    <div class=bp-tabs role=tablist>
+      <button class=chip active data-bp-tab=month role=tab>
+        "الشهر والحدود"
+      <button class=chip data-bp-tab=forecast role=tab>
+        "التوقعات والسيناريوهات"
+      <button class=chip data-bp-tab=goals role=tab>
+        "أهداف الادخار"
+      <button class=chip data-bp-tab=recurring role=tab>
+        "المتكرر"
+    <div class=bp-grid>
+      <label class=bp-f>
+        <span>
+          "رصيدك الحالي (افتتاحي)"
+        <input id=bpOpen inputmode=decimal step=any type=number value=>
+        <small>
+          "المبلغ الذي معك عند «تاريخ الرصيد»"
+      <label class=bp-f>
+        <span>
+          "تاريخ الرصيد"
+        <input id=bpOpenDate type=date value=>
+        <small>
+          "اتركه فارغاً لاحتساب كل المعاملات"
+      <label class=bp-f>
+        <span>
+          "ميزانية الشهر"
+        <input id=bpBudget inputmode=decimal step=any type=number value=>
+        <small>
+          "سقف المصروف الشهري"
+    <div class=bp-kpis>
+      <div class=bp-kpi>
+        <b>
+          "150 د"
+        <span>
+          "الرصيد الحالي"
+      <div class=bp-kpi>
+        <b>
+          "0 د"
+        <span>
+          "مصروف هذا الشهر"
+      <div class=bp-kpi>
+        <b>
+          "—"
+        <span>
+          "المتبقي من الميزانية"
+      <div class=bp-kpi>
+        <b>
+          "—"
+        <span>
+          "نسبة الاستهلاك"
+    <h4 class=bp-h>
+      "حدود الفئات (هذا الشهر)"
+    <div class=bp-cats>
+    <details class=bp-more open=>
+      <summary>
+        "حدّد حداً للفئات"
+      <div class=bp-cats>
+        <div class=bp-cat>
+          <div class=bp-cat-top>
+            <span>
+              "🎓 رسوم جامعية"
+            <input aria-label=حد رسوم جامعية class=bp-limit data-cat=tuition inputmode=decimal min=0 placeholder=الحد step=any type=number value=>
+          <div class=bp-cat-sub>
+            <span>
+              "صرفت 0 د"
+            <span>
+              "بدون حد"
+        <div class=bp-cat>
+          <div class=bp-cat-top>
+            <span>
+              "🏠 سكن"
+            <input aria-label=حد سكن class=bp-limit data-cat=housing inputmode=decimal min=0 placeholder=الحد step=any type=number value=>
+          <div class=bp-cat-sub>
+            <span>
+              "صرفت 0 د"
+            <span>
+              "بدون حد"
+        <div class=bp-cat>
+          <div class=bp-cat-top>
+            <span>
+              "🍔 طعام"
+            <input aria-label=حد طعام class=bp-limit data-cat=food inputmode=decimal min=0 placeholder=الحد step=any type=number value=>
+          <div class=bp-cat-sub>
+            <span>
+              "صرفت 0 د"
+            <span>
+              "بدون حد"
+        <div class=bp-cat>
+          <div class=bp-cat-top>
+            <span>
+              "🚌 مواصلات"
+            <input aria-label=حد مواصلات class=bp-limit data-cat=transport inputmode=decimal min=0 placeholder=الحد step=any type=number value=>
+          <div class=bp-cat-sub>
+            <span>
+              "صرفت 0 د"
+            <span>
+              "بدون حد"
+        <div class=bp-cat>
+          <div class=bp-cat-top>
+            <span>
+              "📚 كتب وقرطاسية"
+            <input aria-label=حد كتب وقرطاسية class=bp-limit data-cat=books inputmode=decimal min=0 placeholder=الحد step=any type=number value=>
+          <div class=bp-cat-sub>
+            <span>
+              "صرفت 0 د"
+            <span>
+              "بدون حد"
+        <div class=bp-cat>
+          <div class=bp-cat-top>
+            <span>
+              "📱 إنترنت"
+            <input aria-label=حد إنترنت class=bp-limit data-cat=internet inputmode=decimal min=0 placeholder=الحد step=any type=number value=>
+          <div class=bp-cat-sub>
+            <span>
+              "صرفت 0 د"
+            <span>
+              "بدون حد"
+        <div class=bp-cat>
+          <div class=bp-cat-top>
+            <span>
+              "💊 صحة"
+            <input aria-label=حد صحة class=bp-limit data-cat=health inputmode=decimal min=0 placeholder=الحد step=any type=number value=>
+          <div class=bp-cat-sub>
+            <span>
+              "صرفت 0 د"
+            <span>
+              "بدون حد"
+        <div class=bp-cat>
+          <div class=bp-cat-top>
+            <span>
+              "🎮 ترفيه"
+            <input aria-label=حد ترفيه class=bp-limit data-cat=entertainment inputmode=decimal min=0 placeholder=الحد step=any type=number value=>
+          <div class=bp-cat-sub>
+            <span>
+              "صرفت 0 د"
+            <span>
+              "بدون حد"
+        <div class=bp-cat>
+          <div class=bp-cat-top>
+            <span>
+              "👕 ملابس"
+            <input aria-label=حد ملابس class=bp-limit data-cat=clothing inputmode=decimal min=0 placeholder=الحد step=any type=number value=>
+          <div class=bp-cat-sub>
+            <span>
+              "صرفت 0 د"
+            <span>
+              "بدون حد"
+        <div class=bp-cat>
+          <div class=bp-cat-top>
+            <span>
+              "🧴 شخصي"
+            <input aria-label=حد شخصي class=bp-limit data-cat=personal inputmode=decimal min=0 placeholder=الحد step=any type=number value=>
+          <div class=bp-cat-sub>
+            <span>
+              "صرفت 0 د"
+            <span>
+              "بدون حد"
+        <div class=bp-cat>
+          <div class=bp-cat-top>
+            <span>
+              "💳 اشتراكات"
+            <input aria-label=حد اشتراكات class=bp-limit data-cat=subscriptions inputmode=decimal min=0 placeholder=الحد step=any type=number value=>
+          <div class=bp-cat-sub>
+            <span>
+              "صرفت 0 د"
+            <span>
+              "بدون حد"
+        <div class=bp-cat>
+          <div class=bp-cat-top>
+            <span>
+              "🏦 مدخرات"
+            <input aria-label=حد مدخرات class=bp-limit data-cat=savings inputmode=decimal min=0 placeholder=الحد step=any type=number value=>
+          <div class=bp-cat-sub>
+            <span>
+              "صرفت 0 د"
+            <span>
+              "بدون حد"
+        <div class=bp-cat>
+          <div class=bp-cat-top>
+            <span>
+              "➖ مصروف آخر"
+            <input aria-label=حد مصروف آخر class=bp-limit data-cat=other-expense inputmode=decimal min=0 placeholder=الحد step=any type=number value=>
+          <div class=bp-cat-sub>
+            <span>
+              "صرفت 0 د"
+            <span>
+              "بدون حد"
+  <div class=budget-tabs id=budgetTabs>
+    <button class=budget-tab active data-bt=all>
+      "الكل"
+    <button class=budget-tab data-bt=income>
+      "📈 دخل"
+    <button class=budget-tab data-bt=expense>
+      "📉 مصروف"
+  <div class=budget-cats id=budgetCats>
+    <button class=budget-cat-chip active data-cat=all>
+      "كل التصنيفات"
+    <button class=budget-cat-chip  data-cat=none>
+      "📦 بدون تصنيف"
+  <div id=budgetList>
+    <div class=budget-item>
+      <div class=bi-left>
+        <div class=bi-icon>
+          "💸"
+        <div class=bi-info>
+          <div class=bi-cat>
+      <div class=bi-amount income>
+        "+150 د"
+        <span class=date>
+          "2026-10-10"
+      <div class=bi-actions>
+        <button class=btn btn-sm btn-ghost data-edit-budget=b1>
+          "✏️"
+        <button class=btn btn-sm btn-danger data-del-budget=b1>
+          "🗑"

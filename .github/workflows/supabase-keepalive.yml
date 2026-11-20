@@ -1,0 +1,27 @@
+# يخلّي مشروع Supabase المجاني (study-space) صاحي: الخطة المجانية بتوقف المشروع لحاله بعد ~أسبوع بلا نشاط.
+# قراءة وهمية مرة باليوم: peek_space برمز غير موجود بترجع null — ما بتقرأ ولا بتكتب أي بيانات حقيقية.
+# المفتاح هو نفس المفتاح العام (publishable) الموجود أصلاً بكود الموقع supabase.js.
+name: supabase-keepalive
+on:
+  schedule:
+    - cron: '17 6 * * *'   # يومياً 06:17 UTC (09:17 بالأردن)
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Ping Supabase (read-only)
+        run: |
+          KEY="sb_publishable_vUjj_AksIR77ShK5JGf_Bw_fXspAXSk"
+          for i in 1 2 3; do
+            code=$(curl -s -o body.txt -w "%{http_code}" -m 30 -X POST "https://serlheaqobgnyuzfnqtl.supabase.co/rest/v1/rpc/peek_space" \
+              -H "apikey: $KEY" -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" -d '{"p_code":"KEEPALIVE000"}')
+            echo "try $i: HTTP $code $(head -c 120 body.txt)"
+            [ "$code" = "200" ] && exit 0
+            sleep 20
+          done
+          echo "::error::Supabase ما رد — ممكن يكون المشروع متوقف (افتح لوحة Supabase ← Restore project)"
+          exit 1

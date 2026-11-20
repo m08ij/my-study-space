@@ -1,0 +1,917 @@
+<section class=section active id=dashboard>
+  <div class=page-head>
+    <h2 class=page-title>
+      "📊 لوحة التحكم"
+    <p class=page-sub id=greetLine>
+      "☀️ سارة, لديك 3 مهمة متبقية"
+    <div class=dash-more id=dashMore>
+      <button aria-controls=dashMoreMenu aria-expanded=false aria-haspopup=menu aria-label=خيارات لوحة التحكم class=dash-more-btn id=dashMoreBtn title=خيارات لوحة التحكم type=button>
+        "⋯"
+      <div class=dash-more-menu hidden= id=dashMoreMenu role=menu>
+        <button data-m=edit role=menuitem type=button>
+          "✏️ تخصيص لوحة التحكم"
+        <button data-m=reset role=menuitem type=button>
+          "↺ استعادة الترتيب الافتراضي"
+  <div class=daily-quote dash-hidden data-dsec=quote>
+    <div class=quote-text id=dailyQuoteText>
+      "العلم نور، والجهل ظلام."
+    <div class=quote-author id=dailyQuoteAuthor>
+  <section aria-label=يومي الجامعي class=myday data-dsec=myday id=myDay>
+    <div class=myday-head md-head>
+      <h3>
+        "🧭 يومي الجامعي"
+      <span class=myday-date>
+        "الأربعاء 14/10"
+    <div class=md-card md-lecture>
+      <div aria-label=البرمجة بلغة C++ class=myday-hero next data-course=البرمجة بلغة C++ role=button>
+        <div class=myday-kicker>
+          "⏭ المحاضرة القادمة"
+        <div class=myday-title>
+          "البرمجة بلغة C++"
+        <div class=myday-meta>
+          <span>
+            "⏰"
+            <bdi dir=ltr>
+              "11:00–12:00"
+            "(1 س)"
+          <span>
+            "📍 م.ش 205"
+        <div class=myday-count>
+          "بعد"
+          <b>
+            "30 د"
+          "· الساعة"
+          <bdi dir=ltr>
+            "11:00"
+        <span class=md-hero-go>
+          "عرض تفاصيل المحاضرة ←"
+      <div class=myday-cta>
+        <button class=btn data-key=حساب التفاضل والتكامل 1|1791957600000 data-myday-act=attend data-n=حساب التفاضل والتكامل 1 type=button>
+          "✓ حضرت — حساب التفاضل والتكامل 1"
+        <button class=btn btn-ghost data-b=hb data-myday-act=map type=button>
+          "🗺️ الخريطة"
+    <section aria-label=خطتي اليوم class=md-card md-plan>
+      <div class=md-card-head>
+        <h4>
+          "📚 خطتي اليوم"
+        <div class=dp-head-r>
+          <span class=dp-streak zero title=أيام منجزة متتالية · أفضل: 0>
+            "💤 0"
+          <button class=md-link data-dp=open type=button>
+            "الخطة كاملة ←"
+      <div class=dp-sum>
+        <div aria-label=0 من 2 مواد class=dp-ring role=img>
+          <b>
+            <bdi dir=ltr>
+              "0/2"
+        <div class=dp-sum-t>
+          <b>
+            "ابدأ بأول بند"
+          <small>
+            "مادتين اليوم · بند واحد من كل مادة وبيتسجّل يومك ✅"
+          <span class=dp-fz>
+            "❄️ إعفاء الأسبوع متاح"
+      <div class=dp-courses>
+        <div class=dp-course>
+          <div class=dp-ch>
+            <b>
+              "حساب التفاضل والتكامل 1"
+            <span class=dp-cp>
+              <bdi dir=ltr>
+                "0/3"
+            <small>
+              "🎯 نصفي التفاضل بعد 7 أيام · 📚 محاضرة 09:00 · ⏰ مقترح"
+              <bdi dir=ltr>
+                "12:10"
+          <div class=dp-items>
+            <div class=dp-item>
+              <button aria-checked=false aria-label=إنجاز: راجع لـ«نصفي التفاضل» class=md-check data-dp=tog data-k=exam:e1 role=checkbox type=button>
+              <span class=dp-t>
+                "🎯 راجع لـ«نصفي التفاضل»"
+              <button aria-label=ابدأ جلسة تركيز: راجع لـ«نصفي التفاضل» class=dp-ic data-c=حساب التفاضل والتكامل 1 data-dp=focus data-k=exam:e1 title=ابدأ جلسة تركيز type=button>
+                "▶"
+            <div class=dp-item>
+              <button aria-checked=false aria-label=إنجاز: واجب التكامل 3 class=md-check data-dp=tog data-k=task:t1 role=checkbox type=button>
+              <span class=dp-t>
+                "📌 واجب التكامل 3"
+              <button aria-label=ابدأ جلسة تركيز: واجب التكامل 3 class=dp-ic data-c=حساب التفاضل والتكامل 1 data-dp=focus data-k=task:t1 title=ابدأ جلسة تركيز type=button>
+                "▶"
+            <div class=dp-item>
+              <button aria-checked=false aria-label=إنجاز: راجع محاضرة اليوم class=md-check data-dp=tog data-k=rev:حساب التفاضل والتكامل 1 role=checkbox type=button>
+              <span class=dp-t>
+                "راجع محاضرة اليوم"
+              <button aria-label=ابدأ جلسة تركيز: راجع محاضرة اليوم class=dp-ic data-c=حساب التفاضل والتكامل 1 data-dp=focus data-k=rev:حساب التفاضل والتكامل 1 title=ابدأ جلسة تركيز type=button>
+                "▶"
+        <div class=dp-course>
+          <div class=dp-ch>
+            <b>
+              "البرمجة بلغة C++"
+            <span class=dp-cp>
+              <bdi dir=ltr>
+                "0/1"
+            <small>
+              "📚 محاضرة 11:00 · ⏰ مقترح"
+              <bdi dir=ltr>
+                "13:10"
+          <div class=dp-items>
+            <div class=dp-item>
+              <button aria-checked=false aria-label=إنجاز: راجع محاضرة اليوم class=md-check data-dp=tog data-k=rev:البرمجة بلغة C++ role=checkbox type=button>
+              <span class=dp-t>
+                "راجع محاضرة اليوم"
+              <button aria-label=ابدأ جلسة تركيز: راجع محاضرة اليوم class=dp-ic data-c=البرمجة بلغة C++ data-dp=focus data-k=rev:البرمجة بلغة C++ title=ابدأ جلسة تركيز type=button>
+                "▶"
+    <button class=myday-tile md-card md-exam urg-amber data-go=exams type=button>
+      <span class=md-badge>
+        "هالأسبوع"
+      <span class=myday-lbl strong>
+        "نصفي التفاضل"
+      <span class=myday-note>
+        "حساب التفاضل والتكامل 1"
+      <span aria-label=المتبقي 6 يوم و23 ساعة و30 دقيقة class=md-cd>
+        <span class=md-cd-box>
+          <b>
+            "6"
+          <small>
+            "يوم"
+        <span class=md-cd-box>
+          <b>
+            "23"
+          <small>
+            "ساعة"
+        <span class=md-cd-box>
+          <b>
+            "30"
+          <small>
+            "دقيقة"
+      <span class=md-exam-meta>
+        <span class=md-meta-chip>
+          "📅 الأربعاء 21/10"
+        <span class=md-meta-chip>
+          "🕙"
+          <bdi dir=ltr>
+            "10:00"
+      <span class=myday-note>
+        "بعد 7 يوم"
+    <section aria-label=اقتراحات لك class=md-card md-coach>
+      <div class=md-card-head>
+        <h4>
+          "💡 اقتراحات لك"
+      <div class=cc-list>
+        <div class=cc-row tone-bad>
+          <span aria-hidden=true class=cc-ic>
+            "⚠️"
+          <div class=cc-body>
+            <b>
+              "عندك مهمة متأخرة"
+            <small>
+              "ابدأ بـ«تقرير قديم»"
+          <button class=btn btn-sm data-coach-act=overdue type=button>
+            "افتح المتأخرة"
+          <button aria-label=إخفاء الاقتراح لليوم class=cc-x data-coach-x=overdue title=إخفاء لليوم type=button>
+            "✕"
+        <div class=cc-row tone-warn>
+          <span aria-hidden=true class=cc-ic>
+            "🎯"
+          <div class=cc-body>
+            <b>
+              "نصفي التفاضل — حساب التفاضل والتكامل 1 بعد 7 أيام"
+            <small>
+              "ما عندك مهام مراجعة لها — خطة مراجعة جاهزة بضغطة"
+          <button class=btn btn-sm data-coach-act=exam-e1 type=button>
+            "🧠 خطة مراجعة"
+          <button aria-label=إخفاء الاقتراح لليوم class=cc-x data-coach-x=exam-e1 title=إخفاء لليوم type=button>
+            "✕"
+        <div class=cc-row tone-info>
+          <span aria-hidden=true class=cc-ic>
+            "🔥"
+          <div class=cc-body>
+            <b>
+              "ما سجّلت تركيز من يومين"
+            <small>
+              "25 دقيقة اليوم بترجّعك على المسار"
+          <button class=btn btn-sm data-coach-act=streak type=button>
+            "▶ ابدأ جلسة تركيز"
+          <button aria-label=إخفاء الاقتراح لليوم class=cc-x data-coach-x=streak title=إخفاء لليوم type=button>
+            "✕"
+    <section aria-label=مهام اليوم class=md-card md-tasks>
+      <div class=md-card-head>
+        <h4>
+          "✅ مهام اليوم"
+        <button class=md-link data-go=tasks data-tf=pending type=button>
+          "عرض الكل ←"
+      <button class=md-chip danger data-go=tasks data-tf=overdue type=button>
+        "⚠️ 1 مهمة متأخرة"
+      <div class=md-tasklist>
+        <div class=md-task late>
+          <button aria-checked=false aria-label=إنجاز: تقرير قديم class=md-check data-task-toggle=t3 role=checkbox type=button>
+          <button class=md-task-main data-go=tasks data-tf=overdue type=button>
+            <b>
+              "تقرير قديم"
+            <small>
+              "متأخرة منذ 9 يوم"
+          <span class=md-prio normal>
+            "متوسطة"
+        <div class=md-task>
+          <button aria-checked=false aria-label=إنجاز: واجب التكامل 3 class=md-check data-task-toggle=t1 role=checkbox type=button>
+          <button class=md-task-main data-go=tasks data-tf=pending type=button>
+            <b>
+              "واجب التكامل 3"
+            <small>
+              "حساب التفاضل والتكامل 1 · اليوم"
+          <span class=md-prio normal>
+            "متوسطة"
+      <div class=md-foot>
+        <div class=myday-lines>
+          <div class=myday-line>
+            <span>
+              "مهام اليوم"
+            <b>
+              <bdi dir=ltr>
+                "0 / 1"
+          <div class=myday-bar slim>
+            <i>
+    <section aria-label=جدول اليوم class=md-card md-sched>
+      <div class=md-card-head>
+        <h4>
+          "🗓️ جدول اليوم"
+        <button class=md-link data-go=timetable type=button>
+          "عرض الجدول الكامل ←"
+      <div class=md-slots>
+        <button class=md-slot done data-slot-course=حساب التفاضل والتكامل 1 type=button>
+          <span class=md-slot-time>
+            <bdi dir=ltr>
+              "09:00"
+            <small>
+              <bdi dir=ltr>
+                "10:00"
+          <span class=md-slot-body>
+            <b>
+              "حساب التفاضل والتكامل 1"
+            <small>
+              "ح.ب 104"
+          <span class=md-state done>
+            "انتهت"
+        <button class=md-slot up data-slot-course=البرمجة بلغة C++ type=button>
+          <span class=md-slot-time>
+            <bdi dir=ltr>
+              "11:00"
+            <small>
+              <bdi dir=ltr>
+                "12:00"
+          <span class=md-slot-body>
+            <b>
+              "البرمجة بلغة C++"
+            <small>
+              "م.ش 205"
+    <section aria-label=أهم المواعيد القادمة class=md-card md-deadlines>
+      <div class=md-card-head>
+        <h4>
+          "📅 أهم المواعيد القادمة"
+      <div class=md-dls>
+        <button class=md-dl task data-go=tasks data-tf=pending type=button>
+          <span aria-hidden=true class=md-dl-ic>
+            "📌"
+          <span class=md-dl-body>
+            <b>
+              "مشروع C++"
+            <small>
+              "مهمة · البرمجة بلغة C++ · الثلاثاء 20/10"
+          <span class=md-dl-days u-amber>
+            "6 أيام"
+    <section aria-label=إجراءات سريعة class=md-card md-quick>
+      <div class=md-card-head>
+        <h4>
+          "⚡ إجراءات سريعة"
+      <div class=md-quick-grid>
+        <button class=md-qa data-myday-act=addtask type=button>
+          <span aria-hidden=true class=md-qa-ic>
+            "＋"
+          <b>
+            "إضافة مهمة"
+          <small>
+            "مهمة جديدة"
+        <button class=md-qa data-go=courses type=button>
+          <span aria-hidden=true class=md-qa-ic>
+            "📖"
+          <b>
+            "فتح المواد"
+          <small>
+            "عرض جميع المواد"
+        <button class=md-qa data-go=timer type=button>
+          <span aria-hidden=true class=md-qa-ic>
+            "⏱️"
+          <b>
+            "بدء التركيز"
+          <small>
+            "مؤقت بومودورو"
+  <div class=card dash-term data-dsec=term>
+    <div class=card-head>
+      <h3>
+        "🎓 تقدم الترم"
+      <span class=card-action data-goto=gradecalc>
+        "علاماتي ←"
+    <div id=dashTermProgress>
+      <div class=term-wrap>
+        <div aria-label=4% من ساعات الخطة class=term-ring role=img>
+          <svg aria-hidden=true height=104 viewBox=0 0 100 100 width=104>
+          <b>
+            "4%"
+        <div class=term-info>
+          <div class=term-line>
+            <b>
+              "6 / 160"
+            "ساعة مسجّلة من خطة التخرج"
+          <div class=sc-progress>
+            <div class=sc-progress-fill>
+          <small class=term-sub>
+            "باقي 154 ساعة للتخرج"
+      <details class=term-more>
+        <summary>
+          "تفصيل حسب النوع"
+        <div>
+          <div>
+            <div>
+              <span>
+                "جامعة إجبارية"
+              <span>
+                "0/18"
+            <div>
+              <div>
+          <div>
+            <div>
+              <span>
+                "جامعة اختيارية"
+              <span>
+                "0/6"
+            <div>
+              <div>
+          <div>
+            <div>
+              <span>
+                "كلية إجبارية"
+              <span>
+                "0/33"
+            <div>
+              <div>
+          <div>
+            <div>
+              <span>
+                "تخصص إجباري"
+              <span>
+                "0/88"
+            <div>
+              <div>
+          <div>
+            <div>
+              <span>
+                "تخصص اختياري"
+              <span>
+                "0/15"
+            <div>
+              <div>
+  <div class=grid grid-4 data-dsec=stats id=dashStats>
+    <div class=stat>
+      <div class=ic>
+        "📚"
+      <div>
+        <div class=v>
+          "2"
+        <div class=l>
+          "مادة مسجّلة"
+    <div class=stat>
+      <div class=ic>
+        "📝"
+      <div>
+        <div class=v>
+          "3"
+        <div class=l>
+          "مهمة متبقية"
+    <div class=stat>
+      <div class=ic>
+        "⏳"
+      <div>
+        <div class=v>
+          "1"
+        <div class=l>
+          "امتحان قادم"
+    <div class=stat>
+      <div class=ic>
+        "📊"
+      <div>
+        <div class=v>
+          "2"
+        <div class=l>
+          "مادة في علاماتي"
+  <section aria-label=إحصائياتي class=card stat-tabs data-dsec=analytics data-st=weekly id=statTabs>
+    <div aria-label=نوع الإحصائيات class=st-tabs role=tablist>
+      <button aria-selected=true class=st-tab active data-st-go=weekly role=tab type=button>
+        "📈 أسبوعي"
+      <button aria-selected=false class=st-tab data-st-go=enhanced role=tab type=button>
+        "📊 متقدمة"
+      <button aria-selected=false class=st-tab data-st-go=insights role=tab type=button>
+        "🧠 تحليلات"
+    <section aria-label=ملخصك الأسبوعي class=dash-weekly data-st-pane=weekly id=weeklySummary>
+      <div class=card-head>
+        <h3>
+          "📈 ملخصك الأسبوعي"
+        <span class=wk-range>
+          <bdi dir=ltr>
+            "11/10 – 17/10"
+      <div class=wk-tiles>
+        <div class=wk-tile>
+          <b>
+            "0"
+          <span>
+            "وقت الدراسة"
+        <div class=wk-tile>
+          <b>
+            "0 / 7"
+          <span>
+            "أيام دراسة"
+        <div class=wk-tile>
+          <b>
+            "0"
+          <span>
+            "مهام أُنجزت"
+      <div aria-label=دقائق الدراسة لكل يوم هذا الأسبوع class=wk-bars role=img>
+        <div class=wk-bar zero title=الأحد: لا دراسة>
+          <i>
+          <span>
+            "أحد"
+        <div class=wk-bar zero title=الاثنين: لا دراسة>
+          <i>
+          <span>
+            "اثنين"
+        <div class=wk-bar zero title=الثلاثاء: لا دراسة>
+          <i>
+          <span>
+            "ثلاثاء"
+        <div class=wk-bar today zero title=الأربعاء: لا دراسة>
+          <i>
+          <span>
+            "أربعاء"
+        <div class=wk-bar zero title=الخميس: لا دراسة>
+          <i>
+          <span>
+            "خميس"
+        <div class=wk-bar zero title=الجمعة: لا دراسة>
+          <i>
+          <span>
+            "جمعة"
+        <div class=wk-bar zero title=السبت: لا دراسة>
+          <i>
+          <span>
+            "سبت"
+      <div class=wk-next>
+        "📝 2 مهمة مستحقة خلال 7 أيام · ⏳ أقرب امتحان: نصفي التفاضل (بعد 7 أيام)"
+    <div data-st-pane=enhanced id=slotEnhanced>
+      <div class=card dash-collapsible dash-collapsed id=enhancedStatsSection>
+        <div class=card-head>
+          <h3>
+            "📊 إحصائيات متقدمة"
+          <span class=card-action id=enhStatsRefresh>
+            "🔄 تحديث"
+        <div class=stats-hero>
+          <div>
+            <div>
+              <div class=big-num>
+                "0.0"
+              <div class=big-lbl>
+                "إجمالي ساعات الدراسة"
+            <div>
+              <div>
+                "💤"
+              <div>
+                "0"
+              <div class=u-note>
+                "يوم متتالي"
+          <div class=stats-grid>
+            <div class=stats-tile>
+              <div class=v>
+                "0.0"
+              <div class=l>
+                "ساعات الأسبوع"
+            <div class=stats-tile>
+              <div class=v>
+                "0"
+              <div class=l>
+                "متوسط يومي (د)"
+            <div class=stats-tile>
+              <div class=v>
+                "0"
+              <div class=l>
+                "أفضل يوم (د)"
+            <div class=stats-tile>
+              <div class=v>
+                "0"
+              <div class=l>
+                "جلسات بومودورو"
+            <div class=stats-tile>
+              <div class=v>
+                "0%"
+              <div class=l>
+                "إنجاز المهام"
+            <div class=stats-tile>
+              <div class=v>
+                "2"
+              <div class=l>
+                "مواد"
+        <div class=chart-container>
+          <div class=chart-title>
+            "📚 توزيع الساعات على الأنواع"
+          <div class=donut-wrap>
+            <div class=donut>
+              <svg viewBox=0 0 100 100>
+              <div class=donut-center>
+                <div class=n>
+                  "0"
+                <div class=t>
+                  "ساعة"
+            <div class=donut-legend>
+              <div>
+                "أضف مواد أولاً"
+    <div data-st-pane=insights id=slotInsights>
+      <div class=card dash-collapsible dash-collapsed id=insightsSection>
+        <div class=card-head>
+          <h3>
+            "📈 تحليلات متقدمة"
+          <span class=card-action id=insightsRefresh>
+            "🔄 تحديث"
+        <div>
+          <div class=chart-title>
+            "ساعات الدراسة (16 أسبوع)"
+          <div id=insightsHeatmap>
+            <div>
+              <div>
+                <div title=2026-06-21 - 0 min>
+                <div title=2026-06-22 - 0 min>
+                <div title=2026-06-23 - 0 min>
+                <div title=2026-06-24 - 0 min>
+                <div title=2026-06-25 - 0 min>
+                <div title=2026-06-26 - 0 min>
+                <div title=2026-06-27 - 0 min>
+              <div>
+                <div title=2026-06-28 - 0 min>
+                <div title=2026-06-29 - 0 min>
+                <div title=2026-06-30 - 0 min>
+                <div title=2026-07-01 - 0 min>
+                <div title=2026-07-02 - 0 min>
+                <div title=2026-07-03 - 0 min>
+                <div title=2026-07-04 - 0 min>
+              <div>
+                <div title=2026-07-05 - 0 min>
+                <div title=2026-07-06 - 0 min>
+                <div title=2026-07-07 - 0 min>
+                <div title=2026-07-08 - 0 min>
+                <div title=2026-07-09 - 0 min>
+                <div title=2026-07-10 - 0 min>
+                <div title=2026-07-11 - 0 min>
+              <div>
+                <div title=2026-07-12 - 0 min>
+                <div title=2026-07-13 - 0 min>
+                <div title=2026-07-14 - 0 min>
+                <div title=2026-07-15 - 0 min>
+                <div title=2026-07-16 - 0 min>
+                <div title=2026-07-17 - 0 min>
+                <div title=2026-07-18 - 0 min>
+              <div>
+                <div title=2026-07-19 - 0 min>
+                <div title=2026-07-20 - 0 min>
+                <div title=2026-07-21 - 0 min>
+                <div title=2026-07-22 - 0 min>
+                <div title=2026-07-23 - 0 min>
+                <div title=2026-07-24 - 0 min>
+                <div title=2026-07-25 - 0 min>
+              <div>
+                <div title=2026-07-26 - 0 min>
+                <div title=2026-07-27 - 0 min>
+                <div title=2026-07-28 - 0 min>
+                <div title=2026-07-29 - 0 min>
+                <div title=2026-07-30 - 0 min>
+                <div title=2026-07-31 - 0 min>
+                <div title=2026-08-01 - 0 min>
+              <div>
+                <div title=2026-08-02 - 0 min>
+                <div title=2026-08-03 - 0 min>
+                <div title=2026-08-04 - 0 min>
+                <div title=2026-08-05 - 0 min>
+                <div title=2026-08-06 - 0 min>
+                <div title=2026-08-07 - 0 min>
+                <div title=2026-08-08 - 0 min>
+              <div>
+                <div title=2026-08-09 - 0 min>
+                <div title=2026-08-10 - 0 min>
+                <div title=2026-08-11 - 0 min>
+                <div title=2026-08-12 - 0 min>
+                <div title=2026-08-13 - 0 min>
+                <div title=2026-08-14 - 0 min>
+                <div title=2026-08-15 - 0 min>
+              <div>
+                <div title=2026-08-16 - 0 min>
+                <div title=2026-08-17 - 0 min>
+                <div title=2026-08-18 - 0 min>
+                <div title=2026-08-19 - 0 min>
+                <div title=2026-08-20 - 0 min>
+                <div title=2026-08-21 - 0 min>
+                <div title=2026-08-22 - 0 min>
+              <div>
+                <div title=2026-08-23 - 0 min>
+                <div title=2026-08-24 - 0 min>
+                <div title=2026-08-25 - 0 min>
+                <div title=2026-08-26 - 0 min>
+                <div title=2026-08-27 - 0 min>
+                <div title=2026-08-28 - 0 min>
+                <div title=2026-08-29 - 0 min>
+              <div>
+                <div title=2026-08-30 - 0 min>
+                <div title=2026-08-31 - 0 min>
+                <div title=2026-09-01 - 0 min>
+                <div title=2026-09-02 - 0 min>
+                <div title=2026-09-03 - 0 min>
+                <div title=2026-09-04 - 0 min>
+                <div title=2026-09-05 - 0 min>
+              <div>
+                <div title=2026-09-06 - 0 min>
+                <div title=2026-09-07 - 0 min>
+                <div title=2026-09-08 - 0 min>
+                <div title=2026-09-09 - 0 min>
+                <div title=2026-09-10 - 0 min>
+                <div title=2026-09-11 - 0 min>
+                <div title=2026-09-12 - 0 min>
+              <div>
+                <div title=2026-09-13 - 0 min>
+                <div title=2026-09-14 - 0 min>
+                <div title=2026-09-15 - 0 min>
+                <div title=2026-09-16 - 0 min>
+                <div title=2026-09-17 - 0 min>
+                <div title=2026-09-18 - 0 min>
+                <div title=2026-09-19 - 0 min>
+              <div>
+                <div title=2026-09-20 - 0 min>
+                <div title=2026-09-21 - 0 min>
+                <div title=2026-09-22 - 0 min>
+                <div title=2026-09-23 - 0 min>
+                <div title=2026-09-24 - 0 min>
+                <div title=2026-09-25 - 0 min>
+                <div title=2026-09-26 - 0 min>
+              <div>
+                <div title=2026-09-27 - 0 min>
+                <div title=2026-09-28 - 0 min>
+                <div title=2026-09-29 - 0 min>
+                <div title=2026-09-30 - 0 min>
+                <div title=2026-10-01 - 0 min>
+                <div title=2026-10-02 - 0 min>
+                <div title=2026-10-03 - 0 min>
+              <div>
+                <div title=2026-10-04 - 0 min>
+                <div title=2026-10-05 - 0 min>
+                <div title=2026-10-06 - 0 min>
+                <div title=2026-10-07 - 0 min>
+                <div title=2026-10-08 - 0 min>
+                <div title=2026-10-09 - 0 min>
+                <div title=2026-10-10 - 0 min>
+              <div>
+                <div title=2026-10-11 - 0 min>
+                <div title=2026-10-12 - 0 min>
+                <div title=2026-10-13 - 0 min>
+                <div title=2026-10-14 - 0 min>
+                <div title=2026-10-15 - 0 min>
+                <div title=2026-10-16 - 0 min>
+                <div title=2026-10-17 - 0 min>
+            <div>
+              <div>
+                <div>
+                  "0.0"
+                <div class=u-note>
+                  "ساعات (16 أسبوع)"
+              <div>
+                <div>
+                  "0"
+                <div class=u-note>
+                  "أيام نشطة"
+              <div>
+                <div>
+                  "0"
+                <div class=u-note>
+                  "ستريك"
+        <div>
+          <div class=chart-title>
+            "هذا الأسبوع vs الماضي"
+          <div id=insightsTrends>
+            <div>
+              <div>
+                <div class=u-note>
+                  "هذا الأسبوع"
+                <div>
+                  "0.0 س"
+              <div>
+                <div class=u-note>
+                  "الأسبوع الماضي"
+                <div>
+                  "0.0 س"
+                <div>
+                  "+0%"
+        <div>
+          <div>
+            <div class=chart-title>
+              "أداء المواد"
+            <div id=insightsCourses>
+              <div>
+                <div>
+                  <span>
+                    "حساب التفاضل والتكامل 1"
+                  <span>
+                    "بلا علامات"
+                <div>
+                  <span>
+                    "البرمجة بلغة C++"
+                  <span>
+                    "بلا علامات"
+          <div>
+            <div class=chart-title>
+              "توقع المعدل"
+            <div id=insightsGpa>
+              <div>
+                "أضف علامات لمادة وحدة على الأقل ليظهر التوقع"
+  <div class=mini-timer data-dsec=timer data-half=>
+    <div class=ring>
+      <svg viewBox=0 0 56 56>
+      <div class=inner id=miniPct>
+        "25:00"
+    <div class=info>
+      <div class=mode id=miniMode>
+        "🎯 تركيز"
+      <div class=time id=miniTime>
+        "25:00"
+    <div>
+      <button aria-label=ابدأ المؤقت class=btn btn-sm id=miniStartBtn>
+        "▶"
+      <button aria-label=إعادة ضبط المؤقت class=btn btn-sm btn-ghost id=miniResetBtn>
+        "↺"
+  <div class=card data-dsec=budget data-half=>
+    <div class=card-head>
+      <h3>
+        "💰 نظرة الميزانية"
+      <span class=card-action data-goto=budget>
+        "التفاصيل ←"
+    <div id=dashBudget>
+      <div>
+        <span>
+          "📈 دخل"
+        <span>
+          "150 د"
+      <div>
+        <span>
+          "📉 مصروف"
+        <span>
+          "0 د"
+      <div>
+        <span>
+          "💼 الرصيد"
+        <span>
+          "150 د"
+  <div aria-label=مصروف سريع class=card quick-spend dash-hidden data-dsec=qspend id=quickSpend>
+    <div class=card-head>
+      <h3>
+        "💸 مصروف سريع"
+      <span class=u-note id=qsTotal>
+        "ما صرفت اليوم"
+    <div aria-label=التصنيف class=qs-chips role=group>
+      <button aria-pressed=false class=qs-chip data-qs-cat=food type=button>
+        "🍔 طعام"
+      <button aria-pressed=false class=qs-chip data-qs-cat=transport type=button>
+        "🚌 مواصلات"
+      <button aria-pressed=false class=qs-chip data-qs-cat=books type=button>
+        "📚 قرطاسية"
+      <button aria-pressed=false class=qs-chip data-qs-cat=entertainment type=button>
+        "🎮 ترفيه"
+      <button aria-pressed=false class=qs-chip data-qs-cat=other-expense type=button>
+        "➖ آخر"
+    <div class=qs-row>
+      <input aria-label=المبلغ بالدينار id=qsAmount inputmode=decimal min=0.01 placeholder=المبلغ بالدينار step=0.01 type=number>
+      <button class=btn id=qsAdd type=button>
+        "＋ أضف"
+  <div class=dash-slot dash-hidden data-dsec=lms id=slotLms>
+    <div class=card moodle-widget dash-collapsible dash-collapsed id=lmsWidget>
+      <div class=card-head>
+        <h3>
+          "🎓 LMS HU — روابط سريعة"
+        <span class=card-action>
+          "lms.hu.edu.jo"
+      <a class=moodle-link href=https://lms.hu.edu.jo/my/ rel=noopener target=_blank>
+        <div class=moodle-icon>
+          "📖"
+        <div class=moodle-info>
+          <div class=moodle-title>
+            "LMS HU — الرئيسية"
+          <div class=moodle-desc>
+            "منصة التعلم الإلكتروني"
+        <div>
+          "←"
+      <a class=moodle-link href=https://lms.hu.edu.jo/calendar/view.php?view=month rel=noopener target=_blank>
+        <div class=moodle-icon>
+          "📅"
+        <div class=moodle-info>
+          <div class=moodle-title>
+            "التقويم"
+          <div class=moodle-desc>
+            "مواعيد الواجبات والاختبارات"
+        <div>
+          "←"
+      <a class=moodle-link href=https://lms.hu.edu.jo/my/ rel=noopener target=_blank>
+        <div class=moodle-icon>
+          "📝"
+        <div class=moodle-info>
+          <div class=moodle-title>
+            "واجباتي"
+          <div class=moodle-desc>
+            "كل الواجبات المطلوبة"
+        <div>
+          "←"
+      <a class=moodle-link href=https://lms.hu.edu.jo/grade/report/overview/index.php rel=noopener target=_blank>
+        <div class=moodle-icon>
+          "📊"
+        <div class=moodle-info>
+          <div class=moodle-title>
+            "علاماتي"
+          <div class=moodle-desc>
+            "نقاط التقويم والواجبات"
+        <div>
+          "←"
+      <a class=moodle-link href=https://lms.hu.edu.jo/mod/forum/index.php rel=noopener target=_blank>
+        <div class=moodle-icon>
+          "💬"
+        <div class=moodle-info>
+          <div class=moodle-title>
+            "المنتديات"
+          <div class=moodle-desc>
+            "نقاشات المواد"
+        <div>
+          "←"
+      <a class=moodle-link href=https://reg1.hu.edu.jo/ rel=noopener target=_blank>
+        <div class=moodle-icon>
+          "🎓"
+        <div class=moodle-info>
+          <div class=moodle-title>
+            "بوابة الطالب"
+          <div class=moodle-desc>
+            "العلامات والرسوم والجدول"
+        <div>
+          "←"
+      <div>
+        <div class=card-head>
+          <h3>
+            "💬 Microsoft Teams"
+          <span class=card-action>
+            "teams.microsoft.com"
+        <a class=moodle-link href=https://teams.microsoft.com/ rel=noopener target=_blank>
+          <div class=moodle-icon>
+            "💬"
+          <div class=moodle-info>
+            <div class=moodle-title>
+              "Microsoft Teams"
+            <div class=moodle-desc>
+              "المحاضرات والاجتماعات"
+          <div>
+            "←"
+        <a class=moodle-link href=https://outlook.office.com/mail/ rel=noopener target=_blank>
+          <div class=moodle-icon>
+            "📧"
+          <div class=moodle-info>
+            <div class=moodle-title>
+              "Outlook الجامعي"
+            <div class=moodle-desc>
+              "البريد الرسمي"
+          <div>
+            "←"
+        <a class=moodle-link href=https://onedrive.live.com/ rel=noopener target=_blank>
+          <div class=moodle-icon>
+            "📁"
+          <div class=moodle-info>
+            <div class=moodle-title>
+              "OneDrive"
+            <div class=moodle-desc>
+              "الملفات والتخزين السحابي"
+          <div>
+            "←"
+        <a class=moodle-link href=https://outlook.office.com/calendar/ rel=noopener target=_blank>
+          <div class=moodle-icon>
+            "📅"
+          <div class=moodle-info>
+            <div class=moodle-title>
+              "تقويم Outlook"
+            <div class=moodle-desc>
+              "مواعيدك من Teams و Office"
+          <div>
+            "←"
+      <div>
+        <div>
+          "📥"
+          <b>
+            "استيراد تقويم LMS:"
+          "نزّل ملف"
+          <code>
+            ".ics"
+          "من LMS → استورده هنا لدمج الواجبات مع جدولك."
+        <button class=btn btn-sm id=moodleImportBtn>
+          "📅 استيراد تقويم (.ics)"

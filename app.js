@@ -1,0 +1,1463 @@
+/* ============================================================
+   🚀 app.js — Boot + Event Bindings (بدل inline script)
+   ============================================================ */
+(function(){
+  'use strict';
+
+  /* ============================================================
+     TM + ts (Timer state)
+     ============================================================ */
+  window.TM = { focus: 25*60, short: 5*60, long: 15*60 };
+  if(window.timerSettings){
+    window.TM.focus = window.timerSettings.focus * 60;
+    window.TM.short = window.timerSettings.short * 60;
+    window.TM.long = window.timerSettings.long * 60;
+  }
+  window.ts = {
+    mode: 'focus',
+    remaining: window.TM.focus,
+    total: window.TM.focus,
+    running: false,
+    interval: null,
+    sessions: window.S.get('pomoSessions', 0) || 0,
+    focusMin: window.S.get('pomoFocus', 0) || 0
+  };
+
+  function fmt(s){ return Math.floor(s/60).toString().padStart(2,'0') + ':' + (s%60).toString().padStart(2,'0'); }
+  window.fmt = fmt;
+
+  window.updateTimerUI = function(){
+    var d = document.getElementById('timerDisplay'); if(d) d.textContent = fmt(window.ts.remaining);
+    var pct = window.ts.total > 0 ? Math.max(0, Math.min(1, 1 - (window.ts.remaining / window.ts.total))) : 0;
+    var c = 2 * Math.PI * 116;
+    var pc = document.getElementById('progressCircle'); if(pc) pc.style.strokeDashoffset = c * pct;
+    var b = document.getElementById('startBtn'); if(b) b.textContent = window.ts.running ? '⏸ إيقاف' : '▶ ابدأ';
+    var sd = document.getElementById('sessionsDone'); if(sd) sd.textContent = window.ts.sessions;
+    var fm = document.getElementById('focusMinutes'); if(fm) fm.textContent = window.ts.focusMin;
+    var mt = document.getElementById('miniTime'); if(mt) mt.textContent = fmt(window.ts.remaining);
+    var mp = document.getElementById('miniPct'); if(mp) mp.textContent = fmt(window.ts.remaining);
+    var mr = document.getElementById('miniRing');
+    if(mr){ var mc = 2 * Math.PI * 24; mr.style.strokeDashoffset = mc * pct; }
+    var mb = document.getElementById('miniStartBtn'); if(mb) mb.textContent = window.ts.running ? '⏸' : '▶';
+  };
+
+  window.setMode = function(el, mode){
+    document.querySelectorAll('.mode-switch .chip').forEach(function(c){ c.classList.remove('active'); });
+    if(el) el.classList.add('active');
+    window.ts.mode = mode;
+    if(mode === 'stopwatch'){ window.ts.remaining = 0; window.ts.total = 1; window.timerMode = 'stopwatch'; }
+    else { window.timerMode = 'focus'; window.ts.remaining = window.TM[mode]; window.ts.total = window.TM[mode]; }
+    window.stopTimer();
+    var tm = document.getElementById('timerMode');
+    if(tm) tm.textContent = mode === 'focus' ? '🎯 وقت التركيز' : mode === 'short' ? '☕ راحة قصيرة' : mode === 'long' ? '🌴 راحة طويلة' : '⏱️ عد تصاعدي';
+    window.updateTimerUI();
+  };
+
+  window.toggleTimer = function(){ window.ts.running ? window.stopTimer() : window.startTimer(); };
+  window.startTimer = function(){
+    if(window.ts.running) return;
+    window.ts.running = true;
+    /* العدّ بالساعة الحقيقية لا بعدد النبضات: مع قفل الشاشة/الخلفية يوقف الهاتف المؤقتات (setInterval)، فكان التركيز يتأخر ويعدّ ثواني أقل.
+       الآن نحسب المنقضي من وقت البدء، فيرجع صحيحاً فوراً عند العودة للتطبيق (visibilitychange أدناه). */
+    var t0 = Date.now(), base = window.ts.remaining, sw = (window.timerMode === 'stopwatch');
+    window.ts._tick = function(){
+      if(!window.ts.running) return;
+      var el = Math.floor((Date.now() - t0) / 1000), next;
+      if(sw) next = base + el;
+      else { next = base - el; if(next <= 0){ window.ts.remaining = 0; window.completeSession(); return; } }
+      if(next !== window.ts.remaining){ window.ts.remaining = next; window.updateTimerUI(); }
+    };
+    window.ts.interval = setInterval(window.ts._tick, 250);
+    window.updateTimerUI();
+  };
+  /* العودة من الخلفية: حدّث المؤقت فوراً (بدون انتظار النبضة التالية) */
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden && window.ts && window.ts.running && window.ts._tick) window.ts._tick(); });
+  window.stopTimer = function(){
+    window.ts.running = false;
+    if(window.ts.interval){ clearInterval(window.ts.interval); window.ts.interval = null; }
+    window.updateTimerUI();
+  };
+  window.resetTimer = function(){
+    window.stopTimer();
+    if(window.timerMode === 'stopwatch'){ window.ts.remaining = 0; }
+    else { window.ts.remaining = window.TM[window.ts.mode]; window.ts.total = window.TM[window.ts.mode]; }
+    window.updateTimerUI();
+  };
+
+  window.completeSession = function(){
+    window.stopTimer();
+    try{
+      var Ctx = window.AudioContext || window.webkitAudioContext;
+      if(Ctx){
+        var ctx = new Ctx(), o = ctx.createOscillator(), g = ctx.createGain();
+        o.connect(g); g.connect(ctx.destination); o.frequency.value = 800;
+        g.gain.setValueAtTime(0.2, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.2);
+        o.start(); o.stop(ctx.currentTime + 1.2);
+      }
+    }catch(e){}
+    if(window.ts.mode === 'focus'){
+      window.ts.sessions++;
+      window.ts.focusMin += window.timerSettings.focus;
+      window.S.set('pomoSessions', window.ts.sessions);
+      window.S.set('pomoFocus', window.ts.focusMin);
+      window.logStudySession(window.timerSettings.focus);
+      try{ document.dispatchEvent(new CustomEvent('ss:focus-complete', { detail: { minutes: window.timerSettings.focus } })); }catch(e){}
+      window.toast('🎉 أكملت جلسة تركيز!', 'success', 4000);
+      window.showNotif('🎉 أكملت جلسة تركيز!', 'خذ راحة ' + window.timerSettings.short + ' دقائق.', {tag:'pomo-done'});
+    } else {
+      window.toast('انتهت الراحة!', 'info', 4000);
+    }
+    window.ts.remaining = window.ts.total;
+    window.updateTimerUI();
+  };
+
+  /* ============================================================
+     NAVIGATION
+     ============================================================ */
+  var TAB_REDIRECTS = {
+    'gpa': {tab:'gradecalc', subTab:'gpa'},
+    'coursedescriptions': {tab:'plan', subTab:'desc'},
+    'extracurricular': {tab:'dashboard'},
+    'notes': {tab:'courses'},
+    'flashcards': {tab:'courses'}
+  };
+
+  window.switchSubTab = function(sectionId, subKey){
+    var section = document.getElementById(sectionId); if(!section) return;
+    var tabs = section.querySelectorAll('.section-tab');
+    var subs = section.querySelectorAll('.subsection');
+    tabs.forEach(function(t){
+      if(sectionId === 'gradecalc') t.classList.toggle('active', t.dataset.gcTab === subKey);
+      else if(sectionId === 'plan') t.classList.toggle('active', t.dataset.planTab === subKey);
+    });
+    subs.forEach(function(s){
+      if(sectionId === 'gradecalc') s.classList.toggle('active', s.dataset.gcSub === subKey);
+      else if(sectionId === 'plan') s.classList.toggle('active', s.dataset.planSub === subKey);
+    });
+    if(sectionId === 'plan' && subKey === 'desc') window.renderCourseDescriptions();
+    if(sectionId === 'plan' && subKey === 'tree' && window.PlanTree) window.PlanTree.render();
+    if(sectionId === 'plan' && subKey === 'simulator') window.renderPlanSimulator();
+  };
+
+  window.initHistoryNavigation = function(){
+    if(window.historyInitialized) return;
+    window.historyInitialized = true;
+    var currentTab = 'dashboard';
+    try{ var v = localStorage.getItem('activeTab'); if(v) currentTab = JSON.parse(v); }catch(e){}
+    /* رابط مباشر (#exams) أو نقر إشعار: له الأولوية على آخر تبويب محفوظ (كان يُستبدل فيضيع الرابط) */
+    var hashTab = location.hash ? location.hash.slice(1) : '';
+    if(hashTab && document.getElementById(hashTab) && document.getElementById(hashTab).classList.contains('section')) currentTab = hashTab;
+    /* أجهزة اللمس/التطبيق: نضع مدخل «قاعدة» تحت الصفحة الأولى ليتحكّم BackNav (ux.js) بزر الرجوع: يغلق النافذة المفتوحة أولاً، ثم يرجع بين الصفحات،
+       وعند الوصول للقاعدة يطلب «اضغط مرة ثانية للخروج». على سطح المكتب لا نغيّر سلوك المتصفح. */
+    var guard = !!(window.BackNav && window.BackNav.enabled);
+    try{ history.replaceState({tab: currentTab, appInit: true, base: guard}, '', '#' + currentTab); if(guard) history.pushState({tab: currentTab}, '', '#' + currentTab); }catch(e){}
+    window.addEventListener('popstate', function(e){
+      if(window.BackNav && window.BackNav.onPop(e)) return;
+      var tab = (e.state && e.state.tab) || (location.hash ? location.hash.slice(1) : 'dashboard');
+      if(document.getElementById(tab)) window.switchTab(tab, false);
+    });
+  };
+
+  /* التنقل: الواجهة الجديدة (focus.js) هي الوحيدة — أسماء التبويبات القديمة بتتحوّل لشاشاتها */
+  var FX_MAP = { dashboard: 'today', gradecalc: 'gpa', grades: 'grades', notes: 'more', analytics: 'stats', calendar: 'timetable', plantree: 'tree' };
+  window.switchTab = function(tab, pushHistory){
+    var redirect = TAB_REDIRECTS[tab];
+    if(redirect) tab = redirect.tab;
+    var v = FX_MAP[tab] || tab;
+    try{ localStorage.setItem('activeTab', JSON.stringify(tab)); }catch(e){}
+    if(window.closeSettingsMenu) window.closeSettingsMenu();
+    if(window.FocusUI && window.FocusUI.go){ try{ window.FocusUI.go(v, pushHistory === false); }catch(e){ console.error('switchTab', tab, e); } }
+  };
+
+  window.toggleSidebar = function(){
+    if(window.innerWidth > 900) return;
+    var sb = document.getElementById('sidebar'), bd = document.getElementById('sidebarBackdrop');
+    if(!sb || !bd) return;
+    sb.classList.toggle('open');
+    bd.classList.toggle('show', sb.classList.contains('open'));
+  };
+  window.closeSidebar = function(){
+    var sb = document.getElementById('sidebar'), bd = document.getElementById('sidebarBackdrop');
+    if(sb) sb.classList.remove('open');
+    if(bd) bd.classList.remove('show');
+  };
+
+  /* ============================================================
+     SHARED HELPERS
+     ============================================================ */
+  window.scheduleBackup = function(){
+    clearTimeout(window.backupTimer);
+    var badge = document.getElementById('backupBadge');
+    var text = document.getElementById('backupText');
+    if(badge && text){
+      text.textContent = window.serverOnline ? '☁️ حُفظ سحابيًا' : '💾 حُفظ محليًا';
+      badge.classList.add('show');
+    }
+    window.backupTimer = setTimeout(function(){ if(badge) badge.classList.remove('show'); }, 1500);
+    window.queueServerSave();
+  };
+
+  window.queueServerSave = function(){
+    if(window.bootSyncing) return;
+    clearTimeout(window.serverSaveTimer);
+    window.serverSaveTimer = setTimeout(window.doServerSave, 800);
+  };
+
+  /* ===== بيانات المزامنة الوصفية (خارج الـ snapshot) =====
+     تُكتب مباشرة بدون S.set حتى لا تُطلق حلقة حفظ.
+     ss_cloud_ver    : updated_at (ms) لآخر نسخة سحابية اتزامنّا معها
+     ss_synced_hash  : بصمة محتوى space عند آخر مزامنة */
+  function metaGet(k){ try{ var v = localStorage.getItem(k); return v === null ? null : JSON.parse(v); }catch(e){ return null; } }
+  function metaSet(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); return true; }catch(e){ return false; } }
+  function metaDel(k){ try{ localStorage.removeItem(k); }catch(e){} }
+  function canon(o){
+    if(o === null || typeof o !== 'object') return JSON.stringify(o);
+    if(Array.isArray(o)) return '[' + o.map(canon).join(',') + ']';
+    return '{' + Object.keys(o).sort().map(function(k){ return JSON.stringify(k) + ':' + canon(o[k]); }).join(',') + '}';
+  }
+  function spaceHash(){
+    var s = canon(window.space), h = 5381;
+    for(var i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0;
+    return s.length + ':' + h;
+  }
+  /* بصمة كل البيانات المتزامنة (space + ملاحظات + حاسبة المعدل + مؤقت + سجل الدراسة + ثيم …)
+     بدون حالة الواجهة (activeTab/openSems) حتى لا تُحسب تعديلاً. البصمة القديمة كانت للـ space فقط، فتعديل
+     ثيم/ملاحظة أوفلاين كان يُستبدل بنسخة السحابة عند التشغيل التالي. */
+  function stateHash(){
+    var s = window.gatherSnapshot();
+    var core = { space: s.space, notes: s.notes, gpaRows: s.gpaRows, timerSettings: s.timerSettings,
+      pomoSessions: s.pomoSessions, pomoFocus: s.pomoFocus, studyLog: s.studyLog, theme: s.theme, welcomeDone: s.welcomeDone };
+    /* تُضاف فقط عند وجودها حتى لا تتغيّر بصمة من لا يستخدمها (فلا يظهر تعديل وهمي بعد التحديث) */
+    if(s.budgetPlan) core.budgetPlan = s.budgetPlan;
+    if(s.focusLinks) core.focusLinks = s.focusLinks;
+    var str = canon(core), h = 5381;
+    for(var i = 0; i < str.length; i++) h = ((h << 5) + h + str.charCodeAt(i)) | 0;
+    return 'v2:' + str.length + ':' + h;
+  }
+  function localDirty(){
+    var h = metaGet('ss_synced_hash');
+    if(h === null) return true;
+    /* بصمة قديمة (قبل v2): نقارنها بالطريقة القديمة (space فقط) ولا نعتبر الباقي تعديلاً */
+    if(String(h).indexOf('v2:') !== 0) return h !== spaceHash();
+    return h !== stateHash();
+  }
+  function toMs(v){ var n = Date.parse(v); return isNaN(n) ? null : n; }
+  window.markSynced = function(updatedAt, hash){
+    var ms = toMs(updatedAt);
+    if(ms === null){ metaDel('ss_cloud_ver'); return; }
+    metaSet('ss_cloud_ver', ms);
+    metaSet('ss_synced_hash', hash || stateHash());
+  };
+  window.getConflictBackup = function(){ return metaGet('ss_conflict_backup'); };
+
+  function scheduleSaveRetry(){
+    if((window._saveRetryN || 0) >= 3) return;
+    var delay = [5000, 15000, 45000][window._saveRetryN || 0];
+    window._saveRetryN = (window._saveRetryN || 0) + 1;
+    clearTimeout(window._saveRetryT);
+    window._saveRetryT = setTimeout(window.doServerSave, delay);
+  }
+
+  window.doServerSave = async function(){
+    if(!window.SB || window.cloudSyncBlocked) return;
+    if(window.serverSaveInFlight){ window.queueServerSave(); return; }
+    try{
+      window.serverSaveInFlight = true; window.setServerStatus();
+      /* منع الكتابة فوق تعديل أحدث من جهاز آخر */
+      var ver = metaGet('ss_cloud_ver');
+      if(ver !== null){
+        var peek = await window.SB.peekUpdatedAt();
+        if(peek.status === 'error'){ window.serverOnline = false; window.setServerStatus('off'); scheduleSaveRetry(); return; }
+        if(peek.status === 'ok' && toMs(peek.updated_at) !== ver){ window.handleSyncConflict(); return; }
+      }
+      var hash = stateHash();
+      var ok = await window.SB.save(window.gatherSnapshot());
+      if(ok){
+        window.serverOnline = true; window.setServerStatus('ok'); window._saveRetryN = 0;
+        /* نقرأ القيمة الفعلية بعد الحفظ (قد تختلف صيغتها/قيمتها عمّا أرسلناه) */
+        var after = await window.SB.peekUpdatedAt();
+        if(after.status === 'ok') window.markSynced(after.updated_at, hash);
+        else metaDel('ss_cloud_ver');
+      } else { window.serverOnline = false; window.setServerStatus('off'); scheduleSaveRetry(); }
+    }catch(e){ window.serverOnline = false; window.setServerStatus('off'); scheduleSaveRetry(); }
+    finally { window.serverSaveInFlight = false; window.setServerStatus(); }
+  };
+
+  /* قرار المزامنة عند توفر نسخة سحابية: 'apply' | 'keep-local' | 'conflict' */
+  function decideSync(sd, dirty){
+    var serverMs = toMs(sd.updated_at), ver = metaGet('ss_cloud_ver');
+    if(dirty === undefined) dirty = localDirty();
+    if(ver !== null && serverMs !== null){
+      if(serverMs === ver) return dirty ? 'keep-local' : 'apply';
+      return dirty ? 'conflict' : 'apply';
+    }
+    /* لا توجد بصمة مزامنة سابقة (بيانات قديمة): قاعدة التوقيت */
+    var lt = parseInt(window.S.get('ss_space_ts', 0), 10) || 0;
+    return (lt && serverMs !== null && lt > serverMs + 2000) ? 'keep-local' : 'apply';
+  }
+
+  /* تعديل من جهازين: نحفظ النسختين احتياطياً ثم المستخدم يقرر — لا شيء يُستبدل تلقائياً */
+  window.handleSyncConflict = async function(pre){
+    if(window._conflictOpen) return;
+    window._conflictOpen = true; window.cloudSyncBlocked = true;
+    window.setServerStatus('off');
+    var row = (pre && pre.data) ? pre : null;   /* نسخة سحابية محمّلة للتو (الإقلاع المتأخر): ما في داعي لطلب ثاني */
+    if(!row){ try{ row = await window.SB.load(); }catch(e){} }
+    if(!row || !row.data){
+      window._conflictOpen = false;
+      window.toast('تعذّر قراءة النسخة السحابية — لم يُرفع شيء', 'warn', 3500);
+      return;
+    }
+    var saved = metaSet('ss_conflict_backup', { at: new Date().toISOString(), cloudAt: row.updated_at, local: window.gatherSnapshot(), cloud: row.data });
+    window.refreshRestorePrevBtn();
+    if(!saved){
+      window._conflictOpen = false;
+      window.toast('لا توجد مساحة لحفظ نسخة احتياطية — تم إيقاف الرفع لحماية بياناتك', 'warn', 5000);
+      return;
+    }
+    var bd = document.createElement('div');
+    bd.className = 'sync-conflict-backdrop';
+    bd.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;padding:16px';
+    bd.innerHTML = '<div class="modal" style="max-width:440px;text-align:center;position:relative">' +
+      '<div style="font-size:2.6rem;margin-bottom:8px">🔀</div>' +
+      '<h3 style="margin-bottom:12px">تعديلات من جهازين</h3>' +
+      '<p style="color:var(--muted);font-size:var(--fs-md);line-height:1.8;margin-bottom:8px">تم تعديل بياناتك على السحابة من جهاز آخر، وعندك تعديلات غير مرفوعة على هذا الجهاز.</p>' +
+      '<p style="color:var(--muted2);font-size:var(--fs-xs);margin-bottom:18px">حفظنا نسخة من الطرفين على هذا الجهاز قبل أي قرار.</p>' +
+      '<div style="display:flex;flex-direction:column;gap:8px">' +
+        '<button class="btn btn-sm" id="scCloud">☁️ استخدام نسخة السحابة (تعديلات هذا الجهاز تبقى بالنسخة الاحتياطية)</button>' +
+        '<button class="btn btn-sm btn-ghost" id="scLocal">💾 الاحتفاظ بنسخة هذا الجهاز (نسخة السحابة تبقى بالنسخة الاحتياطية)</button>' +
+      '</div></div>';
+    document.body.appendChild(bd);
+    bd.querySelector('#scCloud').onclick = function(){
+      bd.remove();
+      window.applyServerData(row.data);
+      window.markSynced(row.updated_at);
+      window._conflictOpen = false;
+      location.reload();
+    };
+    bd.querySelector('#scLocal').onclick = function(){
+      bd.remove();
+      var ms = toMs(row.updated_at);
+      if(ms !== null) metaSet('ss_cloud_ver', ms);
+      window._conflictOpen = false; window.cloudSyncBlocked = false;
+      window.doServerSave();
+    };
+  };
+
+  /* رجوع الاتصال: إعادة محاولة الرفع، أو إعادة محاولة التحميل الذي فشل عند الإقلاع */
+  /* إعادة محاولة الاتصال بعد فشل تحميل السحابة (انقطاع نت، أو مشروع Supabase متوقف ورجع): عند رجوع النت، رجوع التطبيق للواجهة،
+     كل دقيقتين والصفحة ظاهرة، أو من زر «حاول هسا» بنافذة المزامنة. ما بنرفع إشي قبل ما نقرأ السحابة ونقرر. */
+  var retryingCloud = null;
+  window.retryCloud = function(manual){
+    if(retryingCloud) return retryingCloud;
+    if(!window.SB || window.bootSyncing || window._conflictOpen || !window.cloudLoadFailed) return Promise.resolve('skip');
+    retryingCloud = Promise.resolve().then(function(){ return window.SB.load(); }).then(function(sd){
+      if(window.SB.lastLoadStatus === 'error'){ if(manual) window.toast('السحابة لسا ما بترد — بياناتك محفوظة على جهازك', 'warn', 3500); return 'error'; }
+      var decision = (sd && sd.data) ? decideSync(sd) : 'keep-local', same = decision === 'apply' && toMs(sd.updated_at) !== null && toMs(sd.updated_at) === metaGet('ss_cloud_ver');
+      if(decision === 'apply' && !same){ if(metaGet('ss_cloud_ver') === null) backupBeforeCloudApply(); window.applyServerData(sd.data); window.markSynced(sd.updated_at); location.reload(); return 'apply'; }
+      window.cloudLoadFailed = false; window.cloudSyncBlocked = false; window.serverOnline = true;
+      if(same){ if(manual) window.toast('☁️ رجع الاتصال بالسحابة', 'success', 2500); return 'same'; }   /* نفس النسخة: ما في شي نطبّقه ولا نرفعه */
+      if(decision === 'conflict') window.handleSyncConflict(sd);
+      else { if(sd && sd.data && metaGet('ss_cloud_ver') === null) window.markSynced(sd.updated_at, '__dirty__'); window.doServerSave(); }
+      if(manual) window.toast('☁️ رجع الاتصال بالسحابة', 'success', 2500);
+      return decision;
+    }).catch(function(){ return 'error'; }).then(function(r){ retryingCloud = null; window.setServerStatus(); return r; });
+    return retryingCloud;
+  };
+  window.addEventListener('online', function(){
+    if(window.bootSyncing || window._conflictOpen) return;
+    if(window.cloudLoadFailed) window.retryCloud();
+    else if(!window.cloudSyncBlocked){
+      window._saveRetryN = 0; window.doServerSave();
+    }
+  });
+  document.addEventListener('visibilitychange', function(){ if(document.visibilityState === 'visible' && window.cloudLoadFailed) window.retryCloud(); });
+  setInterval(function(){ if(window.cloudLoadFailed && document.visibilityState !== 'hidden') window.retryCloud(); }, 120000);
+
+  window.gatherSnapshot = function(){
+    return {
+      version: 7,
+      savedAt: new Date().toISOString(),
+      space: window.space, notes: window.notes, gpaRows: window.gpaRows,
+      timerSettings: window.timerSettings,
+      pomoSessions: window.S.get('pomoSessions', 0),
+      pomoFocus: window.S.get('pomoFocus', 0),
+      studyLog: window.S.get('studyLog', {}),
+      budgetPlan: window.S.get('budgetPlan', null),
+      focusLinks: window.S.get('focusLinks', null),
+      theme: window.S.get('theme', 'dark'),
+      activeTab: window.S.get('activeTab', 'dashboard'),
+      welcomeDone: window.S.get('welcomeDone', false),
+      openSems: window.S.get('openSems', [0])
+    };
+  };
+
+  /* حالة المزامنة بصيغة مقروءة (للأيقونة العلوية ونافذة الرمز): لا تغيّر آلية المزامنة، تقرأ المؤشرات الموجودة فقط */
+  function agoText(ms){
+    var m = Math.floor(ms / 60000);
+    return m < 1 ? 'الآن' : m < 60 ? 'قبل ' + m + ' د' : m < 1440 ? 'قبل ' + Math.floor(m / 60) + ' س' : 'قبل ' + Math.floor(m / 1440) + ' يوم';
+  }
+  window.getSyncStatus = function(){
+    var last = metaGet('ss_cloud_ver'), ago = (typeof last === 'number' && last > 0) ? ' · آخر مزامنة ' + agoText(Math.max(0, Date.now() - last)) : '';
+    if(window._conflictOpen) return { state: 'conflict', level: 'warn', icon: '⚠️', text: 'تعارض بين نسخة جهازك والسحابة — بانتظار قرارك' };
+    if(window.cloudLoadFailed) return { state: 'error', level: 'warn', icon: '⚠️', text: 'تعذّر الاتصال بالسحابة — بياناتك محفوظة على جهازك' };
+    if(typeof navigator !== 'undefined' && navigator.onLine === false) return { state: 'offline', level: 'muted', icon: '📴', text: 'بدون اتصال — محفوظ على جهازك' };
+    if(window.serverSaveInFlight) return { state: 'syncing', level: 'ok', icon: '🔄', text: 'جاري المزامنة…' };
+    if(window.serverOnline) return { state: 'ok', level: 'ok', icon: '☁️', text: 'متزامن مع السحابة' + ago };
+    if((window._saveRetryN || 0) > 0) return { state: 'retry', level: 'warn', icon: '🔄', text: 'فشل آخر حفظ سحابي — يعيد المحاولة تلقائياً' };
+    return { state: 'local', level: 'muted', icon: '💾', text: 'حفظ على جهازك (المزامنة السحابية غير متصلة)' };
+  };
+  window.setServerStatus = function(){
+    var el = document.getElementById('serverStatus'); if(!el) return;
+    var st = window.getSyncStatus();
+    el.textContent = st.icon; el.title = st.text; el.setAttribute('aria-label', 'حالة المزامنة: ' + st.text); el.setAttribute('data-sync', st.state);
+    el.style.color = st.level === 'ok' ? 'var(--green)' : st.level === 'warn' ? 'var(--amber)' : 'var(--muted)';
+    el.onclick = function(){ if(window.SB) window.SB.showSyncPanel(); };
+  };
+  window.addEventListener('online', function(){ window.setServerStatus(); });
+  window.addEventListener('offline', function(){ window.setServerStatus(); });
+
+  function isPlainObj(v){ return v && typeof v === 'object' && !Array.isArray(v); }
+  function safePlan(p){
+    if(!isPlainObj(p)) return null;
+    try{ if(JSON.stringify(p).length > 200000) return null; }catch(e){ return null; }
+    var out = {};
+    ['openingBalance','monthlyBudget','horizon'].forEach(function(k){ if(typeof p[k] === 'number' && isFinite(p[k])) out[k] = p[k]; });
+    if(typeof p.balanceDate === 'string') out.balanceDate = p.balanceDate.slice(0, 10);
+    if(isPlainObj(p.limits)){ out.limits = {}; Object.keys(p.limits).forEach(function(k){ if(k !== '__proto__' && typeof p.limits[k] === 'number' && isFinite(p.limits[k])) out.limits[k] = p.limits[k]; }); }
+    ['recurring','scenarios','goals'].forEach(function(k){ if(Array.isArray(p[k])) out[k] = p[k].filter(isPlainObj).slice(0, 200); });
+    return out;
+  }
+  function safeFocus(f){
+    if(!isPlainObj(f)) return null;
+    var out = { tasks: {}, courses: {} };
+    ['tasks','courses'].forEach(function(g){ if(isPlainObj(f[g])) Object.keys(f[g]).slice(0, 2000).forEach(function(k){ var n = f[g][k]; if(k !== '__proto__' && typeof n === 'number' && isFinite(n) && n >= 0) out[g][k] = n; }); });
+    return out;
+  }
+
+  /* تعقيم أي بيانات واردة (سحابة/ملف/نسخة سابقة) قبل اعتمادها: يُزال __proto__، وتصير معرّفات العناصر آمنة للإدراج بالواجهة
+     (المعرّفات تُكتب بسمات HTML؛ معرّف فيه < > " كان يمكن أن ينفّذ كوداً من نسخة مخرَّبة). معرّفات التطبيق العادية (uid) لا تتغير. */
+  function cleanIncoming(data){
+    var out;
+    try{ out = JSON.parse(JSON.stringify(data), function(k, v){ return k === '__proto__' ? undefined : v; }); }
+    catch(e){ return data; }
+    var sp = out && out.space;
+    if(sp && typeof sp === 'object'){
+      ['courses','tasks','exams','budget','grades'].forEach(function(k){
+        if(!Array.isArray(sp[k])) return;
+        sp[k].forEach(function(it){ if(it && typeof it === 'object' && it.id != null && /[^\w\-.:]/.test(String(it.id))) it.id = String(it.id).replace(/[^\w\-.:]/g, '_'); });
+      });
+    }
+    return out;
+  }
+  /* قبل ما بيانات السحابة تحلّ محل بيانات هذا الجهاز (مثلاً بعد تغيير رمز المزامنة، أو أول فتح بلا سجل مزامنة): نحفظ نسخة محلية
+     يمكن استرجاعها من ⚙️ ← «استرجاع نسخة سابقة». لا نحفظ إن كان الجهاز فاضياً (لا شيء يضيع). */
+  function hasUserData(){
+    var s = window.space || {};
+    return !!((s.courses || []).length || (s.tasks || []).length || (s.exams || []).length || (s.budget || []).length || Object.keys(s.timetable || {}).length);
+  }
+  function backupBeforeCloudApply(){
+    try{
+      if(!hasUserData()) return;
+      metaSet('ss_pre_restore_backup', { at: new Date().toISOString(), kind: 'cloud-apply', snapshot: window.gatherSnapshot() });
+      if(window.refreshRestorePrevBtn) window.refreshRestorePrevBtn();
+    }catch(e){}
+  }
+
+  window.applyServerData = function(data){
+    if(!data || typeof data !== 'object') return;
+    data = cleanIncoming(data);
+    try{
+      if(data.space){
+        var dSpace = window.defaultSpace || {};
+        var clean = Object.assign({}, dSpace, data.space);
+        ['courses','tasks','exams','budget','grades','completedCourses'].forEach(function(k){
+          if(!Array.isArray(clean[k])) clean[k] = [];
+        });
+        ['timetable','attendance','profile'].forEach(function(k){
+          if(!clean[k] || typeof clean[k] !== 'object' || Array.isArray(clean[k])) clean[k] = dSpace[k] || {};
+        });
+        window.space = window.migrateSpace ? window.migrateSpace(clean) : clean;
+        window.S.set('space', window.space);
+      }
+      if(Array.isArray(data.notes)){ window.notes = data.notes; window.S.set('notes', window.notes); }
+      if(Array.isArray(data.gpaRows) && data.gpaRows.length){ window.gpaRows = data.gpaRows; window.S.set('gpaRows', window.gpaRows); }
+      if(data.timerSettings && typeof data.timerSettings === 'object'){
+        window.timerSettings = {
+          focus: Math.max(1, Math.min(120, parseInt(data.timerSettings.focus) || 25)),
+          short: Math.max(1, Math.min(60, parseInt(data.timerSettings.short) || 5)),
+          long:  Math.max(1, Math.min(90, parseInt(data.timerSettings.long)  || 15))
+        };
+        window.S.set('timerSettings', window.timerSettings);
+      }
+      if(typeof data.pomoSessions === 'number') window.S.set('pomoSessions', data.pomoSessions);
+      if(typeof data.pomoFocus === 'number') window.S.set('pomoFocus', data.pomoFocus);
+      if(data.studyLog && typeof data.studyLog === 'object') window.S.set('studyLog', data.studyLog);
+      /* خطة الميزانية وربط التركيز: تُستعاد فقط إن وُجدت بالنسخة وكانت بصيغة سليمة؛ غيابها (نسخ قديمة) لا يمسّ المحلي */
+      var bp = safePlan(data.budgetPlan); if(bp) window.S.set('budgetPlan', bp);
+      var fl = safeFocus(data.focusLinks); if(fl) window.S.set('focusLinks', fl);
+      if(typeof data.theme === 'string') window.S.set('theme', data.theme);
+      if(typeof data.activeTab === 'string') window.S.set('activeTab', data.activeTab);
+      if(typeof data.welcomeDone === 'boolean') window.S.set('welcomeDone', data.welcomeDone);
+      if(Array.isArray(data.openSems)) window.S.set('openSems', data.openSems);
+    }catch(e){ console.warn('applyServerData error:', e); }
+  };
+
+  window.loadAllData = function(){
+    try{
+      var raw = window.S.get('space', null);
+      if(raw && typeof raw === 'object' && !Array.isArray(raw)){ window.space = Object.assign({}, window.defaultSpace, raw); if(window.migrateSpace) window.migrateSpace(window.space); }
+      else { window.space = Object.assign({}, window.defaultSpace); if(raw !== null) window.dataCorrupted = true; }
+    }catch(e){ window.dataCorrupted = true; window.space = Object.assign({}, window.defaultSpace); }
+    /* مساحة جديدة تنختم برقم البنية من أولها (وإلا ينختم بأول إعادة تحميل فتتغيّر البصمة وينعاد رفع كل البيانات بلا تعديل) */
+    if(window.migrateSpace && window.space && window.space.schemaVersion === undefined) window.migrateSpace(window.space);
+    if(!Array.isArray(window.space.grades)) window.space.grades = [];
+    try{ window.notes = window.S.get('notes', []); if(!Array.isArray(window.notes)){ window.notes = []; window.dataCorrupted = true; } }
+    catch(e){ window.notes = []; }
+    try{
+      window.gpaRows = window.S.get('gpaRows', [{name:'', hrs:3, grade:'A (90-100)'}]);
+      if(!Array.isArray(window.gpaRows) || !window.gpaRows.length) window.gpaRows = [{name:'', hrs:3, grade:'A (90-100)'}];
+    }catch(e){ window.gpaRows = [{name:'', hrs:3, grade:'A (90-100)'}]; }
+    try{
+      var tsData = window.S.get('timerSettings', {});
+      /* نفس حدود applyServerData: قيمة غريبة (نص/سالب/ضخم) من نسخة أو تخزين تالف كانت تكسر المؤقت */
+      window.timerSettings = {
+        focus: Math.max(1, Math.min(120, parseInt(tsData && tsData.focus, 10) || 25)),
+        short: Math.max(1, Math.min(60, parseInt(tsData && tsData.short, 10) || 5)),
+        long:  Math.max(1, Math.min(90, parseInt(tsData && tsData.long, 10) || 15))
+      };
+    }catch(e){ window.timerSettings = {focus:25, short:5, long:15}; }
+  };
+
+  /* ============================================================
+     WELCOME
+     ============================================================ */
+  window.showWelcome = function(simple){
+    var overlay = document.getElementById('welcomeOverlay'); if(!overlay) return;
+    if(simple){
+      var title = document.getElementById('welcomeTitle');
+      var sub = document.getElementById('welcomeSub');
+      if(title) title.textContent = 'مرحبًا بك مجددًا';
+      if(sub) sub.textContent = window.dataCorrupted ? 'حدث خطأ — ابدأ من جديد' : 'سنتعرف عليك سريعًا';
+    }
+    overlay.style.display = '';
+    overlay.classList.add('show');
+    overlay.classList.remove('hide');
+    var btn = document.getElementById('welcomeBtn');
+    var input = document.getElementById('welcomeName');
+    var form = overlay.querySelector('.welcome-form'), errEl = document.getElementById('welcomeErr'), busy = false;
+    function setErr(m){ if(errEl) errEl.textContent = m || ''; if(form) form.classList.toggle('has-err', !!m); if(input) input.setAttribute('aria-invalid', m ? 'true' : 'false'); }
+    setTimeout(function(){ if(input) input.focus(); }, 200);
+    /* حبس التركيز داخل الشاشة (الصفحة خلفها غير متاحة) */
+    overlay.onkeydown = function(e){
+      if(e.key !== 'Tab') return;
+      var f = [input, btn].filter(Boolean); if(!f.length) return;
+      var first = f[0], last = f[f.length - 1];
+      if(e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
+      else if(!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
+    };
+    var handle = function(){
+      if(busy) return;                      /* يمنع النقر/Enter المتكرر */
+      var name = (input && input.value || '').trim();
+      if(!name){ setErr('اكتب اسمك للمتابعة'); if(input) input.focus(); return; }
+      busy = true; setErr(''); if(form) form.classList.add('busy');
+      window.space.profile = window.space.profile || {};
+      window.space.profile.name = name;
+      window.saveSpace();
+      window.S.set('welcomeDone', true);
+      overlay.classList.add('hide');
+      setTimeout(function(){
+        overlay.classList.remove('show'); overlay.style.display = 'none'; document.documentElement.classList.remove('is-new');
+        var mn = document.querySelector('main'); if(mn){ mn.setAttribute('tabindex', '-1'); try{ mn.focus({ preventScroll: true }); }catch(e){} }
+      }, 400);
+      setTimeout(function(){ window.toast('أهلاً ' + name + '! 🚀', 'success', 3500); }, 400);
+      try{ window.renderDashboard(); }catch(e){}
+    };
+    if(btn) btn.onclick = handle;
+    if(input){ input.onkeydown = function(e){ if(e.key === 'Enter'){ e.preventDefault(); handle(); } }; input.oninput = function(){ if(errEl && errEl.textContent) setErr(''); }; }
+  };
+
+  /* ============================================================
+     SEARCH
+     ============================================================ */
+  window.initSearch = function(){};
+
+  /* ============================================================
+     BACKUP / RESTORE
+     ============================================================ */
+  window.downloadBackup = function(silent){
+    try{
+      var snapshot = window.gatherSnapshot();
+      var blob = new Blob([JSON.stringify(snapshot, null, 2)], {type:'application/json'});
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = 'study-space-' + window.today() + '.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+      try{ localStorage.setItem('ss_last_backup', String(Date.now())); }catch(e2){}   /* لتذكير النسخة الأسبوعي فقط؛ خارج الـsnapshot */
+      if(!silent) window.toast('💾 تم التنزيل', 'success', 2500);
+    }catch(e){ if(!silent) window.toast('فشل', 'warn', 2000); }
+  };
+
+  /* فحص ملف النسخة قبل الاستيراد: يرجّع {ok, errors, warnings, summary}. لا يكتب شيئاً. */
+  window.validateBackup = function(data){
+    var errors = [], warnings = [];
+    function isObj(v){ return v && typeof v === 'object' && !Array.isArray(v); }
+    if(!isObj(data)) return { ok: false, errors: ['الملف ليس نسخة احتياطية صالحة'], warnings: [], summary: null };
+    if(!isObj(data.space)) return { ok: false, errors: ['لا يحتوي بيانات المساحة (space)'], warnings: [], summary: null };
+    var sp = data.space;
+    ['courses','tasks','exams','budget','grades','completedCourses'].forEach(function(k){
+      if(sp[k] !== undefined && !Array.isArray(sp[k])) errors.push('الحقل ' + k + ' يجب أن يكون قائمة');
+    });
+    ['timetable','attendance','profile'].forEach(function(k){
+      if(sp[k] !== undefined && !isObj(sp[k])) errors.push('الحقل ' + k + ' بصيغة غير صالحة');
+    });
+    if(data.notes !== undefined && !Array.isArray(data.notes)) errors.push('الملاحظات بصيغة غير صالحة');
+    if(data.budgetPlan != null && !isObj(data.budgetPlan)) errors.push('خطة الميزانية بصيغة غير صالحة');
+    if(data.focusLinks != null && !isObj(data.focusLinks)) errors.push('بيانات ربط التركيز بصيغة غير صالحة');
+    var courses = Array.isArray(sp.courses) ? sp.courses : [];
+    var badCourse = 0, seen = {}, dup = 0;
+    courses.forEach(function(c){
+      if(!isObj(c) || typeof c.name !== 'string' || !c.name.trim() || (c.id !== undefined && typeof c.id !== 'string')){ badCourse++; return; }
+      if(c.id){ if(seen[c.id]) dup++; seen[c.id] = true; }
+    });
+    if(badCourse) errors.push(badCourse + ' مادة بدون اسم صالح');
+    if(dup) errors.push('معرّفات مواد مكررة (' + dup + ') — قد تفقد ارتباط الملفات');
+    /* معرّفات فيها رموز HTML (< > " ') ليست من التطبيق: ملف مخرَّب أو معدَّل — ننبّه ثم تُنظَّف تلقائياً عند الاستيراد */
+    var unsafeIds = 0;
+    ['courses','tasks','exams','budget'].forEach(function(k){ (Array.isArray(sp[k]) ? sp[k] : []).forEach(function(it){ if(isObj(it) && it.id != null && /[<>"'&`]/.test(String(it.id))) unsafeIds++; }); });
+    if(unsafeIds) warnings.push(unsafeIds + ' عنصر بمعرّف غير اعتيادي (سيُنظَّف تلقائياً)');
+    var tasks = Array.isArray(sp.tasks) ? sp.tasks : [], badTask = tasks.filter(function(t){ return !isObj(t) || typeof t.title !== 'string'; }).length;
+    if(badTask) errors.push(badTask + ' مهمة بصيغة غير صالحة');
+    var exams = Array.isArray(sp.exams) ? sp.exams : [], badExam = exams.filter(function(e){ return !isObj(e) || typeof e.name !== 'string'; }).length;
+    if(badExam) errors.push(badExam + ' امتحان بصيغة غير صالحة');
+    var tt = isObj(sp.timetable) ? sp.timetable : {}, ttKeys = Object.keys(tt), badTt = ttKeys.filter(function(k){ return !/^[A-Za-z]{3}-\d{1,2}:\d{2}$/.test(k) || !isObj(tt[k]); }).length;
+    if(badTt) warnings.push(badTt + ' موعد بالجدول بصيغة غير معروفة (سيبقى كما هو)');
+    if(typeof data.version === 'number' && data.version > 7) warnings.push('النسخة من إصدار أحدث من التطبيق (v' + data.version + ')');
+    if(!data.savedAt) warnings.push('لا يوجد تاريخ حفظ بالملف');
+    return { ok: !errors.length, errors: errors, warnings: warnings, summary: {
+      courses: courses.length, tasks: tasks.length, exams: exams.length, notes: Array.isArray(data.notes) ? data.notes.length : 0,
+      lectures: ttKeys.length, savedAt: data.savedAt || '' } };
+  };
+  function backupLine(s){ return s.courses + ' مادة، ' + s.tasks + ' مهمة، ' + s.exams + ' امتحان، ' + s.notes + ' ملاحظة، ' + s.lectures + ' محاضرة'; }
+
+  window.restoreFromFile = function(){
+    var input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json,application/json';
+    input.onchange = function(e){
+      var file = e.target.files[0]; if(!file) return;
+      if(file.size > 10 * 1024 * 1024){ window.toast('الملف كبير جداً (الحد 10MB)', 'warn', 3500); return; }
+      var reader = new FileReader();
+      reader.onerror = function(){ window.toast('تعذّرت قراءة الملف', 'warn', 3000); };
+      reader.onload = function(ev){
+        var data;
+        /* __proto__ تُحذف أثناء القراءة */
+        try{ data = JSON.parse(ev.target.result, function(k, v){ return k === '__proto__' ? undefined : v; }); }
+        catch(err){ window.toast('ملف تالف: ليس JSON صالحاً', 'warn', 3500); return; }
+        var v = window.validateBackup(data);
+        if(!v.ok){ window.toast('ملف غير صالح: ' + v.errors.slice(0, 2).join(' · '), 'warn', 5000); return; }
+        window.importBackupData(data, v);
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  };
+
+  /* استيراد بعد التحقق: يعرض ملخصاً ويطلب تأكيداً، ويحفظ نسخة من الحالي قبل الكتابة */
+  window.importBackupData = function(data, v){
+    v = v || window.validateBackup(data);
+    if(!v.ok) return false;
+    var cur = { courses: (window.space.courses || []).length, tasks: (window.space.tasks || []).length, exams: (window.space.exams || []).length,
+      notes: (window.notes || []).length, lectures: Object.keys(window.space.timetable || {}).length };
+    var msg = 'في الملف: ' + backupLine(v.summary) + (v.summary.savedAt ? '\nتاريخ النسخة: ' + new Date(v.summary.savedAt).toLocaleString('ar-JO') : '') +
+      '\nعندك الآن: ' + backupLine(cur) + (v.warnings.length ? '\n⚠️ ' + v.warnings.join('\n⚠️ ') : '') +
+      '\n\nسيتم استبدال بياناتك الحالية، وتُحفظ نسخة منها تلقائياً على هذا الجهاز ويمكن استرجاعها من القائمة.';
+    window.customConfirm(msg, function(){
+      if(!metaSet('ss_pre_restore_backup', { at: new Date().toISOString(), snapshot: window.gatherSnapshot() }) &&
+         !confirm('تعذّر حفظ نسخة من بياناتك الحالية (لا توجد مساحة). المتابعة بدون نسخة؟')) return;
+      window.applyServerData(data);
+      window.saveSpace();
+      window.S.set('notes', window.notes);
+      window.S.set('gpaRows', window.gpaRows);
+      window.S.set('timerSettings', window.timerSettings);
+      window.toast('✅ تمت الاستعادة', 'success', 2500);
+      setTimeout(function(){ location.reload(); }, 800);
+    }, { title: 'استعادة نسخة احتياطية', icon: '📥', okLabel: 'استعادة واستبدال', danger: false });
+    return true;
+  };
+  /* استرجاع نسخة سابقة محفوظة محلياً: نسخة التعارض (جهازي/سحابة) أو نسخة ما قبل الاستعادة */
+  function prevBackups(){
+    var list = [], c = metaGet('ss_conflict_backup'), p = metaGet('ss_pre_restore_backup');
+    function fmt(iso){ try{ return new Date(iso).toLocaleString('ar-JO'); }catch(e){ return iso; } }
+    function cnt(s){ return s && s.space && Array.isArray(s.space.courses) ? s.space.courses.length : 0; }
+    if(c && c.local) list.push({ v: 'cl', l: 'تعارض ' + fmt(c.at) + ' — نسخة هذا الجهاز (' + cnt(c.local) + ' مادة)', snap: c.local });
+    if(c && c.cloud) list.push({ v: 'cc', l: 'تعارض ' + fmt(c.at) + ' — نسخة السحابة (' + cnt(c.cloud) + ' مادة)', snap: c.cloud });
+    if(p && p.snapshot) list.push({ v: 'pr', l: (p.kind === 'cloud-apply' ? 'قبل استبدال بيانات الجهاز ببيانات السحابة ' : 'قبل استعادة ملف ') + fmt(p.at) + ' (' + cnt(p.snapshot) + ' مادة)', snap: p.snapshot });
+    return list;
+  }
+  /* ===== نسخ تلقائية يومية على هذا الجهاز (IndexedDB «ss_snapshots») =====
+     مرة باليوم (بعد الإقلاع بـ12 ث، أو لما التطبيق يروح للخلفية) لو في بيانات وتغيّرت عن آخر نسخة: آخر 7 نسخ + أحدث نسخة من كل أسبوع لـ4 أسابيع.
+     بتحمي من الغلط (حذف/استيراد/مزامنة غلط) وتنرجع من «استرجاع نسخة سابقة»؛ مش بديل عن السحابة أو ملف النسخة لو انمسحت بيانات المتصفح. */
+  var SNAP_DB = 'ss_snapshots', SNAP_ST = 'snaps', SNAP_DAYS = 7, SNAP_WEEKS = 4;
+  function snapDb(){
+    return new Promise(function(res, rej){
+      if(!window.indexedDB){ rej(new Error('no idb')); return; }
+      var rq; try{ rq = window.indexedDB.open(SNAP_DB, 1); }catch(e){ rej(e); return; }
+      rq.onupgradeneeded = function(){ rq.result.createObjectStore(SNAP_ST); };
+      rq.onsuccess = function(){ res(rq.result); }; rq.onerror = function(){ rej(rq.error || new Error('idb')); };
+    });
+  }
+  function snapOp(mode, fn){
+    return snapDb().then(function(db){ return new Promise(function(res, rej){ var tx = db.transaction(SNAP_ST, mode), st = tx.objectStore(SNAP_ST), r = fn(st); tx.oncomplete = function(){ res(r && r.result); }; tx.onerror = tx.onabort = function(){ rej(tx.error || new Error('idb tx')); }; }); });
+  }
+  function snapSum(s){ var sp = (s && s.space) || {}; return { courses: (sp.courses || []).length, tasks: (sp.tasks || []).length, exams: (sp.exams || []).length, notes: (s && s.notes || []).length, lectures: Object.keys(sp.timetable || {}).length }; }
+  function snapWeek(d){ var p = String(d).split('-'), x = new Date(+p[0], +p[1] - 1, +p[2]); x.setDate(x.getDate() - x.getDay()); return x.getFullYear() + '-' + x.getMonth() + '-' + x.getDate(); }
+  /* list: الأحدث أولاً ← أول 7 + أحدث وحدة من كل أسبوع أقدم (حتى 4 أسابيع) */
+  function snapKeep(list){
+    var keep = list.slice(0, SNAP_DAYS), weeks = {};
+    keep.forEach(function(x){ weeks[snapWeek(x.d)] = 1; });
+    list.slice(SNAP_DAYS).forEach(function(x){ var w = snapWeek(x.d); if(!weeks[w] && Object.keys(weeks).length < SNAP_DAYS + SNAP_WEEKS){ weeks[w] = 1; keep.push(x); } });
+    return keep.slice(0, SNAP_DAYS + SNAP_WEEKS);
+  }
+  var snapBusy = null;
+  window.AutoSnap = {
+    take: function(){
+      if(snapBusy) return snapBusy;
+      if(!hasUserData() || window.bootSyncing) return Promise.resolve('skip');
+      var t = window.today(), h = stateHash();
+      snapBusy = snapOp('readonly', function(st){ return st.get('index'); }).then(function(idx){
+        idx = Array.isArray(idx) ? idx : [];
+        if(idx[0] && (idx[0].d === t || idx[0].h === h)) return 'skip';   /* انأخذت اليوم أو ما تغيّر شي من آخر نسخة */
+        var snap = window.gatherSnapshot(), entry = { d: t, at: new Date().toISOString(), h: h, sum: snapSum(snap) };
+        var list = [entry].concat(idx.filter(function(x){ return x && x.d !== t; })), keep = snapKeep(list);
+        var drop = list.filter(function(x){ return keep.indexOf(x) < 0; });
+        return snapOp('readwrite', function(st){ st.put(snap, 'd:' + t); drop.forEach(function(x){ st.delete('d:' + x.d); }); return st.put(keep, 'index'); })
+          .then(function(){ window.refreshRestorePrevBtn(); return 'saved'; });
+      }).catch(function(){ return 'unavailable'; }).then(function(r){ snapBusy = null; return r; });
+      return snapBusy;
+    },
+    list: function(){ return snapOp('readonly', function(st){ return st.get('index'); }).then(function(x){ return Array.isArray(x) ? x : []; }, function(){ return []; }); },
+    get: function(d){ return snapOp('readonly', function(st){ return st.get('d:' + d); }); }
+  };
+  setTimeout(function(){ window.AutoSnap.take(); }, 12000);
+  document.addEventListener('visibilitychange', function(){ if(document.visibilityState === 'hidden') window.AutoSnap.take(); });
+
+  window.refreshRestorePrevBtn = function(){
+    var b = document.getElementById('restorePrevBtn'); if(!b) return;
+    if(prevBackups().length){ b.style.display = ''; return; }
+    window.AutoSnap.list().then(function(l){ b.style.display = l.length ? '' : 'none'; });
+  };
+  function dayLabel(d){ var p = String(d).split('-'), x = new Date(+p[0], +p[1] - 1, +p[2]); return (window.DAYS_AR || [])[x.getDay()] + ' ' + x.getDate() + '/' + (x.getMonth() + 1); }
+  window.restorePreviousBackup = function(){
+    function open(snaps){
+      var list = prevBackups().concat(snaps.map(function(x){ var s = x.sum || {}; return { v: 'as:' + x.d, d: x.d, l: '🗓️ نسخة تلقائية — ' + dayLabel(x.d) + ' (' + (s.courses || 0) + ' مادة، ' + (s.tasks || 0) + ' مهمة، ' + (s.exams || 0) + ' امتحان)' }; }));
+      if(!list.length){ window.toast('لا توجد نسخ سابقة', 'info', 2000); return; }
+      window.showModal('استرجاع نسخة سابقة', [
+        { key: 'v', label: 'اختر النسخة (بياناتك الحالية تُحفظ تلقائياً قبل الاسترجاع)', type: 'select', options: list.map(function(x){ return { v: x.v, l: x.l }; }) }
+      ], { v: list[0].v }, function(data){
+        var pick = list.filter(function(x){ return x.v === data.v; })[0];
+        if(!pick) return false;
+        function apply(snap){
+          if(!snap || !snap.space){ window.toast('تعذّرت قراءة النسخة', 'warn', 3000); return; }
+          if(!metaSet('ss_pre_restore_backup', { at: new Date().toISOString(), snapshot: window.gatherSnapshot() }) &&
+             !confirm('تعذّر حفظ نسخة من بياناتك الحالية. المتابعة؟')) return;
+          window.applyServerData(snap);
+          window.saveSpace();
+          window.toast('✅ تم الاسترجاع', 'success', 2000);
+          setTimeout(function(){ location.reload(); }, 800);
+        }
+        if(pick.snap) apply(pick.snap); else window.AutoSnap.get(pick.d).then(apply, function(){ window.toast('تعذّرت قراءة النسخة', 'warn', 3000); });
+        return true;
+      });
+    }
+    if(!window.indexedDB) open([]); else window.AutoSnap.list().then(open);   /* بلا IndexedDB: النافذة فوراً بالنسخ المحفوظة بالـlocalStorage */
+  };
+
+  /* ============================================================
+     REMINDERS
+     ============================================================ */
+  window.checkReminders = function(){
+    var today = window.today();
+    var tasks = window.space.tasks || [];
+    var dueToday = tasks.filter(function(t){ return !t.done && t.due === today; });
+    var overdue = tasks.filter(function(t){ return !t.done && t.due && t.due < today; });
+    if(overdue.length > 0) setTimeout(function(){ window.toast('⚠️ ' + overdue.length + ' مهمة متأخرة!', 'warn', 5000); }, 1500);
+    if(dueToday.length > 0) setTimeout(function(){ window.toast('📌 ' + dueToday.length + ' مهمة اليوم!', 'info', 5000); }, 2500);
+  };
+
+  /* تنبيهات داخل التطبيق (Toast + إشعار المتصفح إن كان مسموحاً). موثوقة لأنها محلية بالكامل:
+     - الأيام تُحسب بتوقيت الجهاز (daysUntil).
+     - كل تنبيه له مفتاح باليوم (tag) فلا يتكرر في نفس اليوم حتى لو أُعيد الفحص (توقيت/عودة للتبويب).
+     - مهمة متأخرة/اليوم/غداً (بأولوية عالية)، وامتحانات خلال 3 أيام. */
+  window.checkSmartReminders = function(){
+    if(!window.space || !window.space.tasks) return;
+    var today = window.today(), now = new Date(), hour = now.getHours();
+    var NC = window.NotifyCenter, startHour = NC ? NC.tasksHour() : 8;      /* وقت الملخص من «مركز التنبيهات» */
+    if(hour < startHour || hour > 23) return;
+    var firedKey = 'ss_smart_reminders_v4_' + today;
+    var fired = window.S.get(firedKey, {}) || {};
+    var du = window.daysUntil || function(){ return null; };
+    var pending = window.space.tasks.filter(function(t){ return !t.done; });
+    var dueToday = pending.filter(function(t){ return du(t.due) === 0; });
+    var overdue = pending.filter(function(t){ var d = du(t.due); return d !== null && d < 0; });
+    var tomorrowHigh = pending.filter(function(t){ return du(t.due) === 1 && t.priority === 'high'; });
+    var upcomingExams = (window.space.exams || []).filter(function(e){ var d = du(e.date); return d !== null && d >= 0 && d <= 3; });
+    var reminders = [];
+    function titles(a){ return a.slice(0, 3).map(function(x){ return x.title; }).join(' · '); }
+    if(dueToday.length) reminders.push({tag:'due-today', t:'📌 ' + dueToday.length + ' مهمة اليوم!', b: titles(dueToday)});
+    if(overdue.length) reminders.push({tag:'overdue', t:'⚠️ ' + overdue.length + ' مهمة متأخرة!', b: titles(overdue)});
+    if(tomorrowHigh.length) reminders.push({tag:'high-tomorrow', t:'🔺 ' + tomorrowHigh.length + ' مهمة مهمة غدًا', b: titles(tomorrowHigh)});
+    upcomingExams.forEach(function(e){
+      var r = window.examRemaining(e, now), uid = e.id || (e.date + '_' + String(e.name || '').replace(/\s+/g,'_'));
+      reminders.push({tag: 'exam-' + uid, t: '⏳ امتحان ' + (r.days === 0 ? 'اليوم!' : r.days === 1 ? 'غدًا!' : r.label), b: e.name + (e.time ? ' — ' + e.time : '')});
+    });
+    var anyNew = false, shown = 0;
+    reminders = reminders.filter(function(r){ return !NC || NC.allow(/^exam-/.test(r.tag) ? 'exams' : 'tasks'); });
+    reminders.forEach(function(r){
+      if(fired[r.tag]) return;
+      fired[r.tag] = true; anyNew = true;
+      var delay = 1500 + (shown++) * 2500;
+      if(typeof window.showNotif === 'function') setTimeout(function(){ window.showNotif(r.t, r.b, {tag: 'ss-' + r.tag + '-' + today}); }, delay);
+    });
+    if(anyNew){ window.S.set(firedKey, fired); }
+  };
+  /* عند الرجوع للتبويب (يوم جديد/فترة غياب) نفحص مرة أخرى؛ التكرار ممنوع بمفتاح اليوم */
+  if(!window._reminderVisBound){
+    window._reminderVisBound = true;
+    document.addEventListener('visibilitychange', function(){ if(!document.hidden) window.checkSmartReminders(); });
+  }
+  /* ============================================================
+     FAB + MENU
+     ============================================================ */
+  window.toggleFabMenu = function(){
+    var m = document.getElementById('fabMenu');
+    var f = document.getElementById('fabMain');
+    var ai = document.getElementById('aiFab');
+    if(!m || !f) return;
+    var isOpen = m.classList.contains('show');
+    if(isOpen){ m.classList.remove('show'); f.classList.remove('active'); if(ai) ai.classList.remove('hidden'); }
+    else {
+      var ap = document.getElementById('aiPanel'); if(ap) ap.classList.remove('show');
+      m.classList.add('show'); f.classList.add('active');
+      if(ai) ai.classList.add('hidden');
+    }
+  };
+
+  /* ============================================================
+     BIND ALL EVENTS
+     ============================================================ */
+  window.bindAllEvents = function(){
+    if(window._bindAllRan) return;
+    window._bindAllRan = true;
+
+    document.querySelectorAll('.nav-item').forEach(function(item){
+      item.addEventListener('click', function(){ window.switchTab(item.dataset.tab); });
+      item.setAttribute('role', 'button'); item.setAttribute('tabindex', '0');
+      item.addEventListener('keydown', function(e){ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); window.switchTab(item.dataset.tab); } });
+    });
+    /* أزرار حالات «لا يوجد» (تُرسم ديناميكياً): data-go-tab يفتح التبويب */
+    document.addEventListener('click', function(e){ var b = e.target.closest && e.target.closest('[data-go-tab]'); if(b){ e.preventDefault(); window.switchTab(b.getAttribute('data-go-tab')); } });
+    document.querySelectorAll('[data-goto]').forEach(function(el){
+      el.addEventListener('click', function(){ window.switchTab(el.dataset.goto); });
+    });
+    var mt = document.getElementById('menuToggle'); if(mt) mt.addEventListener('click', window.toggleSidebar);
+    var sbd = document.getElementById('sidebarBackdrop'); if(sbd) sbd.addEventListener('click', window.closeSidebar);
+    var tb = document.getElementById('themeBtn');
+    if(tb) tb.addEventListener('click', function(e){ e.stopPropagation(); window.closeSettingsMenu(); window.toggleThemePanel(); });
+    var sb = document.getElementById('settingsBtn');
+    if(sb) sb.addEventListener('click', function(e){ e.stopPropagation(); window.toggleSettingsMenu(); });
+    document.addEventListener('click', function(e){
+      var p = document.getElementById('themePanel');
+      if(p && p.classList.contains('show') && !e.target.closest('#themePanel') && !e.target.closest('#themeBtn')) p.classList.remove('show');
+      if(!e.target.closest('.settings-wrap') && !e.target.closest('#settingsMenu')) window.closeSettingsMenu();
+    });
+    var rp = document.getElementById('restorePrevBtn'); if(rp) rp.addEventListener('click', function(){ window.closeSettingsMenu(); window.restorePreviousBackup(); });
+    window.refreshRestorePrevBtn();
+
+    document.querySelectorAll('[data-gc-tab]').forEach(function(btn){
+      btn.addEventListener('click', function(){ window.switchSubTab('gradecalc', btn.dataset.gcTab); });
+    });
+    document.querySelectorAll('[data-plan-tab]').forEach(function(btn){
+      btn.addEventListener('click', function(){ window.switchSubTab('plan', btn.dataset.planTab); });
+    });
+
+    function bind(id, fn){ var el = document.getElementById(id); if(el) el.addEventListener('click', fn); }
+    bind('btnAddClass', function(){ if(window.addClassSlot) window.addClassSlot(); });
+    bind('btnClearTt', window.clearTimetable);
+    bind('btnLoadExample', window.loadExampleTimetable);
+    bind('btnAutoFill', window.autoFillTimetable);
+    bind('btnPrintTt', window.printTimetable);
+    bind('btnAddCourse', window.addMyCourse);
+    bind('btnImportPlan', window.importFromPlan);
+    bind('btnUploadHub', function(){ window.openUploadHub(); });
+    bind('btnAddTask', window.addTask);
+    bind('btnAddExam', window.addExam);
+    bind('btnAddAtt', window.addAttendanceCourse);
+    bind('btnTimerSettings', window.openTimerSettings);
+    bind('btnAddIncome', function(){ window.addBudgetItem('income'); });
+    bind('btnAddExpense', function(){ window.addBudgetItem('expense'); });
+    bind('btnClearBudget', window.clearBudget);
+    bind('btnAddGpa', window.addCourse);
+    bind('btnLoadGpaSample', window.loadSampleGpa);
+    bind('btnClearGpa', window.clearGpa);
+    bind('btnCalcWhatIf', window.calcWhatIf);
+    bind('ncCalc', window.calcNeed);
+    bind('btnAddGrade', window.addGradeCourse);
+    bind('startBtn', window.toggleTimer);
+    bind('resetBtn', window.resetTimer);
+    bind('miniStartBtn', window.toggleTimer);
+    bind('miniResetBtn', window.resetTimer);
+
+    document.querySelectorAll('.mode-switch .chip').forEach(function(chip){
+      chip.addEventListener('click', function(){ window.setMode(chip, chip.dataset.mode); });
+    });
+    document.querySelectorAll('[data-tf]').forEach(function(chip){
+      chip.addEventListener('click', function(){ window.filterTasks(chip.dataset.tf); });
+    });
+    var tsel = document.getElementById('taskSort');
+    if(tsel) tsel.addEventListener('change', function(){ window.setTaskSort(tsel.value); });
+    var tqf = document.getElementById('taskQuickForm');
+    if(tqf) tqf.addEventListener('submit', function(e){
+      e.preventDefault();
+      var inp = document.getElementById('taskQuick');
+      if(inp && window.quickAddTask(inp.value)){ inp.value = ''; inp.focus(); }
+    });
+    document.querySelectorAll('[data-bt]').forEach(function(tab){
+      tab.addEventListener('click', function(){ window.filterBudget(tab.dataset.bt); });
+    });
+    document.querySelectorAll('.chip[data-filter]').forEach(function(chip){
+      chip.addEventListener('click', function(){ window.filterSem(chip, chip.dataset.filter); });
+    });
+    document.querySelectorAll('[data-cd-year]').forEach(function(chip){
+      chip.addEventListener('click', function(){
+        document.querySelectorAll('[data-cd-year]').forEach(function(c){ c.classList.remove('active'); });
+        chip.classList.add('active');
+        window.currentCdYear = chip.dataset.cdYear;
+        window.renderCourseDescriptions();
+      });
+    });
+    var cdSearch = document.getElementById('cdSearch');
+    if(cdSearch) cdSearch.addEventListener('input', window.renderCourseDescriptions);
+
+    var fm = document.getElementById('fabMain');
+    if(fm) fm.addEventListener('click', window.toggleFabMenu);
+    document.querySelectorAll('.fab-action').forEach(function(b){
+      b.addEventListener('click', function(){
+        var type = b.dataset.fab;
+        window.toggleFabMenu();
+        if(type === 'quick') setTimeout(window.openQuickCapture, 200);
+        else if(type === 'task'){ window.switchTab('tasks'); setTimeout(window.addTask, 250); }
+        else if(type === 'course'){ window.switchTab('courses'); setTimeout(window.addMyCourse, 250); }
+        else if(type === 'exam'){ window.switchTab('exams'); setTimeout(window.addExam, 250); }
+        else if(type === 'note'){ if(window.addCourseNote) window.addCourseNote(); }
+        else if(type === 'budget'){ window.switchTab('budget'); setTimeout(function(){ window.addBudgetItem('expense'); }, 250); }
+      });
+    });
+  };
+
+  /* ============================================================
+     TIMETABLE HELPERS (simplified)
+     ============================================================ */
+  window.clearTimetable = function(){
+    if(!window.space){ window.toast('البيانات غير محمّلة', 'warn'); return; }
+    if(!Object.keys(window.space.timetable || {}).length){ window.toast('الجدول فاضي أصلاً', 'info'); return; }
+    var doClear = function(){
+      window.space.timetable = {};
+      window.saveSpace();
+      if(window.renderTimetable) window.renderTimetable();
+      if(window.renderDashboard) window.renderDashboard();
+      window.toast('🗑 مُسح الجدول', 'success');
+    };
+    if(window.customConfirm) window.customConfirm('مسح كل الجدول؟', doClear);
+    else if(confirm('مسح كل الجدول؟')) doClear();
+  };
+
+  window.loadExampleTimetable = function(){
+    if(!window.space) return;
+    var had = Object.keys(window.space.timetable || {}).length;
+    if(had){
+      /* كان يستبدل جدولك الحقيقي بجدول تجريبي بدون أي سؤال */
+      var prev = JSON.parse(JSON.stringify(window.space.timetable));
+      return window.customConfirm('عندك ' + had + ' محاضرة بالجدول. الجدول التجريبي بيستبدلها كلها. متأكد؟', function(){ window._applyExampleTimetable(); if(window.toastUndo) window.toastUndo('تم تحميل الجدول التجريبي', function(){ window.space.timetable = prev; window.saveSpace(); if(window.renderTimetable) window.renderTimetable(); if(window.renderDashboard) window.renderDashboard(); }, 12000); }, { title: 'استبدال جدولك؟', icon: '⚠️', okLabel: 'استبدل بالتجريبي', danger: true });
+    }
+    window._applyExampleTimetable();
+  };
+  window._applyExampleTimetable = function(){
+    window.space.timetable = {
+      'Sun-08:00': { name: 'تفاضل وتكامل (1)', room: '101', instructor: '' },
+      'Sun-09:00': { name: 'فيزياء عامة (1)', room: '102', instructor: '' },
+      'Mon-08:00': { name: 'برمجة الحاسوب', room: 'Lab 1', instructor: '' },
+      'Tue-09:00': { name: 'مهارات التواصل باللغة العربية', room: '105', instructor: '' },
+      'Wed-11:00': { name: 'اساسيات الكيمياء العامة', room: 'Lab 3', instructor: '' },
+      'Thu-08:00': { name: 'مهارات التواصل باللغة الانجليزية', room: '106', instructor: '' }
+    };
+    window.saveSpace();
+    if(window.renderTimetable) window.renderTimetable();
+    if(window.renderDashboard) window.renderDashboard();
+    window.toast('✅ تم تحميل جدول تجريبي', 'success', 2500);
+  };
+
+  window.autoFillTimetable = function(){
+    if(!window.space || !(window.space.courses || []).length){ window.toast('أضف موادي أولاً', 'warn', 2500); return; }
+    /* «توليد من موادي»: صفوف جاهزة بأسماء/أكواد موادك التي ليست بالجدول بعد (كانت تفتح نموذجاً فاضياً) */
+    var tt = window.space.timetable || {}, used = {};
+    Object.keys(tt).forEach(function(k){ if(tt[k] && tt[k].name) used[tt[k].name] = true; });
+    var rows = (window.space.courses || []).filter(function(c){ return c.name && !used[c.name]; }).map(function(c){
+      return { code: c.code || '', name: c.name, matched: null, days: [], timeFrom: '', timeTo: '', room: c.room || '' };
+    });
+    if(!rows.length){ window.toast('كل موادك موجودة بالجدول أصلاً', 'info', 2500); return; }
+    if(window.openSmartTimetable) window.openSmartTimetable(rows);
+    else window.toast('استخدم "✨ إضافة دفعة"', 'info', 3500);
+  };
+
+  window.printTimetable = function(){
+    var tt = document.getElementById('timetableTable');
+    if(!tt){ window.toast('الجدول غير موجود', 'warn'); return; }
+    var w = window.open('', '_blank', 'width=1000,height=700');
+    if(!w){ window.toast('امنع المتصفح من حجب النوافذ', 'warn', 3000); return; }
+    w.document.write('<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>الجدول</title><style>body{font-family:Tahoma;padding:20px;direction:rtl}table{width:100%;border-collapse:collapse}th,td{border:1px solid #999;padding:8px;text-align:center}th{background:#e8e8e8}</style></head><body><h2>📅 الجدول الأسبوعي</h2>' + tt.outerHTML + '</body></html>');
+    w.document.close();
+    setTimeout(function(){ w.focus(); w.print(); }, 400);
+  };
+
+  window.addClassSlot = function(key){
+    if(key && window.openSmartTimetableAtKey) window.openSmartTimetableAtKey(key);
+    else if(window.openSmartTimetable) window.openSmartTimetable();
+  };
+
+  /* ---- Timetable helpers: المفتاح 'Sun-08:00' = اليوم-وقت البداية، والقيمة {name, room, instructor, end?} ---- */
+  function ttMin(t){
+    var p = String(t || '').split(':'), h = parseInt(p[0], 10), m = parseInt(p[1], 10) || 0;
+    return isNaN(h) ? null : h * 60 + m;
+  }
+  /* لون ثابت لكل مادة (من الاسم) — يميّز المواد بصرياً بالجدول */
+  var ttHueMap = {};
+  function ttHash(n){ var h = 2166136261; for(var i = 0; i < n.length; i++){ h ^= n.charCodeAt(i); h = (h * 16777619) >>> 0; } return h % 360; }
+  /* مواد الجدول الحالي تأخذ ألواناً متباعدة (≥ 28°) وثابتة: الترتيب أبجدي فلا يتغيّر اللون بترتيب الإدخال */
+  function ttAssignHues(names){
+    var used = [], map = {};
+    names.slice().sort().forEach(function(n){
+      var h = ttHash(n), guard = 0;
+      while(guard++ < 13 && used.some(function(u){ var d = Math.abs(u - h) % 360; return Math.min(d, 360 - d) < 28; })) h = (h + 47) % 360;
+      used.push(h); map[n] = h;
+    });
+    ttHueMap = map;
+  }
+  /* لون المادة (نفس لون الجدول) لاستعماله بأي مكان */
+  var hueSig = '';
+  window.courseHue = function(name){
+    var sp = window.space || {}, names = [];
+    Object.keys(sp.timetable || {}).forEach(function(k){ var n = sp.timetable[k] && sp.timetable[k].name; if(n && names.indexOf(n) < 0) names.push(n); });
+    (sp.courses || []).forEach(function(c){ if(c && c.name && names.indexOf(c.name) < 0) names.push(c.name); });
+    var sig = names.slice().sort().join('|');
+    if(sig !== hueSig){ hueSig = sig; ttAssignHues(names); }
+    return ttHue(name);
+  };
+  function ttHue(name){ var n = String(name || ''); return ttHueMap[n] !== undefined ? ttHueMap[n] : ttHash(n); }
+  function ttPad(t){
+    var m = ttMin(t); if(m === null) return '';
+    return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
+  }
+  function ttSplitKey(k){
+    var i = String(k).indexOf('-');
+    return i < 0 ? null : { day: k.slice(0, i), time: k.slice(i + 1) };
+  }
+  function ttDur(min){
+    if(min < 60) return min + ' د';
+    var h = Math.floor(min / 60), m = min % 60;
+    return m ? h + 'س ' + m + 'د' : h + ' س';
+  }
+  /* مساعدات الجدول متاحة لـ hub.js (لوحة اليوم/تفاصيل المحاضرة) بدل تكرارها */
+  window.ttMin = ttMin; window.ttPad = ttPad; window.ttSplitKey = ttSplitKey; window.ttDur = ttDur;
+  /* تداخل حقيقي فقط: يحتاج وقت نهاية معروف للمحاضرة الأبكر (المحاضرات القديمة بدون end لا تُعلَّم) */
+  window.getTimetableConflicts = function(){
+    var tt = (window.space && window.space.timetable) || {}, byDay = {}, bad = {}, list = [];
+    Object.keys(tt).forEach(function(k){
+      var p = ttSplitKey(k), s = p ? ttMin(p.time) : null; if(s === null || !tt[k]) return;
+      var e = ttMin(tt[k].end);
+      (byDay[p.day] = byDay[p.day] || []).push({ key: k, s: s, e: (e !== null && e > s) ? e : null });
+    });
+    Object.keys(byDay).forEach(function(d){
+      var a = byDay[d].sort(function(x, y){ return x.s - y.s; });
+      for(var i = 0; i < a.length; i++){
+        if(a[i].e === null) continue;
+        for(var j = i + 1; j < a.length && a[j].s < a[i].e; j++){
+          bad[a[i].key] = bad[a[j].key] = true;
+          list.push({ day: d, a: a[i].key, b: a[j].key });
+        }
+      }
+    });
+    return { keys: bad, list: list };
+  };
+
+  /* محاضرات متتالية بدون فاصل كافٍ (من نهاية الأولى لبداية الثانية أقل من gap دقيقة، ولا تداخل) */
+  window.getTimetableTight = function(gap){
+    gap = gap == null ? 10 : gap;
+    var tt = (window.space && window.space.timetable) || {}, byDay = {}, out = [];
+    Object.keys(tt).forEach(function(k){
+      var p = ttSplitKey(k), s = p ? ttMin(p.time) : null, e = tt[k] ? ttMin(tt[k].end) : null; if(s === null || e === null || e <= s) return;
+      (byDay[p.day] = byDay[p.day] || []).push({ key: k, s: s, e: e });
+    });
+    Object.keys(byDay).forEach(function(d){
+      var a = byDay[d].sort(function(x, y){ return x.s - y.s; });
+      for(var i = 0; i < a.length - 1; i++){ var g = a[i + 1].s - a[i].e; if(g >= 0 && g < gap && tt[a[i].key].name !== tt[a[i + 1].key].name) out.push({ day: d, a: a[i].key, b: a[i + 1].key, gap: g }); }
+    });
+    return out;
+  };
+
+  window.editClassSlot = function(key){
+    if(!window.space || !window.space.timetable) return;
+    var cls = window.space.timetable[key];
+    if(!cls) return;
+    if(!window.showModal){ window.toast('لا يمكن فتح المحرر', 'warn'); return; }
+    var sk = ttSplitKey(key) || { day: 'Sun', time: '08:00' };
+    var DE = window.DAYS_EN || ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    var DA = window.DAYS_AR || ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+    window.showModal('تعديل محاضرة', [
+      { key: 'name', label: 'اسم المادة' },
+      { key: 'day', label: 'اليوم', type: 'select', options: DE.map(function(d, i){ return { v: d, l: DA[i] }; }) },
+      { key: 'time', label: 'وقت البداية', type: 'time' },
+      { key: 'end', label: 'وقت النهاية (اختياري)', type: 'time' },
+      { key: 'room', label: 'القاعة' },
+      { key: 'building', label: 'المبنى (اختياري)' },
+      { key: 'instructor', label: 'الدكتور' }
+    ], { name: cls.name || '', day: sk.day, time: ttPad(sk.time), end: ttPad(cls.end), room: cls.room || '', building: cls.building || '', instructor: cls.instructor || '' }, function(data){
+      var name = String(data.name || '').trim();
+      if(!name){ window.toast('أدخل اسم المادة', 'warn'); return false; }
+      var start = ttPad(data.time), end = ttPad(data.end);
+      if(!start){ window.toast('أدخل وقت البداية', 'warn'); return false; }
+      if(end && ttMin(end) <= ttMin(start)){ window.toast('وقت النهاية يجب أن يكون بعد البداية', 'warn', 2500); return false; }
+      var newKey = data.day + '-' + start, tt = window.space.timetable;
+      if(newKey !== key && tt[newKey]){ window.toast('في محاضرة ثانية بنفس اليوم والوقت', 'warn', 2800); return false; }
+      /* نحافظ على أي حقول إضافية في المحاضرة */
+      var merged = Object.assign({}, cls, { name: name, room: data.room || '', building: data.building || '', instructor: data.instructor || '', end: end });
+      if(newKey !== key) delete tt[key];
+      tt[newKey] = merged;
+      window.saveSpace();
+      if(window.renderTimetable) window.renderTimetable();
+      if(window.renderDashboard) window.renderDashboard();
+      window.toast(window.getTimetableConflicts().keys[newKey] ? '⚠️ تم التعديل — لكن في تعارض مع محاضرة ثانية' : '✅ تم التعديل', window.getTimetableConflicts().keys[newKey] ? 'warn' : 'success', 2600);
+      return true;
+    }, function(){
+      window.customConfirm('حذف هذه المحاضرة؟', function(){
+        delete window.space.timetable[key];
+        window.saveSpace();
+        if(window.renderTimetable) window.renderTimetable();
+        if(window.renderDashboard) window.renderDashboard();
+      });
+    });
+  };
+
+  /* تفضيل العرض محلي فقط (localStorage مباشرة — لا يدخل المزامنة) */
+    
+  /* تنقل بين الأسابيع: يغيّر التواريخ وشارات الامتحانات فقط (الجدول نفسه متكرر أسبوعياً) */
+  var ttWeekOffset = 0;
+      window.ttSetWeek = function(off){ ttWeekOffset = off; window.renderTimetable(); };
+
+  var ttScrolledOnce = false;
+  
+  window.openTimerSettings = function(){
+    window.showModal('⚙️ تخصيص المؤقت', [
+      {key:'focus', label:'مدة التركيز (دقائق)', type:'number'},
+      {key:'short', label:'مدة الراحة (دقائق)', type:'number'},
+      {key:'long', label:'مدة الراحة الطويلة (دقائق)', type:'number'}
+    ], window.timerSettings, function(data){
+      window.timerSettings = {
+        focus: Math.max(1, Math.min(120, parseInt(data.focus) || 25)),
+        short: Math.max(1, Math.min(60, parseInt(data.short) || 5)),
+        long: Math.max(1, Math.min(90, parseInt(data.long) || 15))
+      };
+      window.S.set('timerSettings', window.timerSettings);
+      window.TM.focus = window.timerSettings.focus * 60;
+      window.TM.short = window.timerSettings.short * 60;
+      window.TM.long = window.timerSettings.long * 60;
+      window.stopTimer();
+      window.ts.remaining = window.TM[window.ts.mode];
+      window.ts.total = window.TM[window.ts.mode];
+      window.updateTimerUI();
+      window.toast('تم التحديث', 'success', 1500);
+      return true;
+    });
+  };
+
+  window.logStudySession = function(minutes){
+    var today = window.today();
+    var log = window.S.get('studyLog', {});
+    if(!log || typeof log !== 'object') log = {};
+    log[today] = (log[today] || 0) + minutes;
+    window.S.set('studyLog', log);
+  };
+
+  /* ============================================================
+     KEYBOARD
+     ============================================================ */
+  document.addEventListener('keydown', function(e){
+    var tag = (document.activeElement || {}).tagName || '';
+    var isTyping = ['INPUT','TEXTAREA','SELECT'].indexOf(tag) > -1;
+    if(isTyping && e.key !== 'Escape') return;
+
+    if(e.key === '/' && !isTyping){ e.preventDefault(); var si = document.getElementById('searchInput'); if(si) si.focus(); return; }
+    /* Alt+1..6: نفس ترتيب الشريط السفلي (الرئيسية، الجدول، موادي، المهام، الحضور، علاماتي) */
+    if(e.altKey && !e.ctrlKey && !e.metaKey && /^[1-6]$/.test(e.key)){
+      e.preventDefault();
+      window.switchTab(['dashboard','timetable','courses','tasks','attendance','gradecalc'][parseInt(e.key, 10) - 1]);
+      return;
+    }
+    if(e.altKey && e.key.toLowerCase() === 't'){ e.preventDefault(); window.switchTab('tasks'); setTimeout(window.addTask, 200); return; }
+    if(e.altKey && e.key.toLowerCase() === 'n'){ e.preventDefault(); if(window.addCourseNote) window.addCourseNote(); return; }
+    if(e.altKey && e.key.toLowerCase() === 'p'){ e.preventDefault(); window.switchTab('timer'); return; }
+    if(e.altKey && e.key.toLowerCase() === 'q'){ e.preventDefault(); window.openQuickCapture(); return; }
+    if(e.key === 'Escape'){
+      /* نوافذ التعديل (modal-backdrop) أعلى من لوحة الأوامر/نوافذ المادة، فتُغلق هي أولاً */
+      if(!document.querySelector('.modal-backdrop') && window.HubUI && window.HubUI.closeTop()) return;
+      var sr = document.getElementById('searchResults'); if(sr) sr.classList.remove('show');
+      window.closeSidebar();
+      window.closeSettingsMenu();
+      document.querySelectorAll('.modal-backdrop').forEach(function(m){ m.remove(); });
+      /* شاشة العد التنازلي للامتحان (ملء الشاشة + تثبيت التمرير) */
+      var ecs = document.getElementById('examCountdownScreen');
+      if(ecs && ecs.classList.contains('open') && window.closeExamCountdown) window.closeExamCountdown();
+      var ap = document.getElementById('aiPanel'); if(ap) ap.classList.remove('show');
+      var fm = document.getElementById('fabMenu'); if(fm) fm.classList.remove('show');
+      var fmm = document.getElementById('fabMain'); if(fmm) fmm.classList.remove('active');
+      var ai2 = document.getElementById('aiFab'); if(ai2) ai2.classList.remove('hidden');
+      var tp = document.getElementById('themePanel'); if(tp) tp.classList.remove('show');
+    }
+  });
+
+  /* Smooth interactions */
+  document.addEventListener('mousemove', function(e){
+    var t = e.target.closest('.btn, .nav-item');
+    if(!t) return;
+    var rect = t.getBoundingClientRect();
+    t.style.setProperty('--mx', ((e.clientX - rect.left) / rect.width * 100) + '%');
+    t.style.setProperty('--my', ((e.clientY - rect.top) / rect.height * 100) + '%');
+  }, { passive: true });
+
+  /* ============================================================
+     BOOT
+     ============================================================ */
+  function safeRun(label, fn){
+    try{ fn(); }
+    catch(err){ console.error('❌ Failed: ' + label, err); window.debugLog('❌ ' + label + ': ' + (err.message || err)); }
+  }
+
+  /* أقسام اللوحة الطويلة قابلة للطي: افتراضياً مطوية على الموبايل (و LMS دائماً)، والباقي مفتوح على الكمبيوتر.
+     الأقسام تُبنى لاحقاً وبعضها يُعاد بناؤه عند كل رسم، فنستخدم observer + delegation. */
+  var DASH_COLLAPSIBLE = ['insightsSection', 'enhancedStatsSection', 'lmsWidget'];
+  function dashPrefs(){ try{ var v = JSON.parse(localStorage.getItem('dash_collapsed') || '{}'); return (v && typeof v === 'object') ? v : {}; }catch(e){ return {}; } }
+  function dashIsCollapsed(id){
+    var p = dashPrefs();
+    if(p[id] !== undefined) return !!p[id];
+    if(id === 'lmsWidget' || id === 'insightsSection' || id === 'enhancedStatsSection') return true; /* LMS + الإحصائيات/التحليلات المتقدمة (تكرر أرقام الملخص الأسبوعي): مطوية افتراضياً — النقر على العنوان يفتحها وتُحفظ حالتك */
+    return !!(window.matchMedia && window.matchMedia('(max-width:600px)').matches);
+  }
+  function dashApply(){
+    DASH_COLLAPSIBLE.forEach(function(id){
+      var el = document.getElementById(id); if(!el) return;
+      if(!el._dcInit){ el._dcInit = true; el.classList.add('dash-collapsible'); el.classList.toggle('dash-collapsed', dashIsCollapsed(id)); }
+    });
+  }
+  function initDashCollapse(){
+    var dash = document.getElementById('dashboard'); if(!dash || dash._dcBound) return;
+    dash._dcBound = true;
+    dash.addEventListener('click', function(e){
+      var head = e.target.closest ? e.target.closest('.dash-collapsible > .card-head') : null;
+      if(!head || e.target.closest('.card-action')) return;
+      var card = head.parentNode, collapsed = !card.classList.contains('dash-collapsed');
+      card.classList.toggle('dash-collapsed', collapsed);
+      var p = dashPrefs(); p[card.id] = collapsed;
+      try{ localStorage.setItem('dash_collapsed', JSON.stringify(p)); }catch(err){}
+    });
+    if(window.MutationObserver) new MutationObserver(dashApply).observe(dash, { childList: true, subtree: true });
+    dashApply();
+  }
+
+  /* السحابة متأخرة عند الإقلاع (نت ضعيف/شبكة عالقة): نرسم بيانات الجهاز فوراً ونكمّل القرار لما يوصل الرد.
+     الرفع يبقى موقوفاً (bootSyncing) لحد القرار، والتعديل المحلي بعد الرسم يُحسب «تعديل غير مرفوع» فما بينكتب فوقه. */
+  var BOOT_CLOUD_WAIT = 1500, BOOT_CLOUD_WAIT_EMPTY = 8000;
+  function lateBootSync(sd, bootDirty, renderedHash){
+    var changed = stateHash() !== renderedHash, dirty = bootDirty || changed;
+    window._lateBootInfo = { bootDirty: bootDirty, changed: changed };   /* للتشخيص والاختبار */
+    if(sd && sd.data){
+      window.serverOnline = true; window.cloudLoadFailed = false;
+      var decision = decideSync(sd, dirty), serverMs = toMs(sd.updated_at);
+      if(decision === 'apply' && serverMs !== null && serverMs === metaGet('ss_cloud_ver')){ window.bootSyncing = false; window.setServerStatus('ok'); return 'same'; }   /* نفس النسخة: ما في شي نطبّقه */
+      if(decision === 'apply'){
+        window.cloudSyncBlocked = true;   /* لحد إعادة التحميل: ما نرفع النسخة اللي طبّقناها هسا (bootSyncing يضل true) */
+        if(metaGet('ss_cloud_ver') === null) backupBeforeCloudApply();
+        window.applyServerData(sd.data);
+        if(serverMs) window.S.set('ss_space_ts', serverMs);
+        window.markSynced(sd.updated_at);
+        window.toast('☁️ وصلت بيانات أحدث من السحابة — بحدّث الصفحة', 'info', 2500);
+        var tries = 0, iv = setInterval(function(){   /* ما نعيد التحميل فوق نافذة مفتوحة (أقصى دقيقة) */
+          if(document.querySelector('.modal-backdrop,.hub-sheet-backdrop') && ++tries < 60) return;
+          clearInterval(iv); location.reload();
+        }, 1000);
+        return 'apply';
+      }
+      window.bootSyncing = false;
+      if(decision === 'keep-local'){ if(metaGet('ss_cloud_ver') === null) window.markSynced(sd.updated_at, '__dirty__'); window.setServerStatus(); window.doServerSave(); return 'keep-local'; }
+      window.cloudSyncBlocked = true; window.handleSyncConflict(sd); return 'conflict';
+    }
+    window.bootSyncing = false; window.serverOnline = false;
+    if(window.SB && window.SB.lastLoadStatus === 'error'){ window.cloudSyncBlocked = true; window.cloudLoadFailed = true; }
+    else if(window.SB && window.SB.lastLoadStatus === 'empty') window.doServerSave();
+    window.setServerStatus();
+    return window.SB ? window.SB.lastLoadStatus : 'none';
+  }
+
+  window.boot = async function(){
+    console.log('🚀 Booting...');
+    safeRun('Load local data', window.loadAllData);
+
+    var serverData = null, latePromise = null, bootDirty = false;
+    if(window.SB){
+      bootDirty = localDirty();
+      var loadP = Promise.resolve().then(function(){ return window.SB.load(); }).catch(function(){ return null; });
+      var wait = (typeof navigator !== 'undefined' && navigator.onLine === false) ? 0 : (hasUserData() ? BOOT_CLOUD_WAIT : BOOT_CLOUD_WAIT_EMPTY);
+      var first = await Promise.race([loadP.then(function(d){ return { d: d }; }), new Promise(function(r){ setTimeout(function(){ r(null); }, wait); })]);
+      if(first) serverData = first.d;
+      else { latePromise = loadP; console.log('⏳ السحابة متأخرة — رسم بيانات الجهاز أولاً'); }
+    }
+
+    var pushLocalAfterBoot = false, conflictAfterBoot = false;
+    if(serverData && serverData.data){
+      var decision = decideSync(serverData);
+      window.serverOnline = true;
+      if(decision === 'apply'){
+        console.log('☁️ Loaded from Supabase');
+        if(metaGet('ss_cloud_ver') === null) backupBeforeCloudApply();   /* لا سجل مزامنة (جهاز جديد/رمز جديد): احمِ ما على الجهاز قبل استبداله */
+        safeRun('Apply server data', function(){ window.applyServerData(serverData.data); });
+        var serverMs = toMs(serverData.updated_at);
+        if(serverMs) window.S.set('ss_space_ts', serverMs);
+        window.markSynced(serverData.updated_at);
+      } else if(decision === 'keep-local'){
+        /* النسخة المحلية فيها تعديلات غير مرفوعة — لا نكتب فوقها */
+        console.log('💾 Local has unsynced edits — keeping local, will push');
+        if(metaGet('ss_cloud_ver') === null) window.markSynced(serverData.updated_at, '__dirty__');
+        pushLocalAfterBoot = true;
+      } else {
+        console.log('🔀 Edits on both sides — asking user');
+        window.cloudSyncBlocked = true;
+        conflictAfterBoot = true;
+      }
+    } else {
+      console.log('💾 Using localStorage');
+      window.serverOnline = false;
+      /* فشل تحميل (مش "ما في صف"): امنع الرفع حتى لا نكتب فوق السحابة ببيانات محلية قد تكون فاضية */
+      if(window.SB && window.SB.lastLoadStatus === 'error'){ window.cloudSyncBlocked = true; window.cloudLoadFailed = true; }
+    }
+
+    safeRun('Sync timer', function(){
+      window.TM.focus = window.timerSettings.focus * 60;
+      window.TM.short = window.timerSettings.short * 60;
+      window.TM.long = window.timerSettings.long * 60;
+      window.ts.remaining = window.TM[window.ts.mode];
+      window.ts.total = window.TM[window.ts.mode];
+    });
+
+    safeRun('Theme panel', function(){
+      window.buildThemePanel();
+      window.applyTheme(window.S.get('theme', 'dark'));
+    });
+
+    safeRun('Grade dropdown', function(){
+      var sel = document.getElementById('whatIfGrade');
+      if(sel){
+        var opts = '';
+        Object.keys(window.GRADES).forEach(function(g){ opts += '<option>' + g + '</option>'; });
+        sel.innerHTML = opts;
+      }
+    });
+
+    safeRun('History', window.initHistoryNavigation);
+    safeRun('Bind events', window.bindAllEvents);
+    safeRun('Notif button', window.updateNotifBtn);
+
+    safeRun('Plan', window.renderPlan);
+    safeRun('Timetable', window.renderTimetable);
+    safeRun('Courses', window.renderCourses);
+    safeRun('Tasks', window.renderTasks);
+    safeRun('Exams', window.renderExams);
+    safeRun('Attendance', window.renderAttendance);
+    safeRun('GPA', window.renderGpa);
+    safeRun('Budget', window.renderBudget);
+    safeRun('HU Links', window.renderHuLinks);
+    safeRun('Search', window.initSearch);
+    safeRun('Quote', window.renderDailyQuote);
+    safeRun('Dashboard', window.renderDashboard);
+    safeRun('Dash collapse', initDashCollapse);
+    safeRun('GradeCalc', window.renderGradeCalc);
+    safeRun('CourseDesc', window.renderCourseDescriptions);
+    safeRun('AI bindings', function(){ if(window.bindAIEvents) window.bindAIEvents(); });
+
+    safeRun('Initial tab', function(){
+      var tab = location.hash.slice(1) || window.S.get('activeTab', 'dashboard');
+      if(document.getElementById(tab)) window.switchTab(tab, false);
+      else window.switchTab('dashboard', false);
+    });
+
+    safeRun('Welcome', function(){
+      var welcomeDone = window.S.get('welcomeDone', false);
+      var hasName = window.space.profile && window.space.profile.name;
+      if(window.dataCorrupted){ window.showWelcome(true); }
+      else if(!welcomeDone || !hasName){ window.showWelcome(false); }
+      else {
+        document.documentElement.classList.remove('is-new');   /* الحالة جاءت من السحابة/ملف: لا ترحيب */
+        setTimeout(function(){
+          try{
+            /* التحية والملخص صاروا بصفحة «اليوم» (الواجهة الجديدة)؛ ما في توست بداية */
+            setTimeout(window.checkSmartReminders, 4000);
+          }catch(err){}
+        }, 800);
+      }
+    });
+
+    safeRun('Initial sync', function(){
+      if(latePromise){
+        var renderedHash = stateHash();
+        window.setServerStatus();
+        latePromise.then(function(sd){ try{ window._lateBoot = lateBootSync(sd, bootDirty, renderedHash); }catch(e){ window.bootSyncing = false; console.error('late sync', e); } });
+        return;
+      }
+      window.bootSyncing = false;
+      window.setServerStatus(window.serverOnline ? 'ok' : 'off');
+      if(conflictAfterBoot) setTimeout(function(){ window._conflictOpen = false; window.handleSyncConflict(); }, 600);
+      else if(pushLocalAfterBoot || (!serverData && window.SB && window.SB.lastLoadStatus === 'empty')) window.doServerSave();
+      else if(serverData && serverData.data && !window.cloudSyncBlocked && localDirty()) window.doServerSave();
+    });
+
+    setInterval(window.checkSmartReminders, 30 * 60 * 1000);
+
+    /* تحديث "المحاضرة الجارية/التالية" كل دقيقة، فقط للعناصر الظاهرة وبدون مودال مفتوح */
+    setInterval(function(){
+      try{
+        var tb = document.getElementById('timetableTable');
+        if(tb && tb.offsetParent !== null && !document.querySelector('.modal-backdrop') && window.renderTimetable) window.renderTimetable();
+      }catch(e){}
+    }, 60000);
+
+    if(navigator.serviceWorker){
+      navigator.serviceWorker.addEventListener('message', function(e){
+        if(e.data && e.data.type === 'navigate' && e.data.tab) window.switchTab(e.data.tab);
+      });
+    }
+
+    safeRun('Validate DB', function(){
+      if(window.validateCoursesDB){
+        var issues = window.validateCoursesDB();
+        if(issues.length) console.warn('⚠️ DB issues:', issues);
+      }
+    });
+  };
+
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', window.boot);
+  else window.boot();
+
+})();

@@ -1,0 +1,293 @@
+<section class=section tab-play active id=gradecalc>
+  <div class=page-head>
+    <h2 class=page-title>
+      "📊 علاماتي"
+    <p class=page-sub>
+      "علاماتك + كم تحتاج + حاسبة المعدل"
+  <div class=section-tabs>
+    <button class=section-tab active data-gc-tab=need>
+      "🎯 كم أحتاج"
+    <button class=section-tab data-gc-tab=tracker>
+      "📈 علاماتي"
+    <button class=section-tab data-gc-tab=gpa>
+      "📊 حاسبة المعدل"
+  <div class=subsection active data-gc-sub=need>
+    <div class=card>
+      <h3>
+        "🎯 كم أحتاج في الفاينل؟"
+      <div class=grid grid-2>
+        <div class=form-group>
+          <label>
+            "علامتك الحالية"
+          <input aria-label=علامتك الحالية id=ncCurrent max=100 min=0 type=number value=72>
+        <div class=form-group>
+          <label>
+            "وزن الفاينل (%)"
+          <input aria-label=وزن الفاينل بالمئة id=ncWeight max=100 min=1 type=number value=40>
+        <div class=form-group>
+          <label>
+            "الهدف"
+          <select aria-label=العلامة المستهدفة id=ncTarget>
+            <option value=95>
+              "A — 95"
+            <option value=87>
+              "A- — 87"
+            <option value=82>
+              "B+ — 82"
+            <option value=77>
+              "B — 77"
+            <option value=72>
+              "B- — 72"
+            <option value=67>
+              "C+ — 67"
+            <option value=62>
+              "C — 62"
+            <option selected= value=60>
+              "نجاح — 60"
+        <div class=form-group>
+          <label>
+          <button class=btn id=ncCalc>
+            "احسب"
+      <div id=ncResult>
+  <div class=subsection data-gc-sub=tracker>
+    <div class=card>
+      <div class=card-head>
+        <h3>
+          "📈 علامات المواد"
+        <button class=btn btn-sm id=btnAddGrade>
+          "+ مادة"
+      <div id=gradeTrackerList>
+        <div class=card gt-card>
+          <div>
+            <div>
+              <div>
+                <span class=course-link data-open-course=حساب التفاضل والتكامل 1 role=link title=فتح صفحة المادة>
+                  "حساب التفاضل والتكامل 1"
+              <div>
+                "كود: MA101 · مجموع: 0%"
+            <div>
+              <div>
+                <div>
+                  "—"
+                <div class=u-note>
+                  "بلا علامات"
+              <button class=unified-course-btn added data-course-name=حساب التفاضل والتكامل 1 title=حذف من كل الأماكن>
+                "🗑"
+          <div class=u-empty>
+            "ما في علامات — اضغط "+ علامة" للبدء"
+          <div>
+            <button class=btn btn-sm data-gt-add=حساب التفاضل والتكامل 1>
+              "+ علامة"
+        <div class=card gt-card>
+          <div>
+            <div>
+              <div>
+                <span class=course-link data-open-course=البرمجة بلغة C++ role=link title=فتح صفحة المادة>
+                  "البرمجة بلغة C++"
+              <div>
+                "كود: CE102 · مجموع: 0%"
+            <div>
+              <div>
+                <div>
+                  "—"
+                <div class=u-note>
+                  "بلا علامات"
+              <button class=unified-course-btn added data-course-name=البرمجة بلغة C++ title=حذف من كل الأماكن>
+                "🗑"
+          <div class=u-empty>
+            "ما في علامات — اضغط "+ علامة" للبدء"
+          <div>
+            <button class=btn btn-sm data-gt-add=البرمجة بلغة C++>
+              "+ علامة"
+    <div class=card pg-card id=gcForecast>
+      <div class=card-head>
+        <h3>
+          "🔮 توقع تقدمك الأكاديمي"
+      <div class=u-empty>
+        "أضف علامات لموادك (علامة بوزنها) وبظهر هون توقع المعدل والتقدير لكل مادة."
+  <div class=subsection data-gc-sub=gpa>
+    <div class=controls>
+      <button class=btn btn-sm id=btnAddGpa>
+        "+ مادة"
+      <button class=btn btn-sm btn-ghost id=btnLoadGpaSample>
+        "📋 مثال"
+      <button class=btn btn-sm btn-danger id=btnClearGpa>
+        "🗑 مسح"
+    <div>
+      <table class=gpa-table>
+        <thead>
+          <tr>
+            <th>
+              "المادة"
+            <th>
+              "الساعات"
+            <th>
+              "التقدير"
+            <th>
+        <tbody id=gpaBody>
+          <tr>
+            <td>
+              <input data-gname=0 placeholder=اسم المادة type=text value=>
+            <td>
+              <input data-ghrs=0 max=6 min=0 type=number value=3>
+            <td>
+              <select data-ggrade=0>
+                <option selected=>
+                  "A (90-100)"
+                <option>
+                  "A- (85-89)"
+                <option>
+                  "B+ (80-84)"
+                <option>
+                  "B (75-79)"
+                <option>
+                  "B- (70-74)"
+                <option>
+                  "C+ (65-69)"
+                <option>
+                  "C (60-64)"
+                <option>
+                  "C- (55-59)"
+                <option>
+                  "D+ (50-54)"
+                <option>
+                  "D (45-49)"
+                <option>
+                  "F (0-44)"
+            <td>
+              <button class=btn btn-sm btn-danger data-gdel=0>
+                "✕"
+    <div class=gpa-result>
+      <div>
+        "المعدل التراكمي"
+      <div class=big id=gpaVal>
+        "4.00"
+      <div class=gpa-details>
+        <div>
+          <div class=v id=gpaHrs>
+            "3"
+          <div class=l>
+            "مجموع الساعات"
+        <div>
+          <div class=v id=gpaCourses>
+            "1"
+          <div class=l>
+            "عدد المواد"
+        <div>
+          <div class=v id=gpaGrade>
+            "ممتاز"
+          <div class=l>
+            "التقدير"
+    <div class=card>
+      <h3>
+        "🎯 محاكي "ماذا لو""
+      <div class=grid grid-2>
+        <div class=form-group>
+          <label>
+            "الساعات"
+          <input aria-label=ساعات المادة الافتراضية id=whatIfHrs max=6 min=1 type=number value=3>
+        <div class=form-group>
+          <label>
+            "التقدير المتوقع"
+          <select aria-label=التقدير المتوقع id=whatIfGrade>
+            <option>
+              "A (90-100)"
+            <option>
+              "A- (85-89)"
+            <option>
+              "B+ (80-84)"
+            <option>
+              "B (75-79)"
+            <option>
+              "B- (70-74)"
+            <option>
+              "C+ (65-69)"
+            <option>
+              "C (60-64)"
+            <option>
+              "C- (55-59)"
+            <option>
+              "D+ (50-54)"
+            <option>
+              "D (45-49)"
+            <option>
+              "F (0-44)"
+        <div class=form-group>
+          <label>
+          <button class=btn id=btnCalcWhatIf>
+            "احسب"
+      <div id=whatIfResult>
+    <div class=card pg-card id=gpaScen>
+      <div class=card-head>
+        <h3>
+          "🧭 سيناريوهات المعدل التراكمي"
+      <div class=grid grid-2>
+        <div class=form-group>
+          <label for=scHrs>
+            "ساعات الفصل القادم"
+          <input id=scHrs max=30 min=1 step=1 type=number>
+        <div class=form-group>
+          <label for=scTarget>
+            "المعدل الذي تستهدفه"
+          <input id=scTarget max=4 min=0.5 step=0.05 type=number>
+      <div id=scOut>
+        <div class=sc-goal>
+          "لتوصل 4.00 تحتاج متوسط"
+          <b>
+            "4.00"
+          "هذا الفصل، يعني تقريباً"
+          <b>
+            "A"
+          "(≥ 90%) بكل المواد."
+        <div aria-label=سيناريوهات المعدل class=sc-table role=table>
+          <div class=sc-row role=row>
+            <span class=sc-l>
+              "لو كل مواد الفصل A"
+            <b class=sc-v>
+              "4.00"
+            <span class=sc-d >
+              "= 0.00"
+          <div class=sc-row role=row>
+            <span class=sc-l>
+              "لو كل مواد الفصل A-"
+            <b class=sc-v>
+              "3.79"
+            <span class=sc-d down>
+              "▼ 0.21"
+          <div class=sc-row role=row>
+            <span class=sc-l>
+              "لو كل مواد الفصل B+"
+            <b class=sc-v>
+              "3.58"
+            <span class=sc-d down>
+              "▼ 0.42"
+          <div class=sc-row role=row>
+            <span class=sc-l>
+              "لو كل مواد الفصل B"
+            <b class=sc-v>
+              "3.17"
+            <span class=sc-d down>
+              "▼ 0.83"
+          <div class=sc-row role=row>
+            <span class=sc-l>
+              "لو كل مواد الفصل B-"
+            <b class=sc-v>
+              "2.96"
+            <span class=sc-d down>
+              "▼ 1.04"
+          <div class=sc-row role=row>
+            <span class=sc-l>
+              "لو كل مواد الفصل C+"
+            <b class=sc-v>
+              "2.75"
+            <span class=sc-d down>
+              "▼ 1.25"
+          <div class=sc-row role=row>
+            <span class=sc-l>
+              "لو كل مواد الفصل C"
+            <b class=sc-v>
+              "2.33"
+            <span class=sc-d down>
+              "▼ 1.67"
+        <p class=pg-note>
+          "الافتراضات: معدلك الحالي 4.00 على 3 ساعة (من جدول حاسبة المعدل)، وفصل جديد 15 ساعة بتقدير موحّد لكل المواد. المدى الممكن بعد الفصل: 0.67 – 4.00. تقديري، وقد يختلف عن حساب الجامعة الرسمي."

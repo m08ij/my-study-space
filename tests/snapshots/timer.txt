@@ -1,0 +1,73 @@
+<section class=section tab-play active id=timer>
+  <div class=page-head>
+    <h2 class=page-title>
+      "⏱️ بومودورو"
+    <p class=page-sub>
+      "ركّز، ارتح، وأنجز"
+  <div>
+    <button class=btn btn-ghost btn-sm id=btnTimerSettings>
+      "⚙️ تخصيص"
+  <div class=timer-main>
+    <span class=timer-mode id=timerMode>
+      "🎯 وقت التركيز"
+    <div class=timer-ring>
+      <svg viewBox=0 0 260 260>
+      <div class=inner>
+        <div class=timer-display id=timerDisplay>
+          "25:00"
+    <div class=mode-switch>
+      <button class=chip active data-mode=focus id=btnFocus>
+        "🎯 تركيز (25)"
+      <button class=chip data-mode=short id=btnShort>
+        "☕ راحة (5)"
+      <button class=chip data-mode=long id=btnLong>
+        "🌴 طويلة (15)"
+      <button class=chip data-mode=stopwatch id=btnStopwatch>
+        "⏱️ تصاعدي"
+    <div class=timer-link id=timerLink>
+      <label for=timerTask>
+        "🎯 جلسة التركيز لـ:"
+      <select id=timerTask>
+        <option value=>
+          "بدون ربط"
+        <optgroup label=مهام>
+          <option value=t1>
+            "واجب التكامل 3 — حساب التفاضل والتكامل 1"
+          <option value=t2>
+            "مشروع C++ — البرمجة بلغة C++"
+          <option value=t3>
+            "تقرير قديم"
+        <optgroup label=مواد>
+          <option value=course:حساب التفاضل والتكامل 1>
+            "📚 حساب التفاضل والتكامل 1"
+          <option value=course:البرمجة بلغة C++>
+            "📚 البرمجة بلغة C++"
+    <div class=timer-controls>
+      <button class=btn id=startBtn>
+        "▶ ابدأ"
+      <button class=btn btn-ghost id=resetBtn>
+        "↺ إعادة"
+    <div class=timer-stats>
+      <div class=timer-stat>
+        <div class=v id=sessionsDone>
+          "0"
+        <div class=l>
+          "جلسات"
+      <div class=timer-stat>
+        <div class=v id=focusMinutes>
+          "0"
+        <div class=l>
+          "دقيقة"
+    <div class=focus-by-course id=focusByCourse>
+      <div class=u-note>
+        "اربط جلسة تركيز بمهمة لها مادة، وبتظهر هون ساعات دراستك لكل مادة."
+  <div class=card pk-card id=peakCard>
+    <div class=card-head>
+      <h3>
+        "⏰ أوقات ذروتك"
+    <p class=u-note>
+      "ما في جلسات مسجّلة بعد؛ يلزم 5 جلسات تركيز إضافية لتظهر ساعاتك الأفضل (تُسجَّل ساعة بدء كل جلسة على جهازك فقط)."
+    <p class=u-note>
+      "أيام الأسبوع تظهر بعد 3 أيام دراسة على الأقل (من سجل الدراسة)."
+    <p class=u-note>
+      "الافتراض: الذروة = أكثر كتلة ساعتين فيها دقائق تركيز. لا يُرسل أي شيء خارج جهازك."

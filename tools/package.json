@@ -1,0 +1,6 @@
+{
+  "name": "studyspace-tools",
+  "private": true,
+  "description": "أدوات بناء النشر فقط (تصغير JS/CSS) — لا تُنشر",
+  "devDependencies": { "terser": "^5.31.0", "csso": "^5.0.5" }
+}

@@ -1,0 +1,381 @@
+/* ============================================================
+   native-bridge.js — جسر تطبيق أندرويد (غلاف Capacitor يحمّل الموقع المنشور)
+   يعمل فقط داخل التطبيق (Capacitor.isNativePlatform())؛ على المتصفح لا يفعل شيئاً.
+   1) إشعارات محلية حقيقية حتى والتطبيق مسكّر: نجدول تنبيهات 7 أيام قدّام (محاضرات، «اطلع الآن»، امتحانات، ملخص المهام)
+      ونعيد الجدولة عند فتح التطبيق/تعديل البيانات. تحترم تفضيلات مركز التنبيهات وساعات الهدوء.
+   2) تنزيل الملفات (نسخة احتياطية JSON، ics…): WebView ما بيعالج تنزيل روابط blob، فنحوّل a[download] إلى مشاركة/حفظ نظام أندرويد.
+   الإضافات (LocalNotifications/Filesystem/Share) تُستدعى عبر Capacitor.registerPlugin؛ غيابها لا يكسر الموقع.
+   ============================================================ */
+(function(root, factory){
+  var api = factory(root);
+  if(typeof module !== 'undefined' && module.exports) module.exports = api;
+  if(root && root.document) root.NativeApp = api;
+})(typeof window !== 'undefined' ? window : this, function(W){
+  'use strict';
+
+  /* ---------- خطة الإشعارات (نقية، قابلة للاختبار) ---------- */
+  function pad(n){ return ('0' + n).slice(-2); }
+  function hm(m){ return pad(Math.floor(m / 60)) + ':' + pad(Math.round(m % 60)); }
+  function ymd(d){ return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function atMin(day, m){ return new Date(day.getFullYear(), day.getMonth(), day.getDate(), Math.floor(m / 60), Math.round(m % 60), 0, 0); }
+  function toMin(t){ var m = /^(\d{1,2}):(\d{2})$/.exec(t || ''); return m ? +m[1] * 60 + +m[2] : null; }
+  function hashId(key){ var h = 5381; for(var i = 0; i < key.length; i++) h = ((h << 5) + h + key.charCodeAt(i)) | 0; return Math.abs(h) % 2000000000 + 1; }
+  function inQuiet(prefs, m){
+    if(!prefs.quietOn) return false; var a = toMin(prefs.quietFrom), b = toMin(prefs.quietTo); if(a === null || b === null) return false;
+    return a <= b ? (m >= a && m < b) : (m >= a || m < b);
+  }
+  /* entries: [{key, dayIdx, start, end, hasEnd, name, room}] ؛ h: { buildingOf(entry)->{id,name}|null, walk(a,b)->min, leaveInfo(L,prev,bPrev,bNext,walk) } */
+  function plan(o){
+    var now = o.now, prefs = o.prefs || {}, entries = o.entries || [], space = o.space || {}, h = o.helpers || {}, days = o.days || 7, out = [];
+    function add(key, title, body, at){
+      if(at.getTime() <= now.getTime() + 20000) return;
+      if(inQuiet(prefs, at.getHours() * 60 + at.getMinutes())) return;
+      out.push({ id: hashId(key), key: key, title: title, body: body, at: at });
+    }
+    for(var off = 0; off < days; off++){
+      var day = new Date(now.getFullYear(), now.getMonth(), now.getDate() + off), dIdx = day.getDay(), dY = ymd(day);
+      var list = entries.filter(function(e){ return e.dayIdx === dIdx; }).sort(function(a, b){ return a.start - b.start; });
+      if(prefs.lec !== false){
+        list.forEach(function(L, i){
+          var b = h.buildingOf ? h.buildingOf(L) : null, place = b ? b.name : (L.room || '');
+          var lead = Math.max(5, parseInt(prefs.lecMin, 10) || 10);
+          add(dY + '|lec|' + L.key, '📚 «' + L.name + '» بعد ' + lead + ' د', hm(L.start) + (place ? ' — ' + place : ''), atMin(day, L.start - lead));
+          /* «اطلع الآن»: نفس منطق SmartAssist */
+          if(h.leaveInfo && b){
+            var prev = null; for(var j = i - 1; j >= 0; j--){ if(list[j].end <= L.start){ prev = list[j]; break; } }
+            var pb = prev && h.buildingOf ? h.buildingOf(prev) : null;
+            var info = prev && pb ? h.leaveInfo(L, prev, pb.id, b.id, h.walk) : null;
+            if(info) add(dY + '|leave|' + L.key, info.late ? '⚠️ ما بتلحق — اطلع هسا!' : '🚶 اطلع هسا لـ«' + L.name + '»', 'من ' + pb.name + ' إلى ' + b.name + ' — المشي ~' + info.walk + ' د، والمحاضرة ' + hm(L.start), atMin(day, info.leaveAt));
+          }
+        });
+      }
+      if(prefs.exams !== false){
+        (space.exams || []).forEach(function(e){
+          if(!e.date) return; var id = (e.id || e.name || '') + '_' + e.date, name = e.name || 'الامتحان', course = e.course ? ' (' + e.course + ')' : '';
+          var tomorrow = ymd(new Date(day.getFullYear(), day.getMonth(), day.getDate() + 1));
+          if(e.date === tomorrow) add(dY + '|examEve|' + id, '📝 امتحانك بكرة', name + course + (e.time ? ' الساعة ' + e.time : '') + ' — جهّز نفسك', atMin(day, 20 * 60));
+          if(e.date === dY && e.time && toMin(e.time) !== null) add(dY + '|exam2h|' + id, '⏳ امتحانك بعد ساعتين', name + course + ' الساعة ' + e.time, atMin(day, toMin(e.time) - 120));
+        });
+      }
+      if(prefs.tasks !== false){
+        var due = (space.tasks || []).filter(function(t){ return t && !t.done && t.due === dY; });
+        /* تذكير مساء اليوم السابق للتسليم (٨ م) — يُعطَّل بـprefs.tasksEve=false */
+        if(prefs.tasksEve !== false){
+          var tmr = ymd(new Date(day.getFullYear(), day.getMonth(), day.getDate() + 1));
+          var dueTmr = (space.tasks || []).filter(function(t){ return t && !t.done && t.due === tmr; });
+          if(dueTmr.length) add(dY + '|tasksEve', '⏰ بكرة تسليم ' + dueTmr.length + ' ' + (dueTmr.length === 1 ? 'مهمة' : 'مهام'), dueTmr.slice(0, 3).map(function(t){ return t.title; }).join(' • '), atMin(day, 20 * 60));
+        }
+        if(due.length){ var tm = toMin(prefs.tasksAt); if(tm === null) tm = 8 * 60; add(dY + '|tasks', '📝 عندك ' + due.length + ' ' + (due.length === 1 ? 'مهمة' : 'مهام') + ' اليوم', due.slice(0, 3).map(function(t){ return t.title; }).join(' • '), atMin(day, tm)); }
+      }
+      /* «خطتي اليوم» (dayplan.js): خطة الصبح + تذكيرات لحد ما تخلص + المراجعة الأسبوعية؛ اليوم الحالي بيتلغى تذكيره أول ما تخلص (إعادة الجدولة مع كل حفظ) */
+      if(prefs.dayplan !== false && typeof o.dayplan === 'function'){
+        try{ (o.dayplan(day, now) || []).forEach(function(n){ if(n && n.at instanceof Date) add(n.key, n.title, n.body, n.at); }); }catch(e){}
+      }
+    }
+    out.sort(function(a, b){ return a.at - b.at; });
+    return out.slice(0, o.limit || 80);
+  }
+  /* لقطة للودجات الأصلية: محاضرات 7 أيام (أوقات epoch) + مهام اليوم + أقرب امتحان. o: { now, entries, space, helpers:{placeOf(e),hueOf(name)}, days } */
+  function widgetData(o){
+    var now = o.now, entries = o.entries || [], space = o.space || {}, h = o.helpers || {}, days = o.days || 7, lectures = [];
+    for(var off = 0; off < days; off++){
+      var day = new Date(now.getFullYear(), now.getMonth(), now.getDate() + off);
+      entries.forEach(function(e){
+        if(e.dayIdx !== day.getDay()) return;
+        var end = e.hasEnd ? e.end : e.start + 60;
+        lectures.push({ s: atMin(day, e.start).getTime(), e: atMin(day, end).getTime(), n: String(e.name || '').slice(0, 60), p: String(h.placeOf ? h.placeOf(e) : (e.room || '')).slice(0, 40), r: String(h.roomOf ? h.roomOf(e) : '').slice(0, 16), h: h.hueOf ? h.hueOf(e.name) : 200 });
+      });
+    }
+    lectures = lectures.filter(function(l){ return l.e > now.getTime(); }).sort(function(a, b){ return a.s - b.s; }).slice(0, 42);
+    var today = ymd(now), due = (space.tasks || []).filter(function(t){ return t && !t.done && t.due && t.due <= today; });
+    var ex = (space.exams || []).filter(function(x){ return x && x.date && x.date >= today; }).sort(function(a, b){ return a.date < b.date ? -1 : 1; })[0], exam = null;
+    if(ex){ var p = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ex.date), tm = toMin(ex.time || ''); if(p) exam = { n: String(ex.name || 'امتحان').slice(0, 50), at: new Date(+p[1], +p[2] - 1, +p[3], tm === null ? 0 : Math.floor(tm / 60), tm === null ? 0 : tm % 60).getTime() }; }
+    /* ودجت الامتحانات (حتى 5 قادمة) وودجت المهام (حتى 8 معلّقة: المتأخرة ثم الأقرب موعداً ثم بلا موعد) */
+    var exams = (space.exams || []).filter(function(x){ return x && x.date && x.date >= today; }).sort(function(a, b){ return a.date === b.date ? String(a.time || '').localeCompare(String(b.time || '')) : (a.date < b.date ? -1 : 1); }).slice(0, 5).map(function(x){
+      var p = /^(\d{4})-(\d{2})-(\d{2})$/.exec(x.date), tm = toMin(x.time || ''); if(!p) return null;
+      return { n: String(x.name || 'امتحان').slice(0, 50), c: String(x.course || '').slice(0, 40), at: new Date(+p[1], +p[2] - 1, +p[3], tm === null ? 0 : Math.floor(tm / 60), tm === null ? 0 : tm % 60).getTime() };
+    }).filter(Boolean);
+    var tl = (space.tasks || []).filter(function(t){ return t && !t.done && t.id != null && t.title; }).sort(function(a, b){ var ad = a.due || '9999-99-99', bd = b.due || '9999-99-99'; return ad === bd ? 0 : (ad < bd ? -1 : 1); }).slice(0, 8).map(function(t){
+      return { i: String(t.id), t: String(t.title).slice(0, 60), c: String(t.course || '').slice(0, 40), d: String(t.due || '').slice(0, 10) };
+    });
+    var dp = null; if(typeof o.dayplan === 'function'){ try{ dp = o.dayplan(now); }catch(e){ dp = null; } }
+    return { v: 2, at: now.getTime(), exams: exams, tl: tl, dp: dp, lectures: lectures, tasks: { due: due.length, titles: due.slice(0, 3).map(function(t){ return String(t.title || '').slice(0, 50); }) }, exam: exam };
+  }
+  /* حضور سُجّل من الودجات (طابور من Java: [{n: اسم المادة, s: بداية المحاضرة}]) → ما نضيفه فعلاً لسجل الحضور. applied: مفاتيح سبق تطبيقها (حماية مزدوجة بجانب منع التكرار بالجهاز). */
+  function attendItems(items, space, applied){
+    var seen = {}, out = [], keys = (applied || []).slice(0), courses = {};
+    keys.forEach(function(k){ seen[k] = 1; });
+    ((space && space.courses) || []).forEach(function(c){ if(c && c.name) courses[c.name] = 1; });
+    var att = (space && space.attendance) || {};
+    (items || []).forEach(function(it){
+      if(!it || typeof it.n !== 'string' || !it.n) return;
+      var k = it.n + '|' + Number(it.s || 0);
+      if(seen[k]) return; seen[k] = 1; keys.push(k);
+      if(courses[it.n] || att[it.n]) out.push({ n: it.n, s: Number(it.s || 0) });
+    });
+    return { apply: out, keys: keys.slice(-120) };
+  }
+  /* ---- تحديث التطبيق (APK) من GitHub Pages: apk/version.json {versionCode, versionName, url, sha256, size, notes[]} ---- */
+  function newerRelease(installedCode, remote, skippedCode){
+    return !!(remote && typeof remote === 'object' && Number(remote.versionCode) > Number(installedCode) && Number(remote.versionCode) !== Number(skippedCode) && /^apk\/[\w.\-]+\.apk$/.test(String(remote.url || '')));
+  }
+  var pure = { attendItems: attendItems, newerRelease: newerRelease, plan: plan, widgetData: widgetData, hashId: hashId, inQuiet: inQuiet };
+  if(!W || !W.document) return pure;
+
+  /* ---------- وقت التشغيل داخل التطبيق ---------- */
+  var d = W.document;
+  function isNative(){ try{ return !!(W.Capacitor && typeof W.Capacitor.isNativePlatform === 'function' && W.Capacitor.isNativePlatform()); }catch(e){ return false; } }
+  var cache = {};
+  function plugin(name){
+    if(cache[name]) return cache[name];
+    var C = W.Capacitor, p = null;
+    try{
+      if(C && typeof C.registerPlugin === 'function') p = C.registerPlugin(name);                 /* حزمة @capacitor/core موجودة */
+      else if(C && C.Plugins && C.Plugins[name]) p = C.Plugins[name];
+      else if(C && typeof C.nativePromise === 'function' && typeof Proxy === 'function'){
+        /* الغلاف يحمّل موقعاً بعيداً (server.url) بدون حزمة core: الجسر المحقون يوفّر nativePromise/addListener فقط، فنبني وسيطاً لكل إضافة */
+        p = new Proxy({}, { get: function(t, m){
+          if(m === 'then' || typeof m !== 'string') return undefined;
+          if(m === 'addListener') return function(ev, cb){ return Promise.resolve(C.addListener(name, ev, cb)); };
+          return function(opts){ return C.nativePromise(name, m, opts || {}); };
+        } });
+      }
+    }catch(e){ p = null; }
+    cache[name] = p;
+    return cache[name];
+  }
+  function prefs(){ try{ return W.NotifyCenter && W.NotifyCenter.prefs ? W.NotifyCenter.prefs() : {}; }catch(e){ return {}; } }
+  function helpers(){
+    var CM = W.CampusMap, SA = W.SmartAssist;
+    return {
+      buildingOf: function(e){ var r = CM && CM.resolve ? CM.resolve(e) : null; return r && r.b ? { id: r.b.id, name: r.b.n } : null; },
+      walk: function(a, b){ return CM.walkMinutes(a, b); },
+      leaveInfo: SA && SA.leaveInfo
+    };
+  }
+  /* skipDp: تذكيرات الخطة مجدولة أصلياً (تطبيق ≥1.8) فما نكررها بـLocalNotifications */
+  function buildPlan(skipDp){
+    var entries = W.Schedule && W.Schedule.entries ? W.Schedule.entries() : [];
+    return plan({ now: new Date(), prefs: prefs(), entries: entries, space: W.space || {}, helpers: helpers(), days: 7, dayplan: (!skipDp && W.DayPlan) ? W.DayPlan.notifs : null });
+  }
+  /* تذكيرات «خطتي اليوم» للتطبيق ≥1.8 (PlanAlarmReceiver): بتنفحص عند وقتها فما بتطلع لو خلصت خطتك من الودجت والتطبيق مسكّر.
+     التطبيق الأقدم يرفض الدالة ← نرجع لـLocalNotifications (تنلغي مع إعادة الجدولة عند فتح التطبيق/الحفظ). */
+  function planAlarmItems(){
+    var DP = W.DayPlan, pr = prefs(), out = [], now = new Date(); if(!DP || pr.dayplan === false) return out;
+    for(var off = 0; off < 7; off++){
+      var day = new Date(now.getFullYear(), now.getMonth(), now.getDate() + off);
+      try{ (DP.notifs(day, now) || []).forEach(function(n){
+        if(!n || !(n.at instanceof Date) || n.at.getTime() <= now.getTime() + 20000 || inQuiet(pr, n.at.getHours() * 60 + n.at.getMinutes())) return;
+        out.push({ at: n.at.getTime(), t: String(n.title).slice(0, 120), b: String(n.body).slice(0, 300), d: String(n.key).slice(0, 10), k: /\|dp-am$/.test(n.key) ? 'am' : /\|dp-rev$/.test(n.key) ? 'rev' : 'rem' });
+      }); }catch(e){}
+    }
+    return out.slice(0, 40);
+  }
+  function planAlarms(){
+    var WB = plugin('WidgetBridge'); if(!WB || typeof WB.planAlarms !== 'function') return Promise.resolve(false);
+    return Promise.resolve().then(function(){ return WB.planAlarms({ data: JSON.stringify(planAlarmItems()) }); })
+      .then(function(r){ return !!(r && typeof r.scheduled === 'number'); }, function(){ return false; });
+  }
+  function widgetHelpers(){
+    var CM = W.CampusMap;
+    return {
+      /* المبنى (+ الطابق) فقط؛ رقم القاعة بحقل منفصل roomOf فيعرضه الودجت بوضوح: «قاعة 101 · الحسين الباني» */
+      placeOf: function(e){ var r = CM && CM.resolve ? CM.resolve(e) : null; if(r && r.b) return r.b.n + (r.fl ? ' · ط' + r.fl : ''); return e.building || ''; },
+      roomOf: function(e){
+        var r = CM && CM.resolve ? CM.resolve(e) : null, t = String(e.room || '').trim();
+        if(r && r.b && r.b.ab) t = t.split(r.b.ab).join('');
+        t = t.replace(/^[\s\-–·:]*(قاعة|قاعه|room)\s*/i, '').replace(/[()]/g, '').trim();
+        return t;
+      },
+      hueOf: function(n){ return W.courseHue ? W.courseHue(n) : 200; }
+    };
+  }
+  function pushWidget(){
+    if(!isNative()) return Promise.resolve({ native: false });
+    var WB = plugin('WidgetBridge'); if(!WB) return Promise.resolve({ native: true, plugin: false });
+    var entries = W.Schedule && W.Schedule.entries ? W.Schedule.entries() : [];
+    var data = widgetData({ now: new Date(), entries: entries, space: W.space || {}, helpers: widgetHelpers(), days: 7, dayplan: W.DayPlan ? W.DayPlan.widget : null });
+    return WB.update({ data: JSON.stringify(data) }).then(function(){ return { native: true, lectures: data.lectures.length }; }, function(e){ return { native: true, error: String(e && e.message || e) }; });
+  }
+  function openWidgetPicker(){
+    var WB = plugin('WidgetBridge'); if(!WB){ if(W.toast) W.toast('الودجات متاحة بتطبيق أندرويد فقط', 'info'); return; }
+    var old = d.getElementById('wgPicker'); if(old) old.remove();
+    var ov = d.createElement('div'); ov.id = 'wgPicker'; ov.className = 'ocri-overlay'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true');
+    var box = d.createElement('div'); box.className = 'ocri-box'; ov.appendChild(box);
+    function t(tag, cls, text){ var e = d.createElement(tag); if(cls) e.className = cls; if(text != null) e.textContent = text; return e; }
+    box.appendChild(t('div', 'ocri-title', '📱 أضف ودجت للشاشة الرئيسية'));
+    box.appendChild(t('div', 'ocri-sub', 'اختر الودجت وبيطلع لك طلب من أندرويد لإضافته. بتتحدّث تلقائياً من جدولك.'));
+    var list = t('div', 'wg-list');
+    var AU = plugin('AppUpdater'), PLAN_VC = 9;   /* ودجت الخطة من تطبيق 1.8 (versionCode 9)؛ الأقدم كان بيثبّت «المحاضرة الجاية» بدلها */
+    [['plan', '📚', 'خطتي اليوم', 'شو تدرس من كل مادة + 🔥 السلسلة + زر ○ للتشييك — بيحمرّ بعد 8 م لو ما خلصت (4×3)'], ['next', '⏭', 'المحاضرة الجاية', 'اسم + عدّاد تنازلي حيّ + القاعة والمبنى + زر ✓ حضرت (2×2)'], ['today', '📅', 'جدول اليوم', 'كل محاضرات اليوم بألوان المواد + المهام (4×3)'], ['actions', '⚡', 'اختصارات سريعة', 'حضرت ✅ · مهمة · الخريطة · الجدول (4×1)'], ['exams', '📝', 'الامتحانات', 'عدّ تنازلي لأقرب امتحاناتك بألوان الاستعجال (4×2)'], ['tasks', '✅', 'المهام', 'مهامك المعلّقة وزر ○ لإنجازها من الشاشة الرئيسية (4×3)'], ['where', '📍', 'أين أنا؟', 'داخل أو خارج حدود الجامعة وأقرب مبنى — اضغط ⟳ للتحديث (4×1)']].forEach(function(x){
+      var b = t('button', 'wg-opt'); b.type = 'button'; b.setAttribute('data-wg', x[0]);
+      b.appendChild(t('span', 'wg-ic', x[1])); var tx = t('span', 'wg-tx'); tx.appendChild(t('b', null, x[2])); tx.appendChild(t('small', null, x[3])); b.appendChild(tx);
+      b.addEventListener('click', function(){
+        if(x[0] === 'plan'){
+          var vc = AU && AU.info ? Promise.resolve().then(function(){ return AU.info(); }).then(function(i){ return Number(i && i.versionCode) || 0; }, function(){ return 0; }) : Promise.resolve(0);
+          vc.then(function(v){
+            if(v >= PLAN_VC){ pushWidget(); WB.pin({ type: 'plan' }).then(function(r){ ov.remove(); if(!r || !r.requested){ if(W.toast) W.toast('اضغط مطوّلاً على الشاشة الرئيسية ← الودجات ← مساحتي الدراسية', 'info', 8000); } }, function(){ ov.remove(); }); }
+            else { ov.remove(); if(W.toast) W.toast('ودجت «خطتي اليوم» بيحتاج تحديث التطبيق لـ1.8 — بفحص التحديث هسا', 'info', 5000); checkUpdate(true); }
+          });
+          return;
+        }
+        pushWidget(); WB.pin({ type: x[0] }).then(function(r){
+          ov.remove();
+          if(!r || !r.requested) { if(W.toast) W.toast('جهازك ما بيدعم الإضافة المباشرة — اضغط مطوّلاً على الشاشة الرئيسية ← الودجات ← مساحتي الدراسية', 'info', 8000); }
+        }, function(){ ov.remove(); if(W.toast) W.toast('تعذّر طلب الإضافة — جرّب من الودجات بالشاشة الرئيسية', 'warn', 6000); });
+      });
+      list.appendChild(b);
+    });
+    box.appendChild(list);
+    var cl = t('button', 'ocri-btn ghost', 'إغلاق'); cl.type = 'button'; cl.addEventListener('click', function(){ ov.remove(); });
+    var row = t('div', 'ocri-actions'); row.appendChild(cl); box.appendChild(row);
+    ov.addEventListener('click', function(e){ if(e.target === ov) ov.remove(); });
+    d.body.appendChild(ov);
+  }
+  /* ---------- تحديث التطبيق ---------- */
+  var UP_KEY = 'ss_apk_check', SKIP_KEY = 'ss_apk_skip', CHECK_EVERY = 6 * 3600 * 1000;
+  function siteBase(){ return W.location.origin + W.location.pathname.replace(/[^\/]*$/, ''); }
+  function lsg(k){ try{ return W.localStorage.getItem(k); }catch(e){ return null; } }
+  function lss(k, v){ try{ W.localStorage.setItem(k, v); }catch(e){} }
+  function el(tag, cls, text){ var e = d.createElement(tag); if(cls) e.className = cls; if(text != null) e.textContent = text; return e; }
+  function showUpdate(inf, rem){
+    var AU = plugin('AppUpdater'); var old = d.getElementById('upDlg'); if(old) old.remove();
+    var ov = el('div', 'ocri-overlay'); ov.id = 'upDlg'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true');
+    var box = el('div', 'ocri-box up-box'); ov.appendChild(box);
+    box.appendChild(el('div', 'ocri-title', '🔄 تحديث جديد للتطبيق'));
+    box.appendChild(el('div', 'ocri-sub', 'الإصدار ' + (rem.versionName || rem.versionCode) + ' (عندك ' + (inf.versionName || inf.versionCode) + ')' + (rem.size ? ' · ' + Math.round(rem.size / 1024 / 1024 * 10) / 10 + ' ميجا' : '')));
+    if(Array.isArray(rem.notes) && rem.notes.length){ var ul = el('ul', 'up-notes'); rem.notes.slice(0, 8).forEach(function(n){ ul.appendChild(el('li', null, String(n).slice(0, 140))); }); box.appendChild(ul); }
+    var bar = el('div', 'up-bar'); bar.hidden = true; var fill = el('i'); bar.appendChild(fill); box.appendChild(bar);
+    var msg = el('div', 'ocri-note', 'الموقع نفسه بيتحدّث تلقائياً؛ هالتحديث للتطبيق (ميزات أندرويد الجديدة). بياخد دقيقة.'); box.appendChild(msg);
+    var row = el('div', 'ocri-actions'), go = el('button', 'ocri-btn', 'تحديث الآن'), later = el('button', 'ocri-btn ghost', 'لاحقاً'), skip = el('button', 'ocri-btn ghost', 'تخطي هالإصدار');
+    go.type = later.type = skip.type = 'button';
+    later.addEventListener('click', function(){ ov.remove(); });
+    skip.addEventListener('click', function(){ lss(SKIP_KEY, String(rem.versionCode)); ov.remove(); });
+    go.addEventListener('click', function(){
+      go.disabled = true; later.disabled = true; skip.disabled = true; bar.hidden = false; msg.textContent = 'جاري التنزيل…';
+      var hp = AU.addListener ? AU.addListener('progress', function(e){ fill.style.width = (e && e.pct || 0) + '%'; msg.textContent = 'جاري التنزيل… ' + (e && e.pct || 0) + '%'; }) : null;
+      AU.install({ url: siteBase() + rem.url, sha256: rem.sha256 || '' }).then(function(r){
+        if(hp && hp.then) hp.then(function(h){ h && h.remove && h.remove(); });
+        if(r && r.needsPermission){ msg.textContent = 'فعّل «السماح بالتثبيت من هالمصدر» لمساحتي الدراسية بالصفحة اللي فتحتها، وارجع واضغط «تحديث الآن» من جديد.'; bar.hidden = true; go.disabled = false; later.disabled = false; skip.disabled = false; return; }
+        msg.textContent = 'فتحت شاشة التثبيت — أكّد التحديث من أندرويد.'; fill.style.width = '100%'; later.disabled = false; later.textContent = 'إغلاق';
+      }, function(e){ msg.textContent = 'فشل التحديث: ' + String(e && e.message || e).slice(0, 120) + ' — جرّب بعد شوي.'; bar.hidden = true; go.disabled = false; later.disabled = false; skip.disabled = false; });
+    });
+    row.appendChild(go); row.appendChild(later); row.appendChild(skip); box.appendChild(row); d.body.appendChild(ov);
+  }
+  function checkUpdate(manual){
+    if(!isNative()) return Promise.resolve({ native: false });
+    var AU = plugin('AppUpdater'); if(!AU || !AU.info) return Promise.resolve({ native: true, plugin: false });
+    if(!manual && Date.now() - Number(lsg(UP_KEY) || 0) < CHECK_EVERY) return Promise.resolve({ skipped: true });
+    return AU.info().then(function(inf){
+      return W.fetch(siteBase() + 'apk/version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r){ if(!r.ok) throw new Error('http ' + r.status); return r.json(); }).then(function(rem){
+        lss(UP_KEY, String(Date.now()));
+        var sub = d.getElementById('updateSub'); if(sub) sub.textContent = 'الإصدار ' + inf.versionName + (newerRelease(inf.versionCode, rem, 0) ? ' — في تحديث ' + (rem.versionName || '') : ' — آخر إصدار ✓');
+        if(newerRelease(inf.versionCode, rem, manual ? 0 : lsg(SKIP_KEY))){ showUpdate(inf, rem); return { update: true, remote: rem }; }
+        if(manual && W.toast) W.toast('✅ أنت على آخر إصدار (' + inf.versionName + ')', 'success', 3000);
+        return { update: false };
+      });
+    }).catch(function(e){ if(manual && W.toast) W.toast('تعذّر فحص التحديثات — تأكد من الإنترنت', 'warn', 4000); return { error: String(e && e.message || e) }; });
+  }
+  var AK = 'ss_att_applied';
+  function pullAttendance(){
+    if(!isNative()) return Promise.resolve({ native: false });
+    var WB = plugin('WidgetBridge'); if(!WB || !WB.takePending) return Promise.resolve({ plugin: false });
+    return WB.takePending().then(function(r){
+      var applied = []; try{ applied = JSON.parse(lsg(AK) || '[]'); }catch(e){}
+      var res = attendItems(r && r.items, W.space || {}, applied);
+      lss(AK, JSON.stringify(res.keys));
+      if(!res.apply.length || typeof W.markAttendance !== 'function') return { applied: 0 };
+      res.apply.forEach(function(x){ W.markAttendance(x.n, 'present'); });
+      if(W.toast){ var names = []; res.apply.forEach(function(x){ if(names.indexOf(x.n) < 0) names.push(x.n); }); W.toast('✅ سُجّل حضورك من الودجت: ' + names.slice(0, 3).join('، '), 'success', 4500); }
+      return { applied: res.apply.length };
+    }, function(){ return { error: true }; });
+  }
+  /* مهام أُنجزت من ودجت المهام (طابور من Java: ids) → نطبّق toggleTask فقط للمهام المعلّقة الموجودة فعلاً (لا نعيد فتح مهمة) */
+  function pullTasks(){
+    if(!isNative()) return Promise.resolve({ native: false });
+    var WB = plugin('WidgetBridge'); if(!WB || !WB.takePendingTasks) return Promise.resolve({ plugin: false });
+    return WB.takePendingTasks().then(function(r){
+      var ids = (r && r.ids) || [], n = 0, tasks = (W.space && W.space.tasks) || [];
+      ids.forEach(function(id){
+        var t = tasks.filter(function(x){ return x && String(x.id) === String(id); })[0];
+        if(t && !t.done && typeof W.toggleTask === 'function'){ W.toggleTask(t.id); n++; }
+      });
+      if(n && W.toast) W.toast('✅ أُنجزت من الودجت: ' + n + (n === 1 ? ' مهمة' : ' مهام'), 'success', 3500);
+      return { applied: n };
+    }, function(){ return { error: true }; });
+  }
+  /* بنود «خطتي اليوم» شُيّكت من الودجت (طابور {d,k}) → DayPlan.toggle لبنود اليوم المفتوحة فقط (ما بنلغي تشييك) */
+  function pullPlan(){
+    if(!isNative()) return Promise.resolve({ native: false });
+    var WB = plugin('WidgetBridge'); if(!WB || typeof WB.takePendingPlan !== 'function' || !W.DayPlan) return Promise.resolve({ plugin: false });
+    return Promise.resolve().then(function(){ return WB.takePendingPlan(); }).then(function(r){
+      var items = (r && r.items) || [], today = ymd(new Date()), n = 0;
+      items.forEach(function(x){
+        if(!x || x.d !== today || typeof x.k !== 'string') return;
+        var hit = null; W.DayPlan.viewFor(today).courses.forEach(function(c){ c.items.forEach(function(it){ if(it.k === x.k) hit = it; }); });
+        if(hit && !hit.d && W.DayPlan.toggle(hit.k)) n++;
+      });
+      if(n && W.toast) W.toast('✅ سجّلت من الودجت: ' + n + (n === 1 ? ' بند' : ' بنود') + ' بخطة اليوم', 'success', 3500);
+      return { applied: n };
+    }, function(){ return { error: true }; });
+  }
+  var permAsked = false, scheduling = false, again = false;
+  function schedule(){
+    if(!isNative()) return Promise.resolve({ native: false });
+    var LN = plugin('LocalNotifications'); if(!LN) return Promise.resolve({ native: true, plugin: false });
+    if(scheduling){ again = true; return Promise.resolve({ queued: true }); }
+    scheduling = true;
+    var p = (LN.checkPermissions ? LN.checkPermissions() : Promise.resolve({ display: 'granted' })).then(function(st){
+      if(st && st.display === 'prompt' || st && st.display === 'prompt-with-rationale'){ if(permAsked) return st; permAsked = true; return LN.requestPermissions(); }
+      return st;
+    }).then(function(st){
+      if(!st || st.display !== 'granted') return { native: true, permission: st && st.display };
+      return planAlarms().then(function(nativeDp){
+        var items = buildPlan(nativeDp);
+        return LN.getPending().then(function(pend){ var list = (pend && pend.notifications) || []; return list.length ? LN.cancel({ notifications: list.map(function(n){ return { id: n.id }; }) }) : null; }).then(function(){
+          if(!items.length) return { native: true, scheduled: 0, planAlarms: nativeDp };
+          return LN.schedule({ notifications: items.map(function(n){ return { id: n.id, title: n.title, body: n.body, schedule: { at: (n.at && n.at.toISOString) ? n.at.toISOString() : n.at, allowWhileIdle: true }, smallIcon: 'ic_stat_icon', extra: { key: n.key } }; }) }).then(function(){ return { native: true, scheduled: items.length, planAlarms: nativeDp }; });
+        });
+      });
+    }).catch(function(e){ return { native: true, error: String(e && e.message || e) }; }).then(function(r){ scheduling = false; if(again){ again = false; setTimeout(schedule, 1500); } return r; });
+    return p;
+  }
+  var tmr = null; function scheduleSoon(){ if(!isNative()) return; clearTimeout(tmr); tmr = setTimeout(function(){ schedule(); pushWidget(); }, 2500); }
+
+  /* ---------- تنزيل الملفات عبر مشاركة أندرويد ---------- */
+  function toBase64(blob){ return new Promise(function(res, rej){ var fr = new W.FileReader(); fr.onload = function(){ var s = String(fr.result); res(s.slice(s.indexOf(',') + 1)); }; fr.onerror = rej; fr.readAsDataURL(blob); }); }
+  function saveNative(href, name){
+    var FS = plugin('Filesystem'), SH = plugin('Share'); if(!FS || !SH) return Promise.reject(new Error('plugins'));
+    return W.fetch(href).then(function(r){ return r.blob(); }).then(toBase64).then(function(b64){
+      var fname = String(name || 'file').replace(/[\\/:*?"<>|]+/g, '_').slice(0, 80) || 'file';
+      return FS.writeFile({ path: fname, data: b64, directory: 'CACHE' }).then(function(r){ return SH.share({ title: fname, text: fname, url: r.uri, dialogTitle: 'احفظ أو شارك الملف' }); });
+    });
+  }
+  function patchDownloads(){
+    if(!isNative() || W.HTMLAnchorElement.prototype._nativeDl) return;
+    var orig = W.HTMLAnchorElement.prototype.click; W.HTMLAnchorElement.prototype._nativeDl = true;
+    W.HTMLAnchorElement.prototype.click = function(){
+      var a = this, href = a.href || '';
+      if(a.hasAttribute('download') && /^(blob:|data:)/.test(href)){
+        saveNative(href, a.getAttribute('download')).catch(function(){ if(W.toast) W.toast('تعذّر حفظ الملف على الجهاز', 'warn', 4000); });
+        return;
+      }
+      return orig.apply(a, arguments);
+    };
+  }
+
+  function init(){
+    if(!isNative()) return;
+    d.documentElement.classList.add('native-app');
+    patchDownloads();
+    pullAttendance().then(function(){ return pullTasks(); }).then(function(){ return pullPlan(); }).then(function(){ schedule(); pushWidget(); });
+    var ub = d.getElementById('updateBtn'); if(ub && !ub._up){ ub._up = true; ub.addEventListener('click', function(){ if(W.closeSettingsMenu) W.closeSettingsMenu(); checkUpdate(true); }); }
+    setTimeout(function(){ checkUpdate(false); }, 6000);
+    var wb = d.getElementById('widgetBtn'); if(wb && !wb._wg){ wb._wg = true; wb.addEventListener('click', function(){ if(W.closeSettingsMenu) W.closeSettingsMenu(); openWidgetPicker(); }); }
+    d.addEventListener('visibilitychange', function(){ if(d.visibilityState === 'visible'){ pullAttendance(); pullTasks(); pullPlan(); scheduleSoon(); } });
+    if(typeof W.saveSpace === 'function' && !W.saveSpace._nb){ var orig = W.saveSpace; W.saveSpace = function(){ var r = orig.apply(this, arguments); scheduleSoon(); return r; }; W.saveSpace._nb = true; }
+  }
+  if(d.readyState === 'loading') d.addEventListener('DOMContentLoaded', function(){ setTimeout(init, 1500); }); else setTimeout(init, 1500);
+
+  return Object.assign(pure, { pullAttendance: pullAttendance, pullTasks: pullTasks, pullPlan: pullPlan, planAlarmItems: planAlarmItems, checkUpdate: checkUpdate, showUpdate: showUpdate, pushWidget: pushWidget, openWidgetPicker: openWidgetPicker, isNative: isNative, schedule: schedule, buildPlan: buildPlan, saveNative: saveNative, patchDownloads: patchDownloads, _plugin: plugin, _reset: function(){ cache = {}; } });
+});

@@ -1,0 +1,62 @@
+<section class=section tab-play active id=attendance>
+  <div class=page-head>
+    <h2 class=page-title>
+      "✅ الحضور"
+    <p class=page-sub>
+      "سجّل حضورك"
+  <div class=controls>
+    <button class=btn id=btnAddAtt>
+      "+ مادة"
+  <div id=attendanceList>
+    <div class=att-card>
+      <div class=att-head>
+        <div class=att-name>
+          <span class=course-link data-open-course=حساب التفاضل والتكامل 1 role=link title=فتح صفحة المادة>
+            "📚 حساب التفاضل والتكامل 1"
+        <div>
+          <div class=att-pct good>
+            "89%"
+          <button class=unified-course-btn added data-course-name=حساب التفاضل والتكامل 1 title=حذف من كل الأماكن>
+            "🗑"
+      <div class=att-bar>
+        <div class=att-fill good>
+      <div class=att-actions>
+        <span>
+          "✅"
+          <b>
+            "8"
+          "· ❌"
+          <b>
+            "1"
+        <button class=btn btn-sm data-mark-p=حساب التفاضل والتكامل 1>
+          "+ حاضر"
+        <button class=btn btn-sm btn-ghost data-mark-a=حساب التفاضل والتكامل 1>
+          "+ غائب"
+      <div class=att-hint warn role=status>
+        "تقدر تغيب 1 مرة إضافية فقط قبل 75% (حد التنبيه) بدون حضور جديد. لو غبت أسبوعاً كاملاً (1 محاضرة بجدولك) بتصير نسبتك 80%."
+    <div class=att-card>
+      <div class=att-head>
+        <div class=att-name>
+          <span class=course-link data-open-course=البرمجة بلغة C++ role=link title=فتح صفحة المادة>
+            "📚 البرمجة بلغة C++"
+        <div>
+          <div class=att-pct good>
+            "100%"
+          <button class=unified-course-btn added data-course-name=البرمجة بلغة C++ title=حذف من كل الأماكن>
+            "🗑"
+      <div class=att-bar>
+        <div class=att-fill good>
+      <div class=att-actions>
+        <span>
+          "✅"
+          <b>
+            "7"
+          "· ❌"
+          <b>
+            "0"
+        <button class=btn btn-sm data-mark-p=البرمجة بلغة C++>
+          "+ حاضر"
+        <button class=btn btn-sm btn-ghost data-mark-a=البرمجة بلغة C++>
+          "+ غائب"
+      <div class=att-hint warn role=status>
+        "تقدر تغيب 2 مرات إضافية فقط قبل 75% (حد التنبيه) بدون حضور جديد. لو غبت أسبوعاً كاملاً (2 محاضرات بجدولك) بتصير نسبتك 78%."

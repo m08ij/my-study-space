@@ -1,0 +1,249 @@
+<section class=section tab-play active id=hulinks>
+  <div class=page-head>
+    <h2 class=page-title>
+      "🎓 روابط الجامعة الهاشمية"
+    <p class=page-sub>
+      "كل ما تحتاجه من خدمات الجامعة"
+  <div class=hu-hero>
+    <div class=hu-hero-icon>
+      "🎓"
+    <div class=hu-hero-info>
+      <h3>
+        "الجامعة الهاشمية"
+      <p>
+        "بوابة الطالب، البريد، المكتبة، التعلم الإلكتروني"
+  <h3 aria-expanded=true class=hu-grp open role=button>
+    "🔗 الخدمات الأساسية"
+  <div class=grid grid-2 id=huMainLinks>
+    <a class=hu-link href=https://reg1.hu.edu.jo/ rel=noopener noreferrer target=_blank>
+      <div class=hu-link-icon>
+        "🎓"
+      <div class=hu-link-body>
+        <div class=hu-link-title>
+          "بوابة الطالب المباشرة"
+        <div class=hu-link-desc>
+          "الرسوم، الجدول، العلامات، البريد"
+      <div class=hu-link-arrow>
+        "←"
+    <a class=hu-link href=https://lms.hu.edu.jo/my/ rel=noopener noreferrer target=_blank>
+      <div class=hu-link-icon>
+        "📚"
+      <div class=hu-link-body>
+        <div class=hu-link-title>
+          "التعلم الإلكتروني (Moodle)"
+        <div class=hu-link-desc>
+          "المحاضرات، الواجبات، المواد"
+      <div class=hu-link-arrow>
+        "←"
+    <a class=hu-link href=https://hu.edu.jo/ rel=noopener noreferrer target=_blank>
+      <div class=hu-link-icon>
+        "🌐"
+      <div class=hu-link-body>
+        <div class=hu-link-title>
+          "الموقع الرسمي للجامعة"
+        <div class=hu-link-desc>
+          "الأخبار، الإعلانات، الكليات"
+      <div class=hu-link-arrow>
+        "←"
+    <a class=hu-link href=https://hu.edu.jo/unitCenter/class_a.aspx?t=0&unitid=40000000 rel=noopener noreferrer target=_blank>
+      <div class=hu-link-icon>
+        "📊"
+      <div class=hu-link-body>
+        <div class=hu-link-title>
+          "الخطة الدراسية"
+        <div class=hu-link-desc>
+          "الخطط الدراسية للتخصصات"
+      <div class=hu-link-arrow>
+        "←"
+    <a class=hu-link href=https://www.efawateercom.jo/ rel=noopener noreferrer target=_blank>
+      <div class=hu-link-icon>
+        "💰"
+      <div class=hu-link-body>
+        <div class=hu-link-title>
+          "دفع الرسوم (eFawateercom)"
+        <div class=hu-link-desc>
+          "دفع الرسوم الجامعية إلكترونيًا"
+      <div class=hu-link-arrow>
+        "←"
+  <h3 aria-expanded=false class=hu-grp role=button>
+    "📚 المكتبة والمصادر"
+  <div class=grid grid-2 id=huLibraryLinks>
+    <a class=hu-link href=https://library.hu.edu.jo/ rel=noopener noreferrer target=_blank>
+      <div class=hu-link-icon>
+        "📖"
+      <div class=hu-link-body>
+        <div class=hu-link-title>
+          "المكتبة الرقمية"
+        <div class=hu-link-desc>
+          "كتب إلكترونية وقواعد بيانات"
+      <div class=hu-link-arrow>
+        "←"
+    <a class=hu-link href=https://library.hu.edu.jo/ rel=noopener noreferrer target=_blank>
+      <div class=hu-link-icon>
+        "🔍"
+      <div class=hu-link-body>
+        <div class=hu-link-title>
+          "قواعد البيانات العلمية"
+        <div class=hu-link-desc>
+          "IEEE، Springer، ScienceDirect"
+      <div class=hu-link-arrow>
+        "←"
+    <a class=hu-link href=https://hu.edu.jo/ rel=noopener noreferrer target=_blank>
+      <div class=hu-link-icon>
+        "📰"
+      <div class=hu-link-body>
+        <div class=hu-link-title>
+          "المجلات العلمية المحكمة"
+        <div class=hu-link-desc>
+          "مجلة الجامعة الهاشمية"
+      <div class=hu-link-arrow>
+        "←"
+    <a class=hu-link href=https://scholar.google.com/ rel=noopener noreferrer target=_blank>
+      <div class=hu-link-icon>
+        "🎓"
+      <div class=hu-link-body>
+        <div class=hu-link-title>
+          "Google Scholar"
+        <div class=hu-link-desc>
+          "بحث الأوراق العلمية والمراجع"
+      <div class=hu-link-arrow>
+        "←"
+  <h3 aria-expanded=false class=hu-grp role=button>
+    "💻 لتخصصي (هندسة حاسوب)"
+  <div class=grid grid-2 id=huMajorLinks>
+    <a class=hu-link href=https://elcom-team.com/ rel=noopener noreferrer target=_blank>
+      <div class=hu-link-icon>
+        "🤝"
+      <div class=hu-link-body>
+        <div class=hu-link-title>
+          "ElCoM — لجنة الطلبة"
+        <div class=hu-link-desc>
+          "موقع لجنة طلبة هندسة الحاسوب (ElCoM)"
+      <div class=hu-link-arrow>
+        "←"
+    <a class=hu-link href=https://github.com/ rel=noopener noreferrer target=_blank>
+      <div class=hu-link-icon>
+        "🐙"
+      <div class=hu-link-body>
+        <div class=hu-link-title>
+          "GitHub"
+        <div class=hu-link-desc>
+          "مشاريعك وأكوادك ومحفظة أعمالك"
+      <div class=hu-link-arrow>
+        "←"
+    <a class=hu-link href=https://developer.mozilla.org/ rel=noopener noreferrer target=_blank>
+      <div class=hu-link-icon>
+        "📘"
+      <div class=hu-link-body>
+        <div class=hu-link-title>
+          "MDN Web Docs"
+        <div class=hu-link-desc>
+          "مرجع HTML وCSS وJavaScript"
+      <div class=hu-link-arrow>
+        "←"
+    <a class=hu-link href=https://www.geeksforgeeks.org/ rel=noopener noreferrer target=_blank>
+      <div class=hu-link-icon>
+        "💻"
+      <div class=hu-link-body>
+        <div class=hu-link-title>
+          "GeeksforGeeks"
+        <div class=hu-link-desc>
+          "خوارزميات وهياكل بيانات ومقابلات"
+      <div class=hu-link-arrow>
+        "←"
+    <a class=hu-link href=https://www.wolframalpha.com/ rel=noopener noreferrer target=_blank>
+      <div class=hu-link-icon>
+        "🧮"
+      <div class=hu-link-body>
+        <div class=hu-link-title>
+          "Wolfram Alpha"
+        <div class=hu-link-desc>
+          "حل رياضيات وتفاضل وجبر خطي"
+      <div class=hu-link-arrow>
+        "←"
+    <a class=hu-link href=https://www.coursera.org/ rel=noopener noreferrer target=_blank>
+      <div class=hu-link-icon>
+        "🎬"
+      <div class=hu-link-body>
+        <div class=hu-link-title>
+          "Coursera"
+        <div class=hu-link-desc>
+          "مساقات جامعية عالمية"
+      <div class=hu-link-arrow>
+        "←"
+  <h3 aria-expanded=false class=hu-grp role=button>
+    "🏛️ منصات الجامعة"
+  <div class=grid grid-2 id=huAppLinks>
+    <a class=hu-link href=https://outlook.office.com/mail/ rel=noopener noreferrer target=_blank>
+      <div class=hu-link-icon>
+        "📧"
+      <div class=hu-link-body>
+        <div class=hu-link-title>
+          "Outlook الجامعي"
+        <div class=hu-link-desc>
+          "البريد الإلكتروني"
+      <div class=hu-link-arrow>
+        "←"
+    <a class=hu-link href=https://teams.microsoft.com/ rel=noopener noreferrer target=_blank>
+      <div class=hu-link-icon>
+        "💬"
+      <div class=hu-link-body>
+        <div class=hu-link-title>
+          "Microsoft Teams"
+        <div class=hu-link-desc>
+          "المحاضرات والاجتماعات"
+      <div class=hu-link-arrow>
+        "←"
+    <a class=hu-link href=https://onedrive.live.com/ rel=noopener noreferrer target=_blank>
+      <div class=hu-link-icon>
+        "📁"
+      <div class=hu-link-body>
+        <div class=hu-link-title>
+          "OneDrive"
+        <div class=hu-link-desc>
+          "الملفات السحابية"
+      <div class=hu-link-arrow>
+        "←"
+  <h3 aria-expanded=false class=hu-grp role=button>
+    "🆘 الدعم والمساعدة"
+  <div class=grid grid-2 id=huSupportLinks>
+    <a class=hu-link href=tel:+96253903333 rel=noopener noreferrer target=_blank>
+      <div class=hu-link-icon>
+        "📞"
+      <div class=hu-link-body>
+        <div class=hu-link-title>
+          "هاتف الجامعة"
+        <div class=hu-link-desc>
+          "+962 5 3903333"
+      <div class=hu-link-arrow>
+        "←"
+    <a class=hu-link href=mailto:info@hu.edu.jo rel=noopener noreferrer target=_blank>
+      <div class=hu-link-icon>
+        "📧"
+      <div class=hu-link-body>
+        <div class=hu-link-title>
+          "البريد الرسمي"
+        <div class=hu-link-desc>
+          "info@hu.edu.jo"
+      <div class=hu-link-arrow>
+        "←"
+    <a class=hu-link href=https://hu.edu.jo/ rel=noopener noreferrer target=_blank>
+      <div class=hu-link-icon>
+        "📋"
+      <div class=hu-link-body>
+        <div class=hu-link-title>
+          "دليل الطالب"
+        <div class=hu-link-desc>
+          "التعليمات والأنظمة"
+      <div class=hu-link-arrow>
+        "←"
+    <a class=hu-link href=https://www.facebook.com/HashemiteUniversity rel=noopener noreferrer target=_blank>
+      <div class=hu-link-icon>
+        "💬"
+      <div class=hu-link-body>
+        <div class=hu-link-title>
+          "فيسبوك الجامعة"
+        <div class=hu-link-desc>
+          "آخر الأخبار"
+      <div class=hu-link-arrow>
+        "←"

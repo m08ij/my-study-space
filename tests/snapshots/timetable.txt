@@ -1,0 +1,403 @@
+<section class=section tt-view-week tt-has-data tab-play active id=timetable>
+  <div class=page-head>
+    <h2 class=page-title>
+      "📅 الجدول الأسبوعي"
+    <p class=page-sub>
+      "أضف موادك بشكل تفاعلي ذكي"
+  <div class=grid grid-2>
+    <div class=card data-tui-replaced=1>
+      <div>
+        <div>
+          "📅"
+        <div>
+          "إضافة جدول"
+        <div>
+          "اكتب رقم المادة — نعبّي الاسم والساعات تلقائياً."
+          <br>
+          "اختر الأيام والوقت بضغطة واحدة."
+        <button class=btn id=btnOpenSmartTimetable>
+          "➕ إضافة جدول"
+        <div class=ocri-page id=ocrPageBox>
+          <div class=ocri-page-row>
+            <button class=btn id=btnOcrTimetable type=button>
+              "📷 استيراد من صورة"
+            <button class=btn btn-ghost id=btnOcrCamera type=button>
+              "📸 تصوير"
+          <div class=ocri-page-hint>
+            "صورة أو لقطة شاشة لجدولك (حتى عدة صور) — أو الصقها هنا (Ctrl+V) أو اسحبها. بتتحلّل بـGemini وبتراجعها قبل الحفظ."
+    <div class=card>
+      <h3>
+        "✨ أدوات سريعة"
+      <button class=btn id=btnLoadExample>
+        "🎯 تجربة مثال"
+      <button class=btn id=btnPasteOcr>
+        "📋 تجربة OCR"
+      <button class=btn id=btnAutoFill>
+        "✨ توليد من موادي"
+      <button class=btn id=btnPrintTt>
+        "🖨️ طباعة"
+  <div class=controls>
+    <button class=btn id=btnAddClass>
+      "+ محاضرة"
+    <button class=btn id=btnSmartAddClass type=button>
+      "✨ إضافة دفعة"
+    <button class=btn btn-sm btn-ghost id=btnShareTt>
+      "🖼️ مشاركة كصورة"
+    <button class=btn btn-sm btn-ghost id=btnClearTt>
+      "🗑 مسح الجدول"
+  <div class=tt-daybar id=ttDayBar>
+    <div class=tt-row>
+      <span class=tt-weeknav>
+        <button aria-label=الأسبوع السابق class=tt-step data-wk=-1 title=الأسبوع السابق type=button>
+          "›"
+        <span class=tt-weeklabel>
+          "هذا الأسبوع · 11/10 – 15/10"
+        <button aria-label=الأسبوع التالي class=tt-step data-wk=1 title=الأسبوع التالي type=button>
+          "‹"
+      <button class=tt-chip data-view=today title=العودة لليوم الحالي type=button>
+        "اليوم"
+    <div class=tt-row tt-days>
+      <button class=tt-chip active data-view=week type=button>
+        "الأسبوع"
+      <button class=tt-chip data-view=Sun type=button>
+        "الأحد"
+      <button class=tt-chip data-view=Mon type=button>
+        "الاثنين"
+      <button class=tt-chip data-view=Tue type=button>
+        "الثلاثاء"
+      <button class=tt-chip data-view=Wed type=button>
+        "الأربعاء •"
+      <button class=tt-chip data-view=Thu type=button>
+        "الخميس"
+  <div class=tt-conflict-bar id=ttConflictBar>
+  <div class=timetable-wrap>
+    <table class=timetable id=timetableTable>
+      <thead>
+        <tr>
+          <th>
+          <th>
+            "الأحد"
+            <small class=tt-date>
+              "11/10"
+          <th>
+            "الاثنين"
+            <small class=tt-date>
+              "12/10"
+          <th>
+            "الثلاثاء"
+            <small class=tt-date>
+              "13/10"
+          <th data-today=1>
+            "الأربعاء"
+            <small class=tt-date>
+              "14/10"
+          <th>
+            "الخميس"
+            <small class=tt-date>
+              "15/10"
+      <tbody>
+        <tr>
+          <td class=time-col>
+            "09:00"
+          <td>
+            <div class=class-block data-edit=Sun-09:00 role=button title=البرمجة بلغة C++ — 09:00–10:00 (1 س) — م.ش 205>
+              <span class=name>
+                "البرمجة بلغة C++"
+              <span class=tt-time>
+                <bdi dir=ltr>
+                  "09:00–10:00"
+                "· 1 س"
+              <span class=room>
+                "📍 م.ش 205"
+          <td>
+            <div class=cell-empty data-add=Mon-09:00>
+              "+"
+          <td>
+            <div class=cell-empty data-add=Tue-09:00>
+              "+"
+          <td class=tt-today-col>
+            <div class=class-block data-edit=Wed-09:00 role=button title=حساب التفاضل والتكامل 1 — 09:00–10:00 (1 س) — ح.ب 104>
+              <span class=name>
+                "حساب التفاضل والتكامل 1"
+              <span class=tt-time>
+                <bdi dir=ltr>
+                  "09:00–10:00"
+                "· 1 س"
+              <span class=room>
+                "📍 ح.ب 104"
+          <td>
+            <div class=cell-empty data-add=Thu-09:00>
+              "+"
+        <tr>
+          <td colspan=6>
+            "فجوة 1 س"
+        <tr>
+          <td class=time-col>
+            "11:00"
+          <td>
+            <div class=cell-empty data-add=Sun-11:00>
+              "+"
+          <td>
+            <div class=cell-empty data-add=Mon-11:00>
+              "+"
+          <td>
+            <div class=cell-empty data-add=Tue-11:00>
+              "+"
+          <td class=tt-today-col>
+            <div class=class-block tt-next data-edit=Wed-11:00 role=button title=البرمجة بلغة C++ — 11:00–12:00 (1 س) — م.ش 205>
+              <span class=name>
+                "البرمجة بلغة C++"
+              <span class=tt-time>
+                <bdi dir=ltr>
+                  "11:00–12:00"
+                "· 1 س"
+              <span class=room>
+                "📍 م.ش 205"
+              <span class=tt-badge next>
+                "التالية"
+          <td>
+            <div class=cell-empty data-add=Thu-11:00>
+              "+"
+  <div class=card sp-card id=studyPlanCard>
+    <div class=sp-head>
+      <h3>
+        "📚 جدول المذاكرة المقترح"
+      <div>
+        <button aria-expanded=true class=btn btn-sm btn-ghost id=spFold type=button>
+          "طيّ ▴"
+        <button class=btn btn-sm btn-ghost id=spToggle type=button>
+          "إخفاء"
+        <button aria-label=إعدادات جدول المذاكرة class=btn btn-sm btn-ghost id=spCfg type=button>
+          "⚙️"
+    <div class=sp-sub>
+      "بيوزّع جلسات 50 دقيقة على فراغاتك بين المحاضرات (أقصى 3 باليوم)، والأقرب امتحاناً أولاً. بيتحدّث لحاله مع أي تغيير."
+    <div class=sp-day today>
+      <b>
+        "الأربعاء 14/10"
+      <div class=sp-items>
+        <span class=sp-item>
+          <bdi dir=ltr>
+            "12:10–13:00"
+          "حساب التفاضل والتكامل 1"
+          <small>
+            "نصفي التفاضل بعد 7 يوم"
+        <span class=sp-item>
+          <bdi dir=ltr>
+            "13:10–14:00"
+          "البرمجة بلغة C++"
+          <small>
+            "1 مهمة مفتوحة"
+        <span class=sp-item>
+          <bdi dir=ltr>
+            "14:10–15:00"
+          "حساب التفاضل والتكامل 1"
+          <small>
+            "نصفي التفاضل بعد 7 يوم"
+    <div class=sp-day>
+      <b>
+        "الخميس 15/10"
+      <div class=sp-items>
+        <span class=sp-item>
+          <bdi dir=ltr>
+            "08:00–08:50"
+          "حساب التفاضل والتكامل 1"
+          <small>
+            "نصفي التفاضل بعد 7 يوم"
+        <span class=sp-item>
+          <bdi dir=ltr>
+            "09:00–09:50"
+          "البرمجة بلغة C++"
+          <small>
+            "1 مهمة مفتوحة"
+        <span class=sp-item>
+          <bdi dir=ltr>
+            "10:00–10:50"
+          "حساب التفاضل والتكامل 1"
+          <small>
+            "نصفي التفاضل بعد 7 يوم"
+    <div class=sp-day>
+      <b>
+        "الجمعة 16/10"
+      <div class=sp-items>
+        <span class=sp-none>
+          "يوم راحة"
+    <div class=sp-day>
+      <b>
+        "السبت 17/10"
+      <div class=sp-items>
+        <span class=sp-item>
+          <bdi dir=ltr>
+            "08:00–08:50"
+          "حساب التفاضل والتكامل 1"
+          <small>
+            "نصفي التفاضل بعد 7 يوم"
+        <span class=sp-item>
+          <bdi dir=ltr>
+            "09:00–09:50"
+          "البرمجة بلغة C++"
+          <small>
+            "1 مهمة مفتوحة"
+        <span class=sp-item>
+          <bdi dir=ltr>
+            "10:00–10:50"
+          "حساب التفاضل والتكامل 1"
+          <small>
+            "نصفي التفاضل بعد 7 يوم"
+    <div class=sp-day>
+      <b>
+        "الأحد 18/10"
+      <div class=sp-items>
+        <span class=sp-item>
+          <bdi dir=ltr>
+            "08:00–08:50"
+          "حساب التفاضل والتكامل 1"
+          <small>
+            "نصفي التفاضل بعد 7 يوم"
+        <span class=sp-item>
+          <bdi dir=ltr>
+            "10:10–11:00"
+          "البرمجة بلغة C++"
+          <small>
+            "1 مهمة مفتوحة"
+        <span class=sp-item>
+          <bdi dir=ltr>
+            "11:10–12:00"
+          "حساب التفاضل والتكامل 1"
+          <small>
+            "نصفي التفاضل بعد 7 يوم"
+    <div class=sp-day>
+      <b>
+        "الاثنين 19/10"
+      <div class=sp-items>
+        <span class=sp-item>
+          <bdi dir=ltr>
+            "08:00–08:50"
+          "حساب التفاضل والتكامل 1"
+          <small>
+            "نصفي التفاضل بعد 7 يوم"
+        <span class=sp-item>
+          <bdi dir=ltr>
+            "09:00–09:50"
+          "البرمجة بلغة C++"
+          <small>
+            "1 مهمة مفتوحة"
+        <span class=sp-item>
+          <bdi dir=ltr>
+            "10:00–10:50"
+          "حساب التفاضل والتكامل 1"
+          <small>
+            "نصفي التفاضل بعد 7 يوم"
+    <div class=sp-day>
+      <b>
+        "الثلاثاء 20/10"
+      <div class=sp-items>
+        <span class=sp-item>
+          <bdi dir=ltr>
+            "08:00–08:50"
+          "حساب التفاضل والتكامل 1"
+          <small>
+            "نصفي التفاضل بعد 7 يوم"
+        <span class=sp-item>
+          <bdi dir=ltr>
+            "09:00–09:50"
+          "البرمجة بلغة C++"
+          <small>
+            "1 مهمة مفتوحة"
+        <span class=sp-item>
+          <bdi dir=ltr>
+            "10:00–10:50"
+          "حساب التفاضل والتكامل 1"
+          <small>
+            "نصفي التفاضل بعد 7 يوم"
+    <div class=sp-sub>
+      "📎 اقتراح مبني على جدولك وامتحاناتك ومهامك المسجّلة فقط؛ ما بعرف صعوبة المواد ولا جاهزيتك."
+  <div class=tt-agenda id=ttAgenda>
+    <section aria-label=الأحد class=tt-ag-day>
+      <header>
+        <b>
+          "الأحد"
+        <span class=tt-ag-date>
+          <bdi dir=ltr>
+            "11/10"
+        <button aria-label=إضافة محاضرة يوم الأحد class=tt-ag-add data-add=Sun-08:00 type=button>
+          "＋"
+      <div class=tt-ag-item data-edit=Sun-09:00 role=button>
+        <div class=tt-ag-time>
+          <bdi dir=ltr>
+            "09:00"
+          <small>
+            <bdi dir=ltr>
+              "10:00"
+        <div class=tt-ag-body>
+          <div class=tt-ag-name>
+            "البرمجة بلغة C++"
+          <div class=tt-ag-meta>
+            "1 س · 📍 م.ش 205"
+    <section aria-label=الاثنين class=tt-ag-day>
+      <header>
+        <b>
+          "الاثنين"
+        <span class=tt-ag-date>
+          <bdi dir=ltr>
+            "12/10"
+        <button aria-label=إضافة محاضرة يوم الاثنين class=tt-ag-add data-add=Mon-08:00 type=button>
+          "＋"
+      <div class=tt-ag-empty>
+        "لا محاضرات"
+    <section aria-label=الثلاثاء class=tt-ag-day>
+      <header>
+        <b>
+          "الثلاثاء"
+        <span class=tt-ag-date>
+          <bdi dir=ltr>
+            "13/10"
+        <button aria-label=إضافة محاضرة يوم الثلاثاء class=tt-ag-add data-add=Tue-08:00 type=button>
+          "＋"
+      <div class=tt-ag-empty>
+        "لا محاضرات"
+    <section aria-label=الأربعاء class=tt-ag-day today>
+      <header>
+        <b>
+          "الأربعاء"
+        <span class=tt-ag-date>
+          <bdi dir=ltr>
+            "14/10"
+        <button aria-label=إضافة محاضرة يوم الأربعاء class=tt-ag-add data-add=Wed-08:00 type=button>
+          "＋"
+      <div class=tt-ag-item data-edit=Wed-09:00 role=button>
+        <div class=tt-ag-time>
+          <bdi dir=ltr>
+            "09:00"
+          <small>
+            <bdi dir=ltr>
+              "10:00"
+        <div class=tt-ag-body>
+          <div class=tt-ag-name>
+            "حساب التفاضل والتكامل 1"
+          <div class=tt-ag-meta>
+            "1 س · 📍 ح.ب 104"
+      <div class=tt-ag-item next data-edit=Wed-11:00 role=button>
+        <div class=tt-ag-time>
+          <bdi dir=ltr>
+            "11:00"
+          <small>
+            <bdi dir=ltr>
+              "12:00"
+        <div class=tt-ag-body>
+          <div class=tt-ag-name>
+            "البرمجة بلغة C++"
+            <span class=tt-badge next>
+              "التالية"
+          <div class=tt-ag-meta>
+            "1 س · 📍 م.ش 205"
+    <section aria-label=الخميس class=tt-ag-day>
+      <header>
+        <b>
+          "الخميس"
+        <span class=tt-ag-date>
+          <bdi dir=ltr>
+            "15/10"
+        <button aria-label=إضافة محاضرة يوم الخميس class=tt-ag-add data-add=Thu-08:00 type=button>
+          "＋"
+      <div class=tt-ag-empty>
+        "لا محاضرات"

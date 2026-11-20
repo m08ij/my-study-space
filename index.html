@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=5.0,viewport-fit=cover,interactive-widget=resizes-content">
+<meta name="color-scheme" content="dark light">
+<title>مساحتي الدراسية</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#060b1e">
+<meta name="description" content="مساحتي الدراسية: تطبيق لطلاب الجامعة الهاشمية لتنظيم المحاضرات والمهام والامتحانات والحضور والعلامات والمعدل، يشتغل بدون إنترنت.">
+<link rel="icon" href="favicon.ico" sizes="48x48">
+<link rel="icon" type="image/svg+xml" href="icons/logo.svg">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="مساحتي">
+<link rel="stylesheet" href="css/01-base.css">
+<link rel="stylesheet" href="css/02-motion-themes.css">
+<link rel="stylesheet" href="css/03-hub-dashboard-welcome.css">
+<link rel="stylesheet" href="css/04-responsive-components-phases.css">
+<link rel="stylesheet" href="css/05-visual.css">
+<link rel="stylesheet" href="css/06-design.css">
+<link rel="stylesheet" href="css/08-royal.css">
+<link rel="stylesheet" href="css/09-focus.css">
+<link rel="stylesheet" href="css/10-dialogs.css">
+<link rel="stylesheet" href="css/11-sidebar.css">
+<script>/* مستخدم جديد: تظهر شاشة الترحيب من أول رسم (بدون وميض اللوحة خلفها)، ويزيل app.js الصنف عند اكتمال الدخول */
+try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement.classList.add("is-new"); }catch(e){}
+/* هيكل التحميل بألوان آخر ثيم (يحفظها focus.js applyLook بـss_fx_boot: [غامق، أساس، تدرج1..3]) */
+try{ var bk = JSON.parse(localStorage.getItem("ss_fx_boot") || "null"), hs = document.documentElement.style;
+  if(bk){ if(!bk[0]) document.documentElement.classList.add("bs-light"); hs.setProperty("--bsb", bk[1]); hs.setProperty("--bs1", bk[2] || "transparent"); hs.setProperty("--bs2", bk[3] || "transparent"); hs.setProperty("--bs3", bk[4] || "transparent"); }
+  else if(window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches && (localStorage.getItem("ss_fx_mode") || "auto") === "auto") document.documentElement.classList.add("bs-light"); }catch(e){}</script>
+<style>
+/* ===== الإنترو: يرسم الشعار من خط صغير ← مربّع ← كتاب ← نجمة ← الاسم. مرة لكل جلسة، ويتخطّاه «تقليل الحركة» ===== */
+#ssIntro{display:none}
+html.intro-on #ssIntro{display:flex;position:fixed;inset:0;z-index:9500;align-items:center;justify-content:center;background:#191919;color:#e9e9e7;transition:opacity .42s ease;font-family:Tajawal,'Segoe UI',Tahoma,system-ui,sans-serif}
+html.intro-on.bs-light #ssIntro{background:#fff;color:#1f1f1e}
+html.intro-on .boot-skel{display:none!important}
+#ssIntro .si-c{display:flex;flex-direction:column;align-items:center;gap:14px;transition:transform .42s cubic-bezier(.22,1,.36,1)}
+#ssIntro .si-tile{width:8px;height:26px;border-radius:99px;background:linear-gradient(135deg,var(--bs1,#4f7dff),var(--bs2,#b45cff));display:grid;place-items:center;overflow:hidden;box-shadow:0 18px 40px -16px var(--bs2,#b45cff);animation:siPill .3s ease-out both,siTile .55s .28s cubic-bezier(.22,1,.36,1) forwards}
+#ssIntro svg{width:76px;height:76px;flex:none;opacity:0;animation:siShow .01s .6s forwards}
+#ssIntro .si-book,#ssIntro .si-spine{fill:rgba(255,255,255,0);stroke:#fff;stroke-width:2;stroke-linejoin:round;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:1}
+#ssIntro .si-book{animation:siDraw .5s .62s cubic-bezier(.65,0,.35,1) forwards,siFill .35s 1.05s forwards}
+#ssIntro .si-spine{animation:siDraw .3s .9s ease-out forwards}
+#ssIntro .si-spark{fill:#fff;transform-box:fill-box;transform-origin:center;transform:scale(0) rotate(-90deg);animation:siPop .45s 1.02s cubic-bezier(.34,1.56,.64,1) forwards}
+#ssIntro .si-name{font-size:30px;font-weight:700;letter-spacing:0;clip-path:inset(0 0 0 100%);animation:siWipe .5s 1.05s cubic-bezier(.22,1,.36,1) forwards}
+#ssIntro .si-tag{font-size:14px;opacity:0;transform:translateY(6px);color:#9b9a97;animation:siUp .4s 1.3s ease-out forwards}
+#ssIntro.si-out{opacity:0;pointer-events:none}
+#ssIntro.si-out .si-c{transform:scale(1.06)}
+@keyframes siPill{from{transform:scaleY(0);opacity:0}to{transform:scaleY(1);opacity:1}}
+@keyframes siTile{to{width:76px;height:76px;border-radius:22px}}
+@keyframes siShow{to{opacity:1}}
+@keyframes siDraw{to{stroke-dashoffset:0}}
+@keyframes siFill{to{fill:rgba(255,255,255,.22)}}
+@keyframes siPop{to{transform:scale(1) rotate(0)}}
+@keyframes siWipe{to{clip-path:inset(0 0 0 0)}}
+@keyframes siUp{to{opacity:1;transform:none}}
+</style>
+<script>/* الإنترو: مرة وحدة لكل جلسة، مش للمستخدم الجديد (عنده شاشة الترحيب)، ومش مع «تقليل الحركة» */
+try{ var _h = document.documentElement; if(!_h.classList.contains("is-new") && !sessionStorage.getItem("ss_intro") && !(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches)){ _h.classList.add("intro-on"); sessionStorage.setItem("ss_intro", "1"); window.__introT0 = Date.now(); } }catch(e){}</script>
+</head>
+<body>
+
+<div id="ssIntro" aria-hidden="true"><div class="si-c"><div class="si-tile"><svg viewBox="0 0 40 40"><path class="si-book" pathLength="1" d="M9 13.5c3.6-1.6 7.3-1.6 11 .6 3.7-2.2 7.4-2.2 11-.6v14c-3.6-1.6-7.3-1.6-11 .6-3.7-2.2-7.4-2.2-11-.6z"/><path class="si-spine" pathLength="1" d="M20 14.1v14"/><path class="si-spark" d="M29.5 5.5l1 2.4 2.4 1-2.4 1-1 2.4-1-2.4-2.4-1 2.4-1z"/></svg></div><div class="si-name">مساحتي</div><div class="si-tag">دراستك كلها بمكان واحد</div></div></div>
+<div class="debug-panel" id="debugPanel"></div>
+
+<div class="boot-skel" id="bootSkel" aria-hidden="true">
+  <div class="bs-top"><span class="bs-logo"></span><span class="bs-brand"></span><span class="bs-nav"><i></i><i></i><i></i><i></i><i></i></span><span class="bs-ic"><i></i><i></i><i></i></span></div>
+  <div class="bs-body">
+    <div class="bs-hello"><div class="bs-txt"><span></span><span></span><span></span></div><span class="bs-ring"></span></div>
+    <div class="bs-grid"><div class="bs-col"><div class="bs-next"></div><div class="bs-strip"></div></div><div class="bs-side"></div></div>
+  </div>
+  <div class="bs-bnav"><i></i><i></i><i></i><i></i><i></i></div>
+</div>
+
+<div class="welcome-overlay" id="welcomeOverlay" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle" aria-describedby="welcomeSub">
+  <div class="welcome-bg" aria-hidden="true"></div>
+  <div class="welcome-shell">
+    <div class="welcome-card">
+      <div class="welcome-brand"><img class="welcome-icon" src="icons/logo.svg" alt="شعار مساحتي الدراسية" width="40" height="40"><span class="welcome-brand-name">مساحتي الدراسية</span></div>
+      <h1 id="welcomeTitle">نظّم دراستك الجامعية <span class="welcome-grad">في مكان واحد</span></h1>
+      <p id="welcomeSub">جدولك ومهامك وامتحاناتك وموادك — واضحة ومرتبة، بدون تعقيد.</p>
+      <ul class="welcome-feats" aria-label="أهم ما في التطبيق">
+        <li><span class="wf-ic" aria-hidden="true">📅</span><span class="wf-tx"><b>جدول أسبوعي ذكي</b><small>المحاضرة الحالية والقادمة والوقت المتبقي</small></span></li>
+        <li><span class="wf-ic" aria-hidden="true">📝</span><span class="wf-tx"><b>مهام بمواعيد وأولويات</b><small>ما تأخر وما اقترب بنظرة واحدة</small></span></li>
+        <li><span class="wf-ic" aria-hidden="true">⏳</span><span class="wf-tx"><b>عدّ تنازلي للامتحانات</b><small>مع تنبيهات داخل التطبيق</small></span></li>
+        <li><span class="wf-ic" aria-hidden="true">📚</span><span class="wf-tx"><b>مركز المواد</b><small>ملفات وعلامات وحضور لكل مادة</small></span></li>
+      </ul>
+      <div class="welcome-form">
+        <label for="welcomeName" class="welcome-label">ما اسمك؟</label>
+        <input id="welcomeName" placeholder="اكتب اسمك للبدء" autocomplete="given-name" enterkeyhint="go" maxlength="40" aria-describedby="welcomeErr">
+        <div class="welcome-err" id="welcomeErr" role="alert" aria-live="polite"></div>
+        <button id="welcomeBtn" type="button"><span>ابدأ الآن</span><span class="welcome-arrow" aria-hidden="true"></span></button>
+      </div>
+      <p class="welcome-note">🔒 بياناتك تُحفظ على جهازك، والمزامنة السحابية اختيارية.</p>
+    </div>
+  </div>
+</div>
+<div class="settings-wrap">
+      <button class="icon-btn icon-circle" id="settingsBtn" title="الإعدادات" aria-label="الإعدادات" aria-haspopup="dialog" aria-expanded="false"><svg class="ico" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+      <div class="settings-menu" id="settingsMenu" data-sm="look" role="dialog" aria-modal="true" aria-labelledby="smTitle">
+       <div class="sm-dialog">
+        <div class="sm-handle" aria-hidden="true"></div>
+        <header class="sm-head"><div class="sm-ttl"><span class="sm-ttl-ic" aria-hidden="true">⚙️</span><div><b id="smTitle">الإعدادات</b><small>تحكّم بالمظهر والبيانات والنظام</small></div></div><button type="button" class="sm-close" id="smClose" aria-label="إغلاق الإعدادات">✕</button></header>
+        <div class="sm-main">
+        <div class="sm-tabs" role="tablist" aria-label="أقسام الإعدادات" aria-orientation="vertical">
+          <button type="button" class="sm-tab" role="tab" data-sm="look" aria-selected="true"><span class="sm-ti" aria-hidden="true">🎨</span><span class="sm-tt"><b>المظهر</b><small>الثيم والخط والوضع البسيط</small></span></button>
+          <button type="button" class="sm-tab" role="tab" data-sm="work" aria-selected="false"><span class="sm-ti" aria-hidden="true">🎯</span><span class="sm-tt"><b>العمل</b><small>التركيز والخصوصية والإشعارات</small></span></button>
+          <button type="button" class="sm-tab" role="tab" data-sm="data" aria-selected="false"><span class="sm-ti" aria-hidden="true">💾</span><span class="sm-tt"><b>البيانات</b><small>المزامنة والنسخ والتقويم</small></span></button>
+          <button type="button" class="sm-tab" role="tab" data-sm="sys" aria-selected="false"><span class="sm-ti" aria-hidden="true">🧰</span><span class="sm-tt"><b>النظام</b><small>التثبيت والفحص والجولة</small></span></button>
+        </div>
+        <div class="sm-panels">
+        <div class="sm-group" data-g="look" role="group" aria-label="المظهر">
+          <div class="sm-title"><b>المظهر</b><small>الثيم وحجم الخط والكثافة، والوضع البسيط لإخفاء الميزات الثانوية</small></div>
+          <div class="sm-themes" id="smThemes"><div class="sm-th-h"><b>🎨 الثيم</b><small id="smThemeName"></small></div><div class="theme-grid" id="smThemeGrid"></div></div>
+          <button class="settings-item" id="themeBtn" type="button"><span class="si-ic" aria-hidden="true">🎨</span><span class="si-tx"><b>الثيمات</b><small id="themeSub">—</small></span><span class="si-go" aria-hidden="true">‹</span></button>
+          <button class="settings-item" id="simpleBtn" type="button" role="switch" aria-checked="false"><span class="si-ic" aria-hidden="true">🧘</span><span class="si-tx"><b>الوضع البسيط</b><small class="sp-t">كل الميزات ظاهرة</small></span><span class="si-sw" aria-hidden="true"></span></button>
+          <button class="settings-item" id="densityBtn" type="button" role="switch" aria-checked="false"><span class="si-ic" aria-hidden="true">📏</span><span class="si-tx"><b>كثافة العرض</b><small class="db-t">مريحة</small></span><span class="si-sw" aria-hidden="true"></span></button>
+          <div class="si-row" role="group" aria-label="حجم الخط"><span class="si-ic" aria-hidden="true">🔤</span><span class="si-tx"><b>حجم الخط</b><small id="fontSub">عادي</small></span><span class="si-seg"><button type="button" data-fs="sm" aria-pressed="false" aria-label="خط صغير">أ</button><button type="button" data-fs="md" aria-pressed="true" aria-label="خط عادي">أ</button><button type="button" data-fs="lg" aria-pressed="false" aria-label="خط كبير">أ</button></span></div>
+        </div>
+        <div class="sm-group" data-g="work" role="group" aria-label="وضع العمل">
+          <div class="sm-title"><b>وضع العمل</b><small>تركيز، اليوم فقط، استيراد من صورة، إشعارات</small></div>
+          <button class="settings-item native-only" id="widgetBtn" type="button"><span class="si-ic" aria-hidden="true">📱</span><span class="si-tx"><b>ودجتات الشاشة الرئيسية</b><small>أضف المحاضرة الجاية أو جدول اليوم لتلفونك</small></span><span class="si-go" aria-hidden="true">‹</span></button>
+          <button class="settings-item" id="ocrLabBtn" type="button" role="switch" aria-checked="false"><span class="si-ic" aria-hidden="true">📷</span><span class="si-tx"><b>استيراد الجدول من صورة</b><small class="ol-t">تجريبي — مطفأ</small></span><span class="si-sw" aria-hidden="true"></span></button>
+          <button class="settings-item" id="notifBtn" type="button"><span class="si-ic" aria-hidden="true">🔔</span><span class="si-tx"><b>الإشعارات</b><small id="notifBtnText">اضغط للتفعيل</small></span><span class="si-go" aria-hidden="true">‹</span></button>
+        </div>
+        <div class="sm-group" data-g="data" role="group" aria-label="البيانات">
+          <div class="sm-title"><b>البيانات</b><small>مزامنة سحابية اختيارية ونسخ احتياطي بيدك</small></div>
+          <button class="settings-item" id="syncCodeBtn" type="button"><span class="si-ic" aria-hidden="true">☁️</span><span class="si-tx"><b>المزامنة السحابية</b><small id="syncMenuSub">—</small></span><span class="si-go" aria-hidden="true">‹</span></button>
+          <button class="settings-item" id="calSyncBtn" type="button"><span class="si-ic" aria-hidden="true">📅</span><span class="si-tx"><b>التقويم</b><small>تصدير واستيراد ‎.ics</small></span><span class="si-go" aria-hidden="true">‹</span></button>
+          <button class="settings-item" id="exportBackupBtn" type="button"><span class="si-ic" aria-hidden="true">💾</span><span class="si-tx"><b>تصدير نسخة احتياطية</b><small>ملف JSON تنزّله بنفسك</small></span></button>
+          <button class="settings-item" id="importBackupBtn" type="button"><span class="si-ic" aria-hidden="true">📥</span><span class="si-tx"><b>استيراد نسخة احتياطية</b><small>من ملف JSON</small></span></button>
+          <button class="settings-item" id="restorePrevBtn" type="button" style="display:none"><span class="si-ic" aria-hidden="true">🕘</span><span class="si-tx"><b>استرجاع نسخة سابقة</b><small>من آخر نسخ تلقائية</small></span><span class="si-go" aria-hidden="true">‹</span></button>
+        </div>
+        <div class="sm-group" data-g="sys" role="group" aria-label="النظام">
+          <div class="sm-title"><b>النظام</b><small>تثبيت التطبيق، فحص السلامة، سجل الأخطاء، الجولة</small></div>
+          <button class="settings-item native-only" id="updateBtn" type="button"><span class="si-ic" aria-hidden="true">🔄</span><span class="si-tx"><b>فحص تحديثات التطبيق</b><small id="updateSub">اضغط للفحص</small></span><span class="si-go" aria-hidden="true">‹</span></button>
+          <button class="settings-item" id="pwaInstallBtn" type="button" style="display:none"><span class="si-ic" aria-hidden="true">📲</span><span class="si-tx"><b>تثبيت التطبيق</b><small>أيقونة على شاشتك</small></span><span class="si-go" aria-hidden="true">‹</span></button>
+          <button class="settings-item" id="integrityBtn" type="button"><span class="si-ic" aria-hidden="true">🧰</span><span class="si-tx"><b>فحص سلامة البيانات</b><small>مواد، جدول، حضور، علامات</small></span></button>
+          <button class="settings-item" id="diagBtn" type="button"><span class="si-ic" aria-hidden="true">🩺</span><span class="si-tx"><b>سجل الأخطاء</b><small>تشخيص المشاكل</small></span></button>
+          <button class="settings-item" id="onbBtn" type="button"><span class="si-ic" aria-hidden="true">🎓</span><span class="si-tx"><b>جولة تعريفية</b><small>تعرّف على الموقع</small></span><span class="si-go" aria-hidden="true">‹</span></button>
+        </div>
+        </div>
+        </div>
+        <footer class="sm-foot"><span>مساحتي الدراسية</span><span>الإصدار <bdi dir="ltr" id="smBuild">—</bdi></span><span class="sm-keys">Esc للإغلاق</span></footer>
+       </div>
+      </div>
+    </div>
+
+
+
+
+
+<main hidden>
+  <section id="campus" class="section">
+    <div class="page-head">
+      <h2 class="page-title">🗺️ خريطة الجامعة</h2>
+      <p class="page-sub">اعرف وين محاضراتك على الخريطة، وابحث عن أي مبنى أو مختبر</p>
+    </div>
+    <div id="campusRoot"></div>
+  </section>
+</main>
+
+
+
+<button class="ai-fab" id="aiFab" aria-label="المساعد الذكي">✦</button>
+<div class="ai-panel" id="aiPanel">
+  <div class="ai-header">
+    <div class="ai-avatar">🤖</div>
+    <div class="ai-info">
+      <div class="ai-name">مساعدك الذكي</div>
+      <div class="ai-status">متصل</div>
+    </div>
+    <button class="ai-close" id="aiClose">×</button>
+  </div>
+  <div class="ai-messages" id="aiMessages"></div>
+  <div class="ai-suggestions" id="aiSuggestions"></div>
+  <div class="ai-input-wrap">
+    <input id="aiInput" aria-label="اكتب سؤالك للمساعد" placeholder="اسألني...">
+    <button id="aiSend">➤</button>
+  </div>
+</div>
+
+
+
+<div class="toast-container" id="toastContainer" role="status" aria-live="polite"></div>
+
+<!-- مكتبات خارجية -->
+<script src="vendor-supabase.js"></script>
+
+<!-- الملفات الأساسية (الترتيب مهم جداً!) -->
+<script src="core.js"></script>
+<script src="diag.js"></script>
+<script src="data.js"></script>
+<script src="supabase.js"></script>
+<script src="features.js"></script>
+<script src="widgets.js"></script>
+<script src="integrations.js"></script>
+<script src="ocr-parse.js"></script>
+<script src="n8n.js"></script>
+<script src="ocr-import.js"></script>
+<script src="exam-import.js"></script>
+<script src="gemini-lab.js"></script>
+<script src="course-sync.js"></script>
+<script src="extras.js"></script>
+<script src="hub.js"></script>
+<script src="campus-map.js"></script>
+<script src="syllabus.js"></script>
+<script src="smart-assist.js"></script>
+<script src="native-bridge.js"></script>
+<script src="study.js"></script>
+<script src="budget-plan.js"></script>
+<script src="daily.js"></script>
+<script src="progress.js"></script>
+<script src="coach.js"></script>
+<script src="dayplan.js"></script>
+<script src="share.js"></script>
+<script src="ux.js"></script>
+<script src="ics-import.js"></script>
+<script src="pwa.js"></script>
+<script src="app.js"></script>
+<script src="assistant.js"></script>
+<script src="focus.js"></script>
+<script>
+/* إخفاء الهيكل الرمادي بعد أول رسم للتطبيق (مع مؤقّت أمان كي لا يعلق أبداً) */
+(function(){
+  var done = false;
+  function hide(){
+    if(done) return; done = true;
+    /* الإنترو بيكمّل رسمته (1.75 ث على الأقل) وبعدين بيختفي */
+    var it = document.getElementById('ssIntro');
+    if(it && document.documentElement.classList.contains('intro-on')){
+      var wait = Math.max(0, 1750 - (Date.now() - (window.__introT0 || 0)));
+      setTimeout(function(){ it.className += ' si-out'; setTimeout(function(){ document.documentElement.classList.remove('intro-on'); if(it.parentNode) it.parentNode.removeChild(it); }, 450); }, wait);
+    } else if(it && it.parentNode) it.parentNode.removeChild(it);
+    var el = document.getElementById('bootSkel'); if(!el) return;
+    el.className += ' bs-out';
+    setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); }, 350);
+  }
+  function soon(){ var raf = window.requestAnimationFrame || function(f){ setTimeout(f, 16); }; raf(function(){ raf(hide); }); }
+  if(document.readyState === 'complete') soon(); else window.addEventListener('load', soon);
+  setTimeout(hide, 8000);
+})();
+</script>
+<script>
+/* حماية من خلط الإصدارات (HTML جديد + سكربتات قديمة من كاش الـ Service Worker): هذا السكربت داخل الـ HTML نفسه فيأتي دائماً بأحدث نسخة.
+   1) إن لم يطابق window.APP_BUILD رقم BUILD هنا → يمسح كاش التطبيق ويعيد التحميل مرة واحدة (حارس sessionStorage يمنع التكرار).
+   2) أقسام اللوحة المتقدمة (تحليلات/LMS/إحصائيات) تُنقل إلى خانتها الثابتة إذا أضافتها سكربتات قديمة بمكان آخر. */
+(function(){
+  var BUILD = '162';
+  var SLOTS = { insightsSection: 'slotInsights', lmsWidget: 'slotLms', enhancedStatsSection: 'slotEnhanced' };
+  function heal(){
+    var dash = document.getElementById('dashboard'); if(!dash) return;
+    for(var id in SLOTS){
+      var el = document.getElementById(id), slot = document.getElementById(SLOTS[id]);
+      if(el && slot && el.parentNode !== slot) slot.appendChild(el);
+    }
+  }
+  var dash = document.getElementById('dashboard');
+  if(dash && window.MutationObserver){
+    var mo = new MutationObserver(heal); mo.observe(dash, { childList: true });
+    setTimeout(function(){ mo.disconnect(); heal(); }, 20000);
+  }
+  window.addEventListener('load', function(){
+    heal();
+    if(window.APP_BUILD === BUILD) return;
+    try{
+      if(sessionStorage.getItem('ss_build_reload') === BUILD) return;
+      sessionStorage.setItem('ss_build_reload', BUILD);
+    }catch(e){ return; }
+    var go = function(){ location.reload(); };
+    if(window.caches && caches.keys) caches.keys().then(function(ks){ return Promise.all(ks.map(function(k){ return caches.delete(k); })); }).then(go, go);
+    else go();
+  });
+})();
+</script></body>
+</html>

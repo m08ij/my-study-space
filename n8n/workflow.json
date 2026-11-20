@@ -1,0 +1,264 @@
+{
+  "name": "My Space · Gemini backend",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "assistant",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "https://m08ij.github.io"
+        }
+      },
+      "id": "1e104128-cbb5-4010-8ab2-7c0f6ec6ade8",
+      "name": "Webhook · assistant",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.2,
+      "position": [
+        16,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body || {};\n\nconst SYSTEM = \"You are 'My Space assistant', a study assistant for a computer engineering student at the Hashemite University (Jordan). Reply in Jordanian Arabic dialect, short and clear, answer directly. Rely ONLY on the student data JSON provided; never invent data — if something is not there, say it is not recorded. You may propose app actions that run after the student confirms: put them at the very end exactly as <actions>[...]</actions> JSON. Allowed types only: {type:'task',title,due:'YYYY-MM-DD',course,priority:'high'|'normal'}, {type:'exam',name,course,date:'YYYY-MM-DD',time:'HH:MM'}, {type:'expense',amount,category,note}, {type:'done',id}, {type:'go',view:'today|timetable|tasks|grades|courses|exams|attendance|budget|timer|plan|tree|gpa|stats|prayer|campus|settings'}. Only propose actions when the student asks to add/change something. Use simple Markdown (bold, lists).\";\n\nconst q = String(body.question == null ? '' : body.question).trim().slice(0, 800);\nif (!q) {\n  throw new Error('Question is empty');\n}\n\nlet context = body.context == null ? '' : body.context;\nif (typeof context !== 'string') {\n  context = JSON.stringify(context);\n}\ncontext = context.slice(0, 14000);\n\nconst history = Array.isArray(body.history) ? body.history.slice(-8) : [];\nconst contents = history\n  .filter(h => h && h.content != null && String(h.content).trim() !== '')\n  .map(h => ({\n    role: h.role === 'assistant' ? 'model' : 'user',\n    parts: [{ text: String(h.content).slice(0, 1500) }],\n  }));\ncontents.push({ role: 'user', parts: [{ text: q }] });\n\nreturn [{\n  json: {\n    model: ['gemini-flash-latest', 'gemini-flash-lite-latest'].includes(body.model) ? body.model : 'gemini-flash-latest',\n    request: {\n      systemInstruction: { parts: [{ text: SYSTEM + '\\n\\nStudent data now:\\n' + context }] },\n      contents,\n      generationConfig: { temperature: 0.4, maxOutputTokens: 1000 },\n    },\n  },\n}];"
+      },
+      "id": "d2eaf47d-b8d2-4a58-8a9f-e82fec885e13",
+      "name": "Build prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        336,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/{{ $json.model }}:generateContent",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googlePalmApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.request) }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          },
+          "timeout": 120000
+        }
+      },
+      "id": "bc8dcb8f-016e-4e16-a586-4b61349b6e4e",
+      "name": "Gemini · assistant",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        560,
+        144
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const res = $input.first().json;\nconst statusCode = Number(res.statusCode) || 0;\nlet body = res.body;\nif (typeof body === 'string') {\n  try { body = JSON.parse(body); } catch (e) { body = { raw: body }; }\n}\nbody = body || {};\n\nconst parts = (((body.candidates || [])[0] || {}).content || {}).parts || [];\nconst answer = parts\n  .map(p => (p && typeof p.text === 'string') ? p.text : '')\n  .join('')\n  .trim();\n\nif (statusCode >= 300 || !answer) {\n  const message = (body.error && body.error.message) ? body.error.message : 'Gemini returned no reply';\n  return [{ json: { status: statusCode >= 300 ? statusCode : 502, body: { error: message } } }];\n}\n\nreturn [{ json: { status: 200, body: { answer } } }];"
+      },
+      "id": "01789371-4cff-40ca-a281-88291cd2d2ab",
+      "name": "Extract answer",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        784,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json.body) }}",
+        "options": {
+          "responseCode": "={{ $json.status }}"
+        }
+      },
+      "id": "7cddd709-2f53-4ee7-bfd9-4922c6c51acc",
+      "name": "Respond · assistant",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1008,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "gemini",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "https://m08ij.github.io"
+        }
+      },
+      "id": "9b2f49aa-f599-4bbe-922a-67ee88644af7",
+      "name": "Webhook · gemini",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.2,
+      "position": [
+        16,
+        544
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json.body) }}",
+        "options": {
+          "responseCode": "={{ $json.statusCode }}"
+        }
+      },
+      "id": "ba2d2a98-8681-492e-81df-e071252b61b1",
+      "name": "Respond · gemini",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        784,
+        544
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/{{ $json.model }}:generateContent",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googlePalmApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.request) }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          },
+          "timeout": 120000
+        }
+      },
+      "id": "c95bde0a-a962-4382-a0ff-4fe3810206df",
+      "name": "Gemini · images",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        560,
+        544
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body || {};\n\nconst ALLOWED = ['gemini-flash-latest', 'gemini-3.5-flash', 'gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.0-flash', 'gemini-flash-lite-latest'];\nconst model = ALLOWED.includes(body.model) ? body.model : 'gemini-flash-latest';\n\nconst request = body.request;\nif (!request || typeof request !== 'object' || !Array.isArray(request.contents) || request.contents.length === 0) {\n  throw new Error('request.contents is missing or empty');\n}\nif (JSON.stringify(request).length > 9000000) {\n  throw new Error('Request is too large (max 9,000,000 characters)');\n}\n\nreturn [{ json: { model, request } }];"
+      },
+      "id": "5a240e30-7725-445a-9b4a-403c76a68163",
+      "name": "Validate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        336,
+        544
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook · assistant": {
+      "main": [
+        [
+          {
+            "node": "Build prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build prompt": {
+      "main": [
+        [
+          {
+            "node": "Gemini · assistant",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini · assistant": {
+      "main": [
+        [
+          {
+            "node": "Extract answer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract answer": {
+      "main": [
+        [
+          {
+            "node": "Respond · assistant",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook · gemini": {
+      "main": [
+        [
+          {
+            "node": "Validate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini · images": {
+      "main": [
+        [
+          {
+            "node": "Respond · gemini",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate": {
+      "main": [
+        [
+          {
+            "node": "Gemini · images",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "tags": []
+}
