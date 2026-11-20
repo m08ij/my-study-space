@@ -318,18 +318,24 @@
     var d = (new Date()).getDay();
     return cs.filter(function(c){ return c.slots.some(function(e){ return e.dayIdx === d; }); });
   }
+  /* ---- مظهر واقعي: مساحة الحرم الفعلية ---- */
+  var CAMPUS_XY = null;
+  function campusXY(){ if(!CAMPUS_XY) CAMPUS_XY = CAMPUS_LL.map(function(p){ var q = geoToXY(p[0], p[1]); return [q.x, q.y]; }); return CAMPUS_XY; }
+  function campusD(){ return 'M' + campusXY().map(function(p){ return p[0].toFixed(1) + ' ' + p[1].toFixed(1); }).join('L') + 'Z'; }
   function svgHtml(cs, status){
     var h = '<svg id="cmSvg" class="cm-svg" viewBox="' + [st.vb.x, st.vb.y, st.vb.w, st.vb.h].join(' ') + '" role="group" aria-label="خريطة الجامعة الهاشمية" preserveAspectRatio="xMidYMid meet">';
     h += '<defs><filter id="cmShadow" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-opacity=".35"/></filter>' +
       '<linearGradient id="cmRoof" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".3"/><stop offset=".55" stop-color="#fff" stop-opacity=".04"/><stop offset="1" stop-color="#000" stop-opacity=".16"/></linearGradient>' +
       '<marker id="cmArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>';
     h += '<rect class="cm-ground" x="-80" y="-60" width="' + (W + 160) + '" height="' + (H + 120) + '" rx="26"/>';
+    /* مساحة الحرم الفعلية (حدود OpenStreetMap محوّلة لإحداثيات الرسم) */
+    h += '<path class="cm-campus" d="' + campusD() + '"/>';
     /* الشوارع */
     var roadsD = '<path d="M406 160V856"/><path d="M406 172H586Q610 172 610 196V836Q610 860 586 860H406"/>' +
       '<path d="M406 166Q196 166 160 232L22 430Q4 470 26 522L160 740Q228 860 406 860"/>' +
       '<path d="M400 38H696Q722 38 722 64V490H612"/><path d="M400 38H238Q204 38 176 82L150 130"/>' +
       '<path d="M150 232L330 440" /><path d="M90 332L240 470"/><circle cx="406" cy="512" r="20"/><circle cx="96" cy="188" r="18"/><circle cx="168" cy="262" r="22"/><circle cx="332" cy="440" r="17"/>';
-    h += '<g class="cm-roads out" fill="none" stroke-linecap="round" stroke-linejoin="round">' + roadsD + '</g><g class="cm-roads" fill="none" stroke-linecap="round" stroke-linejoin="round">' + roadsD + '</g>';
+    h += '<g class="cm-roads out" fill="none" stroke-linecap="round" stroke-linejoin="round">' + roadsD + '</g><g class="cm-roads" fill="none" stroke-linecap="round" stroke-linejoin="round">' + roadsD + '</g><g class="cm-roads mid" fill="none" stroke-linecap="round">' + roadsD + '</g>';
     /* مواقف */
     if(st.layers.park) PARK.forEach(function(p){ h += '<g class="cm-park" transform="translate(' + (p[0] + p[2] / 2) + ' ' + (p[1] + p[3] / 2) + ') rotate(' + p[4] + ')"><rect x="' + (-p[2] / 2) + '" y="' + (-p[3] / 2) + '" width="' + p[2] + '" height="' + p[3] + '" rx="8"/><text text-anchor="middle" dominant-baseline="central" font-size="' + Math.min(p[2], p[3]) * .62 + '">P</text></g>'; });
     /* خط أقرب بوابة للمبنى المختار */
@@ -352,6 +358,7 @@
       var txtCol = LIGHT_FILL[b.f] ? '#13203a' : '#ffffff';
       var small = Math.min(b.w, b.h) < 42, ic = ICONS[b.id] && Math.min(b.w, b.h) >= 30 && b.w * b.h >= 1800 ? '<text class="cm-ic" x="' + (b.x + b.w - 11) + '" y="' + (b.y + 12) + '" text-anchor="middle" font-size="11">' + ICONS[b.id] + '</text>' : '';
       h += '<g class="' + cls + (small ? ' cm-small' : '') + '" data-b="' + b.id + '" role="button" tabindex="0" aria-label="' + esc(b.n + ' — ' + FAC[b.f][0]) + '"><title>' + esc(b.n) + '</title><g' + rot + '>' +
+                '<rect class="cm-wall" x="' + (b.x + 2.5) + '" y="' + (b.y + 4.5) + '" width="' + b.w + '" height="' + b.h + '" rx="6"/>' +
                 '<rect class="cm-face" x="' + b.x + '" y="' + b.y + '" width="' + b.w + '" height="' + b.h + '" rx="6" fill="' + col + '"/>' +
         '' +
         '<g fill="' + txtCol + '">' + labelFor(b) + '</g></g></g>';
@@ -595,7 +602,7 @@
       '<div class="cm-layers" role="group" aria-label="الطبقات"><button type="button" data-layer="pins" aria-pressed="' + st.layers.pins + '">📍 دبابيسي</button><button type="button" data-layer="gates" aria-pressed="' + st.layers.gates + '">🚪 البوابات</button><button type="button" data-layer="park" aria-pressed="' + st.layers.park + '">🅿️ المواقف</button></div>' +
       svgHtml(cs, status) + '<div class="cm-hint">اسحب لتحريك الخريطة · عجلة الماوس أو اقرص للتكبير</div></div>' +
       '<aside class="cm-side">' + infoCard(cs) + '<div class="cm-tabs" role="tablist">' + tabs.map(function(t){ return '<button type="button" role="tab" class="cm-tab" data-tab="' + t[0] + '" aria-selected="' + (st.tab === t[0]) + '">' + t[1] + '</button>'; }).join('') + '</div><div class="cm-panel" role="tabpanel">' + panel + '</div></aside></div>';
-    svg = document.getElementById('cmSvg'); if(svg) svg.classList.toggle('zfar', st.vb.w > 520);
+    svg = document.getElementById('cmSvg'); if(svg){ svg.classList.toggle('zfar', st.vb.w > 520); }
     bind();
   }
 

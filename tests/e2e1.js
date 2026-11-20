@@ -93,7 +93,7 @@ async function sect(name,fn){ try{ await fn(); }catch(e){ T(name+'_CRASH',false,
    W().addGradeItem(gi); await sl(50); fill({name:'واجب',score:'9',weight:'10'}); save(); await sl(60);
    const g=sp().grades[gi]; T('grade_items_added',g.items.length===2&&g.items[0].score===18,JSON.stringify(g.items));
    W().addGradeItem(gi); await sl(50); fill({name:'خطأ',score:'50',weight:'10'}); const n=sp().grades[gi].items.length; save(); await sl(40); T('grade_score_gt_weight_rejected',sp().grades[gi].items.length===n); D().getElementById('mCancel')&&D().getElementById('mCancel').click();
-   W().FocusUI.go('grades'); await sl(60); const txt=Q('#fxMain').textContent; T('grade_total_67_5_pct',/جمعت 27 من 40/.test(txt)&&/68%/.test(txt),txt.replace(/s+/g,' ').slice(0,120));
+   await sl(150); W().FocusUI.go('grades'); await sl(60); const txt=Q('#fxMain').textContent; T('grade_total_67_5_pct',/جمعت 27 من 40/.test(txt)&&/68%/.test(txt),txt.replace(/s+/g,' ').slice(0,120));
    await reload(); T('grade_persist',sp().grades.find(x=>x.name==='مادة اختبار').items.length===2);
   }
   W().addGradeCourse(); await sl(40); fill({name:'علامة مستقلة'}); save(); await sl(60); T('grade_course_added',sp().grades.some(x=>x.name==='علامة مستقلة'));

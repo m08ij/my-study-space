@@ -1,10 +1,10 @@
 /* ============================================================
    sw.js — شبكة أولاً + كاش احتياطي (v90)
    ============================================================ */
-var CACHE_NAME = 'ss-cache-v162';
+var CACHE_NAME = 'ss-cache-v163';
 var NET_WAIT_MS = 3500;   /* أقصى انتظار للشبكة قبل خدمة النسخة المخزّنة */
 var URLS_TO_CACHE = [
-  './', './index.html', './app.css', './css/01-base.css', './css/02-motion-themes.css', './css/03-hub-dashboard-welcome.css', './css/04-responsive-components-phases.css', './css/05-visual.css', './css/06-design.css', './css/08-royal.css', './css/09-focus.css', './css/10-dialogs.css', './css/11-sidebar.css',
+  './', './index.html', './app.css', './css/01-base.css', './css/02-motion-themes.css', './css/03-hub-dashboard-welcome.css', './css/04-responsive-components-phases.css', './css/05-visual.css', './css/06-design.css', './css/08-royal.css', './css/09-focus.css', './css/10-dialogs.css', './css/11-sidebar.css', './css/12-vivid.css',
   './vendor-supabase.js', './core.js', './diag.js', './data.js', './supabase.js',
   './features.js', './widgets.js', './integrations.js', './ocr-parse.js', './n8n.js', './ocr-import.js', './exam-import.js', './gemini-lab.js',
   './course-sync.js',    

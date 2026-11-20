@@ -354,10 +354,10 @@
     var cats = Object.keys(cat).sort(function(a, b){ return cat[b] - cat[a]; }), mx = cats.length ? cat[cats[0]] : 1;
     var recent = all.slice().sort(function(a, b){ return String(a.date) < String(b.date) ? 1 : -1; }).slice(0, 12);
     return '<div class="fx-kpis">' + kpi('wallet', 'الدخل هالشهر', money(inc)) + kpi('chart', 'المصروف هالشهر', money(exp)) + kpi('calc', 'الباقي', money(inc - exp), inc - exp < 0 ? 'صارف أكثر من دخلك' : '') + '</div>' +
-      '<div class="fx-actions"><button type="button" class="fx-btn" data-fx="call" data-v="addBudgetItem" data-id="expense">' + ic('plus') + 'مصروف</button><button type="button" class="fx-btn ghost" data-fx="call" data-v="addBudgetItem" data-id="income">' + ic('plus') + 'دخل</button></div>' + (W.clearBudget ? '<div class="fx-tools">' + tool('fn', 'مسح الميزانية', 'clearBudget', 1) + '</div>' : '') +
+      '<div class="fx-actions"><button type="button" class="fx-btn" data-fx="call" data-v="addBudgetItem" data-id="expense">' + ic('plus') + 'مصروف</button><button type="button" class="fx-btn ghost" data-fx="call" data-v="addBudgetItem" data-id="income">' + ic('plus') + 'دخل</button></div>' + 
       '<div class="fx-grid2"><div class="fx-glass"><h3>وين راحت مصاريفك</h3>' + (cats.length ? cats.map(function(c){ return '<div class="fx-bar-row"><span>' + esc(catName(c)) + '</span><i style="--w:' + Math.max(4, Math.round(cat[c] / mx * 100)) + '%;--h:' + hue(c) + '"></i><b>' + money(cat[c]) + '</b></div>'; }).join('') : empty('ما في مصاريف هالشهر')) + '</div>' +
       '<div class="fx-glass"><h3>آخر الحركات</h3>' + (recent.length ? recent.map(function(x){ var inc1 = x.type === 'income';
-        return '<div class="fx-mv"><span class="fx-tb"><b>' + esc(catName(x.category) || (inc1 ? 'دخل' : 'مصروف')) + '</b><small>' + esc(x.date || '') + (x.note ? ' · ' + esc(x.note) : '') + '</small></span><b class="' + (inc1 ? 'in' : 'out') + '">' + (inc1 ? '+' : '−') + money(x.amount) + '</b><button type="button" class="fx-ib sm" data-fx="call" data-v="editBudget" data-id="' + esc(x.id) + '" aria-label="تعديل">✎</button><button type="button" class="fx-ib sm" data-fx="call" data-v="deleteBudget" data-id="' + esc(x.id) + '" aria-label="حذف">✕</button></div>'; }).join('') : empty('ما في حركات لسا')) + '</div></div>' + (W.BudgetPlan ? '<details class="fx-glass fx-fold fx-bp"' + (lsGet('ss_fx_bp') === '1' ? ' open' : '') + '><summary>تخطيط الميزانية · حدود الشهر والتوقعات وأهداف الادخار</summary><div id="budgetPlan"></div></details>' : '');
+        return '<div class="fx-mv"><span class="fx-tb"><b>' + esc(catName(x.category) || (inc1 ? 'دخل' : 'مصروف')) + '</b><small>' + esc(x.date || '') + (x.note ? ' · ' + esc(x.note) : '') + '</small></span><b class="' + (inc1 ? 'in' : 'out') + '">' + (inc1 ? '+' : '−') + money(x.amount) + '</b><button type="button" class="fx-ib sm" data-fx="call" data-v="editBudget" data-id="' + esc(x.id) + '" aria-label="تعديل">✎</button><button type="button" class="fx-ib sm" data-fx="call" data-v="deleteBudget" data-id="' + esc(x.id) + '" aria-label="حذف">✕</button></div>'; }).join('') : empty('ما في حركات لسا')) + '</div></div>' + (W.BudgetPlan ? '<details class="fx-glass fx-fold fx-bp"' + (lsGet('ss_fx_bp') === '1' ? ' open' : '') + '><summary>تخطيط الميزانية · حدود الشهر والتوقعات وأهداف الادخار</summary><div id="budgetPlan"></div></details>' : '') + (W.clearBudget ? '<div class="fx-tools">' + tool('fn', 'مسح الميزانية', 'clearBudget', 1) + '</div>' : '');
   }
   function vTimer(){
     var def = (W.timerSettings && W.timerSettings.focus) || 25, fm = 0;
@@ -515,6 +515,7 @@
   /* ---------- ثيمات تصميم الشريط الجانبي: كل ثيم لوحة كاملة (خلفية/شريط/كروت/حدود/تمييز) بنسختين ---------- */
   /* الترتيب: base, side, card, card2, hover, sel, ln, ed, ac */
   var PAL = [
+    ['vivid', 'حيوي', ['#0d1120', '#111628', '#151b2e', '#1b2238', '#1f2740', '#252f4c', '#222a44', '#2c3656', '#8b7bff'], ['#f5f6fb', '#ffffff', '#ffffff', '#f2f3fa', '#eceefa', '#e6e8f8', '#e6e8f2', '#d9dcec', '#6d4dff']],
     ['neutral', 'محايد', ['#191919', '#202020', '#232323', '#2a2a2a', '#2c2c2c', '#323232', '#2f2f2f', '#373737', '#5b9cf5'], ['#ffffff', '#f7f7f5', '#ffffff', '#f7f7f5', '#efefed', '#e8e8e5', '#ebebe9', '#e2e2df', '#2f6feb']],
     ['ocean', 'محيط', ['#0f1520', '#131b28', '#16202f', '#1c2738', '#1f2b3d', '#243349', '#223045', '#2a3a52', '#4f9dff'], ['#f8fafd', '#eef3fa', '#ffffff', '#f1f5fb', '#e6eef8', '#dbe6f5', '#e1e8f2', '#d5dfec', '#2563eb']],
     ['forest', 'غابة', ['#111815', '#151e1a', '#18231e', '#1e2b25', '#213029', '#273830', '#24332c', '#2c3e35', '#3ecf8e'], ['#f7faf8', '#edf4ef', '#ffffff', '#f1f6f2', '#e5efe8', '#d9e8de', '#e0eae3', '#d3e1d7', '#15803d']],
@@ -523,7 +524,9 @@
     ['amber', 'عنبري', ['#1a1712', '#201c16', '#241f18', '#2b251d', '#2f2820', '#372f25', '#332c22', '#3d342a', '#f5b544'], ['#fdfbf6', '#f7f1e4', '#ffffff', '#faf5ea', '#f2e9d6', '#ebdfc5', '#eee4d0', '#e4d8bf', '#b45309']],
     ['mono', 'أبيض وأسود', ['#111111', '#171717', '#1b1b1b', '#222222', '#242424', '#2b2b2b', '#282828', '#303030', '#e9e9e7'], ['#ffffff', '#f5f5f5', '#ffffff', '#f6f6f6', '#ededed', '#e4e4e4', '#e8e8e8', '#dedede', '#111111']]
   ];
-  function curPal(){ var id = lsGet('ss_fx_pal') || 'neutral'; return PAL.filter(function(x){ return x[0] === id; })[0] || PAL[0]; }
+  /* 162+: «حيوي» صار الافتراضي؛ اللي كان على «محايد» (الافتراضي القديم) بينقل مرة وحدة */
+  try{ if(lsGet('ss_fx_pal_v2') !== '1'){ if((lsGet('ss_fx_pal') || 'neutral') === 'neutral') lsSet('ss_fx_pal', 'vivid'); lsSet('ss_fx_pal_v2', '1'); } }catch(e){}
+  function curPal(){ var id = lsGet('ss_fx_pal') || 'vivid'; return PAL.filter(function(x){ return x[0] === id; })[0] || PAL[0]; }
   function hexA(h, a){ var n = parseInt(h.slice(1), 16); return 'rgba(' + (n >> 16 & 255) + ',' + (n >> 8 & 255) + ',' + (n & 255) + ',' + a + ')'; }
   function applyPal(dark){
     var P = curPal(), c = dark ? P[2] : P[3], h = d.documentElement;
@@ -673,7 +676,9 @@
     if(cur === 'timetable'){ var oc = main.querySelector('.fx-chip.on'); if(oc && oc.scrollIntoView) try{ oc.scrollIntoView({ inline: 'center', block: 'nearest' }); }catch(e){} }
     if(cur === 'campus') mountCampus();
     var spf = main.querySelector('.fx-sp'); if(spf) spf.addEventListener('toggle', function(){ lsSet('ss_fx_sp', spf.open ? '1' : '0'); });
-    if(cur === 'budget' && W.BudgetPlan){ try{ W.BudgetPlan.render(); }catch(e){} var bf = main.querySelector('.fx-bp'); if(bf) bf.addEventListener('toggle', function(){ lsSet('ss_fx_bp', bf.open ? '1' : '0'); }); }
+    if(cur === 'budget' && W.BudgetPlan){ var bf = main.querySelector('.fx-bp'), bpr = function(){ try{ W.BudgetPlan.render(); }catch(e){} };   /* تخطيط الميزانية ثقيل: بيتبنى بس لما يكون مفتوح */
+      if(!bf || bf.open) bpr(); else { var ric = W.requestIdleCallback || function(f){ return setTimeout(f, 0); }; ric(function(){ if(d.getElementById('budgetPlan')) bpr(); }, { timeout: 600 }); }   /* مسكّر: بعد ما تنرسم الصفحة */
+      if(bf) bf.addEventListener('toggle', function(){ lsSet('ss_fx_bp', bf.open ? '1' : '0'); }); }
     main.classList.toggle('anim', !!anim);
     if(typed){ var ni = main.querySelector('.fx-add input'); if(ni) ni.value = typed; }
     if(!anim) main.scrollTop = keep; else { main.scrollTop = 0; countUp(main); }
@@ -688,7 +693,8 @@
     if(!fromPop && !same) try{ var t = OLD[cur] || cur; history.pushState({ tab: d.getElementById(t) ? t : 'dashboard', fx: cur }, '', '#' + cur); }catch(e){}
     var m = d.getElementById('fxMain'), red = W.matchMedia && W.matchMedia('(prefers-reduced-motion: reduce)').matches;
     /* انتقال الصفحات (View Transitions): القديمة بتتلاشى والجديدة بتنزلق من اتجاه التنقل، والشريط الجانبي ثابت ومؤشره بيتحرّك */
-    if(!same && d.startViewTransition && !red && d.documentElement.classList.contains('fx-on')){
+    var narrow = W.matchMedia && W.matchMedia('(max-width: 820px), (pointer: coarse)').matches;   /* التلفون/التطبيق: لقطة الصفحة كاملة ثقيلة ← تلاشي CSS خفيف بدلها */
+    if(!same && !narrow && d.startViewTransition && !red && d.documentElement.classList.contains('fx-on')){
       var ord = ['today', 'timetable', 'tasks', 'exams', 'grades', 'courses', 'budget', 'timer', 'attendance', 'plan', 'tree', 'more', 'settings'], a0 = ord.indexOf(go._prev), a1 = ord.indexOf(cur);
       d.documentElement.setAttribute('data-vtdir', a0 > -1 && a1 > -1 && a1 < a0 ? 'back' : 'fwd'); d.documentElement.classList.add('vt-run');
       try{ var vt = d.startViewTransition(function(){ render(true); if(m && !fromPop) m.scrollTop = 0; }); var off = function(){ d.documentElement.classList.remove('vt-run'); }; vt.finished.then(off, off); if(vt.ready) vt.ready.catch(function(){}); if(vt.updateCallbackDone) vt.updateCallbackDone.catch(function(){}); }

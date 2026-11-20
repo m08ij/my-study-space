@@ -24,6 +24,7 @@
 <link rel="stylesheet" href="css/09-focus.css">
 <link rel="stylesheet" href="css/10-dialogs.css">
 <link rel="stylesheet" href="css/11-sidebar.css">
+<link rel="stylesheet" href="css/12-vivid.css">
 <script>/* مستخدم جديد: تظهر شاشة الترحيب من أول رسم (بدون وميض اللوحة خلفها)، ويزيل app.js الصنف عند اكتمال الدخول */
 try{ if(localStorage.getItem("welcomeDone") !== "true") document.documentElement.classList.add("is-new"); }catch(e){}
 /* هيكل التحميل بألوان آخر ثيم (يحفظها focus.js applyLook بـss_fx_boot: [غامق، أساس، تدرج1..3]) */
@@ -247,7 +248,7 @@ try{ var _h = document.documentElement; if(!_h.classList.contains("is-new") && !
    1) إن لم يطابق window.APP_BUILD رقم BUILD هنا → يمسح كاش التطبيق ويعيد التحميل مرة واحدة (حارس sessionStorage يمنع التكرار).
    2) أقسام اللوحة المتقدمة (تحليلات/LMS/إحصائيات) تُنقل إلى خانتها الثابتة إذا أضافتها سكربتات قديمة بمكان آخر. */
 (function(){
-  var BUILD = '162';
+  var BUILD = '163';
   var SLOTS = { insightsSection: 'slotInsights', lmsWidget: 'slotLms', enhancedStatsSection: 'slotEnhanced' };
   function heal(){
     var dash = document.getElementById('dashboard'); if(!dash) return;

@@ -48,6 +48,8 @@ flowchart LR
   R -- "رد Gemini كما هو" --> U
 ```
 
+![n8n workflow — My Space · Gemini backend](docs/n8n-workflow.png)
+
 | المسار | بيستقبل | بيرجّع | وين بالموقع |
 |---|---|---|---|
 | `POST /webhook/assistant` | `{ question, history[], context }` | `{ answer }` (Markdown + `<actions>[…]</actions>` اختياري) | زر ✦ «المساعد» — [`assistant.js`](assistant.js) |

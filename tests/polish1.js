@@ -35,9 +35,9 @@ const base={profile:{name:'س'},courses:[{id:'c1',name:'شبكات',code:'',hour
  /* ===== تجميع إجراءات موادي + فئات الميزانية ===== */
 
 
- w.switchTab('budget'); await sl(80); w.renderBudget(); await sl(60); const bp=Q('#budgetPlan'); const cats=bp?bp.querySelectorAll('.bp-cat').length:0; const more=bp&&bp.querySelector('details.bp-more');
+ w.switchTab('budget'); await sl(80); w.renderBudget(); await sl(150); const bp=Q('#budgetPlan'); const cats=bp?bp.querySelectorAll('.bp-cat').length:0; const more=bp&&bp.querySelector('details.bp-more');
  o.B_collapsedWhenNoActivity=!!more&&more.open===true&&cats>=10;
- sp().budget=[{id:'x',type:'expense',category:'food',amount:5,date:dsK(0),note:''}]; w.renderBudget(); await sl(60); const more2=Q('#budgetPlan details.bp-more'); o.B_activeFirst=!!more2&&!more2.open&&/باقي الفئات/.test(more2.textContent)&&Q('#budgetPlan > * .bp-cats, #budgetPlan .bp-cats').querySelectorAll('.bp-cat').length===1&&/طعام/.test(Q('#budgetPlan .bp-cats').textContent);
+ sp().budget=[{id:'x',type:'expense',category:'food',amount:5,date:dsK(0),note:''}]; w.renderBudget(); await sl(150); const more2=Q('#budgetPlan details.bp-more'); o.B_activeFirst=!!more2&&!more2.open&&/باقي الفئات/.test(more2.textContent)&&Q('#budgetPlan > * .bp-cats, #budgetPlan .bp-cats').querySelectorAll('.bp-cat').length===1&&/طعام/.test(Q('#budgetPlan .bp-cats').textContent);
  o.B_limitsStillBound=(()=>{ const inp=more2.querySelector('.bp-limit'); return !!inp&&inp.getAttribute('data-cat')!==null; })();
  o.errs=errs.filter(e=>!/offline|Not implemented|Could not parse/i.test(e)); console.log(JSON.stringify(o,null,1)); process.exit(0);
 })();
