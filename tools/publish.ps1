@@ -2,7 +2,7 @@
   نشر إصدار جديد بأمر واحد (Windows PowerShell 5.1):
     .\tools\publish.ps1 -Build 162 -Message "وصف قصير"
     .\tools\publish.ps1 -Build 162 -DryRun        # فحص فقط: الاختبارات + الملفات المتغيّرة، بدون أي تعديل
-  الخطوات: (1) الاختبارات السريعة (-Full = الشاملة) (2) رفع الأرقام الثلاثة (core.js / index.html / sw.js)
+  الخطوات: (1) الاختبارات السريعة (-Full = الشاملة) (2) رفع الأرقام الثلاثة (js/core.js / index.html / sw.js)
            (3) commit + push للمصدر على main (4) GitHub Actions بيفحص ويبني (tools/build-site.js) وينشر على Pages
            (5) انتظار حتى يعرض الموقع الإصدار الجديد.
   لا يعدّل بيانات ولا Supabase. يتوقف عند أول خطأ.
@@ -33,7 +33,7 @@ if($code -ne 0){ Die "الاختبارات فيها فشل — لا نشر." }
 
 # 2) رفع الأرقام الثلاثة
 $bumps = @(
-  @{ f = 'core.js';    re = "window\.APP_BUILD = '\d+'"; to = "window.APP_BUILD = '$Build'" },
+  @{ f = 'js\core.js';    re = "window\.APP_BUILD = '\d+'"; to = "window.APP_BUILD = '$Build'" },
   @{ f = 'index.html'; re = "var BUILD = '\d+'";         to = "var BUILD = '$Build'" },
   @{ f = 'sw.js';      re = "ss-cache-v\d+";             to = "ss-cache-v$Build" }
 )

@@ -14,7 +14,7 @@ function check(dir){
   const fd = path.join(dir, 'fonts'); let fsz = 0;
   if(fs.existsSync(fd)) fs.readdirSync(fd).filter(f => /\.woff2$/.test(f)).forEach(f => { fsz += fs.statSync(path.join(fd, f)).size; });
   if(fsz) row('fonts (woff2)', fsz, BUDGET.fonts);
-  const v = path.join(dir, 'vendor-supabase.js'); if(fs.existsSync(v)) row('vendor-supabase.js (lazy, gzip)', gz(v), BUDGET.lazy);
+  const v = path.join(dir, 'js', 'vendor-supabase.js'); if(fs.existsSync(v)) row('vendor-supabase.js (lazy, gzip)', gz(v), BUDGET.lazy);
   return out;
 }
 module.exports = { check, BUDGET };

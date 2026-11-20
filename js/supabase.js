@@ -361,7 +361,7 @@
     if(libPromise) return libPromise;
     libPromise = new Promise(function(resolve){
       try{
-        var s = document.createElement('script'); s.src = 'vendor-supabase.js?v=' + (window.APP_BUILD || '1'); s.async = true;
+        var s = document.createElement('script'); s.src = 'js/vendor-supabase.js?v=' + (window.APP_BUILD || '1'); s.async = true;
         s.onload = function(){ resolve(true); }; s.onerror = function(){ libPromise = null; resolve(false); };   /* بدون إنترنت/ملف: نكمل (init يرجّع null) ونعيد المحاولة لاحقاً */
         document.head.appendChild(s);
       }catch(e){ libPromise = null; resolve(false); }

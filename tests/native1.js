@@ -1,5 +1,5 @@
 /* جسر تطبيق أندرويد: خطة الإشعارات (نقية) + جدولة عبر Capacitor مُحاكى + تنزيل الملفات + قارئ الكتاب */
-const N = require('../native-bridge.js'), A = require('../smart-assist.js');
+const N = require('../js/native-bridge.js'), A = require('../js/smart-assist.js');
 const { boot } = require('./e2elib'); const sl = ms => new Promise(r => setTimeout(r, ms));
 (async () => {
   const o = {};

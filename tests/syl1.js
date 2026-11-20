@@ -1,6 +1,6 @@
 /* خطة المادة + ربط الكتاب: الدوال النقية (Node) ثم الواجهة (jsdom) مع Gemini مُحاكى — بدون شبكة وبدون مفتاح */
 const fs = require('fs'), path = require('path'), zlib = require('zlib');
-const S = require('../syllabus.js');
+const S = require('../js/syllabus.js');
 const { boot } = require('./e2elib'); const sl = ms => new Promise(r => setTimeout(r, ms));
 
 /* بناء docx صغير حقيقي (zip بضغط deflate) لاختبار فكّ الضغط */

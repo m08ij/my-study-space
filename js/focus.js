@@ -190,33 +190,31 @@
   function vTimetable(){
     var all = entries(), nowD = new Date().getDay(), nm = nowMin(), days = [0, 1, 2, 3, 4, 5, 6].filter(function(i){ return i < 5 || all.some(function(e){ return e.dayIdx === i; }); });
     if(!all.length) return '<div class="fx-glass">' + empty('ما في محاضرات بجدولك', 'أضف جدولك مرة وحدة وبيضل معك كل الفصل') + '<div class="fx-actions"><button type="button" class="fx-btn" data-fx="addclass">' + ic('plus') + 'إضافة الجدول</button>' + (W.OcrImport ? '<button type="button" class="fx-btn ghost" data-fx="ocr">' + ic('camera') + 'من صورة</button><button type="button" class="fx-btn ghost fx-only-narrow" data-fx="ocrcam" aria-label="تصوير الجدول">' + ic('camera') + '</button>' : '') + '</div><small class="fx-note">صوّر جدولك أو الصق صورته (Ctrl+V) وبنعبّيه عنك</small></div>';
-    var mn = Math.min.apply(null, all.map(function(e){ return e.start; })), mx = Math.max.apply(null, all.map(function(e){ return e.end; }));
-    mn = Math.floor(mn / 60) * 60; mx = Math.ceil(mx / 60) * 60; var span = mx - mn, PX = 1.3;
     var MON = ['كانون الثاني', 'شباط', 'آذار', 'نيسان', 'أيار', 'حزيران', 'تموز', 'آب', 'أيلول', 'تشرين الأول', 'تشرين الثاني', 'كانون الأول'];
     function dOf(i){ var x = new Date(); x.setDate(x.getDate() + (i - nowD)); return x; }
     var d0 = dOf(days[0]), d1 = dOf(days[days.length - 1]), mins = all.reduce(function(t, e){ return t + (e.end - e.start); }, 0);
     var range = d0.getDate() + (d0.getMonth() !== d1.getMonth() ? ' ' + MON[d0.getMonth()] : '') + ' – ' + d1.getDate() + ' ' + MON[d1.getMonth()];
     var acts = '<button type="button" class="fx-btn sm" data-fx="addclass">' + ic('plus') + 'إضافة / تعديل</button>' + (W.OcrImport ? '<button type="button" class="fx-btn ghost sm" data-fx="ocr">' + ic('camera') + 'من صورة</button>' : '');
-    var bar = '<div class="fx-calbar"><div class="fx-calr"><b>' + range + '</b><small>' + all.length + ' محاضرة بالأسبوع · ' + dur(mins) + '</small></div><span class="fx-calact fx-only-wide">' + acts + '</span></div>';
-    var hours = ''; for(var h = mn; h < mx; h += 60) hours += '<span style="top:' + ((h - mn) * PX) + 'px">' + hm(h) + '</span>';
-    var showNow = days.indexOf(nowD) > -1 && nm > mn && nm < mx;
-    var grid = '<div class="fx-cal" style="--cols:' + days.length + ';--hp:' + (60 * PX) + 'px">' +
-      '<div class="fx-calh"><span></span>' + days.map(function(i){ return '<div class="fx-cald' + (i === nowD ? ' today' : '') + '"><small>' + DA[i] + '</small><b>' + dOf(i).getDate() + '</b></div>'; }).join('') + '</div>' +
-      '<div class="fx-calb" style="height:' + (span * PX) + 'px"><div class="fx-calg">' + hours + (showNow ? '<em class="fx-calnow" style="top:' + ((nm - mn) * PX) + 'px">' + hm(nm) + '</em>' : '') + '</div>' +
-      days.map(function(i){
-        return '<div class="fx-calc' + (i === nowD ? ' today' : '') + (i < nowD ? ' past' : '') + '">' + (i === nowD && showNow ? '<i class="fx-calline" style="top:' + ((nm - mn) * PX) + 'px"></i>' : '') +
-          all.filter(function(e){ return e.dayIdx === i; }).map(function(e){ var st = i === nowD ? (nm >= e.end ? ' done' : nm >= e.start ? ' now' : '') : '', hgt = Math.max(26, (e.end - e.start) * PX - 4);
-            return '<button type="button" class="fx-cev' + st + (hgt < 62 ? ' sm' : '') + '" style="--h:' + hue(e.name) + ';top:' + ((e.start - mn) * PX + 2) + 'px;height:' + hgt + 'px" data-fx="course" data-n="' + esc(e.name) + '" title="' + esc(e.name + ' · ' + hm(e.start) + '–' + hm(e.end) + (place(e) ? ' · ' + place(e) : '')) + '"><b>' + esc(e.name) + '</b><small dir="ltr">' + hm(e.start) + ' – ' + hm(e.end) + '</small>' + (place(e) ? '<small class="fx-cpl">' + esc(place(e)) + '</small>' : '') + '</button>'; }).join('') + '</div>';
-      }).join('') + '</div></div>';
+    var more = '<details class="fx-ttmore"><summary aria-label="خيارات أكثر" title="خيارات أكثر">⋯</summary><div class="fx-ttmenu">' + tool('share', 'مشاركة كصورة') + tool('cal', 'ربط التقويم') + (W.printTimetable ? tool('fn', 'طباعة', 'printTimetable') : '') + (W.clearTimetable ? tool('fn', 'مسح الجدول', 'clearTimetable', 1) : '') + '</div></details>';
+    var bar = '<div class="fx-calbar"><div class="fx-calr"><b>' + range + '</b><small>' + all.length + ' محاضرة بالأسبوع · ' + dur(mins) + '</small></div><span class="fx-calact fx-only-wide">' + acts + more + '</span></div>';
+    /* الكمبيوتر: لوحة أسبوعية مضغوطة — عمود لكل يوم، محاضراته بالترتيب كبطاقات، والفراغ بينهم كسطر صغير (بدون شبكة ساعات طويلة) */
+    var grid = '<div class="fx-wk" style="--cols:' + days.length + '">' + days.map(function(i){
+      var de = all.filter(function(e){ return e.dayIdx === i; }).sort(function(a, b){ return a.start - b.start; }), isT = i === nowD, prevEnd = null, mins2 = de.reduce(function(t, e){ return t + (e.end - e.start); }, 0);
+      var cards = de.map(function(e){
+        var st = isT ? (nm >= e.end ? ' done' : nm >= e.start ? ' now' : '') : '', gap = prevEnd !== null && e.start - prevEnd >= 30 ? '<div class="fx-wkgap">استراحة ' + dur(e.start - prevEnd) + '</div>' : ''; prevEnd = e.end;
+        return gap + '<button type="button" class="fx-wkc' + st + '" style="--h:' + hue(e.name) + '" data-fx="course" data-n="' + esc(e.name) + '" title="' + esc(e.name) + '"><span class="fx-wkt">⁦' + hm(e.start) + ' – ' + hm(e.end) + '⁩</span><b>' + esc(e.name) + '</b>' + (place(e) ? '<small>' + esc(place(e)) + '</small>' : '') + (st === ' now' ? '<em class="fx-nowb">الآن</em>' : '') + '</button>';
+      }).join('');
+      return '<section class="fx-wkd' + (isT ? ' today' : '') + (i < nowD ? ' past' : '') + '"><header><span><small>' + DA[i] + '</small><b>' + dOf(i).getDate() + '</b></span><i title="' + (de.length ? dur(mins2) : '') + '">' + (de.length === 1 ? 'محاضرة' : de.length === 2 ? 'محاضرتين' : de.length ? de.length + ' محاضرات' : 'فاضي') + '</i></header>' +
+        (cards || '<div class="fx-wkfree">يوم فاضي ✨</div>') + '</section>';
+    }).join('') + '</div>';
     /* التلفون: شريط أيام بأرقام التواريخ + محاضرات اليوم المختار كخط زمني */
     var list = all.filter(function(e){ return e.dayIdx === ttDay; }).sort(function(a, b){ return a.start - b.start; });
     var mobile = '<div class="fx-mdays">' + days.map(function(i){ var n = all.filter(function(e){ return e.dayIdx === i; }).length; return '<button type="button" class="fx-mday' + (i === ttDay ? ' on' : '') + (i === nowD ? ' today' : '') + '" data-fx="day" data-v="' + i + '"><small>' + DA[i].replace('ال', '') + '</small><b>' + dOf(i).getDate() + '</b><i>' + (n ? new Array(Math.min(n, 4) + 1).join('•') : '') + '</i></button>'; }).join('') + '</div>' +
       (list.length ? '<div class="fx-mlist">' + list.map(function(e){ var st = ttDay === nowD ? (nm >= e.end ? ' done' : nm >= e.start ? ' now' : '') : '';
           return '<button type="button" class="fx-mrow' + st + '" style="--h:' + hue(e.name) + '" data-fx="course" data-n="' + esc(e.name) + '"><span class="fx-mt" dir="ltr"><b>' + hm(e.start) + '</b><small>' + hm(e.end) + '</small></span><span class="fx-mc"><b>' + esc(e.name) + (st === ' now' ? ' <em class="fx-nowb">الآن</em>' : '') + '</b><small>' + dur(e.end - e.start) + (place(e) ? ' · ' + esc(place(e)) : '') + '</small></span></button>'; }).join('') + '</div>'
         : '<div class="fx-mempty">' + empty('ما في محاضرات ' + DA[ttDay], 'يوم فاضي — مناسب لجلسة مذاكرة') + '</div>');
-    return bar + '<div class="fx-only-wide">' + grid + '</div><div class="fx-only-narrow">' + mobile + '<div class="fx-actions">' + acts + '</div></div>' +
-      spBox() +
-      '<div class="fx-tools">' + tool('share', 'مشاركة كصورة') + tool('cal', 'ربط التقويم') + (W.printTimetable ? tool('fn', 'طباعة', 'printTimetable') : '') + (W.clearTimetable ? tool('fn', 'مسح الجدول', 'clearTimetable', 1) : '') + '</div>';
+    return bar + '<div class="fx-only-wide">' + grid + '</div><div class="fx-only-narrow">' + mobile + '<div class="fx-actions">' + acts + more + '</div></div>' +
+      spBox();
   }
 
   /* ---------- المهام والعلامات (مرحلة 2 بتطوّرهم) ---------- */

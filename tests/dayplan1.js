@@ -1,6 +1,6 @@
 /* خطتي اليوم (dayplan.js): الاقتراحات الذكية، الدمج مع المحفوظ والترحيل، السلسلة والإعفاء، المراجعة الأسبوعية، البطاقة والورقة، التذكيرات والودجت */
 const { boot } = require('./e2elib'); const sl = ms => new Promise(r => setTimeout(r, ms));
-const DP = require('../dayplan.js');
+const DP = require('../js/dayplan.js');
 (async () => {
   const o = {};
   /* ---------- (1) منطق نقي ---------- */

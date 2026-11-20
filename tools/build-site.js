@@ -1,11 +1,11 @@
 /* يبني نسخة النشر من المصدر: node tools/build-site.js [مجلد_الناتج=_site]
-   - ينسخ ملفات التشغيل فقط (html/js/css/json/ico بالجذر + css/ icons/ apk/ fonts/) — بدون tests/tools/n8n/supabase
+   - ينسخ ملفات التشغيل فقط (index.html/sw.js/manifest/ico بالجذر + js/ css/ icons/ apk/ fonts/) — بدون tests/tools/n8n/supabase
    - بعدين tools/bundle.js --clean: سكربت واحد app.bundle.js وتنسيق واحد app.bundle.css مصغّرين
    يُستعمل بـGitHub Actions (.github/workflows/deploy.yml) ومحلياً للتجربة. */
 const fs = require('fs'), path = require('path'), { execFileSync } = require('child_process');
 const src = path.join(__dirname, '..');
 const out = path.resolve(process.argv[2] || path.join(src, '_site'));
-const ROOT_EXT = ['.html', '.js', '.css', '.json', '.ico'], SKIP = ['package.json', 'package-lock.json'], DIRS = ['css', 'icons', 'apk', 'fonts'];
+const ROOT_EXT = ['.html', '.js', '.css', '.json', '.ico'], SKIP = ['package.json', 'package-lock.json'], DIRS = ['js', 'css', 'icons', 'apk', 'fonts'];
 
 fs.rmSync(out, { recursive: true, force: true });
 fs.mkdirSync(out, { recursive: true });

@@ -13,6 +13,8 @@
 
 </div>
 
+### 🎬 [شاهد فيديو العرض (دقيقة)](docs/media/study-space-promo.mp4)
+
 > هذا مشروع شخصي: صمّمته وبنيته على مقاس احتياجاتي كطالب (جدولي، موادي، امتحاناتي…). مش منتج عام، بس الرابط مفتوح وأي حد بيقدر يجرّبه — البيانات بتنحفظ على جهازه هو.
 
 ---
@@ -52,8 +54,8 @@ flowchart LR
 
 | المسار | بيستقبل | بيرجّع | وين بالموقع |
 |---|---|---|---|
-| `POST /webhook/assistant` | `{ question, history[], context }` | `{ answer }` (Markdown + `<actions>[…]</actions>` اختياري) | زر ✦ «المساعد» — [`assistant.js`](assistant.js) |
-| `POST /webhook/gemini` | `{ model, request }` (طلب `generateContent` كامل) | رد Gemini وحالة HTTP كما هي | استيراد الجدول/الامتحانات/العلامات من صورة — [`ocr-import.js`](ocr-import.js) |
+| `POST /webhook/assistant` | `{ question, history[], context }` | `{ answer }` (Markdown + `<actions>[…]</actions>` اختياري) | زر ✦ «المساعد» — [`assistant.js`](js/assistant.js) |
+| `POST /webhook/gemini` | `{ model, request }` (طلب `generateContent` كامل) | رد Gemini وحالة HTTP كما هي | استيراد الجدول/الامتحانات/العلامات من صورة — [`ocr-import.js`](js/ocr-import.js) |
 
 **الحماية**
 - مفتاح Gemini **Credential داخل n8n فقط** — مش موجود بالكود ولا بالمتصفح.
@@ -65,7 +67,7 @@ flowchart LR
 
 **الملفات**
 - [`n8n/workflow.json`](n8n/workflow.json) — الـworkflow نفسه (Import من n8n ← اربط Credential «Google Gemini API» ← Publish).
-- [`n8n.js`](n8n.js) — عميل صغير (`N8n.ask` / `N8n.gemini`) مع مهلة ورسائل خطأ عربية.
+- [`n8n.js`](js/n8n.js) — عميل صغير (`N8n.ask` / `N8n.gemini`) مع مهلة ورسائل خطأ عربية.
 - [`tools/n8n-mock.js`](tools/n8n-mock.js) — خادم n8n مُحاكى للتطوير المحلي: بيشغّل **نفس كود** عقد الـCode من `workflow.json`.
 
 ---
@@ -101,14 +103,21 @@ cd tools && npm ci && node build-site.js       # نسخة النشر بـ _site/
 ## 📁 البنية
 
 ```text
-index.html, *.js        المصدر (Vanilla JS بأسلوب ES5، IIFE + window.X) — ترتيب التحميل بـindex.html
-css/                    التنسيقات بالترتيب 01 … 11
-n8n.js, assistant.js    الربط مع n8n والمساعد
-n8n/workflow.json       الـworkflow
-tests/                  اختبارات jsdom (+ Supabase وهمي)
-tools/                  البناء والنشر وأدوات الفحص بمتصفح حقيقي
-supabase/               SQL للمزامنة (RLS + دوال RPC)
-apk/                    تطبيق أندرويد + version.json للتحديث من داخله
+├── index.html · sw.js · manifest.json   الصفحة + Service Worker (لازم بالجذر) + PWA
+├── js/                 السكربتات (Vanilla JS بأسلوب ES5، IIFE + window.X) — ترتيب التحميل بـindex.html
+│   ├── core.js · data.js · supabase.js …   الأساس، قاعدة المواد، المزامنة
+│   ├── focus.js                             الواجهة (الشاشات والتنقل)
+│   ├── n8n.js · assistant.js                الربط مع n8n والمساعد
+│   └── ocr-import.js · gemini-lab.js …      قراءة الصور، الخريطة، الميزات
+├── css/                التنسيقات بالترتيب 01 … 12
+├── fonts/ · icons/     خط Tajawal (OFL) والأيقونات
+├── apk/                تطبيق أندرويد + version.json للتحديث من داخله
+├── n8n/workflow.json   الـworkflow (Import بـn8n)
+├── supabase/           SQL للمزامنة (RLS + دوال RPC)
+├── tests/              اختبارات jsdom (+ Supabase وهمي) — node run-all.js quick
+├── tools/              البناء والنشر وأدوات الفحص (شوف tools/README.md)
+├── docs/               صورة الـworkflow وفيديو العرض
+└── .github/workflows/  Test & Deploy + Supabase keep-alive
 ```
 
 **التقنيات:** HTML5 · CSS3 · Vanilla JavaScript · PWA / Service Worker · LocalStorage + IndexedDB · Supabase · **n8n Cloud** · Google Gemini · GitHub Actions + Pages · Capacitor (Android)

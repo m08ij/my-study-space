@@ -1,5 +1,0 @@
-/* app.css — محوّل توافق: التنسيق انتقل لملفات css/ (تُحمَّل مباشرة من index.html). يبقى هذا الملف فقط لأي نسخة HTML قديمة محفوظة بالكاش. */
-@import url('css/01-base.css');
-@import url('css/02-motion-themes.css');
-@import url('css/03-hub-dashboard-welcome.css');
-@import url('css/04-responsive-components-phases.css');

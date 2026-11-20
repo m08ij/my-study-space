@@ -22,8 +22,9 @@ try{ csso = require(path.join(__dirname, 'node_modules', 'csso')); }catch(e){ co
   /* مكتبات vendor-* (supabase) لا تدخل الحزمة: تُحمَّل عند الحاجة بـsupabase.js (libReady) فتخفّ الحزمة ~22% لمن لا يستعمل المزامنة */
   /* ميزات بتتحمّل عند أول استعمال (core.js window.withModule): خارج الحزمة، مصغّرة بمكانها، وتضل بقائمة الـSW للأوفلاين */
   const LAZY_MODULES = ['ics-import.js', 'share.js', 'campus-map.js'];
-  const lazy = files.filter(f => /^vendor-/.test(f) || LAZY_MODULES.indexOf(f) > -1); files.splice(0, files.length, ...files.filter(f => lazy.indexOf(f) < 0));
-  for(const f of lazy.filter(x => !/^vendor-/.test(x))){
+  const bn = f => f.split('/').pop();   /* السكربتات صارت بمجلد js/ */
+  const lazy = files.filter(f => /^vendor-/.test(bn(f)) || LAZY_MODULES.indexOf(bn(f)) > -1); files.splice(0, files.length, ...files.filter(f => lazy.indexOf(f) < 0));
+  for(const f of lazy.filter(x => !/^vendor-/.test(bn(x)))){
     const p = path.join(root, f); if(!fs.existsSync(p)) die('ملف مؤجَّل مفقود: ' + f);
     let src = fs.readFileSync(p, 'utf8'); try{ new vm.Script(src, { filename: f }); }catch(e){ die('خطأ صياغة في ' + f + ': ' + e.message); }
     if(terser){ const r = await terser.minify(src, { compress: { passes: 1 }, mangle: true, format: { comments: false, ascii_only: false } }); if(!r || !r.code) die('فشل تصغير ' + f); src = r.code; }
@@ -70,7 +71,7 @@ try{ csso = require(path.join(__dirname, 'node_modules', 'csso')); }catch(e){ co
   if(fs.existsSync(swPath)){
     let sw = fs.readFileSync(swPath, 'utf8');
     const set = new Set(files.map(f => './' + f));
-    sw = sw.replace(/'\.\/[\w.\-]+\.js',?\s*/g, s => set.has(s.replace(/[',\s]/g, '')) ? '' : s);
+    sw = sw.replace(/'\.\/(?:js\/)?[\w.\-]+\.js',?\s*/g, s => set.has(s.replace(/[',\s]/g, '')) ? '' : s);
     sw = sw.replace("'./manifest.json'", "'./app.bundle.js?v=" + build + "', " + (cfiles.length ? "'./app.bundle.css?v=" + build + "', " : '') + "'./manifest.json'");
     if(cfiles.length) sw = sw.replace(/'\.\/css\/[\w.\-]+\.css',?\s*/g, '');
     fs.writeFileSync(swPath, sw);

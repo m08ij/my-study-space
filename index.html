@@ -187,41 +187,41 @@ try{ var _h = document.documentElement; if(!_h.classList.contains("is-new") && !
 <div class="toast-container" id="toastContainer" role="status" aria-live="polite"></div>
 
 <!-- مكتبات خارجية -->
-<script src="vendor-supabase.js"></script>
+<script src="js/vendor-supabase.js"></script>
 
 <!-- الملفات الأساسية (الترتيب مهم جداً!) -->
-<script src="core.js"></script>
-<script src="diag.js"></script>
-<script src="data.js"></script>
-<script src="supabase.js"></script>
-<script src="features.js"></script>
-<script src="widgets.js"></script>
-<script src="integrations.js"></script>
-<script src="ocr-parse.js"></script>
-<script src="n8n.js"></script>
-<script src="ocr-import.js"></script>
-<script src="exam-import.js"></script>
-<script src="gemini-lab.js"></script>
-<script src="course-sync.js"></script>
-<script src="extras.js"></script>
-<script src="hub.js"></script>
-<script src="campus-map.js"></script>
-<script src="syllabus.js"></script>
-<script src="smart-assist.js"></script>
-<script src="native-bridge.js"></script>
-<script src="study.js"></script>
-<script src="budget-plan.js"></script>
-<script src="daily.js"></script>
-<script src="progress.js"></script>
-<script src="coach.js"></script>
-<script src="dayplan.js"></script>
-<script src="share.js"></script>
-<script src="ux.js"></script>
-<script src="ics-import.js"></script>
-<script src="pwa.js"></script>
-<script src="app.js"></script>
-<script src="assistant.js"></script>
-<script src="focus.js"></script>
+<script src="js/core.js"></script>
+<script src="js/diag.js"></script>
+<script src="js/data.js"></script>
+<script src="js/supabase.js"></script>
+<script src="js/features.js"></script>
+<script src="js/widgets.js"></script>
+<script src="js/integrations.js"></script>
+<script src="js/ocr-parse.js"></script>
+<script src="js/n8n.js"></script>
+<script src="js/ocr-import.js"></script>
+<script src="js/exam-import.js"></script>
+<script src="js/gemini-lab.js"></script>
+<script src="js/course-sync.js"></script>
+<script src="js/extras.js"></script>
+<script src="js/hub.js"></script>
+<script src="js/campus-map.js"></script>
+<script src="js/syllabus.js"></script>
+<script src="js/smart-assist.js"></script>
+<script src="js/native-bridge.js"></script>
+<script src="js/study.js"></script>
+<script src="js/budget-plan.js"></script>
+<script src="js/daily.js"></script>
+<script src="js/progress.js"></script>
+<script src="js/coach.js"></script>
+<script src="js/dayplan.js"></script>
+<script src="js/share.js"></script>
+<script src="js/ux.js"></script>
+<script src="js/ics-import.js"></script>
+<script src="js/pwa.js"></script>
+<script src="js/app.js"></script>
+<script src="js/assistant.js"></script>
+<script src="js/focus.js"></script>
 <script>
 /* إخفاء الهيكل الرمادي بعد أول رسم للتطبيق (مع مؤقّت أمان كي لا يعلق أبداً) */
 (function(){
@@ -248,7 +248,7 @@ try{ var _h = document.documentElement; if(!_h.classList.contains("is-new") && !
    1) إن لم يطابق window.APP_BUILD رقم BUILD هنا → يمسح كاش التطبيق ويعيد التحميل مرة واحدة (حارس sessionStorage يمنع التكرار).
    2) أقسام اللوحة المتقدمة (تحليلات/LMS/إحصائيات) تُنقل إلى خانتها الثابتة إذا أضافتها سكربتات قديمة بمكان آخر. */
 (function(){
-  var BUILD = '163';
+  var BUILD = '164';
   var SLOTS = { insightsSection: 'slotInsights', lmsWidget: 'slotLms', enhancedStatsSection: 'slotEnhanced' };
   function heal(){
     var dash = document.getElementById('dashboard'); if(!dash) return;

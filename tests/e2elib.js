@@ -1,7 +1,7 @@
 const ROOT=require('path').resolve(process.env.SS_ROOT||require('path').join(__dirname,'..')).split('\\').join('/')+'/';
 const {JSDOM,VirtualConsole}=require('jsdom'); const fs=require('fs');
 exports.boot=function(ls){ const errs=[]; const vc=new VirtualConsole(); vc.on('jsdomError',e=>errs.push('JSDOMERR '+(e.detail&&e.detail.stack||e.message).split('\n')[0])); vc.on('error',m=>errs.push('console.error '+String(m).slice(0,200)));
- let html=fs.readFileSync(ROOT+'index.html','utf8').replace(/<script[^>]*src="https?:[^>]*><\/script>/g,'').replace(/<script src="([^"]+)"><\/script>/g,(m,s)=>/^vendor-/.test(s)?'':'<script>'+fs.readFileSync(ROOT+s.split('?')[0],'utf8').replace(/<\/script>/g,'<\\/script>')+'</script>');
+ let html=fs.readFileSync(ROOT+'index.html','utf8').replace(/<script[^>]*src="https?:[^>]*><\/script>/g,'').replace(/<script src="([^"]+)"><\/script>/g,(m,s)=>/(^|\/)vendor-/.test(s)?'':'<script>'+fs.readFileSync(ROOT+s.split('?')[0],'utf8').replace(/<\/script>/g,'<\\/script>')+'</script>');
  const dom=new JSDOM(html,{runScripts:'dangerously',url:'http://localhost/',pretendToBeVisual:true,virtualConsole:vc,beforeParse(w){
   w.matchMedia=w.matchMedia||(()=>({matches:false,addListener(){},addEventListener(){}})); w.scrollTo=()=>{}; w.fetch=()=>Promise.reject(new Error('offline'));
   w.IntersectionObserver=class{observe(){}unobserve(){}disconnect(){}}; w.HTMLElement.prototype.scrollIntoView=function(){};

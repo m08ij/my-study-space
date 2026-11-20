@@ -138,3 +138,42 @@ html.fx-on body #fx .cm-svg .cm-b:hover .cm-face,html.fx-on body #fx .cm-svg .cm
 html.fx-on body #fx .cm-svg .cm-park rect{fill:var(--mp-park)!important;stroke:var(--mp-case)!important;stroke-width:1.5!important}
 html.fx-on body #fx .cm-svg .cm-park text{fill:var(--mp-parkt)!important}
 html.fx-on body #fx .cm-mapcard{background:var(--mp-ground)!important;border-radius:16px!important}
+
+/* ---------- الجدول (الكمبيوتر): لوحة أسبوعية مضغوطة ---------- */
+html.fx-on body #fx .fx-calbar{align-items:center;margin:-4px 0 18px}
+html.fx-on body #fx .fx-calact{align-items:center}
+html.fx-on body #fx .fx-wk{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:12px;align-items:start}
+html.fx-on body #fx .fx-wkd{display:flex;flex-direction:column;gap:8px;padding:10px;border-radius:16px;background:var(--card);border:1px solid var(--ln);box-shadow:var(--sh);min-height:120px}
+html.fx-on body #fx .fx-wkd header{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:2px 4px 8px;border-bottom:1px solid var(--ln);margin-bottom:2px}
+html.fx-on body #fx .fx-wkd header span{display:flex;align-items:baseline;gap:7px}
+html.fx-on body #fx .fx-wkd header small{font-size:14px;font-weight:600;color:var(--tx)}
+html.fx-on body #fx .fx-wkd header b{font-size:13px;font-weight:600;color:var(--mu);font-variant-numeric:tabular-nums}
+html.fx-on body #fx .fx-wkd header i{font-style:normal;font-size:11.5px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+html.fx-on body #fx .fx-wkd header span{white-space:nowrap}
+html.fx-on body #fx .fx-wkd.today{border-color:color-mix(in srgb,var(--ac) 45%,transparent);background:linear-gradient(180deg,color-mix(in srgb,var(--ac) 12%,transparent),transparent 120px),var(--card)}
+html.fx-on body #fx .fx-wkd.today header b{background:var(--grad);color:#fff;border-radius:999px;padding:1px 8px}
+html.fx-on body #fx .fx-wkd.past{opacity:.72}
+html.fx-on body #fx .fx-wkc{position:relative;display:flex;flex-direction:column;align-items:stretch;gap:3px;text-align:start;width:100%;padding:9px 11px 10px;border-radius:12px;cursor:pointer;font:inherit;
+  border:1px solid hsl(var(--h) 65% 60% / .22);border-inline-start:4px solid hsl(var(--h) 75% 62%);background:linear-gradient(180deg,hsl(var(--h) 50% 30% / .38),hsl(var(--h) 45% 22% / .22)),var(--card2);color:var(--tx);transition:transform .15s,box-shadow .15s}
+html.fx-on body #fx .fx-wkc:hover{transform:translateY(-1px);box-shadow:0 10px 22px -14px hsl(var(--h) 70% 45% / .9)}
+html.fx-on body #fx .fx-wkc .fx-wkt{align-self:flex-start;direction:ltr!important;unicode-bidi:isolate!important;font-size:12px;font-weight:700;color:hsl(var(--h) 85% 78%);font-variant-numeric:tabular-nums;white-space:nowrap}
+html.fx-on body #fx .fx-wkc b{font-size:14px;font-weight:700;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+html.fx-on body #fx .fx-wkc small{font-size:12px;color:var(--mu)}
+html.fx-on body #fx .fx-wkc .fx-nowb{position:absolute;top:8px;inset-inline-end:8px;font-style:normal;font-size:10.5px;padding:1px 7px;border-radius:999px}
+html.fx-on body #fx .fx-wkc.now{box-shadow:0 0 0 2px hsl(var(--h) 80% 65%),0 10px 24px -12px hsl(var(--h) 70% 45% / .9)}
+html.fx-on body #fx .fx-wkc.done{opacity:.5}
+html.fx-on body #fx.light .fx-wkc{background:linear-gradient(180deg,hsl(var(--h) 85% 96%),hsl(var(--h) 70% 93%));border-color:hsl(var(--h) 55% 82%);border-inline-start-color:hsl(var(--h) 65% 52%)}
+html.fx-on body #fx.light .fx-wkc .fx-wkt{color:hsl(var(--h) 60% 38%)}
+html.fx-on body #fx .fx-wkgap{align-self:center;font-size:11px;color:var(--mu2);padding:1px 10px;border-radius:999px;border:1px dashed var(--ln)}
+html.fx-on body #fx .fx-wkfree{flex:1;display:grid;place-items:center;min-height:70px;font-size:13px;color:var(--mu);border:1px dashed var(--ln);border-radius:12px}
+/* قائمة ⋯ (مشاركة/تقويم/طباعة/مسح) بدل أزرار أسفل الصفحة */
+html.fx-on body #fx .fx-ttmore{position:relative}
+html.fx-on body #fx .fx-ttmore>summary{list-style:none;display:grid;place-items:center;width:40px;height:40px;border-radius:11px;cursor:pointer;background:var(--card2);border:1px solid var(--ed);color:var(--tx);font-size:20px;font-weight:700;line-height:1}
+html.fx-on body #fx .fx-ttmore>summary::-webkit-details-marker{display:none}
+html.fx-on body #fx .fx-ttmore[open]>summary{border-color:var(--ac)}
+html.fx-on body #fx .fx-ttmenu{position:absolute;top:calc(100% + 8px);inset-inline-end:0;z-index:20;min-width:190px;display:flex;flex-direction:column;gap:4px;padding:6px;border-radius:14px;background:var(--card);border:1px solid var(--ed);box-shadow:0 20px 40px -16px rgba(0,0,0,.6)}
+html.fx-on body #fx .fx-ttmenu .fx-tool{border:0!important;background:transparent!important;border-radius:9px!important;text-align:start;justify-content:flex-start;width:100%;margin:0!important}
+html.fx-on body #fx .fx-ttmenu .fx-tool:hover{background:var(--hover)!important}
+html.fx-on body #fx .fx-ttmenu .fx-tool.danger{border-top:1px solid var(--ln)!important;border-radius:0 0 9px 9px!important;margin-top:2px!important}
+html.fx-on body #fx .fx-only-narrow .fx-actions .fx-ttmore .fx-ttmenu{inset-inline-end:auto;inset-inline-start:0}
+
