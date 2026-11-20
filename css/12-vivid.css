@@ -175,5 +175,4 @@ html.fx-on body #fx .fx-ttmenu{position:absolute;top:calc(100% + 8px);inset-inli
 html.fx-on body #fx .fx-ttmenu .fx-tool{border:0!important;background:transparent!important;border-radius:9px!important;text-align:start;justify-content:flex-start;width:100%;margin:0!important}
 html.fx-on body #fx .fx-ttmenu .fx-tool:hover{background:var(--hover)!important}
 html.fx-on body #fx .fx-ttmenu .fx-tool.danger{border-top:1px solid var(--ln)!important;border-radius:0 0 9px 9px!important;margin-top:2px!important}
-html.fx-on body #fx .fx-only-narrow .fx-actions .fx-ttmore .fx-ttmenu{inset-inline-end:auto;inset-inline-start:0}
 
