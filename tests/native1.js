@@ -79,17 +79,10 @@ const { boot } = require('./e2elib'); const sl = ms => new Promise(r => setTimeo
   o.W_pullTasks = pt.applied === (w.space.tasks[0] && !before ? 1 : 0) && (w.space.tasks[0] ? w.space.tasks[0].done === true || before === true : true);
   const pt2 = await w.NativeApp.pullTasks(); o.W_pullTasksNoReopen = pt2.applied === 0 || (w.space.tasks[0] && w.space.tasks[0].done === false);
   w.NativeApp.openWidgetPicker(); await sl(80);
-  o.W_pickerOpens = QA('.wg-opt').length === 7 && !!Q('#wgPicker') && QA('.wg-opt')[0].getAttribute('data-wg') === 'plan';   /* خطتي اليوم + المحاضرة، الجدول، الاختصارات، الامتحانات، المهام، أين أنا؟ */
-  /* ودجت الخطة بيحتاج تطبيق ≥1.8 (versionCode 9): الأقدم ما بيثبّت ودجت غلط، بيطلب التحديث */
-  const upd0 = wcalls.update.length;
-  Q('[data-wg="plan"]').click(); await sl(120);
-  o.W_planOldApk = !wcalls.pin.some(p => p.type === 'plan') && !Q('#wgPicker') && /بيحتاج تحديث التطبيق/.test(d.body.textContent);
-  fakes.AppUpdater = { info: async () => ({ versionName: '1.8', versionCode: 9 }) }; w.NativeApp._reset();
-  w.NativeApp.openWidgetPicker(); await sl(50); Q('[data-wg="plan"]').click(); await sl(150);
-  o.W_planPin = wcalls.pin.some(p => p.type === 'plan') && !Q('#wgPicker');
-  delete fakes.AppUpdater; w.NativeApp._reset(); wcalls.pin.length = 0; wcalls.update.length = upd0; w.NativeApp.openWidgetPicker(); await sl(50);
-  Q('[data-wg="today"]').click(); await sl(150);
-  o.W_pin = wcalls.pin.length === 1 && wcalls.pin[0].type === 'today' && !Q('#wgPicker') && wcalls.update.length === 2;
+  o.W_pickerOpens = QA('.wg-opt').length === 4 && !!Q('#wgPicker') && QA('.wg-opt').map(x => x.getAttribute('data-wg')).join() === 'next,tasks,exams,actions';   /* 2.0: محاضرتي · مهامي · امتحاناتي · اختصارات */
+  const upd0 = wcalls.update.length; wcalls.pin.length = 0;
+  Q('[data-wg="next"]').click(); await sl(150);
+  o.W_pin = wcalls.pin.length === 1 && wcalls.pin[0].type === 'next' && !Q('#wgPicker') && wcalls.update.length === upd0 + 1;
   w.NativeApp.openWidgetPicker(); Q('[data-wg="actions"]').click(); await sl(150); o.W_pinUnsupportedToast = wcalls.pin[1].type === 'actions' && !Q('#wgPicker');
   /* رقم القاعة بالودجات + تسجيل الحضور من الودجت */
   o.W_roomField = snap.lectures.every(l => typeof l.r === 'string') && snap.lectures.some(l => l.r.length > 0 && !/ح\.ب|قاعة/.test(l.r));

@@ -179,4 +179,6 @@
   if(d.readyState === 'loading') d.addEventListener('DOMContentLoaded', bind); else bind();
 
   W.Assistant = { open: open, close: close, send: send, clear: clear, bind: bind, context: context, parse: parse };
+  /* ?open=ai (اختصار «المساعد» بودجت التطبيق والتطبيق مسكّر): يفتح المساعد بعد ما تجهز الواجهة */
+  try{ if(/[?&]open=ai\b/.test(W.location.search || '')) setTimeout(function(){ try{ open(''); if(W.history && W.history.replaceState) W.history.replaceState(W.history.state, '', W.location.pathname + W.location.hash); }catch(e){} }, 900); }catch(e){}
 })();

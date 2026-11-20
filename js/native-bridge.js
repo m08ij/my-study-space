@@ -206,19 +206,10 @@
     box.appendChild(t('div', 'ocri-title', '📱 أضف ودجت للشاشة الرئيسية'));
     box.appendChild(t('div', 'ocri-sub', 'اختر الودجت وبيطلع لك طلب من أندرويد لإضافته. بتتحدّث تلقائياً من جدولك.'));
     var list = t('div', 'wg-list');
-    var AU = plugin('AppUpdater'), PLAN_VC = 9;   /* ودجت الخطة من تطبيق 1.8 (versionCode 9)؛ الأقدم كان بيثبّت «المحاضرة الجاية» بدلها */
-    [['plan', '📚', 'خطتي اليوم', 'شو تدرس من كل مادة + 🔥 السلسلة + زر ○ للتشييك — بيحمرّ بعد 8 م لو ما خلصت (4×3)'], ['next', '⏭', 'المحاضرة الجاية', 'اسم + عدّاد تنازلي حيّ + القاعة والمبنى + زر ✓ حضرت (2×2)'], ['today', '📅', 'جدول اليوم', 'كل محاضرات اليوم بألوان المواد + المهام (4×3)'], ['actions', '⚡', 'اختصارات سريعة', 'حضرت ✅ · مهمة · الخريطة · الجدول (4×1)'], ['exams', '📝', 'الامتحانات', 'عدّ تنازلي لأقرب امتحاناتك بألوان الاستعجال (4×2)'], ['tasks', '✅', 'المهام', 'مهامك المعلّقة وزر ○ لإنجازها من الشاشة الرئيسية (4×3)'], ['where', '📍', 'أين أنا؟', 'داخل أو خارج حدود الجامعة وأقرب مبنى — اضغط ⟳ للتحديث (4×1)']].forEach(function(x){
+    [['next', '⏭', 'محاضرتي', 'الجارية/الجاية بعدّاد حيّ + القاعة + زر «حضرت» كبير، وباقي محاضرات اليوم لما تكبّره (2×2)'], ['tasks', '✅', 'مهامي', 'أنجز المهمة بدائرة ○ من الشاشة الرئيسية، و«+» لمهمة جديدة (4×3)'], ['exams', '📝', 'امتحاناتي', 'الأقرب برقم كبير للأيام الباقية والباقي تحته (4×2)'], ['actions', '⚡', 'اختصارات', 'حضرت · مهمة جديدة · المساعد الذكي · الجدول (4×1)']].forEach(function(x){
       var b = t('button', 'wg-opt'); b.type = 'button'; b.setAttribute('data-wg', x[0]);
       b.appendChild(t('span', 'wg-ic', x[1])); var tx = t('span', 'wg-tx'); tx.appendChild(t('b', null, x[2])); tx.appendChild(t('small', null, x[3])); b.appendChild(tx);
       b.addEventListener('click', function(){
-        if(x[0] === 'plan'){
-          var vc = AU && AU.info ? Promise.resolve().then(function(){ return AU.info(); }).then(function(i){ return Number(i && i.versionCode) || 0; }, function(){ return 0; }) : Promise.resolve(0);
-          vc.then(function(v){
-            if(v >= PLAN_VC){ pushWidget(); WB.pin({ type: 'plan' }).then(function(r){ ov.remove(); if(!r || !r.requested){ if(W.toast) W.toast('اضغط مطوّلاً على الشاشة الرئيسية ← الودجات ← مساحتي الدراسية', 'info', 8000); } }, function(){ ov.remove(); }); }
-            else { ov.remove(); if(W.toast) W.toast('ودجت «خطتي اليوم» بيحتاج تحديث التطبيق لـ1.8 — بفحص التحديث هسا', 'info', 5000); checkUpdate(true); }
-          });
-          return;
-        }
         pushWidget(); WB.pin({ type: x[0] }).then(function(r){
           ov.remove();
           if(!r || !r.requested) { if(W.toast) W.toast('جهازك ما بيدعم الإضافة المباشرة — اضغط مطوّلاً على الشاشة الرئيسية ← الودجات ← مساحتي الدراسية', 'info', 8000); }
