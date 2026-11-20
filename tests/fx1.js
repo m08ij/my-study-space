@@ -32,7 +32,8 @@ const { boot } = require('./e2elib'); const sl = ms => new Promise(r => setTimeo
   o.T_coach = QA('.fx-cs').length === 1;
   /* أدوات كانت بالقديمة بس */
   w.FocusUI.go('timetable'); await sl(80);
-  o.X_tt = !!Q('#fxMain [data-fx="ocr"]') && !!Q('#fxMain [data-fx="share"]') && !!Q('#fxMain [data-fx="cal"]');
+  { const tb = Q('#fxMain .fx-ttbtn'); if(tb) tb.click(); await sl(20); }   /* مشاركة/تقويم صاروا بقائمة ⋯ العائمة */
+  o.X_tt = !!Q('#fxMain [data-fx="ocr"]') && !!Q('#fxTtPop [data-fx="share"]') && !!Q('#fxTtPop [data-fx="cal"]');
   w.FocusUI.go('courses'); await sl(80);
   o.X_courses = !!Q('#fxMain [data-v="closeSemester"]') && !!Q('#fxMain [data-v="openSemesterArchive"]') && !!Q('#fxMain .fx-hl');
   /* الدوال القديمة: switchTab بتحوّل، والرسم القديم بيصير تحديث للجديدة */

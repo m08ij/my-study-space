@@ -1,10 +1,5 @@
-/* =====================================================================
-   12-vivid.css — طبقة «حيوية» فوق تصميم الشريط الجانبي (11): نفس البنية والمكوّنات،
-   بس ألوان أعمق وأدفى (كحلي بنفسجي بدل الرمادي)، تمييز متدرّج بنفسجي→سماوي، بطاقات
-   بعمق خفيف، أيقونات ملوّنة، تباعد ثابت بين الأقسام والأزرار، وجدول محاضرات أوضح.
-   بدون backdrop-filter ولا blur (خفيف على التلفون). غامق وفاتح.
-   ===================================================================== */
-/* لكل الألوان: تدرّج من لون التمييز؛ و«حيوي» (الافتراضي) بنفسجي→سماوي + توهّج خفيف بالخلفية */
+
+
 html.fx-on body #fx{
   --grad:linear-gradient(135deg,var(--ac),color-mix(in srgb,var(--ac) 55%,#22c3ee));
   --good:#34d399; --mid:#fbbf24; --low:#fb7185;
@@ -21,17 +16,17 @@ html.fx-on body #fx[data-pal="vivid"].light{
 }
 html.fx-on body #fx .fx-main{background:transparent!important}
 
-/* ---------- البطاقات ---------- */
+
 html.fx-on body #fx .fx-glass{border-radius:16px!important;background:linear-gradient(180deg,rgba(255,255,255,.028),rgba(255,255,255,0) 46%),var(--card)!important;box-shadow:var(--sh)!important}
 html.fx-on body #fx.light .fx-glass{background:var(--card)!important}
 
-/* ---------- الأزرار: الأساسي متدرّج، والثانوي واضح ---------- */
+
 html.fx-on body #fx .fx-btn:not(.ghost){background:var(--grad)!important;color:#fff!important;border:0!important;border-radius:11px;box-shadow:0 8px 20px -10px rgba(109,91,255,.65)!important}
 html.fx-on body #fx .fx-btn:not(.ghost):hover{opacity:1;filter:brightness(1.07)}
 html.fx-on body #fx .fx-btn.ghost{border-radius:11px;background:var(--card2)!important;border:1px solid var(--ed)!important}
 html.fx-on body #fx .fx-btn .fx-i{opacity:.95}
 
-/* ---------- تباعد ثابت: لا أزرار لازقة ببطاقات أو ببعض ---------- */
+
 html.fx-on body #fx .fx-main .fx-actions{margin:16px 0!important;gap:10px}
 html.fx-on body #fx .fx-main .fx-glass + .fx-glass,html.fx-on body #fx .fx-main .fx-glass + details,html.fx-on body #fx .fx-main details + .fx-glass{margin-top:16px}
 html.fx-on body #fx .fx-main .fx-tools{display:flex;flex-wrap:wrap;gap:8px;margin:22px 0 4px!important;padding-top:16px;border-top:1px dashed var(--ln)}
@@ -40,20 +35,20 @@ html.fx-on body #fx .fx-tool{background:var(--card2)!important;border:1px solid 
 html.fx-on body #fx .fx-tool:hover{border-color:var(--ed)!important;background:var(--hover)!important}
 html.fx-on body #fx .fx-tool.danger{color:var(--low)!important;background:transparent!important;border-color:color-mix(in srgb,var(--low) 35%,transparent)!important}
 html.fx-on body #fx .fx-tool.danger:hover{background:color-mix(in srgb,var(--low) 10%,transparent)!important}
-/* حذف/مسح بأقصى السطر لحاله: بعيد عن الأزرار العادية */
+
 html.fx-on body #fx .fx-tools .fx-tool.danger{margin-inline-start:auto}
 
-/* ---------- العناوين ---------- */
+
 html.fx-on body #fx .fx-head h1{background:linear-gradient(90deg,var(--tx),color-mix(in srgb,var(--tx) 70%,var(--ac)));-webkit-background-clip:text;background-clip:text;color:transparent}
 
-/* ---------- الشريط الجانبي: عنصر نشط متدرّج + أيقونات ملوّنة ---------- */
+
 html.fx-on body #fx .fx-snav{border-radius:10px}
 html.fx-on body #fx .fx-snav.on{background:linear-gradient(90deg,rgba(139,92,246,.22),rgba(34,195,238,.10))!important;color:var(--tx)!important;box-shadow:inset 0 0 0 1px rgba(139,123,255,.25)}
 html.fx-on body #fx.light .fx-snav.on{background:linear-gradient(90deg,#ece8ff,#e6f6fd)!important;box-shadow:inset 0 0 0 1px #dcd5ff}
 html.fx-on body #fx .fx-snav.on .fx-i{color:var(--ac)}
 html.fx-on body #fx .fx-sind{background:var(--grad)!important}
 
-/* ---------- لوحة اليوم: المحاضرة الجارية والملخص ---------- */
+
 html.fx-on body #fx .fx-next{position:relative;overflow:hidden;border-color:color-mix(in srgb,var(--ac) 30%,var(--ln))!important;
   background:radial-gradient(420px 180px at 100% 0%,rgba(139,92,246,.20),transparent 70%),radial-gradient(360px 160px at 0% 100%,rgba(34,195,238,.12),transparent 70%),var(--card)!important}
 html.fx-on body #fx.light .fx-next{background:radial-gradient(420px 180px at 100% 0%,rgba(109,77,255,.10),transparent 70%),radial-gradient(360px 160px at 0% 100%,rgba(14,165,233,.08),transparent 70%),var(--card)!important}
@@ -62,31 +57,7 @@ html.fx-on body #fx .fx-brief-ic{background:var(--grad)!important;color:#fff!imp
 html.fx-on body #fx .fx-nowb{background:var(--grad)!important;color:#fff!important}
 html.fx-on body #fx progress,html.fx-on body #fx .fx-bar i,html.fx-on body #fx .fx-prog i{accent-color:var(--ac)}
 
-/* ---------- الجدول (الكمبيوتر) ---------- */
-html.fx-on body #fx .fx-cal{border-radius:16px;box-shadow:var(--sh);background:var(--card)}
-html.fx-on body #fx .fx-calh{background:var(--card)}
-html.fx-on body #fx .fx-cald.today small{color:var(--ac)}
-html.fx-on body #fx .fx-cald.today b{background:var(--grad);color:#fff;box-shadow:0 6px 16px -8px rgba(109,91,255,.8)}
-html.fx-on body #fx .fx-calb{background-image:repeating-linear-gradient(to bottom,var(--ln) 0 1px,transparent 1px var(--hp))}
-html.fx-on body #fx .fx-calc.today{background:linear-gradient(180deg,rgba(139,123,255,.07),rgba(139,123,255,.02))}
-html.fx-on body #fx.light .fx-calc.today{background:#f7f5ff}
-html.fx-on body #fx .fx-calc.past .fx-cev{filter:saturate(.75)}
-/* المحاضرة: بطاقة صلبة بلون المادة (الخطوط ما بتبيّن من تحتها) */
-html.fx-on body #fx .fx-cev{inset-inline:4px 5px;border-radius:10px;padding:7px 10px;border:1px solid hsl(var(--h) 70% 60% / .30);border-inline-start:4px solid hsl(var(--h) 75% 62%);
-  background:linear-gradient(180deg,hsl(var(--h) 55% 30% / .55),hsl(var(--h) 45% 22% / .55)),var(--card);color:hsl(var(--h) 90% 92%);box-shadow:0 6px 16px -12px rgba(0,0,0,.9)}
-html.fx-on body #fx .fx-cev b{font-weight:700;color:#fff}
-html.fx-on body #fx .fx-cev small{opacity:.8}
-html.fx-on body #fx .fx-cev:hover{background:linear-gradient(180deg,hsl(var(--h) 55% 34% / .7),hsl(var(--h) 45% 25% / .7)),var(--card);box-shadow:0 10px 24px -12px hsl(var(--h) 70% 40% / .9)}
-html.fx-on body #fx .fx-cev.now{box-shadow:0 0 0 2px hsl(var(--h) 80% 65%),0 10px 24px -10px hsl(var(--h) 70% 45% / .9)}
-html.fx-on body #fx .fx-cev.done{opacity:.55}
-html.fx-on body #fx.light .fx-cev{background:linear-gradient(180deg,hsl(var(--h) 85% 96%),hsl(var(--h) 75% 92%));color:hsl(var(--h) 55% 30%);border-color:hsl(var(--h) 60% 75%);border-inline-start-color:hsl(var(--h) 65% 52%);box-shadow:0 6px 14px -12px hsl(var(--h) 50% 40% / .6)}
-html.fx-on body #fx.light .fx-cev b{color:hsl(var(--h) 60% 22%)}
-html.fx-on body #fx.light .fx-cev:hover{background:hsl(var(--h) 80% 90%)}
-html.fx-on body #fx .fx-calline{height:2px;background:var(--low);box-shadow:0 0 0 1px color-mix(in srgb,var(--low) 30%,transparent)}
-html.fx-on body #fx .fx-calline::before{content:"";position:absolute;inset-inline-start:-5px;top:-4px;width:10px;height:10px;border-radius:50%;background:var(--low)}
-html.fx-on body #fx .fx-calnow{border-radius:6px;padding:2px 6px}
 
-/* ---------- الجدول (التلفون): شريط الأيام + الخط الزمني ---------- */
 html.fx-on body #fx .fx-mday{border-radius:14px!important;background:var(--card)!important;border:1px solid var(--ln)!important}
 html.fx-on body #fx .fx-mday.on{background:var(--grad)!important;border-color:transparent!important;color:#fff!important;box-shadow:0 10px 22px -12px rgba(109,91,255,.85)}
 html.fx-on body #fx .fx-mday.on small,html.fx-on body #fx .fx-mday.on i{color:rgba(255,255,255,.85)!important}
@@ -99,29 +70,28 @@ html.fx-on body #fx .fx-mrow .fx-mt b{color:hsl(var(--h) 85% 78%)}
 html.fx-on body #fx.light .fx-mrow .fx-mt b{color:hsl(var(--h) 60% 38%)}
 html.fx-on body #fx .fx-mrow.now{box-shadow:0 0 0 2px hsl(var(--h) 80% 65%),var(--sh)}
 
-/* ---------- قوائم وسطور ---------- */
+
 html.fx-on body #fx .fx-ln{border-radius:10px}
 html.fx-on body #fx .fx-lntag{background:var(--card2)!important;border:1px solid var(--ln)}
 
-/* ---------- التلفون: الشريط السفلي والعلوي ---------- */
+
 @media (max-width:820px){
   html.fx-on body #fx .fx-top{background:color-mix(in srgb,var(--base) 92%,transparent)!important;border-bottom:1px solid var(--ln)}
   html.fx-on body #fx .fx-nav{background:color-mix(in srgb,var(--side) 96%,transparent)!important;border-top:1px solid var(--ln)!important}
   html.fx-on body #fx .fx-nav button.on{color:var(--tx)!important}
   html.fx-on body #fx .fx-nav button.on .fx-i{color:#fff;background:var(--grad);border-radius:10px;padding:3px;box-sizing:content-box;box-shadow:0 6px 14px -8px rgba(109,91,255,.9)}
   html.fx-on body #fx .fx-glass{border-radius:18px!important}
-  html.fx-on body #fx .fx-main .fx-tools{justify-content:flex-start}
-}
+  html.fx-on body #fx .fx-main .fx-tools{justify-content:flex-start}}
 @media (prefers-reduced-motion:reduce){html.fx-on body #fx .fx-btn:not(.ghost){box-shadow:none!important}}
 
-/* ---------- لوحة اليوم: أقسام بطاقات + زر رئيسي متدرّج ---------- */
+
 html.fx-on body #fx .fx-nbtn.p{background:var(--grad)!important;color:#fff!important;border:0!important;box-shadow:0 8px 20px -10px rgba(109,91,255,.7)!important}
 html.fx-on body #fx .fx-nbtn.g{background:var(--card2)!important;border:1px solid var(--ed)!important}
 html.fx-on body #fx .fx-main .fx-sec{background:linear-gradient(180deg,rgba(255,255,255,.022),rgba(255,255,255,0) 40%),var(--card);border:1px solid var(--ln);border-radius:16px;padding:14px 16px 6px;box-shadow:var(--sh);margin-top:16px}
 html.fx-on body #fx.light .fx-main .fx-sec{background:var(--card)}
 html.fx-on body #fx .fx-main .fx-sec .fx-ln:last-child{border-bottom:0}
 
-/* ---------- خريطة الجامعة: مظهر خريطة حقيقية (ليل/نهار) ---------- */
+
 html.fx-on body #fx{--mp-ground:#121722;--mp-campus:#15231d;--mp-edge:#24453a;--mp-case:#0a0e16;--mp-road:#323a4b;--mp-mid:#69728a;--mp-wall:rgba(0,0,0,.55);--mp-park:#262d3c;--mp-parkt:#9aa4bd}
 html.fx-on body #fx.light{--mp-ground:#efe8d8;--mp-campus:#e2edd6;--mp-edge:#b9cfa6;--mp-case:#cfd3da;--mp-road:#ffffff;--mp-mid:#e3c46a;--mp-wall:rgba(60,50,30,.28);--mp-park:#dfe2e8;--mp-parkt:#6b7385}
 html.fx-on body #fx .cm-svg .cm-ground{fill:var(--mp-ground)!important}
@@ -139,7 +109,7 @@ html.fx-on body #fx .cm-svg .cm-park rect{fill:var(--mp-park)!important;stroke:v
 html.fx-on body #fx .cm-svg .cm-park text{fill:var(--mp-parkt)!important}
 html.fx-on body #fx .cm-mapcard{background:var(--mp-ground)!important;border-radius:16px!important}
 
-/* ---------- الجدول (الكمبيوتر): لوحة أسبوعية مضغوطة ---------- */
+
 html.fx-on body #fx .fx-calbar{align-items:center;margin:-4px 0 18px}
 html.fx-on body #fx .fx-calact{align-items:center}
 html.fx-on body #fx .fx-wk{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:12px;align-items:start}
@@ -166,13 +136,12 @@ html.fx-on body #fx.light .fx-wkc{background:linear-gradient(180deg,hsl(var(--h)
 html.fx-on body #fx.light .fx-wkc .fx-wkt{color:hsl(var(--h) 60% 38%)}
 html.fx-on body #fx .fx-wkgap{align-self:center;font-size:11px;color:var(--mu2);padding:1px 10px;border-radius:999px;border:1px dashed var(--ln)}
 html.fx-on body #fx .fx-wkfree{flex:1;display:grid;place-items:center;min-height:70px;font-size:13px;color:var(--mu);border:1px dashed var(--ln);border-radius:12px}
-/* قائمة ⋯ (مشاركة/تقويم/طباعة/مسح) بدل أزرار أسفل الصفحة */
+
 html.fx-on body #fx .fx-ttmore{position:relative}
-html.fx-on body #fx .fx-ttmore>summary{list-style:none;display:grid;place-items:center;width:40px;height:40px;border-radius:11px;cursor:pointer;background:var(--card2);border:1px solid var(--ed);color:var(--tx);font-size:20px;font-weight:700;line-height:1}
-html.fx-on body #fx .fx-ttmore>summary::-webkit-details-marker{display:none}
-html.fx-on body #fx .fx-ttmore[open]>summary{border-color:var(--ac)}
+html.fx-on body #fx .fx-ttbtn{display:grid;place-items:center;width:40px;height:40px;padding:0;border-radius:11px;cursor:pointer;background:var(--card2);border:1px solid var(--ed);color:var(--tx);font:inherit;font-size:20px;font-weight:700;line-height:1}
+html.fx-on body #fx .fx-ttbtn[aria-expanded="true"]{border-color:var(--ac)}
+html.fx-on body #fx .fx-ttpop{position:fixed;inset:auto;z-index:1000}
 html.fx-on body #fx .fx-ttmenu{position:absolute;top:calc(100% + 8px);inset-inline-end:0;z-index:20;min-width:190px;display:flex;flex-direction:column;gap:4px;padding:6px;border-radius:14px;background:var(--card);border:1px solid var(--ed);box-shadow:0 20px 40px -16px rgba(0,0,0,.6)}
 html.fx-on body #fx .fx-ttmenu .fx-tool{border:0!important;background:transparent!important;border-radius:9px!important;text-align:start;justify-content:flex-start;width:100%;margin:0!important}
 html.fx-on body #fx .fx-ttmenu .fx-tool:hover{background:var(--hover)!important}
 html.fx-on body #fx .fx-ttmenu .fx-tool.danger{border-top:1px solid var(--ln)!important;border-radius:0 0 9px 9px!important;margin-top:2px!important}
-

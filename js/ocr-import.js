@@ -14,7 +14,7 @@
   var DEFAULT_MODEL = 'gemini-flash-latest';                 /* اسم مستعار يتبع أحدث نموذج مجاني (الأسماء الثابتة تُسحب: 2.5 أُوقف للمستخدمين الجدد) */
   var TIMEOUT_MS = 180000;
   var MAX_BYTES = 12 * 1024 * 1024;
-  var MAX_SIDE = 2400, THUMB_SIDE = 380, TYPE_OK = /^image\/(png|jpe?g|webp)$/;
+  var MAX_SIDE = 2400, MAX_SIDE_N8N = 1700, THUMB_SIDE = 380, TYPE_OK = /^image\/(png|jpe?g|webp)$/;
 
   /* ---- دوال نقية (تُختبر بدون متصفح) ---- */
   function fitSize(w, h, max){
@@ -185,7 +185,7 @@
         var img = new Image();
         img.onload = function(){
           try{
-            var w = img.naturalWidth, h = img.naturalHeight, f = fitSize(w, h, MAX_SIDE), t = fitSize(w, h, THUMB_SIDE);
+            var w = img.naturalWidth, h = img.naturalHeight, f = fitSize(w, h, viaN8n() ? MAX_SIDE_N8N : MAX_SIDE), t = fitSize(w, h, THUMB_SIDE);
             var cv = document.createElement('canvas'), tv = document.createElement('canvas');
             cv.width = f.w; cv.height = f.h; tv.width = t.w; tv.height = t.h;
             var c = cv.getContext('2d'), tc = tv.getContext('2d');
@@ -214,8 +214,16 @@
     });
   }
   var retryMs = 5000;
+  /* عبر n8n (بدون مفتاح شخصي): Google المجاني كثير «مضغوط» (503) — الأسرع ننطّ بين النماذج بدل ما نستنى نفس النموذج.
+     الخفيف أول (أسرع وأقل ضغطاً، ودقيق للجداول بالقياس: 5/5 صفوف صح بـ9–11 ث)، 7 محاولات خلال ~دقيقة. */
+  var N8N_CHAIN = ['gemini-3.5-flash-lite', 'gemini-flash-latest', 'gemini-3.5-flash-lite', 'gemini-3.8-flash', 'gemini-3.5-flash-lite', 'gemini-flash-latest', 'gemini-3.5-flash-lite'];
   function modelChain(){
+    if(viaN8n()) return N8N_CHAIN.slice();
     var out = [gmodel()]; MODEL_PRESETS.forEach(function(m){ if(out.indexOf(m.id) < 0) out.push(m.id); }); return out;
+  }
+  function nextStep(i, chain, progress, label){   /* رسالة واضحة + فاصل قصير قبل المحاولة الجاية */
+    progress(viaN8n() ? 'Google مضغوط شوي — محاولة ' + (i + 2) + ' من ' + chain.length + '…' : label);
+    return new Promise(function(r){ setTimeout(r, viaN8n() ? 1200 : 0); });
   }
   /* نموذج واحد (503 = Google مشغول: يعيد مرتين بفاصل داخلياً) */
   function geminiOnce(prep, generic, model){
@@ -228,7 +236,7 @@
       var tries = 0;
       function go(){
         return gfetch(model, body).catch(function(e){
-          if(e && e.status === 503 && tries < 2 && !(ctrl && ctrl.signal.aborted)){ tries++; return new Promise(function(r){ setTimeout(r, retryMs); }).then(function(){ return (ctrl && ctrl.signal.aborted) ? Promise.reject(e) : go(); }); }
+          if(e && e.status === 503 && tries < 2 && !viaN8n() && !(ctrl && ctrl.signal.aborted)){ tries++; return new Promise(function(r){ setTimeout(r, retryMs); }).then(function(){ return (ctrl && ctrl.signal.aborted) ? Promise.reject(e) : go(); }); }
           throw e;
         });
       }
@@ -247,7 +255,7 @@
     function at(i){
       return geminiOnce(prep, generic, chain[i]).catch(function(e){
         tried.push(chain[i]);
-        if(i + 1 < chain.length && modelRetryable(e) && !(ctrl && ctrl.signal.aborted)){ progress('نموذج «' + chain[i] + '» ما ردّ (حصته خلصت أو غير متاح) — أجرّب «' + chain[i + 1] + '»…'); return at(i + 1); }
+        if(i + 1 < chain.length && modelRetryable(e) && !(ctrl && ctrl.signal.aborted)) return nextStep(i, chain, progress, 'نموذج «' + chain[i] + '» ما ردّ (حصته خلصت أو غير متاح) — أجرّب «' + chain[i + 1] + '»…').then(function(){ return at(i + 1); });
         e.tried = tried; throw e;
       });
     }
@@ -266,7 +274,7 @@
   /* طلب Gemini: بمفتاحك الشخصي لو حاطّه، وإلا عبر خادم n8n (المفتاح محفوظ عنده) — نفس جسم الطلب ونفس الرد */
   function viaN8n(){ return !gkey() && !!(window.N8n && window.N8n.enabled()); }
   function gfetch(model, bodyStr){
-    if(viaN8n()) return window.N8n.gemini(model, JSON.parse(bodyStr)).catch(function(e){
+    if(viaN8n()) return window.N8n.gemini(model, JSON.parse(bodyStr), 40000).catch(function(e){   /* 40 ث لكل محاولة (كانت 3 د): الناجحة بتاخذ 9–20 ث، والعالقة ما بنستناها */
       var c = e && e.code === 'timeout' ? 'timeout' : e && e.code === 'network' ? 'unreachable' : 'gemini';
       throw Object.assign(e || new Error('n8n'), { code: c, status: (e && e.status) || (c === 'gemini' ? 500 : 0) });
     });
@@ -389,7 +397,7 @@
     function at(i){
       return geminiAsk(prep, prompt, schema, chain[i]).catch(function(e){
         tried.push(chain[i]);
-        if(i + 1 < chain.length && modelRetryable(e) && !(ctrl && ctrl.signal.aborted)){ progress('أجرّب نموذج «' + chain[i + 1] + '»…'); return at(i + 1); }
+        if(i + 1 < chain.length && modelRetryable(e) && !(ctrl && ctrl.signal.aborted)) return nextStep(i, chain, progress, 'أجرّب نموذج «' + chain[i + 1] + '»…').then(function(){ return at(i + 1); });
         e.tried = tried; throw e;
       });
     }

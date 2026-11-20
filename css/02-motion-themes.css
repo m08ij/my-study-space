@@ -1,15 +1,8 @@
-/* ============================================================
-   ✨ الحركة والتفاعل (Motion) — كانت طبقة v3 المتراكمة؛ دُمجت بلا !important
-   ============================================================ */
 
 
-.page-title{
-  animation: uiTitleIn .4s var(--ease);
-}
-@keyframes uiTitleIn{
-  from{opacity:0;transform:translateX(14px) scale(.96)}
-  to{opacity:1;transform:translateX(0) scale(1)}
-}
+
+
+
 
 .btn{
   transition: transform var(--dur-2) cubic-bezier(.34,1.56,.64,1),
@@ -34,15 +27,11 @@
   transform: scale(1.03);
 }
 
-.nav-item{
-  transition: background var(--dur-2) ease, color var(--dur-2) ease, transform var(--dur-2) cubic-bezier(.34,1.56,.64,1);
-}
+
 .nav-item:hover{
   transform: translateX(-4px);
 }
-.nav-item.active{
-  transform: translateX(-2px);
-}
+
 
 .modal-backdrop.show .modal{
   animation: uiModalIn .3s var(--ease);
@@ -74,15 +63,15 @@
 }
 
 
-/* ============ Enhanced Stats ============ */
 
-/* ============ Exam Countdown ============ */
+
+
 .exam-countdown-screen{
   position:fixed;inset:0;z-index:950;
   background:var(--bg);
   display:none;flex-direction:column;overflow:hidden;
 }
-.exam-countdown-screen.open{display:flex}
+
 .ecs-header{
   padding:18px var(--sp-5);display:flex;align-items:center;
   justify-content:space-between;border-bottom:1px solid var(--border);
@@ -125,42 +114,9 @@
 .ecs-check-item input{width:18px;height:18px;accent-color:var(--accent);cursor:pointer}
 .ecs-check-item.done span{text-decoration:line-through;opacity:.55}
 
-/* ============ Onboarding ============ */
-.onb-overlay{
-  position:fixed;inset:0;z-index:2500;
-  background:rgba(0,0,0,.85);backdrop-filter:blur(8px);
-  display:none;align-items:center;justify-content:center;padding:20px;
-}
-.onb-overlay.show{display:flex}
-.onb-card{
-  background:var(--card);border:1px solid var(--border);
-  border-radius:var(--r-xl);padding:36px var(--sp-6);max-width:480px;width:100%;
-  text-align:center;box-shadow:var(--shadow-lg);
-  position:relative;overflow:hidden;
-  animation:onbIn .5s var(--ease);
-}
-@keyframes onbIn{from{opacity:0;transform:scale(.9) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
-.onb-card::before{
-  content:'';position:absolute;top:0;right:0;left:0;height:4px;background:var(--grad);
-}
-.onb-icon{font-size:4rem;margin-bottom:14px;display:inline-block;animation:onbFloat 2.5s ease-in-out 2}
-@keyframes onbFloat{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-10px) rotate(3deg)}}
-.onb-card h3{font-size:var(--fs-xl);font-weight:800;margin-bottom:10px;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.onb-card p{color:var(--muted);font-size:var(--fs-md);line-height:1.8;margin-bottom:22px;min-height:60px}
-.onb-dots{display:flex;gap:6px;justify-content:center;margin-bottom:20px}
-.onb-dots .dot{width:8px;height:8px;border-radius:50%;background:var(--border);transition:var(--dur-2)}
-.onb-dots .dot.active{background:var(--accent);width:24px;border-radius:var(--r-sm)}
-.onb-actions{display:flex;gap:var(--sp-2);justify-content:space-between}
-.onb-skip{background:transparent;border:none;color:var(--muted);cursor:pointer;font-family:inherit;font-size:var(--fs-sm);padding:10px}
-.onb-skip:hover{color:var(--red)}
-.onb-next{
-  background:var(--grad);color:var(--on-accent);border:none;
-  padding:11px 26px;border-radius:var(--r-lg);font-family:inherit;
-  font-weight:800;font-size:var(--fs-md);cursor:pointer;
-  box-shadow:var(--sh-glow);
-}
 
-/* ============ Confetti ============ */
+
+
 .confetti-piece{
   position:fixed;width:10px;height:10px;z-index:9999;
   pointer-events:none;animation:cfFall 2.8s var(--ease) forwards;
@@ -170,67 +126,59 @@
   100%{transform:translateY(100vh) rotate(900deg);opacity:0}
 }
 
-/* ============ Moodle Integration ============ */
 
-/* موبايل: ارفع التنبيهات فوق الشريط السفلي (يجب أن تأتي بعد القواعد الأساسية) */
+
+
 @media(max-width:900px){.toast-container{bottom:84px}}
 
-/* الجدول: عند وجود محاضرات يظهر أولاً، وكروت الإعداد تحته */
-#timetable.active.tt-has-data{display:flex;flex-direction:column}
-#timetable.tt-has-data > .grid.grid-2{order:10;margin-top:var(--sp-4)}
-.timetable td[colspan]{height:auto}
 
-/* أقسام اللوحة القابلة للطي */
-.dash-collapsible > .card-head{cursor:pointer;-webkit-tap-highlight-color:transparent}
-.dash-collapsible > .card-head h3::after{content:' ▾';color:var(--muted2);font-size:.8em}
-.dash-collapsed > :not(.card-head){display:none!important}
-.dash-collapsed > .card-head{margin-bottom:0}
-.dash-collapsed > .card-head h3::after{content:' ◂'}
 
-/* ============================================================
-   🎨 Themes & Motion v4
-   ============================================================ */
 
-/* انتقال ناعم للألوان لحظة تبديل الثيم فقط (الصنف يُضاف ثم يُزال من JS) */
-html.theme-fading *,html.theme-fading *::before,html.theme-fading *::after{
-  transition:background-color var(--dur-3) ease,border-color var(--dur-3) ease,color var(--dur-3) ease,box-shadow var(--dur-3) ease,fill var(--dur-3) ease,stroke var(--dur-3) ease!important;
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
 body{transition:background-color var(--dur-3) ease,color var(--dur-3) ease}
 
-/* خروج التنبيه كان مُلغى بسبب !important على أنيميشن الدخول */
+
 .toast.out{animation:toastOut .3s ease forwards}
 
-/* نبض الزر العائم: 3 مرات فقط بدل حلقة لا نهائية (تقليل إعادة الرسم واستهلاك البطارية) */
 
-/* بقع الخلفية الضبابية: ثابتة على الشاشات الصغيرة (blur كبير + حركة مستمرة ثقيلة على الموبايل) */
-/* حالات الضغط والتركيز المتناسقة */
-.bn-item,.tt-chip,button.badge[data-goto-tab],.settings-item,.theme-swatch,.fab-action,.card-action{transition:transform var(--dur-1) var(--ease),background var(--dur-2) ease,color var(--dur-2) ease,border-color var(--dur-2) ease,box-shadow var(--dur-2) ease}
+
+
+
+
 .bn-item:active,.tt-chip:active,button.badge[data-goto-tab]:active,.fab-action:active,.card-action:active{transform:scale(.94)}
 .settings-item:active{transform:scale(.98)}
 .theme-swatch:active{transform:scale(.97)}
 .theme-swatch:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.theme-swatch.active{transform:scale(1.04)}
 
-/* الثيمات الفاتحة (عاج / سماء): ظلال وخلفية نوافذ أخف */
+
+
 [data-theme="glass-light"] .modal-backdrop{background:rgba(20,40,30,.42)}
 [data-theme="glass-light"] .card:hover{box-shadow:var(--shadow-lg)}
 [data-theme="glass-light"] .icon-btn:hover{box-shadow:var(--shadow)}
 [data-theme="glass-light"] .toast{box-shadow:var(--shadow)}
 
 @media (prefers-reduced-motion: reduce){
-  html.theme-fading *,html.theme-fading *::before,html.theme-fading *::after{transition:none!important}
-  }
+  html.theme-fading *,html.theme-fading *::before,html.theme-fading *::after{transition:none!important}}
 
-/* ============================================================
-   🎛️ توحيد حالات الحقول والأزرار — للثيمات الجديدة فقط (coral/glass/glass-light)
-   ============================================================ */
+
 [data-theme="coral"],[data-theme="glass"]{color-scheme:dark}
 [data-theme="glass-light"]{color-scheme:light}
 [data-theme="coral"] ::placeholder,
 [data-theme="glass"] ::placeholder,[data-theme="glass-light"] ::placeholder{color:var(--muted2);opacity:1}
 [data-theme="coral"] option,
 [data-theme="glass"] option,[data-theme="glass-light"] option{background:var(--card);color:var(--text)}
-/* تعطيل موحّد (يشمل كل الثيمات لأنه سلوك وليس لون): خافت + مؤشر ممنوع + بدون حركة */
+
 .btn:disabled,.btn[disabled]{opacity:.5;cursor:not-allowed;transform:none!important;box-shadow:none!important}
 input:disabled,select:disabled,textarea:disabled{opacity:.55;cursor:not-allowed}
-/* نتيجة البحث المحددة بلوحة المفاتيح */

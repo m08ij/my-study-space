@@ -195,7 +195,7 @@
     var d0 = dOf(days[0]), d1 = dOf(days[days.length - 1]), mins = all.reduce(function(t, e){ return t + (e.end - e.start); }, 0);
     var range = d0.getDate() + (d0.getMonth() !== d1.getMonth() ? ' ' + MON[d0.getMonth()] : '') + ' – ' + d1.getDate() + ' ' + MON[d1.getMonth()];
     var acts = '<button type="button" class="fx-btn sm" data-fx="addclass">' + ic('plus') + 'إضافة / تعديل</button>' + (W.OcrImport ? '<button type="button" class="fx-btn ghost sm" data-fx="ocr">' + ic('camera') + 'من صورة</button>' : '');
-    var more = '<details class="fx-ttmore"><summary aria-label="خيارات أكثر" title="خيارات أكثر">⋯</summary><div class="fx-ttmenu">' + tool('share', 'مشاركة كصورة') + tool('cal', 'ربط التقويم') + (W.printTimetable ? tool('fn', 'طباعة', 'printTimetable') : '') + (W.clearTimetable ? tool('fn', 'مسح الجدول', 'clearTimetable', 1) : '') + '</div></details>';
+    var more = '<span class="fx-ttmore"><button type="button" class="fx-ttbtn" data-fx="ttmenu" aria-haspopup="menu" aria-expanded="false" aria-label="خيارات أكثر" title="خيارات أكثر">⋯</button></span>';
     var bar = '<div class="fx-calbar"><div class="fx-calr"><b>' + range + '</b><small>' + all.length + ' محاضرة بالأسبوع · ' + dur(mins) + '</small></div><span class="fx-calact fx-only-wide">' + acts + more + '</span></div>';
     /* الكمبيوتر: لوحة أسبوعية مضغوطة — عمود لكل يوم، محاضراته بالترتيب كبطاقات، والفراغ بينهم كسطر صغير (بدون شبكة ساعات طويلة) */
     var grid = '<div class="fx-wk" style="--cols:' + days.length + '">' + days.map(function(i){
@@ -701,6 +701,28 @@
     go._prev = cur; }
   function classic(tab){ parkCampus(); d.documentElement.classList.remove('fx-on'); if(W.switchTab) W.switchTab(tab || 'dashboard'); }
   function back(){ d.documentElement.classList.add('fx-on'); render(true); }
+  /* قائمة ⋯ بالجدول: نافذة عائمة (position:fixed) فوق كل إشي — بدل <details> اللي كانت تنفتح ورا اللوحة الأسبوعية */
+  function ttMenu(btn){
+    var old = d.getElementById('fxTtPop'), same = old && old._from === btn;
+    if(old) ttClose();
+    if(same) return;
+    var p = d.createElement('div'); p.id = 'fxTtPop'; p.className = 'fx-ttmenu fx-ttpop'; p.setAttribute('role', 'menu'); p._from = btn;
+    p.innerHTML = tool('share', 'مشاركة كصورة') + tool('cal', 'ربط التقويم') + (W.printTimetable ? tool('fn', 'طباعة', 'printTimetable') : '') + (W.clearTimetable ? tool('fn', 'مسح الجدول', 'clearTimetable', 1) : '');
+    root.appendChild(p);
+    var r = btn.getBoundingClientRect(), w = p.offsetWidth, h = p.offsetHeight, vw = W.innerWidth, vh = W.innerHeight;
+    var left = Math.min(Math.max(8, r.left), vw - w - 8), top = r.bottom + 8; if(top + h > vh - 8) top = Math.max(8, r.top - h - 8);
+    p.style.left = left + 'px'; p.style.top = top + 'px';
+    btn.setAttribute('aria-expanded', 'true');
+    var first = p.querySelector('button'); if(first) try{ first.focus({ preventScroll: true }); }catch(e){}
+    setTimeout(function(){ d.addEventListener('click', ttOutside, true); d.addEventListener('keydown', ttKey, true); W.addEventListener('resize', ttClose); var m = d.getElementById('fxMain'); if(m) m.addEventListener('scroll', ttClose, { once: true }); }, 0);
+  }
+  function ttClose(){
+    var p = d.getElementById('fxTtPop'); if(!p) return;
+    if(p._from) p._from.setAttribute('aria-expanded', 'false');
+    p.remove(); d.removeEventListener('click', ttOutside, true); d.removeEventListener('keydown', ttKey, true); W.removeEventListener('resize', ttClose);
+  }
+  function ttOutside(e){ var p = d.getElementById('fxTtPop'); if(!p) return; if(p.contains(e.target)){ setTimeout(ttClose, 0); return; } if(p._from && p._from.contains(e.target)) return; ttClose(); }
+  function ttKey(e){ if(e.key === 'Escape'){ var p = d.getElementById('fxTtPop'), b = p && p._from; ttClose(); if(b) b.focus(); } }
   function onClick(e){
     var b = e.target.closest ? e.target.closest('[data-fx]') : null; if(!b || b.tagName === 'FORM') return;
     var a = b.getAttribute('data-fx'), v = b.getAttribute('data-v');
@@ -708,6 +730,7 @@
     else if(a === 'tog'){ var row = b.closest('.fx-task'); if(row) row.classList.add('pop'); if(W.toggleTask) W.toggleTask(b.getAttribute('data-id')); setTimeout(soon, 220); }
     else if(a === 'day'){ ttDay = +v; render(false); }
     else if(a === 'addtask'){ if(W.addTask) W.addTask(); }
+    else if(a === 'ttmenu') ttMenu(b);
     else if(a === 'addclass'){ if(W.openSmartTimetable) W.openSmartTimetable(); }
     else if(a === 'askai'){ askAI(v || ''); }
     else if(a === 'study'){ if(b.getAttribute('data-c')) lsSet('ss_dp_focus', JSON.stringify({ d: today(), k: b.getAttribute('data-k') || '', c: b.getAttribute('data-c') })); openStudy(); }
@@ -769,7 +792,7 @@
   function onSubmit(e){
     var f = e.target; if(!f.classList || !f.classList.contains('fx-add')) return;
     e.preventDefault();
-    var inp = f.querySelector('input'), txt = String(inp.value || '').trim(); if(!txt) return;
+    var inp = f.querySelector('input'), txt = String(inp.value || '').trim(); if(!txt){ if(W.addTask) W.addTask(); return; }   /* «+» والخانة فاضية = نافذة المهمة الكاملة */
     var qp = quickParse(txt), due = qp.due, course = qp.course;
     if(typeof due !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(due)) due = today();
     sp().tasks = sp().tasks || [];

@@ -48,6 +48,7 @@
   function init(){
     if(client) return client;
     if(!CFG.url || !CFG.anonKey || CFG.url.indexOf('YOUR-') > -1) return null;
+    try{ if(localStorage.getItem('ss_demo') === '1') return null; }catch(e){}   /* الوضع التجريبي (js/demo.js): ولا إشي بينرفع لقاعدة البيانات */
     if(typeof window.supabase === 'undefined' || !window.supabase.createClient) return null;
     /* أمان التطوير: عند التشغيل محلياً (localhost/127.0.0.1) لا نتصل بسحابة الإنتاج بالمكتبة الحقيقية إلا مع ?cloud=1 (كل تجربة بملف تعريف جديد كانت تنشئ صفاً وهمياً بجدول spaces). المحاكيات بالاختبارات لا تُحجب. */
     try{ if(window.supabase.SupabaseClient && /^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]cloud=1/.test(location.search)){ console.log('☁️ Supabase معطّل محلياً (أضف ?cloud=1 لتفعيله)'); return null; } }catch(e){}

@@ -1,7 +1,7 @@
 const ROOT=require('path').resolve(__dirname,'..').split('\\').join('/')+'/';
 const {JSDOM,VirtualConsole}=require('jsdom'); const fs=require('fs'); const P=ROOT;
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-const SRC=fs.readFileSync(P+'index.html','utf8').replace(/<script[^>]*src="https?:[^>]*><\/script>/g,'').replace(/<script src="([^"]+)"><\/script>/g,(m,s)=>/^vendor-/.test(s)?'':'<script>'+fs.readFileSync(P+s,'utf8').replace(/<\/script>/g,'<\\/script>')+'</script>');
+const SRC=fs.readFileSync(P+'index.html','utf8').replace(/<script[^>]*src="https?:[^>]*><\/script>/g,'').replace(/<script src="([^"]+)"><\/script>/g,(m,s)=>/(^|\/)vendor-/.test(s)?'':'<script>'+fs.readFileSync(P+s,'utf8').replace(/<\/script>/g,'<\\/script>')+'</script>');
 function mkCloud(){ return {row:null,down:false,trigger:false,writes:0,loads:0}; }
 function device(cloud,ls,name){ const errs=[];
   const vc=new VirtualConsole(); vc.on('jsdomError',e=>{const m=(e.message||'');if(!/navigation|not implemented/i.test(m))errs.push(m.slice(0,150));});

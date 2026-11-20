@@ -1,8 +1,4 @@
-/* =====================================================================
-   10-dialogs.css — كل النوافذ (القديمة والجديدة) بشكل واحد مع الواجهة الجديدة:
-   لوح مرتفع هادئ بدون خط ملوّن، حقول موحّدة، زر أساسي بلون الثيم (بدون تدرّج/توهّج)
-   وزر ثانوي شفاف. المحدِّدات تبدأ بـhtml.fx-skin body عشان تغلب قواعد الثيمات القديمة.
-   ===================================================================== */
+
 html.fx-skin{
   --dlg:color-mix(in srgb,var(--fxbase,#0b0e2a) 89%,#c9ccff);
   --dlg2:color-mix(in srgb,var(--fxbase,#0b0e2a) 84%,#c9ccff);
@@ -18,18 +14,18 @@ html.fx-skin.fx-skin-light{
   --dlg-tx:#14172b;--dlg-mu:rgba(20,23,43,.6);--dlg-ac:color-mix(in srgb,var(--fxac,#5b4bff) 75%,#000);
 }
 
-/* ---- الخلفية خلف النافذة ---- */
+
 html.fx-skin body :is(.modal-backdrop,.stt-backdrop,.hub-sheet-backdrop,.ocri-overlay){background:rgba(4,5,18,.58)!important;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
 html.fx-skin.fx-skin-light body :is(.modal-backdrop,.stt-backdrop,.hub-sheet-backdrop,.ocri-overlay){background:rgba(30,34,70,.3)!important}
 
-/* ---- اللوح ---- */
+
 html.fx-skin body :is(.modal,.stt-modal,.hub-sheet,.ocri-box){background:var(--dlg)!important;background-image:none!important;color:var(--dlg-tx);border:1px solid var(--dlg-ln)!important;border-radius:24px!important;box-shadow:0 40px 100px -24px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.06)!important}
 html.fx-skin.fx-skin-light body :is(.modal,.stt-modal,.hub-sheet,.ocri-box){box-shadow:0 30px 80px -24px rgba(30,34,80,.35)!important}
 html.fx-skin body .modal::before{display:none!important}
 html.fx-skin body .modal{padding:24px!important}
-html.fx-skin body .modal>:is(h2,h3):first-child,html.fx-skin body .modal .modal-title{font-size:19px;font-weight:800;color:var(--dlg-tx);margin:0 0 18px;letter-spacing:0}
+html.fx-skin body .modal>:is(h2,h3):first-child{font-size:19px;font-weight:800;color:var(--dlg-tx);margin:0 0 18px;letter-spacing:0}
 
-/* ---- الحقول ---- */
+
 html.fx-skin body :is(.modal,.stt-modal,.hub-sheet,.ocri-box) :is(.form-group>label,label.ocri-lbl){font-size:13px;font-weight:700;color:var(--dlg-mu)!important;margin-bottom:7px}
 html.fx-skin body :is(.modal,.stt-modal,.hub-sheet,.ocri-box) :is(input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]):not([type=file]),select,textarea){background-color:var(--dlg-in)!important;border:1px solid var(--dlg-inb)!important;border-radius:12px!important;color:var(--dlg-tx)!important;font-family:inherit;font-size:15px;min-height:46px;box-shadow:none!important;transition:border-color .15s,box-shadow .15s}
 html.fx-skin body :is(.modal,.stt-modal,.hub-sheet,.ocri-box) textarea{min-height:96px;padding-top:12px}
@@ -39,7 +35,7 @@ html.fx-skin body :is(.modal,.stt-modal,.hub-sheet,.ocri-box) select{appearance:
 html.fx-skin body :is(.modal,.stt-modal,.hub-sheet,.ocri-box) select option{background:var(--dlg);color:var(--dlg-tx)}
 html.fx-skin body .modal .form-group{margin-bottom:16px}
 
-/* ---- الأزرار ---- */
+
 html.fx-skin body :is(.modal,.stt-modal,.hub-sheet,.ocri-box) :is(.btn,.stt-btn,.ocri-btn){display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:44px;padding:0 18px;border-radius:12px!important;font-family:inherit;font-size:15px!important;font-weight:800!important;background:var(--dlg-ac)!important;background-image:none!important;color:#fff!important;border:1px solid transparent!important;box-shadow:none!important;text-shadow:none!important;transition:filter .15s,background-color .15s,transform .1s;cursor:pointer}
 html.fx-skin body :is(.modal,.stt-modal,.hub-sheet,.ocri-box) :is(.btn,.stt-btn,.ocri-btn):hover{filter:brightness(1.08);transform:none}
 html.fx-skin body :is(.modal,.stt-modal,.hub-sheet,.ocri-box) :is(.btn,.stt-btn,.ocri-btn):active{transform:scale(.98)}
@@ -52,11 +48,11 @@ html.fx-skin body .stt-modal .stt-btn-warn{background:color-mix(in srgb,var(--dl
 html.fx-skin body .modal .modal-actions{display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-start;margin-top:22px;padding-top:18px;border-top:1px solid var(--dlg-ln)}
 html.fx-skin body .modal .modal-actions .btn{min-width:104px}
 
-/* ---- زر الإغلاق ✕ ---- */
+
 html.fx-skin body :is(.stt-close,.hub-x,.modal .sync-x,.ocri-x){width:38px!important;height:38px!important;min-width:38px;padding:0!important;border-radius:50%!important;display:grid!important;place-items:center;background:var(--dlg-in)!important;border:1px solid var(--dlg-ln)!important;color:var(--dlg-tx)!important;box-shadow:none!important}
 html.fx-skin body :is(.stt-close,.hub-x,.modal .sync-x,.ocri-x):hover{background:var(--dlg-inb)!important}
 
-/* ---- نافذة «إضافة جدول» وورقة المادة ---- */
+
 html.fx-skin body :is(.stt-header,.hub-sheet-head){background:transparent!important;border-bottom:1px solid var(--dlg-ln)!important}
 html.fx-skin body :is(.stt-header h3,.hub-sheet-title){font-size:19px!important;font-weight:800!important;color:var(--dlg-tx)!important;background:none!important;-webkit-text-fill-color:currentColor!important}
 html.fx-skin body .stt-footer{background:var(--dlg2)!important;border-top:1px solid var(--dlg-ln)!important}
@@ -67,6 +63,5 @@ html.fx-skin body .hub-sheet .hub-ctabs{background:var(--dlg-in)!important;borde
 html.fx-skin body .hub-sheet .hub-ctabs>*{border-radius:10px!important;box-shadow:none!important}
 
 @media (max-width:700px){
-  html.fx-skin body .modal{padding:20px 18px calc(18px + env(safe-area-inset-bottom,0px))!important;border-radius:24px 24px 0 0!important}
-}
+  html.fx-skin body .modal{padding:20px 18px calc(18px + env(safe-area-inset-bottom,0px))!important;border-radius:24px 24px 0 0!important}}
 @media (hover:none){html.fx-skin body :is(.modal-backdrop,.stt-backdrop,.hub-sheet-backdrop,.ocri-overlay){backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(4,5,18,.72)!important}}

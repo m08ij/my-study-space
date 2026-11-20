@@ -22,7 +22,9 @@ const { boot } = require('./e2elib'); const sl = ms => new Promise(r => setTimeo
   o.P_oddHours = vr[2]._ocr.confidence === 'review' && /خارج ساعات/.test(vr[2]._ocr.reasons.join()) && /مدة/.test(vr[3]._ocr.reasons.join());
   o.P_digitsFixed = vr[4].timeFrom === '09:00' && vr[4]._ocr.confidence === 'high';
   o.P_retryable = OI.modelRetryable({ status: 429 }) && OI.modelRetryable({ status: 404 }) && OI.modelRetryable({ message: 'quota exceeded' }) && OI.modelRetryable({ status: 503 }) && !OI.modelRetryable({ status: 400, message: 'API key not valid' });
-  o.P_chain = OI.modelChain().length >= 3 && OI.modelChain()[0] === 'gemini-flash-latest' && new Set(OI.modelChain()).size === OI.modelChain().length;
+  /* عبر n8n: تنقّل سريع يبدأ بالخفيف؛ بمفتاح شخصي/بدون n8n: السلسلة القديمة بدون تكرار */
+  const n8nChain = OI.modelChain(); w.localStorage.setItem('ss_n8n_base', 'off'); const ownChain = OI.modelChain(); w.localStorage.removeItem('ss_n8n_base');
+  o.P_chain = n8nChain.length >= 5 && n8nChain[0] === 'gemini-3.5-flash-lite' && ownChain.length >= 3 && ownChain[0] === 'gemini-flash-latest' && new Set(ownChain).size === ownChain.length;
   o.P_explain = /مشغول/.test(OI.explainGemini({ status: 503 })) && /الحد المجاني/.test(OI.explainGemini({ status: 429 })) && /المفتاح غير صالح/.test(OI.explainGemini({ message: 'API key not valid' }));
 
   /* ===== صفحة الجدول: الزر دايماً ظاهر (بدون مفتاح) + تصوير ===== */

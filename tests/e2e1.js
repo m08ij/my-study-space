@@ -146,7 +146,7 @@ async function sect(name,fn){ try{ await fn(); }catch(e){ T(name+'_CRASH',false,
   T('tt_edit_moves_slot',!!sp().timetable['Sun-09:30']&&!sp().timetable['Sun-09:00'],JSON.stringify(Object.keys(sp().timetable)));
   T('tt_conflict_resolved',W().getTimetableConflicts().list.length===0);
   await reload(); T('tt_persist',!!sp().timetable['Sun-09:30']&&!!sp().timetable['Mon-08:00']);
-  await go('timetable'); const clr=Q('#fxMain [data-v="clearTimetable"]'); if(clr){ clr.click(); await sl(40); await confirmYes(); await sl(60); T('tt_cleared',Object.keys(sp().timetable).length===0); } else T('tt_clear_btn',false);
+  await go('timetable'); const ttb=Q('#fxMain .fx-ttbtn'); if(ttb){ ttb.click(); await sl(30); } const clr=Q('#fxTtPop [data-v="clearTimetable"]');   /* المسح صار بقائمة ⋯ العائمة */ if(clr){ clr.click(); await sl(40); await confirmYes(); await sl(60); T('tt_cleared',Object.keys(sp().timetable).length===0); } else T('tt_clear_btn',false);
  });
 
 

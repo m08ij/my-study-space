@@ -63,7 +63,7 @@ const { boot } = require('./e2elib'); const sl = ms => new Promise(r => setTimeo
   o.T_rtl = sun.x > wed.x;   /* الأحد يمين الأربعاء */
   o.T_inside = L.blocks.every(b => b.x >= 0 && b.y >= 0 && b.x + b.w <= L.w && b.y + b.h <= L.h) && L.blocks.every(b => b.hue >= 0 && b.hue < 360);
   o.T_empty = w.ShareTT.layout([]) === null && w.ShareTT.layout([{ name: 'x', dayIdx: 0, start: 600, end: 600 }]) === null;
-  w.FocusUI.go('timetable'); await sl(150); o.T_button = !!Q('#fxMain [data-fx="share"]');
+  w.FocusUI.go('timetable'); await sl(150); { const tb = Q('#fxMain .fx-ttbtn'); if(tb) tb.click(); await sl(20); } o.T_button = !!Q('#fxTtPop [data-fx="share"]');
   const e2 = mk({ ...empty }); await sl(800); e2.w.ShareTT.share(); await sl(100); o.T_emptyToast = /أضف محاضرات/.test(e2.w.document.body.textContent);
   o.errs = [...errs, ...b2.errs, ...b3.errs, ...b4.errs, ...e2.errs].filter(e => !/offline|Not implemented|Could not parse/i.test(e));
   console.log(JSON.stringify(o, null, 1)); process.exit(0);

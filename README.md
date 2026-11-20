@@ -139,3 +139,17 @@ The Gemini key lives only as an n8n credential; CORS is restricted to `https://m
 **CI/CD.** Every push to `main` runs the jsdom test suite, builds a minified bundle and deploys to GitHub Pages via GitHub Actions.
 
 </details>
+
+---
+
+<div align="center">
+
+### 🚀 جرّب الموقع ببيانات جاهزة
+
+[![جرّب الموقع](https://img.shields.io/badge/%D8%AC%D8%B1%D9%91%D8%A8%20%D8%A7%D9%84%D9%85%D9%88%D9%82%D8%B9-%D8%A8%D9%8A%D8%A7%D9%86%D8%A7%D8%AA%20%D8%AA%D8%AC%D8%B1%D9%8A%D8%A8%D9%8A%D8%A9-8b5cf6?style=for-the-badge)](https://m08ij.github.io/my-study-space/?demo=1)
+
+بيفتح الموقع بطالب تجريبي (مواد، جدول، مهام، امتحانات، ميزانية) عشان تشوفه مليان — كله بمتصفحك بس، **ولا إشي بينرفع لقاعدة البيانات**. زر «ابدأ ببياناتي» فوق بيمسحه.
+
+**Live demo:** [m08ij.github.io/my-study-space/?demo=1](https://m08ij.github.io/my-study-space/?demo=1)
+
+</div>
