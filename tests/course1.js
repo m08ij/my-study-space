@@ -26,7 +26,7 @@ const { boot } = require('./e2elib'); const sl = ms => new Promise(r => setTimeo
   w.Hub.openCourse('c1'); await sl(300);
   const body = Q('.hub-course-sheet .hub-sheet-body');
   o.C_defaultOverview = body.getAttribute('data-ctab') === 'over' && Q('.hub-ctab.active').getAttribute('data-jump') === 'over' && Q('.hub-ctab.active').getAttribute('aria-selected') === 'true';
-  o.C_sixTabs = QA('.hub-ctab').map(b => b.getAttribute('data-jump')).join() === 'over,plan,files,work,marks,notes';
+  o.C_sixTabs = QA('.hub-ctab').map(b => b.getAttribute('data-jump')).join() === 'over,plan,work,marks,files,notes';   /* 168: المهام والعلامات قبل الملفات (أكثر استعمالاً) */
   const tabsOf = id => Q('#hs-' + id).getAttribute('data-ctabs');
   o.C_sectionTabs = tabsOf('over') === 'over' && tabsOf('plan') === 'plan' && tabsOf('sched') === 'plan' && tabsOf('files') === 'files' && tabsOf('tasks') === 'work' && tabsOf('exams') === 'work' && tabsOf('grades') === 'marks' && tabsOf('att') === 'marks' && tabsOf('notes') === 'notes';
   o.C_workBadge = /\d/.test(Q('.hub-ctab[data-jump="work"] .hub-ctab-n').textContent);
@@ -43,7 +43,7 @@ const { boot } = require('./e2elib'); const sl = ms => new Promise(r => setTimeo
   Q('#hs-over [data-go-tab="marks"]').click(); await sl(40);
   o.T_cardJumps = Q('.hub-course-sheet .hub-sheet-body').getAttribute('data-ctab') === 'marks';
   Q('.hub-ctab[data-jump="over"]').click(); await sl(40);
-  Q('#hs-over [data-ov-act="addtask"]').click(); await sl(150);
+  Q('.hub-ct [data-ov-act="addtask"]').click(); await sl(150);   /* «+ مهمة» صار برأس النافذة */
   o.T_quickAddTask = !!Q('.modal, .modal-box, [role=dialog]:not(#settingsMenu)');
   d.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'Escape', bubbles: true })); await sl(150);
   /* فتح من مكان ثانٍ بقسم محدّد: الامتحانات -> تبويب work */

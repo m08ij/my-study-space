@@ -357,12 +357,27 @@
       '<div class="fx-glass"><h3>آخر الحركات</h3>' + (recent.length ? recent.map(function(x){ var inc1 = x.type === 'income';
         return '<div class="fx-mv"><span class="fx-tb"><b>' + esc(catName(x.category) || (inc1 ? 'دخل' : 'مصروف')) + '</b><small>' + esc(x.date || '') + (x.note ? ' · ' + esc(x.note) : '') + '</small></span><b class="' + (inc1 ? 'in' : 'out') + '">' + (inc1 ? '+' : '−') + money(x.amount) + '</b><button type="button" class="fx-ib sm" data-fx="call" data-v="editBudget" data-id="' + esc(x.id) + '" aria-label="تعديل">✎</button><button type="button" class="fx-ib sm" data-fx="call" data-v="deleteBudget" data-id="' + esc(x.id) + '" aria-label="حذف">✕</button></div>'; }).join('') : empty('ما في حركات لسا')) + '</div></div>' + (W.BudgetPlan ? '<details class="fx-glass fx-fold fx-bp"' + (lsGet('ss_fx_bp') === '1' ? ' open' : '') + '><summary>تخطيط الميزانية · حدود الشهر والتوقعات وأهداف الادخار</summary><div id="budgetPlan"></div></details>' : '') + (W.clearBudget ? '<div class="fx-tools">' + tool('fn', 'مسح الميزانية', 'clearBudget', 1) + '</div>' : '');
   }
+  /* مؤقت التركيز (168): دائرة كبيرة بالنص (مدة الجلسة + تقدّم اليوم نحو الهدف) + «ابدأ» واحد كبير + اختيار المادة + أسبوعك */
   function vTimer(){
-    var def = (W.timerSettings && W.timerSettings.focus) || 25, fm = 0;
-    try{ var dp = sp().dayPlan, dd = dp && dp.days && dp.days[today()]; if(dd && dd.fm) Object.keys(dd.fm).forEach(function(k){ fm += +dd.fm[k] || 0; }); }catch(e){}
-    return '<div class="fx-glass fx-hero fx-timer-hero"><small>ركزت اليوم</small><b class="fx-big">' + dur(Math.round(fm)) + '</b><span class="fx-meta"><span>الجلسة الافتراضية ' + def + ' د</span></span></div>' +
-      '<div class="fx-glass"><h3>ابدأ جلسة تركيز</h3><div class="fx-durs">' + [15, 25, 45, 60, 90].map(function(n){ return '<button type="button" class="fx-dur' + (n === def ? ' on' : '') + '" data-fx="studyn" data-v="' + n + '"><b>' + n + '</b><small>دقيقة</small></button>'; }).join('') + '</div></div>' +
-      '<div class="fx-actions"><button type="button" class="fx-btn ghost" data-fx="call" data-v="openTimerSettings">' + ic('clock') + 'إعدادات المؤقت</button></div>';
+    var def = (W.timerSettings && W.timerSettings.focus) || 25, sel = +lsGet('ss_fx_dur') || def, crs = lsGet('ss_fx_tmc') || '';
+    var log = {}; try{ log = W.S && W.S.get ? W.S.get('studyLog', {}) || {} : JSON.parse(lsGet('studyLog') || '{}') || {}; }catch(e){}
+    var fm = 0; try{ var dp = sp().dayPlan, dd = dp && dp.days && dp.days[today()]; if(dd && dd.fm) Object.keys(dd.fm).forEach(function(k){ fm += +dd.fm[k] || 0; }); }catch(e){}
+    var tdy = Math.max(Math.round(+log[today()] || 0), Math.round(fm)), goal = +lsGet('ss_fx_goal') || 120, pct = Math.min(100, Math.round(tdy / goal * 100));
+    var t = new Date(), wk = [], wTot = 0, mx = 1, streakN = 0;
+    for(var i = 6; i >= 0; i--){ var x = new Date(t.getFullYear(), t.getMonth(), t.getDate() - i), m = Math.max(0, Math.round(+log[ymd(x)] || 0)); if(i === 0) m = tdy; wk.push({ d: DA[x.getDay()].replace('ال', ''), m: m, today: i === 0 }); wTot += m; if(m > mx) mx = m; }
+    for(var k = 0; k < 365; k++){ var z = new Date(t.getFullYear(), t.getMonth(), t.getDate() - k), zm = k === 0 ? tdy : +log[ymd(z)] || 0; if(zm > 0) streakN++; else if(k > 0) break; }
+    var courses = (sp().courses || []).map(function(c){ return c && c.name; }).filter(Boolean);
+    var hero = '<div class="fx-glass fx-tm">' +
+      '<div class="fx-tm-ring" style="--p:' + pct + '"><div class="fx-tm-in"><b dir="ltr">' + pad(sel) + ':00</b><small>جلسة تركيز</small></div></div>' +
+      '<div class="fx-tm-side">' +
+        '<div class="fx-tm-durs" role="group" aria-label="مدة الجلسة">' + [15, 25, 45, 60, 90].map(function(n){ return '<button type="button" class="fx-tm-d' + (n === sel ? ' on' : '') + '" data-fx="tmsel" data-v="' + n + '" aria-pressed="' + (n === sel) + '">' + n + ' د</button>'; }).join('') + '</div>' +
+        (courses.length ? '<div class="fx-tm-lbl">على شو بتركّز؟</div><div class="fx-tm-crs">' + ['<button type="button" class="fx-tm-c' + (!crs ? ' on' : '') + '" data-fx="tmcrs" data-v="">عام</button>'].concat(courses.slice(0, 8).map(function(n){ return '<button type="button" class="fx-tm-c' + (crs === n ? ' on' : '') + '" style="--h:' + hue(n) + '" data-fx="tmcrs" data-v="' + esc(n) + '"><i></i>' + esc(n) + '</button>'; })).join('') + '</div>' : '') +
+        '<button type="button" class="fx-btn fx-tm-go" data-fx="tmgo">' + ic('play') + 'ابدأ ' + sel + ' دقيقة</button>' +
+        '<div class="fx-tm-goal">ركّزت اليوم <b>' + dur(tdy) + '</b> من هدف ' + dur(goal) + ' · <button type="button" class="fx-link" data-fx="tmgoal">غيّر الهدف</button></div>' +
+      '</div></div>';
+    var week = '<div class="fx-glass fx-tm-week"><h3>أسبوعك <small>' + dur(wTot) + ' · 🔥 ' + streakN + (streakN === 1 ? ' يوم' : ' أيام') + '</small></h3><div class="fx-tm-bars">' +
+      wk.map(function(x){ return '<span class="fx-tm-bar' + (x.today ? ' today' : '') + '" title="' + x.m + ' د"><i style="height:' + Math.max(4, Math.round(x.m / mx * 100)) + '%"></i><b>' + (x.m ? x.m : '') + '</b><small>' + x.d + '</small></span>'; }).join('') + '</div></div>';
+    return hero + week + '<div class="fx-actions"><button type="button" class="fx-btn ghost" data-fx="call" data-v="openTimerSettings">' + ic('clock') + 'إعدادات المؤقت</button></div>';
   }
   /* الإعدادات: صفحة وحدة بكل إشي (بدل نافذة الإعدادات القديمة) — الأزرار بتنادي نفس دوال الأزرار الأصلية المخفية بـindex.html */
   function liveSub(id){ var e = d.getElementById(id), s2 = e && e.querySelector('small'); return s2 ? s2.textContent.trim() : ''; }
@@ -397,15 +412,32 @@
   
   /* ---------- الدفعة 3: الخطة · روابط الجامعة ---------- */
   var TYPES = [['uni-c', 'جامعة إجباري'], ['uni-e', 'جامعة اختياري'], ['faculty', 'كلية'], ['major-c', 'تخصص إجباري'], ['major-e', 'تخصص اختياري']];
+  /* الخطة الدراسية (168): دائرة تقدّم كبيرة + كروت ملوّنة لكل نوع متطلب + «مواد مقترحة إلك» من الخطة الموصى فيها */
+  var TYPE_HUE = { 'uni-c': 200, 'uni-e': 170, 'faculty': 265, 'major-c': 330, 'major-e': 35 };
   function vPlan(){
     var p = null; try{ p = W.planHoursSummary ? W.planHoursSummary() : null; }catch(e){}
     if(!p) return empty('الخطة مش متوفرة');
-    var T = W.TOTAL_REQUIRED_HOURS || {}, pct = Math.min(100, Math.round(p.done / p.total * 100)), left = Math.max(0, p.total - p.done - p.curCounted);
-    return '<div class="fx-glass fx-hero fx-plan-hero"><span class="fx-ring big" style="--p:' + pct + ';--h:250"><b>' + pct + '%</b></span><span class="fx-tb"><small>خلصت من خطتك</small><b class="fx-big">' + p.done + ' <small>من ' + p.total + ' ساعة</small></b><span class="fx-meta"><span>هالفصل ' + p.current + ' ساعة' + (p.over ? ' (فوق 18!)' : '') + '</span><span>باقي بعده ' + left + '</span></span></span></div>' +
-      '<div class="fx-glass"><h3>حسب نوع المتطلب</h3>' + TYPES.map(function(t){ var need = +T[t[0]] || 0, dn = p.byType[t[0]] || 0, cu = p.curByType[t[0]] || 0; if(!need && !dn && !cu) return '';
-        var a = need ? Math.min(100, dn / need * 100) : 0, b = need ? Math.min(100 - a, cu / need * 100) : 0;
-        return '<div class="fx-req"><span class="fx-tb"><b>' + t[1] + '</b><small>' + dn + (cu ? ' + ' + cu + ' هالفصل' : '') + ' / ' + (need || '—') + '</small></span><i class="fx-stack"><i style="width:' + a + '%"></i><i class="cur" style="width:' + b + '%"></i></i></div>'; }).join('') +
-      '<div class="fx-legend"><span><i></i>مكتمل</span><span><i class="cur"></i>هالفصل</span></div></div>' +
+    var T = W.TOTAL_REQUIRED_HOURS || {}, pct = Math.min(100, Math.round(p.done / p.total * 100)), pctCur = Math.min(100 - pct, Math.round(p.curCounted / p.total * 100)), left = Math.max(0, p.total - p.done - p.curCounted);
+    var sems = left ? Math.ceil(left / 16) : 0;
+    var hero = '<div class="fx-glass fx-pl">' +
+      '<div class="fx-pl-ring" style="--a:' + pct + ';--b:' + (pct + pctCur) + '"><div class="fx-pl-in"><b>' + pct + '%</b><small>من خطتك</small></div></div>' +
+      '<div class="fx-pl-side"><h2>' + p.done + ' <small>من ' + p.total + ' ساعة</small></h2>' +
+        '<div class="fx-pl-kpis"><span class="k-done"><i></i><b>' + p.done + '</b><small>مكتملة</small></span><span class="k-cur"><i></i><b>' + p.current + '</b><small>هالفصل' + (p.over ? ' ⚠️' : '') + '</small></span><span class="k-left"><i></i><b>' + left + '</b><small>باقية</small></span></div>' +
+        '<p class="fx-pl-note">' + (sems ? 'بهالمعدّل (~16 ساعة بالفصل) باقيلك تقريباً <b>' + sems + (sems === 1 ? ' فصل' : sems === 2 ? ' فصلين' : ' فصول') + '</b> بعد هالفصل.' : 'خلصت كل ساعات الخطة 🎉') + (p.over ? ' <span class="warn">مسجّل فوق 18 ساعة هالفصل.</span>' : '') + '</p>' +
+      '</div></div>';
+    var cards = '<div class="fx-pl-grid">' + TYPES.map(function(t){ var need = +T[t[0]] || 0, dn = p.byType[t[0]] || 0, cu = p.curByType[t[0]] || 0; if(!need && !dn && !cu) return '';
+        var a = need ? Math.min(100, Math.round(dn / need * 100)) : 0, b2 = need ? Math.min(100, Math.round((dn + cu) / need * 100)) : 0, rest = Math.max(0, need - dn - cu);
+        return '<div class="fx-glass fx-pl-card" style="--h:' + (TYPE_HUE[t[0]] || 250) + '"><div class="fx-pl-ch"><b>' + t[1] + '</b><span class="fx-pl-mini" style="--a:' + a + ';--b:' + b2 + '"><i>' + a + '%</i></span></div>' +
+          '<div class="fx-pl-nums"><b>' + dn + '</b><small>/ ' + (need || '—') + ' ساعة</small></div>' +
+          '<div class="fx-pl-bar"><i style="width:' + a + '%"></i><i class="cur" style="width:' + Math.max(0, b2 - a) + '%"></i></div>' +
+          '<small class="fx-pl-sub">' + (cu ? '+' + cu + ' هالفصل · ' : '') + (rest ? 'باقي ' + rest : 'مكتمل ✓') + '</small></div>'; }).join('') + '</div>';
+    /* مقترحة: بالترتيب من الخطة الموصى فيها، مش منجزة ومش مسجّلة هالفصل */
+    var DB = W.COURSES_DB || {}, doneM = W.getCompletedCourses ? W.getCompletedCourses() : {}, curM = {}; (sp().courses || []).forEach(function(c){ if(c && c.name) curM[c.name] = 1; });
+    var RP = W.RECOMMENDED_PLAN || {}, sug = [];
+    Object.keys(RP).sort(function(a, b){ return +a - +b; }).forEach(function(k){ (RP[k] || []).forEach(function(n){ if(sug.length < 6 && !doneM[n] && !curM[n] && sug.indexOf(n) < 0) sug.push(n); }); });
+    var next = sug.length ? '<div class="fx-glass fx-pl-next"><h3>مواد مقترحة إلك <small>حسب الخطة الموصى فيها</small></h3><div class="fx-pl-sug">' +
+      sug.map(function(n){ var inf = DB[n] || {}; return '<span class="fx-pl-s" style="--h:' + (TYPE_HUE[inf.t] || 250) + '"><i></i><b>' + esc(n) + '</b><small>' + (inf.h || 3) + ' س</small></span>'; }).join('') + '</div></div>' : '';
+    return hero + cards + next +
       '<div class="fx-actions"><button type="button" class="fx-btn" data-fx="go" data-v="tree">' + ic('book') + 'شجرة المواد بالتفصيل</button>' + (W.importFromPlan ? '<button type="button" class="fx-btn ghost" data-fx="call" data-v="importFromPlan">استورد مواد من الخطة</button>' : '') + '</div>';
   }
   var LG = [['main', 'الأساسية'], ['library', 'المكتبة والبحث'], ['major', 'التخصص'], ['apps', 'تطبيقات'], ['support', 'دعم وخدمات']];
@@ -691,7 +723,8 @@
     if(!fromPop && !same) try{ var t = OLD[cur] || cur; history.pushState({ tab: d.getElementById(t) ? t : 'dashboard', fx: cur }, '', '#' + cur); }catch(e){}
     var m = d.getElementById('fxMain'), red = W.matchMedia && W.matchMedia('(prefers-reduced-motion: reduce)').matches;
     /* انتقال الصفحات (View Transitions): القديمة بتتلاشى والجديدة بتنزلق من اتجاه التنقل، والشريط الجانبي ثابت ومؤشره بيتحرّك */
-    var narrow = W.matchMedia && W.matchMedia('(max-width: 820px), (pointer: coarse)').matches;   /* التلفون/التطبيق: لقطة الصفحة كاملة ثقيلة ← تلاشي CSS خفيف بدلها */
+    /* View Transitions انلغى (168): أثناءه الصفحة القديمة بتضل معروضة ~0.4 ث فالضغطات بتروح عليها وبتضيع (وثقيل على التلفون). دخول الصفحة بأنيميشن CSS خفيف (.anim) بدله */
+    var narrow = true;
     if(!same && !narrow && d.startViewTransition && !red && d.documentElement.classList.contains('fx-on')){
       var ord = ['today', 'timetable', 'tasks', 'exams', 'grades', 'courses', 'budget', 'timer', 'attendance', 'plan', 'tree', 'more', 'settings'], a0 = ord.indexOf(go._prev), a1 = ord.indexOf(cur);
       d.documentElement.setAttribute('data-vtdir', a0 > -1 && a1 > -1 && a1 < a0 ? 'back' : 'fwd'); d.documentElement.classList.add('vt-run');
@@ -754,6 +787,10 @@
     else if(a === 'dpopen'){ if(W.DayPlan && W.DayPlan.openSheet) W.DayPlan.openSheet(); }
     else if(a === 'dpt'){ if(W.DayPlan && W.DayPlan.toggle){ b.classList.toggle('on'); W.DayPlan.toggle(b.getAttribute('data-k')); try{ if(navigator.vibrate) navigator.vibrate(8); }catch(e){} soon(); } }
     else if(a === 'studyn') openStudy(+v);
+    else if(a === 'tmsel'){ lsSet('ss_fx_dur', String(+v)); render(false); }
+    else if(a === 'tmcrs'){ lsSet('ss_fx_tmc', v || ''); render(false); }
+    else if(a === 'tmgo'){ var tc = lsGet('ss_fx_tmc') || ''; if(tc) lsSet('ss_dp_focus', JSON.stringify({ d: today(), k: '', c: tc })); openStudy(+lsGet('ss_fx_dur') || ((W.timerSettings && W.timerSettings.focus) || 25)); }
+    else if(a === 'tmgoal'){ var g = W.prompt ? W.prompt('هدف التركيز اليومي (دقائق)', lsGet('ss_fx_goal') || '120') : null; if(g !== null && +g >= 10 && +g <= 720){ lsSet('ss_fx_goal', String(Math.round(+g))); render(false); } }
     else if(a === 'retry'){ if(W.retryCloud) W.retryCloud(true); }
     else if(a === 'att'){ if(W.markAttendance) W.markAttendance(b.getAttribute('data-n'), v); soon(); }
     else if(a === 'classic') classic(v);

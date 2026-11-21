@@ -481,7 +481,7 @@
       row.appendChild(el('span', 'ocri-dot'));
       var nm = el('b', null, r.name || '(بدون اسم)'); row.appendChild(nm);
       var DA = { Sun: 'ح', Mon: 'ن', Tue: 'ث', Wed: 'ر', Thu: 'خ', Fri: 'ج', Sat: 'س' };
-      row.appendChild(el('small', null, (r.days || []).map(function(d){ return DA[d] || d; }).join(' ') + (r.timeFrom ? ' · ' + r.timeFrom + (r.timeTo ? '–' + r.timeTo : '') : '') + (r.room ? ' · ' + r.room : '')));
+      row.appendChild(el('small', null, (r.days || []).map(function(d){ return DA[d] || d; }).join(' ') + (r.timeFrom ? ' · ⁦' + r.timeFrom + (r.timeTo ? '–' + r.timeTo : '') + '⁩' : '') + (r.room ? ' · ' + r.room : '')));
       if(r._ocr && r._ocr.reasons && r._ocr.reasons.length && r._ocr.confidence === 'review') row.title = r._ocr.reasons.join(' — ');
       list.appendChild(row);
     });

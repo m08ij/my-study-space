@@ -335,9 +335,9 @@
     /* الحضور والعلامات */
     card('marks', '✅ الحضور', x.ap === null ? '—' : x.ap + '%', 'غبت ' + (x.att.absent || 0) + ' مرة', x.ap !== null && x.ap < 75 ? 'danger' : '');
     var gi = (x.g && x.g.items) || [], gt = 0, ge = 0; gi.forEach(function(it){ gt += parseFloat(it.weight) || 0; ge += parseFloat(it.score) || 0; });
-    card('marks', '📊 العلامات', gt > 0 ? ge + ' / ' + gt : '—', gt > 0 ? Math.round(ge / gt * 100) + '%' : 'ما في علامات بعد');
+    card('marks', '📊 العلامات', gt > 0 ? '<bdi dir="ltr">' + ge + ' / ' + gt + '</bdi>' : '—', gt > 0 ? Math.round(ge / gt * 100) + '%' : 'ما في علامات بعد');
     return '<section class="hub-sec hub-over" id="hs-over" data-ctabs="over"><div class="hub-ov-grid">' + cards.join('') + '</div>' +
-      '<div class="hub-ov-actions"><button type="button" class="btn btn-sm" data-ov-act="addtask">+ مهمة</button><button type="button" class="btn btn-sm btn-ghost" data-ov-act="upload">📤 رفع ملف</button><button type="button" class="btn btn-sm btn-ghost" data-ov-act="addnote">📔 ملاحظة</button></div></section>';
+      '<div class="hub-ov-actions"><button type="button" class="btn btn-sm btn-ghost" data-ov-act="upload">📤 رفع ملف</button><button type="button" class="btn btn-sm btn-ghost" data-ov-act="addnote">📔 ملاحظة</button></div></section>';
   }
 
   function renderCourseSheet(scrollTo){
@@ -361,11 +361,13 @@
     var notes = []; (window.notes || []).forEach(function(n, i){ if(n && n.course === name) notes.push({ n: n, i: i }); });
 
     var h = '';
-    h += '<div class="hub-course-top">' +
-      '<div class="hub-chips">' + (window.Coach ? window.Coach.healthPill(c.name) : '') + (c.code ? '<span class="badge mono">' + esc(c.code) + '</span>' : '') + '<span class="badge">' + (c.hours || 3) + ' ساعات</span>' +
-        (c.instructor ? '<span class="badge">👤 ' + esc(c.instructor) + '</span>' : '') + (c.room ? '<span class="badge">📍 ' + esc(c.room) + '</span>' : '') + '</div>' +
-      '<div class="hub-actions inline"><button type="button" class="btn btn-sm" data-act="focus">⏱️ جلسة تركيز</button><button type="button" class="btn btn-sm btn-ghost" data-act="edit">✏️ تعديل</button><button type="button" class="btn btn-sm btn-danger hub-del" data-act="delete" aria-label="حذف المادة" title="حذف المادة">🗑</button></div></div>';
-    var CTABS = [['over', '🏠 نظرة'], ['plan', '🧾 الخطة'], ['files', '📎 الملفات'], ['work', '📝 المهام والامتحانات'], ['marks', '📊 العلامات والحضور'], ['notes', '📔 الملاحظات']];
+    /* رأس المادة (168): لون المادة + سطر معلومات هادي + زر رئيسي واحد + «مهمة» + أيقونات تعديل/حذف */
+    var meta = [c.code ? '<bdi class="mono">' + esc(c.code) + '</bdi>' : '', (c.hours || 3) + ' ساعات', c.instructor ? esc(c.instructor) : '', c.room ? esc(c.room) : ''].filter(Boolean).join(' · ');
+    h += '<div class="hub-course-top hub-ct" style="--h:' + (window.courseHue ? window.courseHue(c.name) : 250) + '">' +
+      '<div class="hub-ct-info"><div class="hub-ct-meta">' + meta + '</div>' + (window.Coach ? '<div class="hub-chips">' + window.Coach.healthPill(c.name) + '</div>' : '') + '</div>' +
+      '<div class="hub-actions inline hub-ct-acts"><button type="button" class="btn btn-sm hub-ct-go" data-act="focus">▶ جلسة تركيز</button><button type="button" class="btn btn-sm btn-ghost" data-ov-act="addtask">+ مهمة</button>' +
+        '<button type="button" class="btn btn-sm btn-ghost hub-ct-ic" data-act="edit" aria-label="تعديل المادة" title="تعديل">✏️</button><button type="button" class="btn btn-sm btn-danger hub-del hub-ct-ic" data-act="delete" aria-label="حذف المادة" title="حذف المادة">🗑</button></div></div>';
+    var CTABS = [['over', 'نظرة'], ['plan', 'الخطة'], ['work', 'المهام'], ['marks', 'العلامات'], ['files', 'الملفات'], ['notes', 'ملاحظات']];
     var curTab = (scrollTo && SEC_TAB[scrollTo]) || activeCourse.tab || 'over'; activeCourse.tab = curTab;
     sheet.body.setAttribute('data-ctab', curTab);
     h += '<nav class="hub-secnav hub-ctabs" role="tablist" aria-label="أقسام المادة">' + CTABS.map(function(s2){

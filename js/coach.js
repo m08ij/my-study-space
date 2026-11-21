@@ -119,6 +119,7 @@
   function whatsNew(){
     var s = sp(); if(!((s.courses || []).length + (s.tasks || []).length)) return false;
     if(lsGet(NEWS_KEY) === NEWS_VER) return false;
+    try{ if(localStorage.getItem('ss_demo') === '1') return false; }catch(e){}   /* زائر الوضع التجريبي ما بيشوف «جديد» */
     lsSet(NEWS_KEY, NEWS_VER);
     if(!window.customConfirm) return false;
     window.customConfirm('• ' + NEWS.join('\n• '), function(){}, { title: 'جديد بمساحتي الدراسية', icon: '✨', okLabel: 'تمام' });

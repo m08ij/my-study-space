@@ -1448,6 +1448,7 @@
   function npNudge(){
     try{
       if(window.getNotifPermission() !== 'default' || localStorage.getItem('ss_notif_nudged')) return;
+      if(document.querySelector('.modal-backdrop,.ocri-overlay,#aiPanel.show')){ setTimeout(npNudge, 15000); return; }   /* ما نغطّي نافذة مفتوحة: نستنى لحد ما تتسكّر */
       var sp = space(); if(!(Object.keys(sp.timetable || {}).length || (sp.exams || []).length)) return;
       localStorage.setItem('ss_notif_nudged', '1');
       if(window.toastCard){ var el = window.toastCard('<b>🔔 تبي تنبيهات قبل المحاضرات والامتحانات؟</b><br><button class="btn btn-sm" id="ncNudgeBtn" style="margin-top:6px">فعّلها بضغطة</button>', { dur: 14000, icon: '🔔' });
