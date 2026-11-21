@@ -2,7 +2,7 @@
 
 # 📚 مساحتي الدراسية · Study Space
 
-**موقع شخصي بنيته لنفسي لإدارة حياتي الجامعية — طالب هندسة حاسوب، الجامعة الهاشمية (الأردن)**
+**طالب هندسة حاسوب، الجامعة الهاشمية (الأردن)**
 
 [![Test & Deploy](https://github.com/m08ij/my-study-space/actions/workflows/deploy.yml/badge.svg)](https://github.com/m08ij/my-study-space/actions/workflows/deploy.yml)
 ![Vanilla JS](https://img.shields.io/badge/Vanilla-JS-f7df1e?logo=javascript&logoColor=000)
@@ -15,7 +15,6 @@
 
 ### 🎬 [شاهد فيديو العرض (دقيقة)](docs/media/study-space-promo.mp4)
 
-> هذا مشروع شخصي: صمّمته وبنيته على مقاس احتياجاتي كطالب (جدولي، موادي، امتحاناتي…). مش منتج عام، بس الرابط مفتوح وأي حد بيقدر يجرّبه — البيانات بتنحفظ على جهازه هو.
 
 ---
 
