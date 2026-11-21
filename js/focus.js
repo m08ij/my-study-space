@@ -301,7 +301,7 @@
     var mode = lsGet('ss_fx_mode') || 'auto', th = curTheme()[0];
     return '<div class="fx-tiles">' + mine.map(function(x){ return '<button type="button" class="fx-glass fx-tile" style="--h:' + x[3] + '" data-fx="go" data-v="' + x[0] + '"><span class="fx-tic">' + ic(x[1]) + '</span><b>' + x[2] + '</b><small>' + esc(moreInfo(x[0])) + '</small></button>'; }).join('') + '</div>' +
       '<div class="fx-glass"><h3>المظهر</h3><div class="fx-seg">' + [['auto', 'تلقائي'], ['dark', 'غامق'], ['light', 'فاتح']].map(function(m){ return '<button type="button" class="' + (mode === m[0] ? 'on' : '') + '" data-fx="mode" data-v="' + m[0] + '">' + m[1] + '</button>'; }).join('') + '</div>' +
-      '<details class="fx-thfold" open><summary>الثيم · <b>' + esc(curPal()[1]) + '</b></summary>' + palHtml() + '</details></div>' +
+      '<details class="fx-thfold"><summary>الثيم · <b>' + esc(curPal()[1]) + '</b></summary>' + palHtml() + '</details></div>' +
       '<div class="fx-glass fx-menu"><button type="button" data-fx="go" data-v="settings">' + ic('gear') + '<span>الإعدادات والمزامنة</span><i>←</i></button></div>';
   }
 
@@ -464,8 +464,10 @@
     var L = { done: 'مكتملة', cur: 'هالفصل', open: 'متاحة', lock: 'مقفلة' };
     return '<div class="fx-legend fx-tleg">' + Object.keys(L).map(function(k){ return '<span class="st-' + k + '"><i></i>' + L[k] + '</span>'; }).join('') + '</div>' + info +
       '<div class="fx-tree">' + S.map(function(sem){ var cs = sem.courses || [], dn = cs.filter(function(c){ return done[c.n]; }).length;
-        return '<div class="fx-glass fx-sem"><h3>' + esc(sem.name || '') + '<small>سنة ' + esc(sem.year || '') + ' · ' + dn + '/' + cs.length + '</small></h3>' + cs.map(function(c){ var st = cState(c.n, done, curN);
-          return '<button type="button" class="fx-tc st-' + st + (treeSel === c.n ? ' sel' : '') + '" data-fx="tsel" data-v="' + esc(c.n) + '"><i></i><span>' + esc(c.n) + '</span><small>' + (c.h || 3) + '</small></button>'; }).join('') + '</div>'; }).join('') + '</div>';
+        var cu = cs.filter(function(c){ return curN[c.n] && !done[c.n]; }).length, sp1 = cs.length ? Math.round(dn / cs.length * 100) : 0, sp2 = cs.length ? Math.round((dn + cu) / cs.length * 100) : 0;
+        return '<div class="fx-glass fx-sem' + (dn === cs.length && cs.length ? ' full' : cu ? ' now' : '') + '"><h3>' + esc(sem.name || '') + '<small>سنة ' + esc(sem.year || '') + ' · ' + dn + '/' + cs.length + '</small></h3>' +
+          '<i class="fx-sem-bar" style="--a:' + sp1 + ';--b:' + sp2 + '"><i></i><i class="cur"></i></i>' + cs.map(function(c){ var st = cState(c.n, done, curN);
+          return '<button type="button" class="fx-tc st-' + st + (treeSel === c.n ? ' sel' : '') + '" data-fx="tsel" data-v="' + esc(c.n) + '"><i>' + (st === 'done' ? '✓' : st === 'lock' ? '🔒' : '') + '</i><span>' + esc(c.n) + '</span><small>' + (c.h || 3) + ' س</small></button>'; }).join('') + '</div>'; }).join('') + '</div>';
   }
   function vCampus(){ return '<div class="fx-glass fx-campus" id="fxCampusSlot"></div>'; }
   var campusHome = null;
