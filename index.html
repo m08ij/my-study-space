@@ -8,8 +8,8 @@
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#060b1e">
 <meta name="description" content="مساحتي الدراسية: تطبيق لطلاب الجامعة الهاشمية لتنظيم المحاضرات والمهام والامتحانات والحضور والعلامات والمعدل، يشتغل بدون إنترنت.">
-<link rel="icon" href="favicon.ico" sizes="48x48">
-<link rel="icon" type="image/svg+xml" href="icons/logo.svg">
+<link rel="icon" href="favicon.ico?v=170" sizes="48x48">
+<link rel="icon" type="image/svg+xml" href="icons/logo.svg?v=170">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -251,7 +251,7 @@ try{ var _h = document.documentElement; if(!_h.classList.contains("is-new") && !
    1) إن لم يطابق window.APP_BUILD رقم BUILD هنا → يمسح كاش التطبيق ويعيد التحميل مرة واحدة (حارس sessionStorage يمنع التكرار).
    2) أقسام اللوحة المتقدمة (تحليلات/LMS/إحصائيات) تُنقل إلى خانتها الثابتة إذا أضافتها سكربتات قديمة بمكان آخر. */
 (function(){
-  var BUILD = '170';
+  var BUILD = '171';
   var SLOTS = { insightsSection: 'slotInsights', lmsWidget: 'slotLms', enhancedStatsSection: 'slotEnhanced' };
   function heal(){
     var dash = document.getElementById('dashboard'); if(!dash) return;

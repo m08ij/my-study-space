@@ -92,10 +92,10 @@ html.fx-on body #fx.light .fx-main .fx-sec{background:var(--card)}
 html.fx-on body #fx .fx-main .fx-sec .fx-ln:last-child{border-bottom:0}
 
 
-html.fx-on body #fx{--mp-ground:#121722;--mp-campus:#15231d;--mp-edge:#24453a;--mp-case:#0a0e16;--mp-road:#323a4b;--mp-mid:#69728a;--mp-wall:rgba(0,0,0,.55);--mp-park:#262d3c;--mp-parkt:#9aa4bd}
-html.fx-on body #fx.light{--mp-ground:#efe8d8;--mp-campus:#e2edd6;--mp-edge:#b9cfa6;--mp-case:#cfd3da;--mp-road:#ffffff;--mp-mid:#e3c46a;--mp-wall:rgba(60,50,30,.28);--mp-park:#dfe2e8;--mp-parkt:#6b7385}
+html.fx-on body #fx{--mp-ground:#121722;--mp-campus:#161d2b;--mp-edge:transparent;--mp-case:#0a0e16;--mp-road:#323a4b;--mp-mid:#69728a;--mp-wall:rgba(0,0,0,.55);--mp-park:#262d3c;--mp-parkt:#9aa4bd}
+html.fx-on body #fx.light{--mp-ground:#efe8d8;--mp-campus:#f7f4ec;--mp-edge:transparent;--mp-case:#cfd3da;--mp-road:#ffffff;--mp-mid:#e3c46a;--mp-wall:rgba(60,50,30,.28);--mp-park:#dfe2e8;--mp-parkt:#6b7385}
 html.fx-on body #fx .cm-svg .cm-ground{fill:var(--mp-ground)!important}
-html.fx-on body #fx .cm-svg .cm-campus{fill:var(--mp-campus);stroke:var(--mp-edge);stroke-width:2.5;stroke-dasharray:10 6;stroke-linejoin:round}
+html.fx-on body #fx .cm-svg .cm-campus{fill:var(--mp-campus);stroke:none}
 html.fx-on body #fx .cm-svg .cm-roads.out path,html.fx-on body #fx .cm-svg .cm-roads.out circle{stroke:var(--mp-case)!important;stroke-opacity:1!important;stroke-width:15!important}
 html.fx-on body #fx .cm-svg .cm-roads:not(.out):not(.mid) path,html.fx-on body #fx .cm-svg .cm-roads:not(.out):not(.mid) circle{stroke:var(--mp-road)!important;stroke-opacity:1!important;stroke-width:11!important}
 html.fx-on body #fx .cm-svg .cm-roads:not(.out):not(.mid) circle{fill:var(--mp-campus)!important}
@@ -412,11 +412,6 @@ html.fx-on body #fx .cm-svg .cm-b.sel .cm-roof{translate:0 -6px}
 html.fx-on body #fx .cm-svg .cm-b.sel .cm-face{filter:drop-shadow(0 0 8px rgba(255,255,255,.55)) drop-shadow(0 6px 10px rgba(0,0,0,.45));animation:none}
 html.fx-on body #fx .cm-svg.cm-intro .cm-b{animation:cmRise .62s cubic-bezier(.34,1.4,.64,1) both;animation-delay:calc(var(--bi,0) * 22ms)}
 @keyframes cmRise{from{opacity:0;transform:translateY(-14px) scale(.82)}to{opacity:1;transform:none}}
-/* منظر مائل */
-html.fx-on body #fx .cm-mapcard{perspective:1500px;overflow:hidden}
-html.fx-on body #fx .cm-svg{transition:transform .7s cubic-bezier(.22,1,.36,1);transform-origin:50% 60%}
-html.fx-on body #fx .cm-svg.cm-tilt{transform:rotateX(26deg) scale(1.04)}
-html.fx-on body #fx .cm-svg.cm-tilt .cm-wall{opacity:.75}
 html.fx-on body #fx .cm-zoom .cm-3dbtn{font-size:12px;font-weight:800;letter-spacing:.5px}
 html.fx-on body #fx .cm-zoom .cm-3dbtn.on{background:var(--grad,linear-gradient(135deg,#8b5cf6,#22c3ee))!important;color:#fff!important;border-color:transparent!important}
 /* المسار يمشي + الدبابيس تنط */

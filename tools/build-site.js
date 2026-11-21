@@ -5,7 +5,7 @@
 const fs = require('fs'), path = require('path'), { execFileSync } = require('child_process');
 const src = path.join(__dirname, '..');
 const out = path.resolve(process.argv[2] || path.join(src, '_site'));
-const ROOT_EXT = ['.html', '.js', '.css', '.json', '.ico'], SKIP = ['package.json', 'package-lock.json'], DIRS = ['js', 'css', 'icons', 'apk', 'fonts'];
+const ROOT_EXT = ['.html', '.js', '.css', '.json', '.ico'], SKIP = ['package.json', 'package-lock.json'], DIRS = ['js', 'css', 'icons', 'apk', 'fonts', 'docs/media'];
 
 fs.rmSync(out, { recursive: true, force: true });
 fs.mkdirSync(out, { recursive: true });

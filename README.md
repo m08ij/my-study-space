@@ -1,34 +1,96 @@
 <div align="center">
 
-# 📚 مساحتي الدراسية · Study Space
+<img src="icons/icon-192.png" width="96" alt="Study Space logo">
 
-**طالب هندسة حاسوب، الجامعة الهاشمية (الأردن)**
+# مساحتي الدراسية · Study Space
+
+**الجدول، المواد، المهام، الامتحانات، والمساعد الذكي، كلها بمكان واحد**
+<br><sub>طالب هندسة حاسوب · الجامعة الهاشمية · الأردن</sub>
+
+<br>
+
+[![Open the app](https://img.shields.io/badge/Open_the_app-m08ij.github.io-8b5cf6?style=for-the-badge&logo=googlechrome&logoColor=white)](https://m08ij.github.io/my-study-space/)
+[![Live demo](https://img.shields.io/badge/Live_demo-sample_data-22c3ee?style=for-the-badge&logo=rocket&logoColor=white)](https://m08ij.github.io/my-study-space/?demo=1)
+[![Watch video](https://img.shields.io/badge/Watch-1_min_video-f43f5e?style=for-the-badge&logo=youtube&logoColor=white)](https://m08ij.github.io/my-study-space/docs/media/study-space-promo.mp4)
 
 [![Test & Deploy](https://github.com/m08ij/my-study-space/actions/workflows/deploy.yml/badge.svg)](https://github.com/m08ij/my-study-space/actions/workflows/deploy.yml)
 ![Vanilla JS](https://img.shields.io/badge/Vanilla-JS-f7df1e?logo=javascript&logoColor=000)
-![PWA](https://img.shields.io/badge/PWA-offline--first-5a0fc8)
-![n8n](https://img.shields.io/badge/backend-n8n%20Cloud-ea4b71?logo=n8n&logoColor=fff)
+![PWA](https://img.shields.io/badge/PWA-offline--first-5a0fc8?logo=pwa&logoColor=white)
+![n8n](https://img.shields.io/badge/backend-n8n_Cloud-ea4b71?logo=n8n&logoColor=fff)
+![Android](https://img.shields.io/badge/Android-APK_+_widgets-3ddc84?logo=android&logoColor=fff)
 
-### 🔗 [m08ij.github.io/my-study-space](https://m08ij.github.io/my-study-space/)
+<br>
+
+<a href="https://m08ij.github.io/my-study-space/docs/media/study-space-promo.mp4"><img src="docs/media/preview.gif" width="720" alt="Study Space preview: click to watch the full video"></a>
+<br><sub>▶ اضغط على الصورة لتشوف الفيديو كامل (دقيقة، مع صوت)</sub>
 
 </div>
 
-### 🎬 [شاهد فيديو العرض (دقيقة)](docs/media/study-space-promo.mp4)
-
+> [!TIP]
+> بدك تشوفه مليان؟ افتح [**النسخة التجريبية**](https://m08ij.github.io/my-study-space/?demo=1): طالب وهمي بمواد وجدول ومهام، وما في إشي بينرفع لقاعدة البيانات.
 
 ---
 
 ## ✨ شو فيه
 
-| | |
-|---|---|
-| 📅 **اليوم والجدول** | المحاضرة الجاية، جدول أسبوعي بكشف التعارضات، واستيراد الجدول **من صورة** |
-| 📝 **مهام وامتحانات** | إضافة سريعة بنص طبيعي («واجب برمجة بكرة»)، عدّاد للامتحانات، واستيراد الامتحانات/العلامات من صورة |
-| 🎓 **المواد والخطة** | خطة الدراسة الشجرية بالمتطلبات، GPA، الحضور، العلامات |
-| ✦ **مساعد دراسي ذكي** | بيجاوب من بياناتك الحقيقية وبيقترح إجراءات (إضافة مهمة/امتحان…) بعد موافقتك — **عبر n8n** |
-| ⏱️ **التركيز** | بومودورو، خطة اليوم، سلسلة أيام |
-| ☁️ **مزامنة** | اختيارية برمز (Supabase)، والأساس محلي ويشتغل بدون إنترنت |
-| 📱 **تطبيق** | PWA قابل للتثبيت + تطبيق أندرويد مع ودجتات |
+<table>
+<tr>
+<td width="50%" valign="top">
+
+### 📅 اليوم والجدول
+المحاضرة الجاية، جدول أسبوعي بكشف التعارضات، واستيراد الجدول **من صورة**.
+
+</td>
+<td width="50%" valign="top">
+
+### 📝 مهام وامتحانات
+إضافة سريعة بنص طبيعي («واجب برمجة بكرة»)، عدّاد للامتحانات، واستيراد الامتحانات والعلامات من صورة.
+
+</td>
+</tr>
+<tr>
+<td valign="top">
+
+### 🎓 المواد والخطة
+خطة شجرية بالمتطلبات، GPA، الحضور، العلامات، وورقة لكل مادة.
+
+</td>
+<td valign="top">
+
+### ✦ مساعد دراسي ذكي
+بيجاوب من بياناتك الحقيقية وبيقترح إجراءات (إضافة مهمة/امتحان…) بعد موافقتك. **يشتغل عبر n8n.**
+
+</td>
+</tr>
+<tr>
+<td valign="top">
+
+### 🗺️ خريطة الجامعة 3D
+مباني مرفوعة بألوان الكليات، «وين أروح؟» لمحاضرتك الجاية، ومسار اليوم.
+
+</td>
+<td valign="top">
+
+### ⏱️ التركيز
+مؤقت تركيز، خطة اليوم، وسلسلة أيام.
+
+</td>
+</tr>
+<tr>
+<td valign="top">
+
+### ☁️ مزامنة اختيارية
+برمز (Supabase)، والأساس محلي ويشتغل بدون إنترنت.
+
+</td>
+<td valign="top">
+
+### 📱 تطبيق
+PWA قابل للتثبيت + تطبيق أندرويد بأربع ودجتات للشاشة الرئيسية.
+
+</td>
+</tr>
+</table>
 
 ---
 
@@ -143,12 +205,12 @@ The Gemini key lives only as an n8n credential; CORS is restricted to `https://m
 
 <div align="center">
 
-### 🚀 جرّب الموقع ببيانات جاهزة
+<br>
 
-[![جرّب الموقع](https://img.shields.io/badge/%D8%AC%D8%B1%D9%91%D8%A8%20%D8%A7%D9%84%D9%85%D9%88%D9%82%D8%B9-%D8%A8%D9%8A%D8%A7%D9%86%D8%A7%D8%AA%20%D8%AA%D8%AC%D8%B1%D9%8A%D8%A8%D9%8A%D8%A9-8b5cf6?style=for-the-badge)](https://m08ij.github.io/my-study-space/?demo=1)
+**جرّبه هلّق 👇**
 
-بيفتح الموقع بطالب تجريبي (مواد، جدول، مهام، امتحانات، ميزانية) عشان تشوفه مليان — كله بمتصفحك بس، **ولا إشي بينرفع لقاعدة البيانات**. زر «ابدأ ببياناتي» فوق بيمسحه.
+[![Live demo](https://img.shields.io/badge/Try_the_live_demo-sample_data-8b5cf6?style=for-the-badge&logo=rocket&logoColor=white)](https://m08ij.github.io/my-study-space/?demo=1)
 
-**Live demo:** [m08ij.github.io/my-study-space/?demo=1](https://m08ij.github.io/my-study-space/?demo=1)
+<sub>صُنع بـ 💜 لطلاب الجامعة الهاشمية</sub>
 
 </div>
