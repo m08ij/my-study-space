@@ -55,7 +55,7 @@
   function entries(){ return W.Schedule && W.Schedule.entries ? W.Schedule.entries() : []; }
   function place(e){ return W.Schedule && W.Schedule.place ? W.Schedule.place(e) : (e.room || ''); }
   function nowMin(){ var n = new Date(); return n.getHours() * 60 + n.getMinutes(); }
-  function empty(t, s){ return '<div class="fx-empty"><b>' + t + '</b>' + (s ? '<small>' + s + '</small>' : '') + '</div>'; }
+  function empty(t, s){ return '<div class="fx-empty"><span class="fx-empty-ic" aria-hidden="true">✨</span><b>' + t + '</b>' + (s ? '<small>' + s + '</small>' : '') + '</div>'; }
 
   /* ---------- بيانات مشتركة ---------- */
   function openTasks(){ var t = today(); return (sp().tasks || []).filter(function(x){ return x && !x.done && x.due && x.due <= t; }).sort(function(a, b){ return a.due < b.due ? -1 : 1; }); }
@@ -676,7 +676,7 @@
       c.textContent = n >= mx ? 'وصلت للحد: ' + mx + ' حرف' : n >= 90 ? 'باقي ' + (mx - n) + ' حرف' : ''; c.classList.toggle('max', n >= mx); });
     /* إيماءات السحب (تلفون): يمين/يسار بين تبويبات الشريط — RTL: سحب الإصبع لليمين = التبويب اللي بعده */
     var sw = null;
-    root.addEventListener('touchstart', function(e){ var t = e.touches[0]; if(e.touches.length !== 1 || W.innerWidth > 820 || e.target.closest('input,textarea,select,.fx-chips,.fx-kpis,.fx-campus,.fx-tree,.fx-durs,.fx-cmd,.fx-study')){ sw = null; return; } sw = { x: t.clientX, y: t.clientY, t: Date.now() }; }, { passive: true });
+    root.addEventListener('touchstart', function(e){ var t = e.touches[0]; if(e.touches.length !== 1 || W.innerWidth > 820 || e.target.closest('input,textarea,select,.fx-chips,.fx-kpis,.fx-campus,.fx-tree,.fx-durs,.fx-cmd,.fx-study,.fx-lntask,.fx-task,.mx-fabwrap')){ sw = null; return; } sw = { x: t.clientX, y: t.clientY, t: Date.now() }; }, { passive: true });
     root.addEventListener('touchend', function(e){ if(!sw) return; var t = e.changedTouches[0], dx = t.clientX - sw.x, dy = t.clientY - sw.y, dt = Date.now() - sw.t; sw = null;
       if(dt > 700 || Math.abs(dx) < 70 || Math.abs(dy) > Math.abs(dx) * 0.6) return;
       var i = NAV.indexOf(cur); if(i < 0){ if(dx < 0) history.back(); return; }

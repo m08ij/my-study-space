@@ -12,7 +12,8 @@ const SNAP = "(function(){ var m=document.getElementById('fxMain'); var html=doc
 (async () => {
   const b = await cdp.launch({ w: W, h: H, mobile: W < 800 });
   await b.send('Page.addScriptToEvaluateOnNewDocument', { source: SAFE });
-  await b.goto(URL0 + '/__seed'); await b.sleep(3500);
+  const LOCAL = /127\.0\.0\.1|localhost/.test(URL0);
+  await b.goto(LOCAL ? URL0 + '/__seed' : URL0.replace(/\/?$/, '/') + '?demo=1'); await b.sleep(LOCAL ? 3500 : 6000);   /* الموقع الحي: الوضع التجريبي (بيانات وهمية بدون مزامنة) */
   await b.eval("localStorage.setItem('ss_asst_consent','1');localStorage.setItem('ocr_consent','1');location.reload()"); await b.sleep(5000);
   const problems = []; let total = 0;
   for (const v of VIEWS) {

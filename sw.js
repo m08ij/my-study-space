@@ -1,14 +1,14 @@
 /* ============================================================
    sw.js — شبكة أولاً + كاش احتياطي (v90)
    ============================================================ */
-var CACHE_NAME = 'ss-cache-v169';
+var CACHE_NAME = 'ss-cache-v170';
 var NET_WAIT_MS = 3500;   /* أقصى انتظار للشبكة قبل خدمة النسخة المخزّنة */
 var URLS_TO_CACHE = [
-  './', './index.html', './css/01-base.css', './css/02-motion-themes.css', './css/03-hub-dashboard-welcome.css', './css/04-responsive-components-phases.css', './css/05-visual.css', './css/06-design.css', './css/08-royal.css', './css/09-focus.css', './css/10-dialogs.css', './css/11-sidebar.css', './css/12-vivid.css',
+  './', './index.html', './css/01-base.css', './css/02-motion-themes.css', './css/03-hub-dashboard-welcome.css', './css/04-responsive-components-phases.css', './css/05-visual.css', './css/06-design.css', './css/08-royal.css', './css/09-focus.css', './css/10-dialogs.css', './css/11-sidebar.css', './css/12-vivid.css', './css/13-mobile.css',
   './js/vendor-supabase.js', './js/demo.js', './js/core.js', './js/diag.js', './js/data.js', './js/supabase.js',
   './js/features.js', './js/widgets.js', './js/integrations.js', './js/ocr-parse.js', './js/n8n.js', './js/ocr-import.js', './js/exam-import.js', './js/gemini-lab.js',
   './js/course-sync.js',    
-  './js/extras.js', './js/hub.js', './js/campus-map.js', './js/syllabus.js', './js/smart-assist.js', './js/native-bridge.js', './js/study.js', './js/budget-plan.js', './js/daily.js', './js/progress.js', './js/coach.js', './js/dayplan.js', './js/share.js', './js/ux.js', './js/ics-import.js', './js/assistant.js',
+  './js/extras.js', './js/hub.js', './js/campus-map.js', './js/syllabus.js', './js/smart-assist.js', './js/native-bridge.js', './js/study.js', './js/budget-plan.js', './js/daily.js', './js/progress.js', './js/coach.js', './js/dayplan.js', './js/share.js', './js/ux.js', './js/ics-import.js', './js/assistant.js', './js/mobile.js',
   './js/pwa.js', './js/app.js',
   './fonts/tajawal-arabic-400.woff2', './fonts/tajawal-arabic-500.woff2', './fonts/tajawal-arabic-700.woff2', './fonts/tajawal-latin-400.woff2', './fonts/tajawal-latin-500.woff2', './fonts/tajawal-latin-700.woff2',
   './manifest.json', './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png', './icons/apple-touch-icon.png', './icons/logo.svg'
