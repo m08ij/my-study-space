@@ -91,7 +91,7 @@ html.fx-on body #fx .fx-empty-ic{display:inline-grid;place-items:center;width:46
   /* هالة لونية خفيفة خلف الترحيب (طبقة صغيرة، مش خلفية الصفحة كلها) */
   html.fx-on body #fx .fx-main{isolation:isolate}
   html.fx-on body #fx .fx-hello{position:relative}
-  html.fx-on body #fx .fx-hello::before{content:"";position:absolute;inset:-70px -30px -40px;z-index:-1;pointer-events:none;
+  html.fx-on body #fx .fx-hello::before{content:"";position:absolute;inset:-70px 0 -40px;z-index:-1;pointer-events:none;
     background:radial-gradient(70% 70% at 85% 20%,rgba(139,92,246,.26),transparent 70%),radial-gradient(60% 60% at 10% 30%,rgba(34,195,238,.14),transparent 70%)}
   html.fx-on body #fx.light .fx-hello::before{opacity:.6}
 
