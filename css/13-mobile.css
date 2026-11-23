@@ -82,3 +82,99 @@ html.fx-on body #fx .fx-empty-ic{display:inline-grid;place-items:center;width:46
 @keyframes mxPop{from{transform:translateY(10px) scale(.9);opacity:0}to{transform:none;opacity:1}}
 @keyframes mxSpin{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){html.fx-on body #fx .mx-fabit,html.fx-skin .modal-backdrop .modal,html.fx-skin .hub-sheet{animation:none!important}}
+
+/* =====================================================================
+   173 — شكل «تطبيق» فاخر على التلفون: شريط سفلي عائم، بطاقة المحاضرة متوهّجة،
+   عناوين أقسام ملوّنة، بطاقات بحواف لامعة، وهالة لونية أعلى الصفحة. (≤820px فقط)
+   ===================================================================== */
+@media (max-width:820px){
+  /* هالة لونية خفيفة خلف الترحيب (طبقة صغيرة، مش خلفية الصفحة كلها) */
+  html.fx-on body #fx .fx-main{isolation:isolate}
+  html.fx-on body #fx .fx-hello{position:relative}
+  html.fx-on body #fx .fx-hello::before{content:"";position:absolute;inset:-70px -30px -40px;z-index:-1;pointer-events:none;
+    background:radial-gradient(70% 70% at 85% 20%,rgba(139,92,246,.26),transparent 70%),radial-gradient(60% 60% at 10% 30%,rgba(34,195,238,.14),transparent 70%)}
+  html.fx-on body #fx.light .fx-hello::before{opacity:.6}
+
+  /* الشريط العلوي */
+  html.fx-on body #fx .fx-top{background:color-mix(in srgb,var(--base) 82%,transparent)!important;border-bottom:1px solid color-mix(in srgb,var(--tx) 6%,transparent)!important}
+  html.fx-on body #fx .fx-top .fx-logo{font-size:18px;font-weight:900;letter-spacing:-.2px}
+  html.fx-on body #fx .fx-top .fx-logo .fx-mark{width:30px;height:30px;border-radius:10px;box-shadow:0 6px 16px -6px rgba(139,92,246,.8)}
+  html.fx-on body #fx .fx-top :is(.fx-ib,.fx-tool){width:40px;height:40px;border-radius:14px!important;background:color-mix(in srgb,var(--tx) 6%,transparent)!important;border:1px solid color-mix(in srgb,var(--tx) 8%,transparent)!important}
+
+  /* الشريط السفلي العائم */
+  html.fx-on body #fx .fx-nav{left:12px!important;right:12px!important;bottom:calc(10px + env(safe-area-inset-bottom,0px))!important;padding:6px!important;border-radius:24px!important;
+    background:color-mix(in srgb,var(--card,#151b2e) 94%,transparent)!important;border:1px solid color-mix(in srgb,var(--tx) 9%,transparent)!important;
+    box-shadow:0 18px 40px -12px rgba(0,0,0,.6),0 1px 0 rgba(255,255,255,.05) inset!important}
+  html.fx-on body #fx.light .fx-nav{box-shadow:0 16px 36px -14px rgba(40,30,90,.35)!important}
+  html.fx-on body #fx .fx-nav.mx-has::before{display:none}
+  html.fx-on body #fx .fx-nav button{min-height:54px!important;border-radius:18px!important;gap:3px!important;font-size:10.5px!important;font-weight:700!important;transition:color .2s,background-color .25s}
+  html.fx-on body #fx .fx-nav button .fx-i{width:22px;height:22px;transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+  html.fx-on body #fx .fx-nav button.on{color:var(--tx)!important;background:linear-gradient(160deg,color-mix(in srgb,#8b5cf6 30%,transparent),color-mix(in srgb,#22c3ee 16%,transparent))!important}
+  html.fx-on body #fx .fx-nav button.on .fx-i{color:#fff!important;transform:translateY(-1px) scale(1.08)}
+  html.fx-on body #fx.light .fx-nav button.on .fx-i{color:#6d4cff!important}
+  html.fx-on body #fx .fx-nav button.on::before{display:none!important}
+  html.fx-on body #fx .mx-fabwrap{bottom:calc(88px + env(safe-area-inset-bottom,0px))}
+  html.fx-on body #fx .fx-main{padding-bottom:calc(160px + env(safe-area-inset-bottom,0px))!important}
+
+  /* العنوان والترحيب */
+  html.fx-on body #fx .fx-main h1{font-size:28px!important;font-weight:900!important;letter-spacing:-.3px}
+  html.fx-on body #fx .fx-hello small{display:inline-block;font-size:12px;font-weight:700;padding:4px 10px;border-radius:99px;background:color-mix(in srgb,var(--tx) 7%,transparent);color:var(--mu)}
+  html.fx-on body #fx .fx-hello b{font-size:27px!important;font-weight:900!important;margin:8px 0 6px!important;
+    background:linear-gradient(90deg,var(--tx) 30%,#a78bfa 75%,#22d3ee);-webkit-background-clip:text;background-clip:text;color:transparent}
+  html.fx-on body #fx.light .fx-hello b{background:linear-gradient(90deg,#1b1f3b 30%,#6d4cff 75%,#0891b2);-webkit-background-clip:text;background-clip:text}
+
+  /* بطاقة المحاضرة الجاية: متوهّجة */
+  html.fx-on body #fx .fx-next{position:relative;overflow:hidden;border:0!important;border-radius:24px!important;color:#fff!important;padding:20px 18px!important;
+    background:radial-gradient(140% 120% at 0% 0%,#22c3ee 0,transparent 45%),linear-gradient(135deg,#7c3aed,#5b5bf5 55%,#2f80ed)!important;
+    box-shadow:0 22px 44px -20px rgba(124,58,237,.9)!important}
+  html.fx-on body #fx .fx-next::after{content:"";position:absolute;width:180px;height:180px;border-radius:50%;left:-60px;bottom:-90px;background:rgba(255,255,255,.10);pointer-events:none}
+  html.fx-on body #fx .fx-next :is(small,h2,.fx-nm,.fx-nm *){color:#fff!important}
+  html.fx-on body #fx .fx-next small{opacity:.92}
+  html.fx-on body #fx .fx-next h2{font-size:23px!important;font-weight:900!important}
+  html.fx-on body #fx .fx-next .fx-nm{opacity:.85}
+  html.fx-on body #fx .fx-next .fx-prog{background:rgba(255,255,255,.22)!important}
+  html.fx-on body #fx .fx-next .fx-prog i{background:#fff!important;box-shadow:0 0 12px rgba(255,255,255,.8)}
+  html.fx-on body #fx .fx-next .fx-nbtn{position:relative;z-index:1;border-radius:14px!important;min-height:44px}
+  html.fx-on body #fx .fx-next .fx-nbtn.p{background:#fff!important;color:#4c2fd8!important;box-shadow:0 8px 18px -8px rgba(0,0,0,.45)!important}
+  html.fx-on body #fx .fx-next .fx-nbtn.g{background:rgba(255,255,255,.16)!important;color:#fff!important;border:1px solid rgba(255,255,255,.28)!important}
+
+  /* البطاقات والأقسام */
+  html.fx-on body #fx :is(.fx-sec,.fx-glass){border-radius:22px!important;border:1px solid color-mix(in srgb,var(--tx) 7%,transparent)!important;
+    background:linear-gradient(180deg,color-mix(in srgb,var(--tx) 4%,var(--card)) 0,var(--card) 70%)!important;box-shadow:0 14px 30px -22px rgba(0,0,0,.8)!important}
+  html.fx-on body #fx.light :is(.fx-sec,.fx-glass){background:#fff!important;border-color:rgba(30,30,80,.07)!important;box-shadow:0 10px 26px -18px rgba(40,30,90,.3)!important}
+  html.fx-on body #fx .fx-next.fx-glass{background:radial-gradient(140% 120% at 0% 0%,#22c3ee 0,transparent 45%),linear-gradient(135deg,#7c3aed,#5b5bf5 55%,#2f80ed)!important}
+  html.fx-on body #fx :is(.fx-sec,.fx-plan2) > h3{display:flex;align-items:center;gap:8px;font-size:15.5px!important;font-weight:800!important;color:var(--tx)!important;margin-bottom:8px!important}
+  html.fx-on body #fx :is(.fx-sec,.fx-plan2) > h3::before{content:"";flex:none;width:6px;height:18px;border-radius:4px;background:var(--sbar,linear-gradient(180deg,#8b5cf6,#22c3ee))}
+  html.fx-on body #fx .fx-main > .fx-sec:nth-of-type(4n+1){--sbar:linear-gradient(180deg,#22d3ee,#3b82f6)}
+  html.fx-on body #fx .fx-main > .fx-sec:nth-of-type(4n+2){--sbar:linear-gradient(180deg,#a78bfa,#ec4899)}
+  html.fx-on body #fx .fx-main > .fx-sec:nth-of-type(4n+3){--sbar:linear-gradient(180deg,#fbbf24,#f97316)}
+  html.fx-on body #fx .fx-main > .fx-sec:nth-of-type(4n+4){--sbar:linear-gradient(180deg,#34d399,#10b981)}
+  html.fx-on body #fx :is(.fx-sec,.fx-plan2) > h3 :is(.fx-link,.fx-secr,small){margin-inline-start:auto;font-size:12px!important;font-weight:700}
+  html.fx-on body #fx :is(.fx-sec,.fx-plan2) > h3 .fx-link{padding:5px 11px;border-radius:99px;background:color-mix(in srgb,var(--ac,#8b5cf6) 14%,transparent);color:var(--ac)!important;text-decoration:none}
+
+  /* الصفوف */
+  html.fx-on body #fx .fx-sec .fx-ln{min-height:50px;border-radius:14px;padding-inline:10px}
+  html.fx-on body #fx .fx-sec .fx-ln + .fx-ln{border-top:1px solid color-mix(in srgb,var(--tx) 6%,transparent)}
+  html.fx-on body #fx .fx-sec .fx-ln.now{background:linear-gradient(90deg,color-mix(in srgb,#8b5cf6 18%,transparent),transparent)!important;border-top-color:transparent}
+  html.fx-on body #fx .fx-sec .fx-ln.past{opacity:.6}
+  html.fx-on body #fx .fx-sec .fx-ln .fx-lt2{font-variant-numeric:tabular-nums;font-weight:700;color:var(--mu)}
+  html.fx-on body #fx .fx-sec .fx-ln .fx-dot{width:9px;height:9px;box-shadow:0 0 0 3px color-mix(in srgb,currentColor 18%,transparent)}
+
+  /* بطاقة التنبيه (المدرّب) */
+  html.fx-on body #fx .fx-coach .fx-cs{border-radius:20px!important;padding:14px!important;gap:10px!important;align-items:center}
+  html.fx-on body #fx .fx-coach .fx-cs.warn{background:linear-gradient(135deg,rgba(245,158,11,.16),rgba(245,158,11,.05))!important;border:1px solid rgba(245,158,11,.3)!important}
+  html.fx-on body #fx .fx-coach .fx-csi{width:40px;height:40px;border-radius:13px;display:grid;place-items:center;flex:none}
+
+  html.fx-on body #fx .fx-coach .fx-cs{flex-wrap:wrap!important}
+  html.fx-on body #fx .fx-coach .fx-cs .fx-tb{flex:1 1 calc(100% - 60px)!important;min-width:0}
+  html.fx-on body #fx .fx-coach .fx-cs .fx-tool{flex:1;margin-inline-start:50px}
+  html.fx-on body #fx .fx-sec .fx-ln.now .fx-nowb{font-size:0!important;padding:0!important;width:8px;height:8px;min-width:0;border-radius:50%;background:#22c55e!important;display:inline-block;vertical-align:middle;margin-inline-start:6px;box-shadow:0 0 0 4px rgba(34,197,94,.22)}
+
+  /* الحالات الفاضية: أصغر وأهدى (كانت بتاخذ نص الشاشة بالمهام) */
+  html.fx-on body #fx .fx-empty{flex-direction:row!important;justify-content:center;gap:10px!important;padding:12px!important;text-align:start!important}
+  html.fx-on body #fx .fx-empty .fx-empty-ic{width:38px;height:38px;border-radius:13px;font-size:17px;margin:0!important}
+  html.fx-on body #fx .fx-empty b{font-size:14px}
+
+  /* بلاطات «المزيد»: لمعة خفيفة */
+  html.fx-on body #fx .fx-tile{border-radius:22px!important}
+}

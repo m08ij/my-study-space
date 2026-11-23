@@ -461,3 +461,8 @@ html.fx-on body #fx .fx-main h1::after{content:"";position:absolute;inset-inline
 html.fx-on body #fx .fx-main.anim h1::after{transform-origin:right;animation:fxLine .6s .15s cubic-bezier(.22,1,.36,1) both}
 @keyframes fxLine{from{transform:scaleX(0)}to{transform:none}}
 @media (prefers-reduced-motion:reduce){.fx-burst,html.fx-on body #fx .fx-rip{display:none}html.fx-on body #fx .fx-main.anim h1::after{animation:none}}
+
+/* زر «+» بالإضافة السريعة بنفس تدرّج أزرار الموقع (كان أبيض من --pri القديم) */
+html.fx-on body #fx .fx-add button{background:var(--grad,linear-gradient(135deg,#8b5cf6,#22c3ee))!important;color:#fff!important;border-radius:12px!important;box-shadow:0 10px 22px -12px rgba(109,91,255,.9)}
+html.fx-on body #fx .fx-add button .fx-i{stroke-width:2.6}
+html.fx-on body #fx .fx-add input{border-radius:12px!important}
