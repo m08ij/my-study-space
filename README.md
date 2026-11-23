@@ -211,6 +211,6 @@ The Gemini key lives only as an n8n credential; CORS is restricted to `https://m
 
 [![Live demo](https://img.shields.io/badge/Try_the_live_demo-sample_data-8b5cf6?style=for-the-badge&logo=rocket&logoColor=white)](https://m08ij.github.io/my-study-space/?demo=1)
 
-<sub>صُنع بـ 💜 لطلاب الجامعة الهاشمية</sub>
+<sub>مشروعي الخاص · بنيته بـ 💜 عشان يرتّب دراستي ويساعدني بمستقبلي</sub>
 
 </div>
