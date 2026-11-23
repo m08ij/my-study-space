@@ -368,7 +368,7 @@
     for(var k = 0; k < 365; k++){ var z = new Date(t.getFullYear(), t.getMonth(), t.getDate() - k), zm = k === 0 ? tdy : +log[ymd(z)] || 0; if(zm > 0) streakN++; else if(k > 0) break; }
     var courses = (sp().courses || []).map(function(c){ return c && c.name; }).filter(Boolean);
     var hero = '<div class="fx-glass fx-tm">' +
-      '<div class="fx-tm-ring" style="--p:' + pct + '"><div class="fx-tm-in"><b dir="ltr">' + pad(sel) + ':00</b><small>جلسة تركيز</small></div></div>' +
+      '<div class="fx-tm-ring" style="--p:' + Math.round(sel / 90 * 100) + '"><div class="fx-tm-in"><b dir="ltr">' + pad(sel) + ':00</b><small>جلسة تركيز</small></div></div>' +
       '<div class="fx-tm-side">' +
         '<div class="fx-tm-durs" role="group" aria-label="مدة الجلسة">' + [15, 25, 45, 60, 90].map(function(n){ return '<button type="button" class="fx-tm-d' + (n === sel ? ' on' : '') + '" data-fx="tmsel" data-v="' + n + '" aria-pressed="' + (n === sel) + '">' + n + ' د</button>'; }).join('') + '</div>' +
         (courses.length ? '<div class="fx-tm-lbl">على شو بتركّز؟</div><div class="fx-tm-crs">' + ['<button type="button" class="fx-tm-c' + (!crs ? ' on' : '') + '" data-fx="tmcrs" data-v="">عام</button>'].concat(courses.slice(0, 8).map(function(n){ return '<button type="button" class="fx-tm-c' + (crs === n ? ' on' : '') + '" style="--h:' + hue(n) + '" data-fx="tmcrs" data-v="' + esc(n) + '"><i></i>' + esc(n) + '</button>'; })).join('') + '</div>' : '') +
@@ -789,7 +789,13 @@
     else if(a === 'dpopen'){ if(W.DayPlan && W.DayPlan.openSheet) W.DayPlan.openSheet(); }
     else if(a === 'dpt'){ if(W.DayPlan && W.DayPlan.toggle){ b.classList.toggle('on'); W.DayPlan.toggle(b.getAttribute('data-k')); try{ if(navigator.vibrate) navigator.vibrate(8); }catch(e){} soon(); } }
     else if(a === 'studyn') openStudy(+v);
-    else if(a === 'tmsel'){ lsSet('ss_fx_dur', String(+v)); render(false); }
+    else if(a === 'tmsel'){ lsSet('ss_fx_dur', String(+v));
+      /* تحديث بمكانه عشان الدائرة تتحرّك بسلاسة للمدة الجديدة (90 د = دائرة كاملة) */
+      var rg = document.querySelector('#fx .fx-tm-ring'), gb = document.querySelector('#fx .fx-tm-go');
+      if(rg && gb){ rg.style.setProperty('--p', Math.round(+v / 90 * 100)); rg.querySelector('b').textContent = pad(+v) + ':00';
+        [].forEach.call(document.querySelectorAll('#fx .fx-tm-d'), function(x){ var on = x.getAttribute('data-v') === String(+v); x.classList.toggle('on', on); x.setAttribute('aria-pressed', String(on)); });
+        gb.innerHTML = ic('play') + 'ابدأ ' + (+v) + ' دقيقة'; }
+      else render(false); }
     else if(a === 'tmcrs'){ lsSet('ss_fx_tmc', v || ''); render(false); }
     else if(a === 'tmgo'){ var tc = lsGet('ss_fx_tmc') || ''; if(tc) lsSet('ss_dp_focus', JSON.stringify({ d: today(), k: '', c: tc })); openStudy(+lsGet('ss_fx_dur') || ((W.timerSettings && W.timerSettings.focus) || 25)); }
     else if(a === 'tmgoal'){ var g = W.prompt ? W.prompt('هدف التركيز اليومي (دقائق)', lsGet('ss_fx_goal') || '120') : null; if(g !== null && +g >= 10 && +g <= 720){ lsSet('ss_fx_goal', String(Math.round(+g))); render(false); } }
