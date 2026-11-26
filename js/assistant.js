@@ -102,7 +102,7 @@
     var s = sp(), t = ymd(new Date()), list = [];
     var late = (s.tasks || []).some(function(x){ return x && !x.done && x.due && x.due < t; });
     var ex = (s.exams || []).filter(function(x){ return x && x.date >= t; }).sort(function(a, b){ return a.date < b.date ? -1 : 1; })[0];
-    list.push('شو عندي اليوم؟');
+    list.push('شو عندي اليوم؟', 'رتبلي أسبوعي');
     if(ex) list.push('اعملي خطة مراجعة لـ' + String(ex.name || 'الامتحان').slice(0, 30));
     if(late) list.push('عندي مهام متأخرة، رتّبلي أولوياتي');
     list.push('خطّطلي باقي يومي', 'نصيحة للتركيز');
@@ -119,6 +119,8 @@
 
   function send(text){
     text = String(text || '').trim(); if(!text) return;
+    /* (175) «رتبلي أسبوعي/رتب الأسبوع»: محلياً من جدول المذاكرة (فراغاتك + الامتحانات) بدل الخادم — أسرع وبيضيف للخطة مباشرة */
+    if(/رت+ب.{0,6}(ا|أ)?سبوع/.test(text.replace(/[ً-ْ]/g, '')) && W.WeekPlan){ var E0 = el(); if(E0.input) E0.input.value = ''; close(); setTimeout(function(){ W.WeekPlan.open(); }, 200); return; }
     var E = el(); if(E.input) E.input.value = '';
     consent(function(){
       var w = E.msgs && E.msgs.querySelector('.asst-welcome'); if(w && hist.length === 0) w.classList.add('mini');

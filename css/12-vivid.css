@@ -92,12 +92,12 @@ html.fx-on body #fx.light .fx-main .fx-sec{background:var(--card)}
 html.fx-on body #fx .fx-main .fx-sec .fx-ln:last-child{border-bottom:0}
 
 
-html.fx-on body #fx{--mp-ground:#121722;--mp-campus:#161d2b;--mp-edge:transparent;--mp-case:#0a0e16;--mp-road:#323a4b;--mp-mid:#69728a;--mp-wall:rgba(0,0,0,.55);--mp-park:#262d3c;--mp-parkt:#9aa4bd}
-html.fx-on body #fx.light{--mp-ground:#efe8d8;--mp-campus:#f7f4ec;--mp-edge:transparent;--mp-case:#cfd3da;--mp-road:#ffffff;--mp-mid:#e3c46a;--mp-wall:rgba(60,50,30,.28);--mp-park:#dfe2e8;--mp-parkt:#6b7385}
+html.fx-on body #fx{--mp-ground:#10151f;--mp-campus:#161d2b;--mp-edge:transparent;--mp-case:#2f8a7a;--mp-road:#1a2231;--mp-mid:#3f9c8b;--mp-wall:rgba(0,0,0,.55);--mp-park:#2b3a67;--mp-parkt:#e6ebff}
+html.fx-on body #fx.light{--mp-ground:#eef3f1;--mp-campus:#ffffff;--mp-edge:transparent;--mp-case:#3b8c7c;--mp-road:#ffffff;--mp-mid:#9cc9be;--mp-wall:rgba(60,50,30,.28);--mp-park:#2b3a67;--mp-parkt:#ffffff}
 html.fx-on body #fx .cm-svg .cm-ground{fill:var(--mp-ground)!important}
 html.fx-on body #fx .cm-svg .cm-campus{fill:var(--mp-campus);stroke:none}
 html.fx-on body #fx .cm-svg .cm-roads.out path,html.fx-on body #fx .cm-svg .cm-roads.out circle{stroke:var(--mp-case)!important;stroke-opacity:1!important;stroke-width:15!important}
-html.fx-on body #fx .cm-svg .cm-roads:not(.out):not(.mid) path,html.fx-on body #fx .cm-svg .cm-roads:not(.out):not(.mid) circle{stroke:var(--mp-road)!important;stroke-opacity:1!important;stroke-width:11!important}
+html.fx-on body #fx .cm-svg .cm-roads:not(.out):not(.mid) path,html.fx-on body #fx .cm-svg .cm-roads:not(.out):not(.mid) circle{stroke:var(--mp-road)!important;stroke-opacity:1!important;stroke-width:8!important}
 html.fx-on body #fx .cm-svg .cm-roads:not(.out):not(.mid) circle{fill:var(--mp-campus)!important}
 html.fx-on body #fx .cm-svg .cm-roads.out circle{fill:var(--mp-case)!important}
 html.fx-on body #fx .cm-svg .cm-roads.mid path,html.fx-on body #fx .cm-svg .cm-roads.mid circle{stroke:var(--mp-mid);stroke-width:1.3;stroke-dasharray:7 9;fill:none;opacity:.85}
@@ -105,7 +105,7 @@ html.fx-on body #fx .cm-svg .cm-wall{fill:var(--mp-wall)}
 html.fx-on body #fx .cm-svg .cm-face{stroke:rgba(255,255,255,.22)!important;stroke-width:1!important}
 html.fx-on body #fx.light .cm-svg .cm-face{stroke:rgba(0,0,0,.12)!important}
 html.fx-on body #fx .cm-svg .cm-b:hover .cm-face,html.fx-on body #fx .cm-svg .cm-b.sel .cm-face{stroke:#fff!important;stroke-width:3!important}
-html.fx-on body #fx .cm-svg .cm-park rect{fill:var(--mp-park)!important;stroke:var(--mp-case)!important;stroke-width:1.5!important}
+html.fx-on body #fx .cm-svg .cm-park rect{fill:var(--mp-park)!important;stroke:none!important}
 html.fx-on body #fx .cm-svg .cm-park text{fill:var(--mp-parkt)!important}
 html.fx-on body #fx .cm-mapcard{background:var(--mp-ground)!important;border-radius:16px!important}
 
@@ -399,10 +399,6 @@ html.fx-on body #fx :is(.fx-ck,.fx-check)::after{content:"";position:absolute;le
 
 /* ===== الخريطة 3D (170): مباني مرفوعة + منظر مائل + حركات ===== */
 html.fx-on body #fx .cm-svg .cm-w{stroke:none;pointer-events:none}
-html.fx-on body #fx .cm-svg .cm-ws{filter:brightness(.55) saturate(1.1)}
-html.fx-on body #fx .cm-svg .cm-we{filter:brightness(.72) saturate(1.05)}
-html.fx-on body #fx.light .cm-svg .cm-ws{filter:brightness(.7)}
-html.fx-on body #fx.light .cm-svg .cm-we{filter:brightness(.84)}
 html.fx-on body #fx .cm-svg .cm-wall{opacity:.55;filter:blur(0)}
 html.fx-on body #fx .cm-svg .cm-shine{fill:url(#cmShine);pointer-events:none;stroke:none}
 html.fx-on body #fx .cm-svg .cm-roof{transition:translate .28s cubic-bezier(.22,1,.36,1)}
@@ -466,3 +462,6 @@ html.fx-on body #fx .fx-main.anim h1::after{transform-origin:right;animation:fxL
 html.fx-on body #fx .fx-add button{background:var(--grad,linear-gradient(135deg,#8b5cf6,#22c3ee))!important;color:#fff!important;border-radius:12px!important;box-shadow:0 10px 22px -12px rgba(109,91,255,.9)}
 html.fx-on body #fx .fx-add button .fx-i{stroke-width:2.6}
 html.fx-on body #fx .fx-add input{border-radius:12px!important}
+
+/* (177) الشوارع بشكل الخريطة الرسمية: حافتين خضر مزرقة وبينهم فاضي، بدون خط متقطع بالنص */
+html.fx-on body #fx .cm-svg .cm-roads.mid{display:none}

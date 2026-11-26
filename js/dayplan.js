@@ -240,6 +240,19 @@
     var now = new Date(), t = ymd(now), v = viewFor(t, now), r = touch(t); if(!r) return false;
     r.u.push({ k: 'u:' + uidv(), t: text, c: course }); stamp(t, now, v); save(); return true;
   }
+  /* (175) «رتبلي أسبوعي»: إضافة عدة بنود لأيام مختلفة مرة وحدة (حفظ واحد). list = [{date, course, text}] ← عدد اللي انضاف */
+  function addMany(list){
+    var now = new Date(), n = 0;
+    (list || []).forEach(function(x){
+      if(!x || !/^\d{4}-\d{2}-\d{2}$/.test(x.date || '')) return;
+      var text = String(x.text || '').replace(/\s+/g, ' ').trim().slice(0, 80), course = String(x.course || '').trim(); if(!text || !course) return;
+      var v = viewFor(x.date, now), r = touch(x.date); if(!r) return;
+      if(r.u.some(function(u){ return u && u.c === course && u.t === text; })) return;
+      r.u.push({ k: 'u:' + uidv(), t: text, c: course }); stamp(x.date, now, v); n++;
+    });
+    if(n) save();
+    return n;
+  }
   function delItem(k){
     var now = new Date(), t = ymd(now), v = viewFor(t, now), r = touch(t); if(!r) return false;
     var n = r.u.length; r.u = r.u.filter(function(u){ return u && u.k !== k; }); delete r.d[k];
@@ -515,6 +528,6 @@
   d.addEventListener('visibilitychange', function(){ if(d.visibilityState === 'visible') setTimeout(function(){ maybeAutoOpen(false); }, 1500); });
   if(d.readyState === 'loading') d.addEventListener('DOMContentLoaded', boot); else boot();
 
-  return Object.assign(pure, { cardHtml: cardHtml, viewFor: viewFor, streakInfo: streakInfo, toggle: toggle, addItem: addItem, delItem: delItem, later: later, setCfg: setCfg, cfg: cfg,
+  return Object.assign(pure, { cardHtml: cardHtml, viewFor: viewFor, streakInfo: streakInfo, toggle: toggle, addItem: addItem, addMany: addMany, delItem: delItem, later: later, setCfg: setCfg, cfg: cfg,
     openSheet: openSheet, openReview: openReview, reviewDue: reviewDue, notifs: notifs, widget: widget, maybeAutoOpen: maybeAutoOpen, startFocus: startFocus });
 });

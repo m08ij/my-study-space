@@ -1,14 +1,14 @@
 /* ============================================================
    sw.js — شبكة أولاً + كاش احتياطي (v90)
    ============================================================ */
-var CACHE_NAME = 'ss-cache-v174';
-var NET_WAIT_MS = 3500;   /* أقصى انتظار للشبكة قبل خدمة النسخة المخزّنة */
+var CACHE_NAME = 'ss-cache-v175';
+var NET_WAIT_MS = 1200;   /* (175) أقصى انتظار للشبكة قبل خدمة النسخة المخزّنة — كان 3.5 ث وكان يأخّر فتح التطبيق على نت ضعيف */
 var URLS_TO_CACHE = [
-  './', './index.html', './css/01-base.css', './css/02-motion-themes.css', './css/03-hub-dashboard-welcome.css', './css/04-responsive-components-phases.css', './css/05-visual.css', './css/06-design.css', './css/08-royal.css', './css/09-focus.css', './css/10-dialogs.css', './css/11-sidebar.css', './css/12-vivid.css', './css/13-mobile.css',
+  './', './index.html', './css/01-base.css', './css/02-motion-themes.css', './css/03-hub-dashboard-welcome.css', './css/04-responsive-components-phases.css', './css/05-visual.css', './css/06-design.css', './css/08-royal.css', './css/09-focus.css', './css/10-dialogs.css', './css/11-sidebar.css', './css/12-vivid.css', './css/13-mobile.css', './css/14-home.css',
   './js/vendor-supabase.js', './js/demo.js', './js/core.js', './js/diag.js', './js/data.js', './js/supabase.js',
   './js/features.js', './js/widgets.js', './js/integrations.js', './js/ocr-parse.js', './js/n8n.js', './js/ocr-import.js', './js/exam-import.js', './js/gemini-lab.js',
   './js/course-sync.js',    
-  './js/extras.js', './js/hub.js', './js/campus-map.js', './js/syllabus.js', './js/smart-assist.js', './js/native-bridge.js', './js/study.js', './js/budget-plan.js', './js/daily.js', './js/progress.js', './js/coach.js', './js/dayplan.js', './js/share.js', './js/ux.js', './js/ics-import.js', './js/assistant.js', './js/mobile.js', './js/effects.js',
+  './js/extras.js', './js/hub.js', './js/campus-map.js', './js/syllabus.js', './js/smart-assist.js', './js/native-bridge.js', './js/study.js', './js/budget-plan.js', './js/daily.js', './js/progress.js', './js/coach.js', './js/dayplan.js', './js/share.js', './js/ux.js', './js/ics-import.js', './js/assistant.js', './js/mobile.js', './js/effects.js', './js/planner.js', './js/delight.js',
   './js/pwa.js', './js/app.js',
   './fonts/tajawal-arabic-400.woff2', './fonts/tajawal-arabic-500.woff2', './fonts/tajawal-arabic-700.woff2', './fonts/tajawal-latin-400.woff2', './fonts/tajawal-latin-500.woff2', './fonts/tajawal-latin-700.woff2',
   './manifest.json', './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png', './icons/apple-touch-icon.png', './icons/logo.svg'
@@ -45,6 +45,19 @@ self.addEventListener('fetch', function(e){
 
   var isLocal = url.indexOf(self.location.origin) === 0;
   var isStatic = isLocal && /\/(icons\/[^?#]+|manifest\.json)(\?|#|$)/.test(url);
+  /* (175) ملفات بإصدار بالرابط (app.bundle.*?v=NNN) والخطوط: ما بتتغيّر أبداً لنفس الرابط ← من الكاش فوراً بلا شبكة.
+     إصدار جديد = رابط جديد (?v=) فبينزل مرة وحدة. هاد اللي بخلّي التطبيق يفتح فوراً على التلفون. */
+  var isImmutable = isLocal && (/[?&]v=\d+/.test(url) || /\/fonts\/[^?#]+\.woff2(\?|#|$)/.test(url));
+  if(isImmutable){
+    e.respondWith(caches.match(e.request).then(function(cached){
+      if(cached) return cached;
+      return fetch(e.request).then(function(res){
+        if(res && res.status === 200){ var c = res.clone(); caches.open(CACHE_NAME).then(function(cache){ cache.put(e.request, c).catch(function(){}); }); }
+        return res;
+      });
+    }));
+    return;
+  }
 
   /* أيقونات والـ manifest: كاش أولاً + تحديث بالخلفية (لا تتغير بين إصدار وآخر عملياً، وتفتح فوراً بلا شبكة) */
   if(isStatic){

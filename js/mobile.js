@@ -77,12 +77,20 @@
     titleEl = d.createElement('div'); titleEl.id = 'mxTitle'; titleEl.className = 'mx-title'; titleEl.setAttribute('aria-hidden', 'true');
     var logo = top.querySelector('.fx-logo'); if(logo && logo.nextSibling) top.insertBefore(titleEl, logo.nextSibling); else top.appendChild(titleEl);
   }
-  function onScroll(){
+  /* (175) مرة وحدة لكل إطار، وحد العنوان محسوب مرة لكل صفحة (كان يقيس الصفحة مع كل حدث تمرير) */
+  var scRaf = 0, scLim = null;
+  function onScroll(){ if(!scRaf) scRaf = requestAnimationFrame(function(){ scRaf = 0; scrollNow(); }); }
+  function scrollNow(){
     var m = main(), r = root(); if(!m || !r) return;
-    var h1 = m.querySelector('.fx-head h1, h1'), lim = h1 ? h1.offsetTop + h1.offsetHeight - 8 : 60;
+    var h1 = m.querySelector('.fx-head h1, h1');
+    if(scLim === null) scLim = h1 ? h1.offsetTop + h1.offsetHeight - 8 : 60;
+    var lim = scLim;
     var on = phone() && m.scrollTop > lim;
     r.classList.toggle('mx-scrolled', on);
-    if(titleEl) titleEl.textContent = on && h1 ? h1.textContent.trim() : '';
+    /* (176) تدريجي زي الآيفون: العنوان الكبير بيصغر ويبهت مع التمرير، والصغير بالشريط بيظهر بآخر الطريق */
+    var k = phone() && lim > 0 ? Math.max(0, Math.min(1, m.scrollTop / lim)) : 0;
+    if(h1 && phone()){ h1.style.opacity = String(1 - k * .85); h1.style.transform = k ? 'translateY(' + (-6 * k).toFixed(1) + 'px) scale(' + (1 - .1 * k).toFixed(3) + ')' : ''; }
+    if(titleEl){ titleEl.textContent = h1 ? h1.textContent.trim() : ''; titleEl.style.opacity = phone() ? String(Math.max(0, (k - .55) / .45)) : ''; }
   }
 
   /* ---------- 4+9) مؤشر الشريط السفلي + شارة المتأخرة ---------- */
@@ -167,7 +175,7 @@
   }, { passive: true });
 
   /* ---------- تشغيل ---------- */
-  function onRender(){ navUpdate(); foldToday(); onScroll(); }
+  function onRender(){ scLim = null; navUpdate(); foldToday(); onScroll(); }
   function start(){
     if(!root() || !main()){ setTimeout(start, 300); return; }
     buildFab(); ensureTitle(); onRender();

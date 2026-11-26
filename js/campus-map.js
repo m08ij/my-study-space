@@ -34,16 +34,16 @@
     { id: 'rest', n: 'المطاعم', f: 'util', x: 418, y: 483, w: 72, h: 70, k: ['المطاعم'] },
     { id: 'lib', n: 'المكتبة', f: 'util', x: 425, y: 402, w: 80, h: 58, k: ['المكتبه'] },
     { id: 'reg', n: 'القبول والتسجيل', f: 'util', x: 362, y: 335, w: 24, h: 92, k: ['القبول والتسجيل', 'القبول'] },
-    { id: 'eco', n: 'الاقتصاد', f: 'eco', x: 425, y: 327, w: 62, h: 50, k: ['الاقتصاد', 'العلوم الاداريه'] },
+    { id: 'eco', n: 'الاقتصاد', f: 'eco', x: 425, y: 327, w: 62, h: 50, k: ['الاقتصاد', 'العلوم الاداريه', 'الاعمال'] },
     { id: 'grad', n: 'الدراسات العليا', f: 'grad', x: 330, y: 290, w: 54, h: 36, k: ['الدراسات العليا'] },
     { id: 'bank', n: 'بنك القاهرة', s: 'بنك القاهرة', f: 'util', x: 334, y: 246, w: 46, h: 36, k: ['بنك'] },
     { id: 'h4', n: 'الحارث الرابع', s: 'الحارث الرابع', f: 'util', x: 318, y: 192, w: 74, h: 36, k: ['الحارث'] },
-    { id: 'tour', n: 'السياحة والتراث', s: 'السياحة والتراث', f: 'tour', x: 252, y: 184, w: 60, h: 32, r: -25, k: ['السياحه', 'التراث'] },
+    { id: 'tour', n: 'السياحة والتراث', s: 'السياحة والتراث', f: 'tour', x: 252, y: 184, w: 60, h: 32, r: -25, k: ['السياحه', 'التراث', 'الاداب'] },
     { id: 'health', n: 'المركز الصحي', s: 'المركز الصحي', f: 'util', x: 544, y: 188, w: 48, h: 40, k: ['المركز الصحي', 'عياده'] },
     { id: 'ahs', n: 'العلوم الطبية التطبيقية', s: 'الطبية التطبيقية', f: 'alh', x: 427, y: 190, w: 98, h: 26, k: ['العلوم الطبيه التطبيقيه', 'الطبيه التطبيقيه'] },
     { id: 'nurs', n: 'التمريض', f: 'nurs', x: 427, y: 228, w: 98, h: 36, k: ['التمريض'] },
-    { id: 'med', n: 'الطب', f: 'med', x: 427, y: 272, w: 98, h: 32, k: ['الطب', 'كليه الطب'] },
-    { id: 'pharm', n: 'الصيدلة', f: 'pharm', x: 625, y: 175, w: 85, h: 153, k: ['الصيدله'] },
+    { id: 'med', n: 'الطب', f: 'med', x: 427, y: 272, w: 98, h: 32, k: ['الطب', 'كليه الطب', 'الطب البشري'] },
+    { id: 'pharm', n: 'الصيدلة', f: 'pharm', x: 625, y: 175, w: 85, h: 153, k: ['الصيدله', 'طب الاسنان', 'الاسنان'] },
     { id: 'qr', n: 'كلية الملكة رانيا للطفولة', s: 'الملكة رانيا للطفولة', f: 'qr', x: 472, y: 92, w: 118, h: 60, k: ['رانيا', 'الطفوله'] },
     { id: 'mosque', n: 'المسجد', f: 'util', x: 416, y: 82, w: 46, h: 28, r: 18, k: ['المسجد'] },
     { id: 'math', n: 'الرياضيات', f: 'sci', x: 428, y: 570, w: 62, h: 48, k: ['الرياضيات'] },
@@ -67,7 +67,7 @@
     { n: 'ابن سينا', b: 'eng', fl: 1 }, { n: 'ابن خلدون', b: 'eng', fl: 2 }, { n: 'ابن رشد', b: 'dean', fl: 2 },
     { n: 'الخوارزمي', b: 'rest', fl: 2 }, { n: 'ابن حيان', b: 'rest', fl: 2 }, { n: 'الطبري', b: 'lib', fl: 2 },
     { n: 'الرازي', b: 'res', fl: 1 }, { n: 'التعليم الإلكتروني', b: 'east', fl: 2 }, { n: 'الطفولة', b: 'qr', fl: 1 },
-    { n: 'ابن النفيس', b: 'ahs', fl: 3 }
+    { n: 'ابن النفيس', b: 'ahs', fl: 2 }, { n: 'حبيب الزيودي', b: 'qr', fl: 2 }, { n: 'الطفولة 2', b: 'qr', fl: 1 }
   ];
   /* أيقونات المرافق (تظهر على المبنى إن كان كبيراً بما يكفي) */
   var ICONS = { lib: '📚', mosque: '🕌', rest: '🍽️', health: '➕', busz: '🚌', busa: '🚌', busm: '🚌', bank: '🏦', nursery: '🌱', reg: '📝', pharm: '💊', med: '🩺', nurs: '💉', eng: '⚙️', it: '💻', west: '🏛️', east: '🏛️', hb: '🏛️', dean: '🎓', pe: '🏅', pefield: '⚽', itfield: '⚽', activity: '🏃', chem: '🧪', phys: '⚛️', bio: '🧬', math: '➗', res: '🌿', eco: '📈', qr: '🧒', grad: '🎓', h4: '🏢', tour: '🏺', risala: '🏢', sdean: '🔬', ahs: '🧬' };
@@ -238,6 +238,9 @@
     return String(s == null ? '' : s).toLowerCase().replace(/[ً-ْـ]/g, '').replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').replace(/\s+/g, ' ').trim();
   }
   LABS.forEach(function(l){ l.nn = norm(l.n); });
+  /* (175) تغميق لون بنسبة k (0..1) — بدل filter:brightness على 74 جدار (كان ثقيل جداً بالرسم وقت السحب على التلفون) */
+  function shade(hex, k){ var m = /^#?([0-9a-f]{6})$/i.exec(String(hex || '')); if(!m) return hex; var n = parseInt(m[1], 16);
+    function c(v){ return Math.round(v * k); } return 'rgb(' + c(n >> 16 & 255) + ',' + c(n >> 8 & 255) + ',' + c(n & 255) + ')'; }
   function esc(s){ return window.esc ? window.esc(s) : String(s).replace(/[&<>"']/g, function(c){ return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
 
   /* ---------- ربط المحاضرة بمبنى ---------- */
@@ -319,9 +322,7 @@
     return cs.filter(function(c){ return c.slots.some(function(e){ return e.dayIdx === d; }); });
   }
   /* ---- مظهر واقعي: مساحة الحرم الفعلية ---- */
-  var CAMPUS_XY = null;
-  function campusXY(){ if(!CAMPUS_XY) CAMPUS_XY = CAMPUS_LL.map(function(p){ var q = geoToXY(p[0], p[1]); return [q.x, q.y]; }); return CAMPUS_XY; }
-  function campusD(){ return 'M' + campusXY().map(function(p){ return p[0].toFixed(1) + ' ' + p[1].toFixed(1); }).join('L') + 'Z'; }
+  var CAMPUS_OFFICIAL = 'M406 860Q228 860 160 740L26 522Q4 470 22 430L132 160Q150 120 176 82Q204 38 238 38H696Q722 38 722 64V490H612V836Q610 860 586 860Z';
   function svgHtml(cs, status){
     var h = '<svg id="cmSvg" class="cm-svg" viewBox="' + [st.vb.x, st.vb.y, st.vb.w, st.vb.h].join(' ') + '" role="group" aria-label="خريطة الجامعة الهاشمية" preserveAspectRatio="xMidYMid meet">';
     h += '<defs><filter id="cmShadow" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-opacity=".35"/></filter>' +
@@ -329,8 +330,9 @@
       '<linearGradient id="cmShine" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".28"/><stop offset=".55" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".12"/></linearGradient>' +
       '<marker id="cmArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>';
     h += '<rect class="cm-ground" x="-80" y="-60" width="' + (W + 160) + '" height="' + (H + 120) + '" rx="26"/>';
-    /* مساحة الحرم الفعلية (حدود OpenStreetMap محوّلة لإحداثيات الرسم) */
-    h += '<path class="cm-campus" d="' + campusD() + '"/>';
+    /* (177) مساحة الحرم = الحلقة الخارجية بالخريطة الرسمية (كانت حدود OpenStreetMap وشكلها ما بيطابق الشوارع).
+       حدود OSM بقيت للـGPS فقط (whereAmI/inPoly). */
+    h += '<path class="cm-campus" d="' + CAMPUS_OFFICIAL + '"/>';
     /* الشوارع */
     var roadsD = '<path d="M406 160V856"/><path d="M406 172H586Q610 172 610 196V836Q610 860 586 860H406"/>' +
       '<path d="M406 166Q196 166 160 232L22 430Q4 470 26 522L160 740Q228 860 406 860"/>' +
@@ -360,15 +362,16 @@
       var txtCol = LIGHT_FILL[b.f] ? '#13203a' : '#ffffff';
       var small = Math.min(b.w, b.h) < 42, ic = ICONS[b.id] && Math.min(b.w, b.h) >= 30 && b.w * b.h >= 1800 ? '<text class="cm-ic" x="' + (b.x + b.w - 11) + '" y="' + (b.y + 12) + '" text-anchor="middle" font-size="11">' + ICONS[b.id] + '</text>' : '';
       /* 3D (171): سقف مرفوع + جدارين ظاهرين (أمامي وجانبي) بدرجات أغمق من لون المبنى؛ الارتفاع حسب الحجم */
-      var area = b.w * b.h, k = (area > 5200 ? 15 : area > 2200 ? 11 : 7) * (st.tilt ? 1.8 : 1), ox = -k * .38, oy = -k, X = b.x, Y = b.y, Wd = b.w, Hd = b.h;
+      /* (177) السقف بمكان المبنى الحقيقي بالضبط (حسب الخريطة الرسمية) والجدران بتنزل لتحت-يمين — كان السقف يطلع لفوق وينزاح عن مكانه */
+      var area = b.w * b.h, k = (area > 5200 ? 12 : area > 2200 ? 9 : 6) * (st.tilt ? 1.7 : 1), ox = k * .38, oy = k, X = b.x, Y = b.y, Wd = b.w, Hd = b.h;
       function pt(a, c){ return (a).toFixed(1) + ',' + (c).toFixed(1); }
       var wallS = [pt(X, Y + Hd), pt(X + Wd, Y + Hd), pt(X + Wd + ox, Y + Hd + oy), pt(X + ox, Y + Hd + oy)].join(' '),
           wallE = [pt(X + Wd, Y), pt(X + Wd, Y + Hd), pt(X + Wd + ox, Y + Hd + oy), pt(X + Wd + ox, Y + oy)].join(' ');
       bi++;
       h += '<g class="' + cls + (small ? ' cm-small' : '') + '" style="--bi:' + bi + '" data-b="' + b.id + '" role="button" tabindex="0" aria-label="' + esc(b.n + ' — ' + FAC[b.f][0]) + '"><title>' + esc(b.n) + '</title><g' + rot + '>' +
-                '<rect class="cm-wall" x="' + (X + 3) + '" y="' + (Y + 5) + '" width="' + Wd + '" height="' + Hd + '" rx="6"/>' +
-                '<polygon class="cm-w cm-ws" points="' + wallS + '" fill="' + col + '"/><polygon class="cm-w cm-we" points="' + wallE + '" fill="' + col + '"/>' +
-                '<g class="cm-roof" transform="translate(' + ox.toFixed(1) + ' ' + oy + ')"><rect class="cm-face" x="' + X + '" y="' + Y + '" width="' + Wd + '" height="' + Hd + '" rx="5" fill="' + col + '"/>' +
+                '<rect class="cm-wall" x="' + (X + ox + 3) + '" y="' + (Y + oy + 4) + '" width="' + Wd + '" height="' + Hd + '" rx="6"/>' +
+                '<polygon class="cm-w cm-ws" points="' + wallS + '" fill="' + shade(col, .55) + '"/><polygon class="cm-w cm-we" points="' + wallE + '" fill="' + shade(col, .72) + '"/>' +
+                '<g class="cm-roof"><rect class="cm-face" x="' + X + '" y="' + Y + '" width="' + Wd + '" height="' + Hd + '" rx="5" fill="' + col + '"/>' +
                 '<rect class="cm-shine" x="' + X + '" y="' + Y + '" width="' + Wd + '" height="' + Hd + '" rx="5"/>' +
         '<g fill="' + txtCol + '">' + labelFor(b) + '</g></g></g></g>';
     });

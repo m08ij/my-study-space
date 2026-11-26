@@ -331,6 +331,23 @@
     }).catch(function(e){ return { native: true, error: String(e && e.message || e) }; }).then(function(r){ scheduling = false; if(again){ again = false; setTimeout(schedule, 1500); } return r; });
     return p;
   }
+  /* (175) حالة إذن التنبيهات بالتطبيق + تنبيه تجريبي حقيقي بعد 4 ث (مركز التنبيهات بيستعملهم بدل تنبيهات المتصفح اللي مش موجودة بالـWebView) */
+  function notifState(){
+    if(!isNative()) return Promise.resolve('web');
+    var LN = plugin('LocalNotifications'); if(!LN || !LN.checkPermissions) return Promise.resolve('unsupported');
+    return LN.checkPermissions().then(function(st){ return (st && st.display) || 'prompt'; }, function(){ return 'unsupported'; });
+  }
+  function askNotif(){
+    var LN = plugin('LocalNotifications'); if(!isNative() || !LN || !LN.requestPermissions) return Promise.resolve('unsupported');
+    return LN.requestPermissions().then(function(st){ var d = (st && st.display) || 'denied'; if(d === 'granted') scheduleSoon(); return d; }, function(){ return 'denied'; });
+  }
+  function testNotif(){
+    var LN = plugin('LocalNotifications'); if(!isNative() || !LN) return Promise.resolve(false);
+    return askNotif().then(function(d){
+      if(d !== 'granted') return false;
+      return LN.schedule({ notifications: [{ id: 990001, title: '🔔 تجربة تنبيه', body: 'إذا شفت هالإشعار، تنبيهات المحاضرات والامتحانات رح توصلك حتى والتطبيق مسكّر.', schedule: { at: new Date(Date.now() + 4000).toISOString(), allowWhileIdle: true }, smallIcon: 'ic_stat_icon' }] }).then(function(){ return true; }, function(){ return false; });
+    });
+  }
   var tmr = null; function scheduleSoon(){ if(!isNative()) return; clearTimeout(tmr); tmr = setTimeout(function(){ schedule(); pushWidget(); }, 2500); }
 
   /* ---------- تنزيل الملفات عبر مشاركة أندرويد ---------- */
@@ -368,5 +385,5 @@
   }
   if(d.readyState === 'loading') d.addEventListener('DOMContentLoaded', function(){ setTimeout(init, 1500); }); else setTimeout(init, 1500);
 
-  return Object.assign(pure, { pullAttendance: pullAttendance, pullTasks: pullTasks, pullPlan: pullPlan, planAlarmItems: planAlarmItems, checkUpdate: checkUpdate, showUpdate: showUpdate, pushWidget: pushWidget, openWidgetPicker: openWidgetPicker, isNative: isNative, schedule: schedule, buildPlan: buildPlan, saveNative: saveNative, patchDownloads: patchDownloads, _plugin: plugin, _reset: function(){ cache = {}; } });
+  return Object.assign(pure, { pullAttendance: pullAttendance, pullTasks: pullTasks, pullPlan: pullPlan, planAlarmItems: planAlarmItems, checkUpdate: checkUpdate, showUpdate: showUpdate, pushWidget: pushWidget, openWidgetPicker: openWidgetPicker, isNative: isNative, schedule: schedule, notifState: notifState, askNotif: askNotif, testNotif: testNotif, buildPlan: buildPlan, saveNative: saveNative, patchDownloads: patchDownloads, _plugin: plugin, _reset: function(){ cache = {}; } });
 });

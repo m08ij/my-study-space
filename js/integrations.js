@@ -1400,6 +1400,11 @@
       if(changed){ try{ localStorage.setItem(NP_FIRED, JSON.stringify(fired)); }catch(e){} }
     },
     test: function(){
+      var NA = window.NativeApp;
+      if(NA && NA.isNative && NA.isNative() && NA.testNotif){   /* (175) داخل تطبيق الأندرويد: تنبيه حقيقي من النظام */
+        NA.testNotif().then(function(ok){ toast(ok ? '🔔 سكّر التطبيق أو اطلع للشاشة الرئيسية — التنبيه رح يوصل خلال ثواني' : 'التنبيهات مقفولة للتطبيق: الإعدادات ← التطبيقات ← مساحتي ← الإشعارات ← سماح', ok ? 'success' : 'warn', 5000); });
+        return;
+      }
       var ok = window.getNotifPermission() === 'granted';
       toast('🔔 هاي تجربة تنبيه', 'info', 3500); if(npGet().sound) playChime();
       if(ok) window.showNotif('🔔 تجربة تنبيه', 'إذا شفت هالإشعار، التنبيهات شغّالة تمام.', { tag: 'ss-test-' + Date.now(), force: true, data: { tab: 'dashboard' } });
@@ -1414,7 +1419,13 @@
     var bd = document.createElement('div'); bd.className = 'modal-backdrop show'; bd._trap = true;
     function paint(){
       var p = npGet(), perm = window.getNotifPermission();
-      var st = perm === 'granted' ? '<div class="nc-status ok">✅ التنبيهات مفعّلة على هالجهاز</div>' :
+      var NA = window.NativeApp, nat = !!(NA && NA.isNative && NA.isNative());
+      if(nat){ perm = bd._natPerm || 'checking'; if(!bd._natAsked){ bd._natAsked = true; NA.notifState().then(function(s){ bd._natPerm = s === 'granted' ? 'granted' : s === 'denied' ? 'denied' : 'default'; paint(); }); } }
+      var st = nat && perm === 'checking' ? '<div class="nc-status">⏳ بفحص إذن التنبيهات…</div>' :
+        nat && perm === 'granted' ? '<div class="nc-status ok">✅ التنبيهات مفعّلة بالتطبيق — بتوصلك حتى والتطبيق مسكّر</div>' :
+        nat && perm === 'denied' ? '<div class="nc-status bad">🚫 التنبيهات مقفولة للتطبيق: الإعدادات ← التطبيقات ← مساحتي ← الإشعارات ← سماح.</div>' :
+        nat ? '<div class="nc-status"><span>🔔 فعّل تنبيهات المحاضرات والامتحانات (بتوصل والتطبيق مسكّر).</span><button class="btn btn-sm" id="ncEnable">فعّل التنبيهات</button></div>' :
+        perm === 'granted' ? '<div class="nc-status ok">✅ التنبيهات مفعّلة على هالجهاز</div>' :
         perm === 'denied' ? '<div class="nc-status bad">🚫 المتصفح حاجب التنبيهات. افتح قفل 🔒 بجنب عنوان الموقع ← الإشعارات ← سماح، وارجع هون.</div>' :
         perm === 'unsupported' ? '<div class="nc-status warn">⚠️ متصفحك ما بيدعم الإشعارات. استخدم «ملف التقويم» تحت — بيشتغل بدونها.</div>' :
         '<div class="nc-status"><span>🔔 فعّل التنبيهات بضغطة وحدة (مجاني وبدون حساب).</span><button class="btn btn-sm" id="ncEnable">فعّل التنبيهات</button></div>';
@@ -1430,7 +1441,7 @@
         sw('ncSound', '🔊 صوت التنبيه', p.sound) +
         sw('ncQuiet', '🌙 ساعات الهدوء (بدون إشعارات المتصفح)', p.quietOn, '<input type="time" id="ncQFrom" value="' + p.quietFrom + '" aria-label="من"><input type="time" id="ncQTo" value="' + p.quietTo + '" aria-label="إلى">') +
         '</div>' +
-        '<div class="nc-note">التنبيهات بتوصل والتطبيق مفتوح أو شغّال بالخلفية. وهو مسكّر تماماً، المضمون هو تنبيهات <b>التقويم</b>:</div>' +
+        (nat ? '<div class="nc-note">📱 التطبيق بيجدول التنبيهات لـ7 أيام قدّام ويحدّثها كل ما تفتحه — بتوصلك والتطبيق مسكّر. وإذا بدك نسخة بالتقويم كمان:</div>' : '<div class="nc-note">التنبيهات بتوصل والتطبيق مفتوح أو شغّال بالخلفية. وهو مسكّر تماماً، المضمون هو تنبيهات <b>التقويم</b>:</div>') +
         '<div class="modal-actions" style="flex-wrap:wrap"><button class="btn btn-sm btn-ghost" id="ncClose">إغلاق</button><button class="btn btn-sm btn-ghost" id="ncTest">🔔 جرّب تنبيه</button><button class="btn btn-sm" id="ncIcs">📅 تقويم بتنبيهات (ics)</button></div></div>';
       var q = function(s){ return bd.querySelector(s); }, save = function(){
         window.NotifyCenter.setPrefs({ lec: q('#ncLec').checked, lecMin: parseInt(q('#ncLecMin').value, 10) || 10, study: q('#ncStudy').checked, dayplan: q('#ncPlan').checked, exams: q('#ncExams').checked, tasks: q('#ncTasks').checked, tasksAt: q('#ncTasksAt').value || '08:00', sound: q('#ncSound').checked, quietOn: q('#ncQuiet').checked, quietFrom: q('#ncQFrom').value || '23:00', quietTo: q('#ncQTo').value || '07:00' });
@@ -1438,7 +1449,7 @@
       bd.querySelectorAll('input,select').forEach(function(el){ el.addEventListener('change', save); });
       q('#ncClose').onclick = close; q('#ncTest').onclick = function(){ save(); window.NotifyCenter.test(); };
       q('#ncIcs').onclick = function(){ save(); if(window.downloadICS) window.downloadICS({ lectures: true, exams: true, tasks: true, study: true }); toast('افتح الملف بتطبيق التقويم بجوالك: التنبيهات بتشتغل حتى والتطبيق مسكّر', 'info', 6000); };
-      var en = q('#ncEnable'); if(en) en.onclick = function(){ window.requestNotifPermission().then(function(){ paint(); }); };
+      var en = q('#ncEnable'); if(en) en.onclick = function(){ if(nat){ NA.askNotif().then(function(s){ bd._natPerm = s === 'granted' ? 'granted' : s === 'denied' ? 'denied' : 'default'; paint(); }); return; } window.requestNotifPermission().then(function(){ paint(); }); };
     }
     function close(){ if(window.dismissOverlay) window.dismissOverlay(bd); else bd.remove(); }
     bd.onclick = function(e){ if(e.target === bd) close(); };

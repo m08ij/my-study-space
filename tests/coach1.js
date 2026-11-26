@@ -54,7 +54,7 @@ const { boot } = require('./e2elib'); const sl = ms => new Promise(r => setTimeo
   /* ما الجديد */
   const b4 = mk(busy, { ss_seen_news: '' }); await sl(900); b4.w.localStorage.removeItem('ss_seen_news');
   const shown = b4.w.Coach.whatsNew(); await sl(200);
-  o.W_shows = shown === true && !!b4.w.document.querySelector('#cConfirm') && /الخطوة الجاية/.test(b4.w.document.querySelector('#cConfirm').closest('.modal').textContent) && JSON.parse(b4.w.localStorage.getItem('ss_seen_news')) === '157';
+  o.W_shows = shown === true && !!b4.w.document.querySelector('#cConfirm') && /بداية يومك/.test(b4.w.document.querySelector('#cConfirm').closest('.modal').textContent) && JSON.parse(b4.w.localStorage.getItem('ss_seen_news')) === '175';
   o.W_once = b4.w.Coach.whatsNew() === false;
   /* مشاركة الجدول: layout نقي */
   const E = w.Schedule.entries(), L = w.ShareTT.layout(E);

@@ -348,7 +348,7 @@
 /* ===== لمس: اهتزاز خفيف عند إنجاز مهمة / تسجيل حضور (يحترم «تقليل الحركة»؛ يعمل حيث يدعم الجهاز navigator.vibrate) ===== */
 (function(){
   function reduced(){ try{ return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){ return false; } }
-  function haptic(p){ try{ if(!reduced() && navigator.vibrate) navigator.vibrate(p); }catch(e){} }
+  function haptic(p){ try{ if(!reduced() && navigator.vibrate && localStorage.getItem('ss_fx_feel') !== 'off') navigator.vibrate(p); }catch(e){} }   /* (176) بينطفي من الإعدادات ← الأصوات والاهتزاز */
   function wrapOnce(name, after){
     var o = window[name]; if(typeof o !== 'function' || o._hp) return;
     var n = function(){ var r = o.apply(this, arguments); try{ after.apply(null, arguments); }catch(e){} return r; }; n._hp = true; window[name] = n;

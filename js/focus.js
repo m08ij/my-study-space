@@ -55,7 +55,15 @@
   function entries(){ return W.Schedule && W.Schedule.entries ? W.Schedule.entries() : []; }
   function place(e){ return W.Schedule && W.Schedule.place ? W.Schedule.place(e) : (e.room || ''); }
   function nowMin(){ var n = new Date(); return n.getHours() * 60 + n.getMinutes(); }
-  function empty(t, s){ return '<div class="fx-empty"><span class="fx-empty-ic" aria-hidden="true">✨</span><b>' + t + '</b>' + (s ? '<small>' + s + '</small>' : '') + '</div>'; }
+  /* (175) رسومات صغيرة للحالات الفاضية حسب السياق (مهام/امتحانات/يوم هادي/عام) — SVG خفيف بلا مكتبات */
+  var ILL = {
+    tasks: '<svg viewBox="0 0 64 64"><rect x="14" y="10" width="36" height="46" rx="7" fill="#8b5cf6" opacity=".22"/><rect x="18" y="14" width="28" height="38" rx="5" fill="#8b5cf6" opacity=".35"/><rect x="25" y="7" width="14" height="8" rx="3" fill="#a78bfa"/><path d="M24 27l4 4 8-8" fill="none" stroke="#22d3ee" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/><rect x="24" y="38" width="16" height="3" rx="1.5" fill="#c4b5fd"/><rect x="24" y="44" width="10" height="3" rx="1.5" fill="#c4b5fd" opacity=".7"/></svg>',
+    exam: '<svg viewBox="0 0 64 64"><rect x="10" y="14" width="44" height="40" rx="8" fill="#22d3ee" opacity=".2"/><rect x="10" y="14" width="44" height="12" rx="6" fill="#22d3ee" opacity=".45"/><rect x="20" y="8" width="4" height="12" rx="2" fill="#67e8f9"/><rect x="40" y="8" width="4" height="12" rx="2" fill="#67e8f9"/><circle cx="32" cy="40" r="8" fill="none" stroke="#a78bfa" stroke-width="3"/><path d="M32 36v4l3 2" fill="none" stroke="#a78bfa" stroke-width="2.6" stroke-linecap="round"/></svg>',
+    calm: '<svg viewBox="0 0 64 64"><path d="M14 30h30v8a15 15 0 0 1-30 0z" fill="#8b5cf6" opacity=".35"/><path d="M44 33h4a6 6 0 0 1 0 12h-5" fill="none" stroke="#a78bfa" stroke-width="3"/><path d="M22 14c-3 4 3 6 0 10M30 12c-3 4 3 6 0 10M38 14c-3 4 3 6 0 10" fill="none" stroke="#22d3ee" stroke-width="2.6" stroke-linecap="round"/><rect x="10" y="52" width="40" height="4" rx="2" fill="#8b5cf6" opacity=".3"/></svg>',
+    star: '<svg viewBox="0 0 64 64"><path d="M32 8l5.5 14.5L52 28l-14.5 5.5L32 48l-5.5-14.5L12 28l14.5-5.5z" fill="#8b5cf6" opacity=".45"/><path d="M48 40l2.4 6.1L56 48l-5.6 1.9L48 56l-2.4-6.1L40 48l5.6-1.9z" fill="#22d3ee"/><circle cx="16" cy="48" r="3" fill="#a78bfa"/></svg>'
+  };
+  function empty(t, s){ var k = /امتحان/.test(t) ? 'exam' : /مهم|مهام|اسحب/.test(t) ? 'tasks' : /فاضي|راحة|هادي|ما في|ما عليك/.test(t) ? 'calm' : 'star';
+    return '<div class="fx-empty"><span class="fx-empty-ic fx-ill" aria-hidden="true">' + ILL[k] + '</span><b>' + t + '</b>' + (s ? '<small>' + s + '</small>' : '') + '</div>'; }
 
   /* ---------- بيانات مشتركة ---------- */
   function openTasks(){ var t = today(); return (sp().tasks || []).filter(function(x){ return x && !x.done && x.due && x.due <= t; }).sort(function(a, b){ return a.due < b.due ? -1 : 1; }); }
@@ -88,7 +96,7 @@
     var P = W.DayPlan; if(!P || !P.viewFor) return '';
     try{ P.cardHtml(now); }catch(e){}
     var v; try{ v = P.viewFor(today(), now); }catch(e){ return ''; }
-    var st = streak(), head = '<h3>خطتي اليوم <span class="fx-pl-st">' + ic('flame') + st + '</span><button type="button" class="fx-link" data-fx="dpopen">الخطة كاملة</button></h3>';
+    var st = streak(), head = '<h3>خطتي اليوم <span class="fx-pl-st">' + ic('flame') + st + '</span><button type="button" class="fx-link fx-wkbtn" data-fx="weekplan">🗓️ رتبلي أسبوعي</button><button type="button" class="fx-link" data-fx="dpopen">الخطة كاملة</button></h3>';
     if(!v || !v.n) return '<div class="fx-glass fx-plan2">' + head + empty('ما في دراسة مطلوبة اليوم', 'استغلها براحة أو ضيف بند من الخطة الكاملة') + '</div>';
     var pct = Math.round((v.okN || 0) / v.n * 100);
     return '<div class="fx-glass fx-plan2' + (v.ok ? ' ok' : '') + '">' + head +
@@ -122,6 +130,41 @@
   }
   /* فتح المساعد وإرسال سؤال (بيحمّل المساعد لو لسا ما تحمّل) */
   function askAI(text){ if(W.Assistant) W.Assistant.open(text || ''); }
+  /* (175) دقائق التركيز اليوم (نفس حساب صفحة المؤقت) */
+  function focusToday(){
+    var log = {}; try{ log = W.S && W.S.get ? W.S.get('studyLog', {}) || {} : JSON.parse(lsGet('studyLog') || '{}') || {}; }catch(e){}
+    var fm = 0; try{ var dp = sp().dayPlan, dd = dp && dp.days && dp.days[today()]; if(dd && dd.fm) Object.keys(dd.fm).forEach(function(k){ fm += +dd.fm[k] || 0; }); }catch(e){}
+    return { min: Math.max(Math.round(+log[today()] || 0), Math.round(fm)), goal: +lsGet('ss_fx_goal') || 120 };
+  }
+  function ring(pct, cls){ var C = 113.1, p = Math.max(0, Math.min(100, pct || 0));
+    return '<svg class="fx-hring ' + (cls || '') + '" viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="18" class="bg"/><circle cx="22" cy="22" r="18" class="fg" stroke-dasharray="' + C + '" stroke-dashoffset="' + (C * (1 - p / 100)).toFixed(1) + '"/></svg>'; }
+  /* (175) بطاقات التقدّم بأعلى «اليوم»: تركيز اليوم · مهام الأسبوع · أقرب امتحان */
+  function homeStats(){
+    var f = focusToday(), fp = Math.min(100, Math.round(f.min / f.goal * 100));
+    var t0 = new Date(today() + 'T00:00:00'); t0.setDate(t0.getDate() - t0.getDay()); var ws = ymd(t0), t6 = new Date(t0.getTime()); t6.setDate(t6.getDate() + 6); var we = ymd(t6);
+    var wk = (sp().tasks || []).filter(function(x){ return x && x.title && ((x.due && x.due >= ws && x.due <= we) || (x.done && x.completedAt && x.completedAt >= ws && x.completedAt <= we)); });
+    var wd = wk.filter(function(x){ return x.done; }).length, wp = wk.length ? Math.round(wd / wk.length * 100) : 0;
+    var ex = upcomingExams()[0], en = ex ? dayDiff(ex.date) : null, ep = en === null ? 0 : Math.max(6, Math.round((1 - Math.min(en, 30) / 30) * 100));
+    function card(v, cls, rg, val, lbl, sub){ return '<button type="button" class="fx-hs ' + cls + '" data-fx="go" data-v="' + v + '">' + rg + '<span class="fx-hsv"><b>' + val + '</b><em>' + lbl + '</em><small>' + sub + '</small></span></button>'; }
+    return '<div class="fx-hstats">' +
+      card('timer', 'h1', ring(fp, 'a'), dur(f.min) || '0 د', 'تركيز اليوم', fp >= 100 ? 'حقّقت هدفك 🎉' : 'من هدف ' + dur(f.goal)) +
+      card('tasks', 'h2', ring(wp, 'b'), wd + '/' + wk.length, 'مهام الأسبوع', wk.length ? (wp >= 100 ? 'خلصتهم كلهم 👏' : (wk.length - wd) + ' باقيات') : 'ما في مهام هالأسبوع') +
+      card('exams', 'h3', ring(ep, 'c'), en === null ? '—' : en === 0 ? 'اليوم' : String(en), en === null ? 'امتحانات' : en === 0 ? 'امتحان!' : (en === 1 ? 'يوم' : en <= 10 ? 'أيام' : 'يوم') + ' للامتحان', ex ? esc(String(ex.name || 'امتحان').slice(0, 26)) : 'ما في امتحانات قريبة') +
+      '</div>';
+  }
+  /* (175) ملخص اليوم لشاشة البداية (planner.js) — نفس حسابات «اليوم» */
+  function dayData(){
+    var now = new Date(), nm = nowMin(), list = entries().filter(function(e){ return e.dayIdx === now.getDay(); }).sort(function(a, b){ return a.start - b.start; });
+    var open = (sp().tasks || []).filter(function(x){ return x && x.title && !x.done; });
+    var late = open.filter(function(t){ return t.due && dayDiff(t.due) < 0; }), due = open.filter(function(t){ return t.due && dayDiff(t.due) === 0; });
+    var ex = upcomingExams()[0], nx = list.filter(function(e){ return e.end > nm; })[0];
+    return { now: now, name: ((sp().profile || {}).name || '').split(' ')[0], streak: streak(),
+      lectures: list.map(function(e){ return { name: e.name, start: hm(e.start), end: hm(e.end), place: place(e) }; }),
+      next: nx ? { name: nx.name, start: hm(nx.start), place: place(nx), now: nm >= nx.start } : null,
+      late: late.length, due: due.length, top: late[0] || due[0] || null,
+      exam: ex ? { name: ex.name || 'امتحان', course: ex.course || '', days: dayDiff(ex.date) } : null,
+      courses: (sp().courses || []).filter(function(c){ return c && c.name && !c.completed; }).length };
+  }
   function vToday(){
     var now = new Date(), nm = nowMin(), list = entries().filter(function(e){ return e.dayIdx === now.getDay(); }).sort(function(a, b){ return a.start - b.start; });
     var curL = list.filter(function(e){ return nm >= e.start && nm < e.end; })[0], next = list.filter(function(e){ return e.start > nm; })[0];
@@ -155,17 +198,17 @@
       : '<p class="fx-lnempty">ما في محاضرات اليوم</p>';
     var allOpen = (sp().tasks || []).filter(function(x){ return x && x.title && !x.done; }).sort(function(a, b){ return (a.due || '9') < (b.due || '9') ? -1 : 1; });
     var tkH = allOpen.length ? allOpen.slice(0, 6).map(function(t){ var n = t.due ? dayDiff(t.due) : null;
-        return '<div class="fx-ln fx-lntask"><button type="button" class="fx-ck" role="checkbox" aria-checked="false" aria-label="' + esc('إنجاز: ' + t.title) + '" data-fx="tog" data-id="' + esc(t.id) + '"></button><span class="fx-lnt">' + esc(t.title) + (t.repeat ? ' <span class="fx-rep">🔁</span>' : '') + '</span>' + (t.course ? '<span class="fx-lntag">' + esc(t.course) + '</span>' : '') + '<span class="fx-lnw' + (n !== null && n < 0 ? ' late' : n === 0 ? ' soon' : '') + '">' + (n === null ? 'بلا موعد' : when(n)) + '</span></div>'; }).join('')
+        return '<div class="fx-ln fx-lntask' + (t.course ? ' fx-hue' : '') + '"' + (t.course ? ' style="--h:' + hue(t.course) + '"' : '') + '><button type="button" class="fx-ck" role="checkbox" aria-checked="false" aria-label="' + esc('إنجاز: ' + t.title) + '" data-fx="tog" data-id="' + esc(t.id) + '"></button><span class="fx-lnt">' + esc(t.title) + (t.repeat ? ' <span class="fx-rep">🔁</span>' : '') + '</span>' + (t.course ? '<span class="fx-lntag">' + esc(t.course) + '</span>' : '') + '<span class="fx-lnw' + (n !== null && n < 0 ? ' late' : n === 0 ? ' soon' : '') + '">' + (n === null ? 'بلا موعد' : when(n)) + '</span></div>'; }).join('')
       : '<p class="fx-lnempty">ما عليك مهام مفتوحة 🎉</p>';
     var semG = semGpa();
     var exH = ex.length ? ex.slice(0, 4).map(function(x){ var n = dayDiff(x.date);
-        return '<button type="button" class="fx-ln' + (n <= 7 ? ' fx-exrow' : '') + '" data-fx="go" data-v="exams">' + ic('exam') + '<span class="fx-lnt">' + esc(x.name || 'امتحان') + '</span>' + (x.course ? '<span class="fx-lntag">' + esc(x.course) + '</span>' : '') + '<span class="fx-lnw' + (n <= 3 ? ' soon' : '') + '">' + when(n) + '</span></button>'; }).join('')
+        return '<button type="button" class="fx-ln' + (n <= 7 ? ' fx-exrow' : '') + (x.course ? ' fx-hue' : '') + '"' + (x.course ? ' style="--h:' + hue(x.course) + '"' : '') + ' data-fx="go" data-v="exams">' + ic('exam') + '<span class="fx-lnt">' + esc(x.name || 'امتحان') + '</span>' + (x.course ? '<span class="fx-lntag">' + esc(x.course) + '</span>' : '') + '<span class="fx-lnw' + (n <= 3 ? ' soon' : '') + '">' + when(n) + '</span></button>'; }).join('')
       : '<p class="fx-lnempty">ما في امتحانات قادمة</p>';
     var lateN = allOpen.filter(function(t){ return t.due && dayDiff(t.due) < 0; }).length;
     var summary = (list.length ? 'عندك ' + list.length + (list.length === 1 ? ' محاضرة' : ' محاضرات') + ' اليوم' : 'ما في محاضرات اليوم') + (lateN ? '، و' + (lateN === 1 ? 'مهمة متأخرة وحدة' : lateN + ' مهام متأخرة') : '') + '.';
     var nm1 = ((sp().profile || {}).name || '').split(' ')[0];
     var head = '<div class="fx-hello"><small>' + DA[now.getDay()] + '، ' + now.getDate() + '/' + (now.getMonth() + 1) + '</small><b>' + greet + (nm1 ? '، ' + esc(nm1) : '') + '</b><p class="fx-sum">' + summary + ' <span class="fx-hst">' + ic('flame') + st + (st === 1 ? ' يوم' : ' أيام') + '</span></p></div>';
-    return head +
+    return head + homeStats() +
       '<div class="fx-trow">' + nx + planCard(now) + '</div>' + smartBrief(list, nm, ex, allOpen) + coachH() +
       sec('جدول اليوم', '<button type="button" class="fx-link" data-fx="go" data-v="timetable">' + (list.length ? list.length + (list.length === 1 ? ' محاضرة' : ' محاضرات') + ' · ' : '') + 'الأسبوع</button>', ttH) +
       sec('المهام', '<button type="button" class="fx-link" data-fx="go" data-v="tasks">' + (allOpen.length ? allOpen.length + ' مفتوحة · ' : '') + 'الكل</button>', tkH) +
@@ -186,6 +229,22 @@
     }).join('');
     return '<details class="fx-glass fx-fold fx-sp"' + (lsGet('ss_fx_sp') === '1' ? ' open' : '') + '><summary>جدول المذاكرة المقترح · <b>' + esc(sum) + '</b></summary>' + body +
       '<div class="fx-tools">' + tool('spcfg', 'إعدادات') + tool('sptog', c.on ? 'إيقاف' : 'تشغيل') + '</div></details>';
+  }
+  /* (176) التلفون: خط زمني زي تطبيق التقويم — مربعات بطول المحاضرة على ساعات اليوم، وخط أحمر للوقت الحالي */
+  function timeline(list, isToday, nm){
+    var PX = 1.1, s0 = Math.floor(Math.min.apply(null, list.map(function(e){ return e.start; })) / 60) * 60, e0 = Math.ceil(Math.max.apply(null, list.map(function(e){ return e.end; })) / 60) * 60;
+    if(isToday && nm < s0 && s0 - nm <= 90) s0 = Math.floor(nm / 60) * 60;   /* الصبح قبل أول محاضرة بشوي: نورجي الخط الأحمر كمان */
+    var H = (e0 - s0) * PX, hrs = '', lanes = [];
+    for(var m = s0; m <= e0; m += 60) hrs += '<div class="fx-tl-h" style="top:' + Math.round((m - s0) * PX) + 'px"><span>' + hm(m) + '</span></div>';
+    var blocks = list.map(function(e){
+      var ln = 0; while(lanes[ln] !== undefined && lanes[ln] > e.start) ln++; lanes[ln] = e.end;
+      var ov = list.some(function(o){ return o !== e && o.start < e.end && e.start < o.end; });
+      var st = isToday ? (nm >= e.end ? ' done' : nm >= e.start ? ' now' : '') : '', top = Math.round((e.start - s0) * PX), ht = Math.max(46, Math.round((e.end - e.start) * PX) - 4);
+      return '<button type="button" class="fx-tl-b' + st + (ov ? ' half l' + Math.min(ln, 1) : '') + '" style="--h:' + hue(e.name) + ';top:' + top + 'px;height:' + ht + 'px" data-fx="course" data-n="' + esc(e.name) + '">' +
+        '<b>' + esc(e.name) + (st === ' now' ? ' <em class="fx-nowb">الآن</em>' : '') + '</b><small>⁦' + hm(e.start) + ' – ' + hm(e.end) + '⁩' + (place(e) ? ' · ' + esc(place(e)) : '') + '</small></button>';
+    }).join('');
+    var now = isToday && nm >= s0 && nm <= e0 ? '<div class="fx-tl-now" style="top:' + Math.round((nm - s0) * PX) + 'px" aria-label="الوقت الحالي"><i></i><span>' + hm(nm) + '</span></div>' : '';
+    return '<div class="fx-tl" style="height:' + Math.round(H + 14) + 'px">' + hrs + '<div class="fx-tl-col">' + blocks + '</div>' + now + '</div>';
   }
   function vTimetable(){
     var all = entries(), nowD = new Date().getDay(), nm = nowMin(), days = [0, 1, 2, 3, 4, 5, 6].filter(function(i){ return i < 5 || all.some(function(e){ return e.dayIdx === i; }); });
@@ -210,8 +269,7 @@
     /* التلفون: شريط أيام بأرقام التواريخ + محاضرات اليوم المختار كخط زمني */
     var list = all.filter(function(e){ return e.dayIdx === ttDay; }).sort(function(a, b){ return a.start - b.start; });
     var mobile = '<div class="fx-mdays">' + days.map(function(i){ var n = all.filter(function(e){ return e.dayIdx === i; }).length; return '<button type="button" class="fx-mday' + (i === ttDay ? ' on' : '') + (i === nowD ? ' today' : '') + '" data-fx="day" data-v="' + i + '"><small>' + DA[i].replace('ال', '') + '</small><b>' + dOf(i).getDate() + '</b><i>' + (n ? new Array(Math.min(n, 4) + 1).join('•') : '') + '</i></button>'; }).join('') + '</div>' +
-      (list.length ? '<div class="fx-mlist">' + list.map(function(e){ var st = ttDay === nowD ? (nm >= e.end ? ' done' : nm >= e.start ? ' now' : '') : '';
-          return '<button type="button" class="fx-mrow' + st + '" style="--h:' + hue(e.name) + '" data-fx="course" data-n="' + esc(e.name) + '"><span class="fx-mt" dir="ltr"><b>' + hm(e.start) + '</b><small>' + hm(e.end) + '</small></span><span class="fx-mc"><b>' + esc(e.name) + (st === ' now' ? ' <em class="fx-nowb">الآن</em>' : '') + '</b><small>' + dur(e.end - e.start) + (place(e) ? ' · ' + esc(place(e)) : '') + '</small></span></button>'; }).join('') + '</div>'
+      (list.length ? timeline(list, ttDay === nowD, nm)
         : '<div class="fx-mempty">' + empty('ما في محاضرات ' + DA[ttDay], 'يوم فاضي — مناسب لجلسة مذاكرة') + '</div>');
     return bar + '<div class="fx-only-wide">' + grid + '</div><div class="fx-only-narrow">' + mobile + '<div class="fx-actions">' + acts + more + '</div></div>' +
       spBox();
@@ -309,19 +367,33 @@
   function attOf(n){ var a = (sp().attendance || {})[n] || {}, p = +a.present || 0, b = +a.absent || 0; return { p: p, a: b, t: p + b, pct: p + b ? Math.round(p / (p + b) * 100) : null }; }
   function sub(title, back){ return '<button type="button" class="fx-link fx-backlink" data-fx="go" data-v="' + (back || 'more') + '">→ ' + title + '</button>'; }
   function healthTag(n){ if(!W.Coach || !W.Coach.health) return ''; var h; try{ h = W.Coach.health(n, new Date()); }catch(e){ return ''; } if(h.level === 'good') return ''; return '<span class="fx-hl ' + h.level + '" title="' + esc(h.reasons.join(' · ')) + '">' + (h.level === 'risk' ? 'تحتاج تدخّل' : 'انتبه') + '</span>'; }
+  /* (176) أيقونة المادة حسب اسمها */
+  function courseIcon(n){
+    var x = String(n || '');
+    return /برمج|حاسوب|خوارزم|بيانات|برامج|program|software|java|python/i.test(x) ? '💻' : /شبك|اتصالات|network/i.test(x) ? '🌐' : /معالج|منطق|رقمي|حاسب|معمار|microproc|logic|digital/i.test(x) ? '🔲' :
+      /دوائر|دارات|الكترون|كهرب|إلكترون|circuit|electr/i.test(x) ? '🔌' : /تفاضل|تكامل|رياض|جبر|إحصاء|احصاء|منفصل|معادلات|عددي|calculus|math|algebra|discrete|statist/i.test(x) ? '∑' :
+      /فيزياء|physics/i.test(x) ? '⚛️' : /كيمياء|chem/i.test(x) ? '🧪' : /إشارات|اشارات|نظم|تحكم|signal|control/i.test(x) ? '📈' :
+      /عربي|إنجليز|انجليز|لغة|اتصال|مهارات|english|arabic|language/i.test(x) ? '🗣️' : /أخلاق|اخلاق|ثقافة|تاريخ|وطني|عسكر|إسلام|اسلام|قيادة|ethic|history/i.test(x) ? '📜' :
+      /مختبر|lab/i.test(x) ? '🔬' : /رسم|تصميم|design|draw/i.test(x) ? '📐' : '📘';
+  }
   function vCourses(){
     var cs = (sp().courses || []).filter(function(c){ return c && c.name; }), gr = {}; courseGrades().forEach(function(g){ gr[g.name] = g; });
     var ex = upcomingExams(), tk = (sp().tasks || []).filter(function(t){ return t && !t.done; });
     var act = cs.filter(function(c){ return !c.completed; }), done = cs.filter(function(c){ return c.completed; });
+    /* (176) بطاقة مادة بغلاف بلونها + أيقونة حسب نوعها + حلقتين (العلامة والحضور) */
     function card(c){
       var a = attOf(c.name), g = gr[c.name], e = ex.filter(function(x){ return x.course === c.name; })[0], n = tk.filter(function(t){ return t.course === c.name; }).length;
-      return '<button type="button" class="fx-glass fx-ccard" style="--h:' + hue(c.name) + '" data-fx="course" data-n="' + esc(c.name) + '"><span class="fx-chead"><span class="fx-cdot">' + esc(String(c.name).trim().charAt(0)) + '</span><span class="fx-tb"><b>' + esc(c.name) + '</b><small>' + (c.code ? esc(c.code) + ' · ' : '') + (c.hours ? c.hours + ' ساعات' : 'مادة') + '</small></span>' + healthTag(c.name) + '</span>' +
-        '<span class="fx-cstats"><span><b>' + (g && g.pct !== null ? g.pct + '%' : '—') + '</b><small>علامات</small></span><span><b>' + (a.pct === null ? '—' : a.pct + '%') + '</b><small>حضور</small></span><span><b>' + n + '</b><small>مهام</small></span></span>' +
-        (e ? '<span class="fx-tag">' + esc(e.name || 'امتحان') + ' · ' + when(dayDiff(e.date)) + '</span>' : '') + '</button>';
+      var gp = g && g.pct !== null ? g.pct : null, ap = a.pct;
+      function cr(p, cls, lbl){ return '<span class="fx-cr ' + cls + '">' + ring(p === null ? 0 : p, cls) + '<b>' + (p === null ? '—' : p + '%') + '</b><small>' + lbl + '</small></span>'; }
+      return '<button type="button" class="fx-glass fx-ccard fx-cc2" style="--h:' + hue(c.name) + '" data-fx="course" data-n="' + esc(c.name) + '">' +
+        '<span class="fx-cc-cover"><span class="fx-cc-ic" aria-hidden="true">' + courseIcon(c.name) + '</span>' + healthTag(c.name) + '</span>' +
+        '<span class="fx-cc-body"><b class="fx-cc-n">' + esc(c.name) + '</b><small>' + (c.code ? esc(c.code) + ' · ' : '') + (c.hours ? c.hours + ' ساعات' : 'مادة') + '</small>' +
+        '<span class="fx-cc-stats">' + cr(gp, 'cg', 'العلامة') + cr(ap, 'ca' + (ap !== null && ap < 80 ? ' low' : ''), 'الحضور') + '<span class="fx-cr ct"><b class="fx-cc-tn">' + n + '</b><small>' + (n === 1 ? 'مهمة' : 'مهام') + '</small></span></span>' +
+        (e ? '<span class="fx-tag fx-cc-ex">⏳ ' + esc(e.name || 'امتحان') + ' · ' + when(dayDiff(e.date)) + '</span>' : '') + '</span></button>';
     }
     return '<div class="fx-actions"><button type="button" class="fx-btn" data-fx="call" data-v="addMyCourse">' + ic('plus') + 'مادة جديدة</button></div>' +
       '<div class="fx-tools">' + (W.openUploadHub ? tool('fn', 'رفع ملفات', 'openUploadHub') : '') + (W.openSemesterArchive ? tool('fn', 'أرشيف الفصول', 'openSemesterArchive') : '') + (W.closeSemester ? tool('fn', 'إغلاق الفصل', 'closeSemester', 1) : '') + '</div>' +
-      '<div class="fx-cards">' + (act.length ? act.map(card).join('') : empty('ما في مواد لسا', 'أضف مادتك الأولى أو استورد جدولك')) + '</div>' +
+      '<div class="fx-cards fx-cc2s">' + (act.length ? act.map(card).join('') : empty('ما في مواد لسا', 'أضف مادتك الأولى أو استورد جدولك')) + '</div>' +
       (done.length ? '<details class="fx-glass fx-fold"><summary>مواد مكتملة (' + done.length + ')</summary><div class="fx-cards">' + done.map(card).join('') + '</div></details>' : '');
   }
   function vExams(){
@@ -387,6 +459,7 @@
   function sset(id, title, desc, body){ return body ? '<section class="fx-sset" id="fxS-' + id + '"><header><h2>' + title + '</h2>' + (desc ? '<p>' + desc + '</p>' : '') + '</header><div class="fx-sbody">' + body + '</div></section>' : ''; }
   function sgroup(rows){ rows = rows.filter(Boolean).join(''); return rows ? '<div class="fx-sgroup">' + rows + '</div>' : ''; }
   var SSECS = [['account', 'الحساب والمزامنة', 'cloud'], ['look', 'المظهر', 'sun'], ['notif', 'الإشعارات', 'clock'], ['ai', 'الذكاء الاصطناعي', 'spark'], ['data', 'البيانات والنسخ', 'book'], ['app', 'التطبيق', 'more'], ['adv', 'متقدم', 'gear']];
+  function segRow(lbl, fx, cur0, opts){ return '<div class="fx-sline"><div class="fx-slbl">' + lbl + '</div><div class="fx-seg" role="group" aria-label="' + lbl + '">' + opts.map(function(o){ return '<button type="button" class="' + (cur0 === o[0] ? 'on' : '') + '" data-fx="' + fx + '" data-v="' + o[0] + '" aria-pressed="' + (cur0 === o[0]) + '">' + o[1] + '</button>'; }).join('') + '</div></div>'; }
   function vSettings(){
     var st = {}; try{ st = W.getSyncStatus ? W.getSyncStatus() || {} : {}; }catch(e){}
     var native = d.documentElement.classList.contains('native-app'), fsv = lsGet('ss_font') || 'md', prof = sp().profile || {}, nm1 = (prof.name || 'طالب').trim();
@@ -395,7 +468,9 @@
       '<span class="fx-spill lv-' + esc(st.level || 'ok') + '"><i></i>' + esc(st.text || 'محفوظ على جهازك') + '</span>' + (W.retryCloud && st.level && st.level !== 'ok' ? '<button type="button" class="fx-btn ghost sm" data-fx="sync">أعد المحاولة</button>' : '') + '</div>';
     var body =
       sset('account', 'الحساب والمزامنة', 'بياناتك محفوظة على جهازك، والمزامنة بتربط أجهزتك ببعض.', acct + sgroup([srow('syncCodeBtn', 'cloud', 'رمز المزامنة', 'اربط أجهزتك بنفس البيانات', 210), srow('calSyncBtn', 'timetable', 'ربط التقويم', 'تصدير واستيراد ics لتقويم جوالك', 160)])) +
-      sset('look', 'المظهر', 'الثيم والوضع وحجم الخط — بيتغيّروا فوراً.', '<div class="fx-sgroup fx-spad"><div class="fx-slbl">الثيم</div>' + palHtml() + '<div class="fx-sline"><div class="fx-slbl">الوضع</div>' + modeHtml() + '</div><div class="fx-sline"><div class="fx-slbl">حجم الخط</div><div class="fx-seg" role="group" aria-label="حجم الخط">' + [['sm', 'صغير'], ['md', 'عادي'], ['lg', 'كبير']].map(function(f){ return '<button type="button" class="' + (fsv === f[0] ? 'on' : '') + '" data-fx="font" data-v="' + f[0] + '">' + f[1] + '</button>'; }).join('') + '</div></div></div>') +
+      sset('look', 'المظهر', 'الثيم والوضع وحجم الخط — بيتغيّروا فوراً.', '<div class="fx-sgroup fx-spad"><div class="fx-slbl">الثيم</div>' + palHtml() + '<div class="fx-sline"><div class="fx-slbl">الوضع</div>' + modeHtml() + '</div><div class="fx-sline"><div class="fx-slbl">حجم الخط</div><div class="fx-seg" role="group" aria-label="حجم الخط">' + [['sm', 'صغير'], ['md', 'عادي'], ['lg', 'كبير']].map(function(f){ return '<button type="button" class="' + (fsv === f[0] ? 'on' : '') + '" data-fx="font" data-v="' + f[0] + '">' + f[1] + '</button>'; }).join('') + '</div></div>' +
+        segRow('الأصوات والاهتزاز', 'feel', lsGet('ss_fx_feel') === 'off' ? 'off' : 'on', [['on', 'شغّالة'], ['off', 'مطفية']]) +
+        segRow('خلفية حسب الوقت', 'tod', lsGet('ss_fx_tod') === '0' ? '0' : '1', [['1', 'شغّالة'], ['0', 'ثابتة']]) + '</div>') +
       sset('notif', 'الإشعارات', 'تذكيرات المحاضرات والمهام والامتحانات وساعات الهدوء.', sgroup([srow('notifBtn', 'clock', 'الإشعارات والتذكيرات', '', 35)])) +
       sset('ai', 'الذكاء الاصطناعي', 'مساعد دراسي وقراءة صور بالذكاء الاصطناعي عبر n8n.', aiBox() + (W.N8n && W.N8n.enabled() ? '' : sgroup([srow('ocrLabBtn', 'camera', 'مفتاح Gemini للصور', 'لقراءة الجدول والامتحانات والعلامات من صورة', 265)]))) +
       sset('data', 'البيانات والنسخ', 'نسخة يومية تلقائية على جهازك، وبتقدر تنزّل نسخة بأي وقت.', sgroup([srow('exportBackupBtn', 'book', 'نزّل نسخة احتياطية', 'ملف فيه كل بياناتك', 145), srow('importBackupBtn', 'plus', 'استرجع من ملف', 'ملف JSON من نسخة سابقة', 145), srow('restorePrevBtn', 'clock', 'استرجع نسخة سابقة', 'من النسخ اليومية التلقائية', 145)])) +
@@ -427,17 +502,25 @@
       '</div></div>';
     var cards = '<div class="fx-pl-grid">' + TYPES.map(function(t){ var need = +T[t[0]] || 0, dn = p.byType[t[0]] || 0, cu = p.curByType[t[0]] || 0; if(!need && !dn && !cu) return '';
         var a = need ? Math.min(100, Math.round(dn / need * 100)) : 0, b2 = need ? Math.min(100, Math.round((dn + cu) / need * 100)) : 0, rest = Math.max(0, need - dn - cu);
-        return '<div class="fx-glass fx-pl-card" style="--h:' + (TYPE_HUE[t[0]] || 250) + '"><div class="fx-pl-ch"><b>' + t[1] + '</b><span class="fx-pl-mini" style="--a:' + a + ';--b:' + b2 + '"><i>' + a + '%</i></span></div>' +
+        return '<button type="button" class="fx-glass fx-pl-card" data-fx="tfilter" data-v="' + t[0] + '" title="اعرض مواد «' + t[1] + '» بالشجرة" style="--h:' + (TYPE_HUE[t[0]] || 250) + '"><div class="fx-pl-ch"><b>' + t[1] + '</b><span class="fx-pl-mini" style="--a:' + a + ';--b:' + b2 + '"><i>' + a + '%</i></span></div>' +
           '<div class="fx-pl-nums"><b>' + dn + '</b><small>/ ' + (need || '—') + ' ساعة</small></div>' +
           '<div class="fx-pl-bar"><i style="width:' + a + '%"></i><i class="cur" style="width:' + Math.max(0, b2 - a) + '%"></i></div>' +
-          '<small class="fx-pl-sub">' + (cu ? '+' + cu + ' هالفصل · ' : '') + (rest ? 'باقي ' + rest : 'مكتمل ✓') + '</small></div>'; }).join('') + '</div>';
-    /* مقترحة: بالترتيب من الخطة الموصى فيها، مش منجزة ومش مسجّلة هالفصل */
-    var DB = W.COURSES_DB || {}, doneM = W.getCompletedCourses ? W.getCompletedCourses() : {}, curM = {}; (sp().courses || []).forEach(function(c){ if(c && c.name) curM[c.name] = 1; });
-    var RP = W.RECOMMENDED_PLAN || {}, sug = [];
-    Object.keys(RP).sort(function(a, b){ return +a - +b; }).forEach(function(k){ (RP[k] || []).forEach(function(n){ if(sug.length < 6 && !doneM[n] && !curM[n] && sug.indexOf(n) < 0) sug.push(n); }); });
-    var next = sug.length ? '<div class="fx-glass fx-pl-next"><h3>مواد مقترحة إلك <small>حسب الخطة الموصى فيها</small></h3><div class="fx-pl-sug">' +
-      sug.map(function(n){ var inf = DB[n] || {}; return '<span class="fx-pl-s" style="--h:' + (TYPE_HUE[inf.t] || 250) + '"><i></i><b>' + esc(n) + '</b><small>' + (inf.h || 3) + ' س</small></span>'; }).join('') + '</div></div>' : '';
-    return hero + cards + next +
+          '<small class="fx-pl-sub">' + (cu ? '+' + cu + ' هالفصل · ' : '') + (rest ? 'باقي ' + rest : 'مكتمل ✓') + '</small></button>'; }).join('') + '</div>';
+    /* (177) خطة فصلك الجاي: بتراعي المتطلبات (كانت تقترح «تفاضل 2» وإنت لسا بـ«تفاضل 1») */
+    var doneM = W.getCompletedCourses ? W.getCompletedCourses() || {} : {}, curM = {}; (sp().courses || []).forEach(function(c){ if(c && c.name && !c.completed) curM[c.name] = 1; });
+    var ns = nextSemPlan(doneM, curM);
+    var next = ns.list.length ? '<div class="fx-glass fx-pl-next"><h3>خطة فصلك الجاي <small>' + ns.hours + ' ساعة · متطلباتها خالصة أو بتخلص هالفصل</small></h3><div class="fx-ns">' +
+      ns.list.map(function(c){ return '<button type="button" class="fx-ns-c" style="--h:' + (TYPE_HUE[c.t] || 250) + '" data-fx="tgo" data-v="' + esc(c.n) + '"><i></i><span class="fx-tb"><b>' + esc(c.n) + '</b><small>' +
+        (c.u ? 'بتفتحلك ' + c.u + (c.u === 1 ? ' مادة' : c.u === 2 ? ' مادتين' : ' مواد') : c.req ? 'إجبارية' : 'اختيارية') + '</small></span><em>' + c.h + ' س</em></button>'; }).join('') + '</div>' +
+      (ns.more ? '<small class="fx-note">في كمان ' + ns.more + (ns.more > 10 ? ' مادة متاحة' : ' مواد متاحة') + ' إلك — شوفهم بالشجرة (فلتر «متاحة»).</small>' : '') + '</div>' : '';
+    /* (177) طريقك للتخرج: الفصول الباقية بالتقدير (~16 ساعة بالفصل) */
+    var road = '';
+    if(sems > 0 && sems <= 12){
+      var per = Math.ceil(left / sems), chips = '<span class="fx-rd now"><b>هالفصل</b><small>' + p.current + ' س</small></span>';
+      for(var si = 1; si <= sems; si++) chips += '<i class="fx-rd-l"></i><span class="fx-rd"><b>+' + si + '</b><small>~' + Math.min(per, left - per * (si - 1)) + ' س</small></span>';
+      road = '<div class="fx-glass fx-road"><h3>طريقك للتخرج <small>تقدير بـ~16 ساعة بالفصل</small></h3><div class="fx-rd-row">' + chips + '<i class="fx-rd-l"></i><span class="fx-rd grad"><b>🎓</b><small>تخرّج</small></span></div></div>';
+    }
+    return hero + road + next + cards +
       '<div class="fx-actions"><button type="button" class="fx-btn" data-fx="go" data-v="tree">' + ic('book') + 'شجرة المواد بالتفصيل</button>' + (W.importFromPlan ? '<button type="button" class="fx-btn ghost" data-fx="call" data-v="importFromPlan">استورد مواد من الخطة</button>' : '') + '</div>';
   }
   var LG = [['main', 'الأساسية'], ['library', 'المكتبة والبحث'], ['major', 'التخصص'], ['apps', 'تطبيقات'], ['support', 'دعم وخدمات']];
@@ -448,7 +531,28 @@
   }
 
   /* ---------- شجرة المواد (أصلية) + الخريطة (المحرّك القديم مستضاف داخل الواجهة) ---------- */
-  var treeSel = null;
+  var treeSel = null, treeF = 'all';
+  /* (177) علاقات المواد من COURSES_DB: متطلبات مادة (كل السلسلة) والمواد اللي بتفتحها */
+  function dbOf(){ return W.COURSES_DB || {}; }
+  var REV = null, REVDB = null;   /* خريطة عكسية (مادة ← المواد اللي متطلبها) تنبنى مرة وحدة */
+  function unlocksOf(n){ var DB = dbOf(); if(REVDB !== DB){ REVDB = DB; REV = {}; Object.keys(DB).forEach(function(k){ (DB[k].pre || []).forEach(function(p){ (REV[p] = REV[p] || []).push(k); }); }); } return REV[n] || []; }
+  var UNLC = {};   /* عدد كل اللي بتفتحه المادة (ثابت لأن الخطة ثابتة) */
+  function unlCount(n){ if(UNLC[n] === undefined) UNLC[n] = Object.keys(unlChain(n)).length; return UNLC[n]; }
+  function chain(n, next, out){ out = out || {}; next(n).forEach(function(x){ if(!out[x]){ out[x] = 1; chain(x, next, out); } }); return out; }
+  function preChain(n){ return chain(n, function(x){ return (dbOf()[x] || {}).pre || []; }); }
+  function unlChain(n){ return chain(n, unlocksOf); }
+  /* خطة الفصل الجاي: مواد متطلباتها خالصة (أو بتخلص هالفصل)، الإجباري أول، والأولوية للي بتفتح مواد أكثر ثم الأبكر بالخطة — لحد 15–18 ساعة */
+  function nextSemPlan(done, curN){
+    var DB = dbOf(), ok = {}; Object.keys(done).forEach(function(k){ ok[k] = 1; }); Object.keys(curN).forEach(function(k){ ok[k] = 1; });
+    var REQ = { 'uni-c': 1, 'faculty': 1, 'major-c': 1 }, semOf = {};
+    (W.SEMESTERS || []).forEach(function(s, i){ (s.courses || []).forEach(function(c){ if(semOf[c.n] === undefined) semOf[c.n] = i; }); });
+    var cand = Object.keys(DB).filter(function(n){ var x = DB[n]; return x && x.t !== 'remedial' && !ok[n] && (x.pre || []).every(function(p){ return ok[p]; }); })
+      .map(function(n){ var x = DB[n]; return { n: n, h: +x.h || 3, t: x.t, u: unlCount(n), req: !!REQ[x.t], sem: semOf[n] === undefined ? 99 : semOf[n] }; })
+      .sort(function(a, b){ return (b.req - a.req) || (a.sem - b.sem) || (b.u - a.u); });
+    var out = [], hrs = 0;
+    cand.forEach(function(c){ if(hrs >= 15 || hrs + c.h > 18) return; if(!c.req && out.filter(function(o){ return !o.req; }).length >= 1) return; out.push(c); hrs += c.h; });
+    return { list: out, hours: hrs, more: cand.length - out.length };
+  }
   function cState(n, done, curN){ if(done[n]) return 'done'; if(curN[n]) return 'cur'; try{ return W.prereqsMet && !W.prereqsMet(n, done) ? 'lock' : 'open'; }catch(e){ return 'open'; } }
   function vTree(){
     var S = W.SEMESTERS || [], DB = W.COURSES_DB || {}, done = {}, curN = {};
@@ -458,17 +562,31 @@
     var info = '';
     if(treeSel){ var x = DB[treeSel] || {}, st = cState(treeSel, done, curN), miss = []; try{ miss = W.missingPrereqs ? W.missingPrereqs(treeSel) || [] : []; }catch(e){}
       info = '<div class="fx-glass fx-tinfo st-' + st + '"><h3>' + esc(treeSel) + ' <button type="button" class="fx-link" data-fx="tsel" data-v="">✕</button></h3><small>' + esc(x.code || '') + ' · ' + (x.h || 3) + ' ساعات</small>' + (x.d ? '<p>' + esc(x.d) + '</p>' : '') +
-        ((x.pre || []).length ? '<p><b>المتطلبات:</b> ' + x.pre.map(function(p){ return '<span class="fx-tag' + (done[p] ? ' ok' : '') + '">' + esc(p) + '</span>'; }).join(' ') + '</p>' : '') +
+        (function(){ var u = unlocksOf(treeSel); return u.length ? '<p><b>بتفتحلك:</b> ' + u.map(function(q){ return '<button type="button" class="fx-tag unl" data-fx="tsel" data-v="' + esc(q) + '">' + esc(q) + '</button>'; }).join(' ') + '</p>' : ''; })() + ((x.pre || []).length ? '<p><b>المتطلبات:</b> ' + x.pre.map(function(p){ return '<span class="fx-tag' + (done[p] ? ' ok' : '') + '">' + esc(p) + '</span>'; }).join(' ') + '</p>' : '') +
         (miss.length && st === 'lock' ? '<p class="fx-hint">لازم تخلص قبلها: ' + miss.map(esc).join('، ') + '</p>' : '') +
         '<div class="fx-actions">' + (st === 'done' ? '<button type="button" class="fx-btn ghost" data-fx="tdone" data-v="0">إلغاء «خلّصتها»</button>' : '<button type="button" class="fx-btn" data-fx="tdone" data-v="1">' + ic('tick') + 'خلّصتها</button>') + (curN[treeSel] ? '<button type="button" class="fx-btn ghost" data-fx="course" data-n="' + esc(treeSel) + '">افتح المادة</button>' : '') + '</div></div>'; }
-    var L = { done: 'مكتملة', cur: 'هالفصل', open: 'متاحة', lock: 'مقفلة' };
-    return '<div class="fx-legend fx-tleg">' + Object.keys(L).map(function(k){ return '<span class="st-' + k + '"><i></i>' + L[k] + '</span>'; }).join('') + '</div>' + info +
-      '<div class="fx-tree">' + S.map(function(sem){ var cs = sem.courses || [], dn = cs.filter(function(c){ return done[c.n]; }).length;
+    /* (177) عدّادات/فلاتر + بحث + تضويء علاقات المادة المختارة (متطلباتها بالأزرق، واللي بتفتحه بالبرتقالي) */
+    var all = [], cnt = { done: 0, cur: 0, open: 0, lock: 0 };
+    S.forEach(function(sem){ (sem.courses || []).forEach(function(c){ var st = cState(c.n, done, curN); cnt[st]++; all.push(c.n); }); });
+    var pre = treeSel ? preChain(treeSel) : {}, unl = treeSel ? unlChain(treeSel) : {};
+    var L = [['all', 'الكل', all.length], ['open', 'متاحة', cnt.open], ['cur', 'هالفصل', cnt.cur], ['done', 'مكتملة', cnt.done], ['lock', 'مقفلة', cnt.lock]];
+    var tf = treeF.indexOf('t:') === 0 ? treeF.slice(2) : null, tName = tf ? ((TYPES.filter(function(t){ return t[0] === tf; })[0] || [])[1] || '') : '';
+    var bar = '<div class="fx-tbar"><div class="fx-tfil" role="group" aria-label="فلتر المواد">' + L.map(function(f){ return '<button type="button" class="fx-tf st-' + f[0] + (treeF === f[0] ? ' on' : '') + '" data-fx="tfilt" data-v="' + f[0] + '" aria-pressed="' + (treeF === f[0]) + '"><i></i>' + f[1] + ' <b>' + f[2] + '</b></button>'; }).join('') +
+      (tf ? '<button type="button" class="fx-tf on" data-fx="tfilt" data-v="all">' + esc(tName) + ' ✕</button>' : '') + '</div>' +
+      '<label class="fx-tsearch">' + ic('search') + '<input type="search" id="fxTreeQ" placeholder="دوّر على مادة…" aria-label="بحث بالمواد" autocomplete="off"></label></div>' +
+      (treeSel ? '<div class="fx-tkey"><span class="k-pre"><i></i>متطلباتها</span><span class="k-unl"><i></i>بتفتحها</span></div>' : '');
+    function show(st, n){ if(treeF === 'all') return true; if(tf) return (DB[n] || {}).t === tf; return st === treeF; }
+    return bar + info +
+      '<div class="fx-tree' + (treeSel ? ' has-sel' : '') + '">' + S.map(function(sem){ var cs = sem.courses || [], dn = cs.filter(function(c){ return done[c.n]; }).length;
         var cu = cs.filter(function(c){ return curN[c.n] && !done[c.n]; }).length, sp1 = cs.length ? Math.round(dn / cs.length * 100) : 0, sp2 = cs.length ? Math.round((dn + cu) / cs.length * 100) : 0;
+        var vis = cs.filter(function(c){ return show(cState(c.n, done, curN), c.n); });
+        if(!vis.length && treeF !== 'all') return '';
         return '<div class="fx-glass fx-sem' + (dn === cs.length && cs.length ? ' full' : cu ? ' now' : '') + '"><h3>' + esc(sem.name || '') + '<small>سنة ' + esc(sem.year || '') + ' · ' + dn + '/' + cs.length + '</small></h3>' +
-          '<i class="fx-sem-bar" style="--a:' + sp1 + ';--b:' + sp2 + '"><i></i><i class="cur"></i></i>' + cs.map(function(c){ var st = cState(c.n, done, curN);
-          return '<button type="button" class="fx-tc st-' + st + (treeSel === c.n ? ' sel' : '') + '" data-fx="tsel" data-v="' + esc(c.n) + '"><i>' + (st === 'done' ? '✓' : st === 'lock' ? '🔒' : '') + '</i><span>' + esc(c.n) + '</span><small>' + (c.h || 3) + ' س</small></button>'; }).join('') + '</div>'; }).join('') + '</div>';
+          '<i class="fx-sem-bar" style="--a:' + sp1 + ';--b:' + sp2 + '"><i></i><i class="cur"></i></i>' + vis.map(function(c){ var st = cState(c.n, done, curN), rel = treeSel === c.n ? ' sel' : pre[c.n] ? ' pre' : unl[c.n] ? ' unl' : treeSel ? ' dim' : '';
+          return '<button type="button" class="fx-tc st-' + st + rel + '" style="--th:' + (TYPE_HUE[(DB[c.n] || {}).t] || 250) + '" data-fx="tsel" data-v="' + esc(c.n) + '" data-q="' + esc(normQ(c.n + ' ' + (c.code || ''))) + '"><i>' + (st === 'done' ? '✓' : st === 'lock' ? '🔒' : '') + '</i><span>' + esc(c.n) + '</span><small>' + (c.h || 3) + ' س</small></button>'; }).join('') + '</div>'; }).join('') + '</div>';
   }
+  /* تطبيع للبحث العربي (همزات/ة-ه/ى-ي/تشكيل) */
+  function normQ(x){ return String(x || '').toLowerCase().replace(/[ً-ْ]/g, '').replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي'); }
   function vCampus(){ return '<div class="fx-glass fx-campus" id="fxCampusSlot"></div>'; }
   var campusHome = null;
   function parkCampus(){ var r = d.getElementById('campusRoot'); if(r && campusHome && r.parentNode !== campusHome) campusHome.appendChild(r); }
@@ -683,7 +801,10 @@
       var j = i + (dx > 0 ? 1 : -1); if(j < 0 || j >= NAV.length) return;
       var m = d.getElementById('fxMain'); go(NAV[j]); if(m){ m.classList.remove('sw-l', 'sw-r'); void m.offsetWidth; m.classList.add(dx > 0 ? 'sw-r' : 'sw-l'); }
       try{ if(navigator.vibrate) navigator.vibrate(8); }catch(err){} }, { passive: true });
-    root.addEventListener('input', gpaInput); root.addEventListener('change', gpaInput);
+    root.addEventListener('input', gpaInput);
+    root.addEventListener('input', function(e){ var t = e.target; if(!t || t.id !== 'fxTreeQ') return; var q = normQ(t.value.trim());   /* (177) بحث الشجرة بدون إعادة رسم (عشان ما يضيع المؤشر) */
+      [].forEach.call(root.querySelectorAll('.fx-tc'), function(b){ b.classList.toggle('qhide', !!q && (b.getAttribute('data-q') || '').indexOf(q) < 0); });
+      [].forEach.call(root.querySelectorAll('.fx-sem'), function(sm){ sm.classList.toggle('qhide', !!q && !sm.querySelector('.fx-tc:not(.qhide)')); }); }); root.addEventListener('change', gpaInput);
     applyLook();
     if(W.matchMedia) try{ W.matchMedia('(prefers-color-scheme: light)').addEventListener('change', applyLook); }catch(e){}
   }
@@ -705,7 +826,7 @@
     render._h = html; render._v = cur;
     parkCampus();
     main.innerHTML = html;
-    if(cur === 'timetable'){ var oc = main.querySelector('.fx-chip.on'); if(oc && oc.scrollIntoView) try{ oc.scrollIntoView({ inline: 'center', block: 'nearest' }); }catch(e){} }
+    if(cur === 'timetable'){ var oc = main.querySelector('.fx-chip.on'); if(oc && oc.scrollIntoView) requestAnimationFrame(function(){ try{ if(oc.isConnected) oc.scrollIntoView({ inline: 'center', block: 'nearest' }); }catch(e){} }); }   /* (175) بعد الرسم: كان يجبر قياس الصفحة وهي بتنبني */
     if(cur === 'campus') mountCampus();
     var spf = main.querySelector('.fx-sp'); if(spf) spf.addEventListener('toggle', function(){ lsSet('ss_fx_sp', spf.open ? '1' : '0'); });
     if(cur === 'budget' && W.BudgetPlan){ var bf = main.querySelector('.fx-bp'), bpr = function(){ try{ W.BudgetPlan.render(); }catch(e){} };   /* تخطيط الميزانية ثقيل: بيتبنى بس لما يكون مفتوح */
@@ -721,7 +842,10 @@
   }
   function soon(){ clearTimeout(timer); timer = setTimeout(function(){ render(false); }, 60); }
   var OLD = { today: 'dashboard', grades: 'gradecalc', tree: 'plan', more: 'dashboard', settings: 'dashboard' };
-  function go(v, fromPop){ var nv = VIEWS[v] ? v : 'today', same = nv === cur; cur = nv; lsSet('ss_fx_view', cur);
+  var ORD = ['today', 'timetable', 'tasks', 'grades', 'more', 'courses', 'exams', 'attendance', 'budget', 'timer', 'plan', 'tree', 'gpa', 'prayer', 'stats', 'campus', 'hulinks', 'settings'];
+  function go(v, fromPop){ var nv = VIEWS[v] ? v : 'today', same = nv === cur, pv = cur; cur = nv; lsSet('ss_fx_view', cur);
+    /* (175) اتجاه دخول الصفحة: للأمام (يسار بالعربي) أو للخلف — CSS بـ14-home.css */
+    var mm0 = d.getElementById('fxMain'); if(mm0 && !same){ var o0 = ORD.indexOf(pv), n0 = ORD.indexOf(nv); mm0.setAttribute('data-pdir', fromPop || (o0 > -1 && n0 > -1 && n0 < o0) ? 'back' : 'fwd'); }
     if(!fromPop && !same) try{ var t = OLD[cur] || cur; history.pushState({ tab: d.getElementById(t) ? t : 'dashboard', fx: cur }, '', '#' + cur); }catch(e){}
     var m = d.getElementById('fxMain'), red = W.matchMedia && W.matchMedia('(prefers-reduced-motion: reduce)').matches;
     /* انتقال الصفحات (View Transitions): القديمة بتتلاشى والجديدة بتنزلق من اتجاه التنقل، والشريط الجانبي ثابت ومؤشره بيتحرّك */
@@ -768,10 +892,16 @@
     else if(a === 'ttmenu') ttMenu(b);
     else if(a === 'addclass'){ if(W.openSmartTimetable) W.openSmartTimetable(); }
     else if(a === 'askai'){ askAI(v || ''); }
+    else if(a === 'feel'){ lsSet('ss_fx_feel', v === 'off' ? 'off' : 'on'); if(v !== 'off' && W.Delight) W.Delight.tick(); render(false); }
+    else if(a === 'tod'){ lsSet('ss_fx_tod', v === '0' ? '0' : '1'); if(W.Delight) W.Delight.tod(); render(false); }
+    else if(a === 'weekplan'){ if(W.WeekPlan) W.WeekPlan.open(); }
     else if(a === 'study'){ if(b.getAttribute('data-c')) lsSet('ss_dp_focus', JSON.stringify({ d: today(), k: b.getAttribute('data-k') || '', c: b.getAttribute('data-c') })); openStudy(); }
     else if(a === 'cmd') openCmd();
     else if(a === 'course'){ var c = (sp().courses || []).filter(function(x){ return x.name === b.getAttribute('data-n'); })[0]; if(c && W.Hub && W.Hub.openCourse) W.Hub.openCourse(c.id, b.getAttribute('data-sec') || undefined); }
     else if(a === 'call'){ var id = b.getAttribute('data-id'); if(/^(addMyCourse|addExam|editExam|deleteExam|openExamPlan|addBudgetItem|editBudget|deleteBudget|openTimerSettings|downloadBackup|restorePreviousBackup|exportCalendar|exportPDF|importFromPlan)$/.test(v) && typeof W[v] === 'function') W[v](id || undefined); }
+    else if(a === 'tgo'){ treeSel = v || null; treeF = 'all'; go('tree'); }
+    else if(a === 'tfilter'){ treeSel = null; treeF = v ? 't:' + v : 'all'; go('tree'); }
+    else if(a === 'tfilt'){ treeF = v || 'all'; render(false); }
     else if(a === 'tsel'){ treeSel = v || null; render(false); if(treeSel){ var ti = d.querySelector('.fx-tinfo'); if(ti && ti.scrollIntoView) ti.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } }
     else if(a === 'tdone'){ if(treeSel){ if(v === '1' && W.askCourseCompleted) W.askCourseCompleted(treeSel); else if(v === '1' && W.markCourseCompleted) W.markCourseCompleted(treeSel); else if(v === '0' && W.unmarkCourseCompleted) W.unmarkCourseCompleted(treeSel); } soon(); }
     else if(a === 'fn'){ if(/^(printTimetable|clearTimetable|openUploadHub|openSemesterArchive|closeSemester|clearBudget)$/.test(v) && typeof W[v] === 'function'){ W[v](); soon(); } }
@@ -886,5 +1016,5 @@
   W.addEventListener('load', function(){ retireOld(); setTimeout(retireOld, 1500); });
   if(d.readyState === 'loading') d.addEventListener('DOMContentLoaded', function(){ setTimeout(init, 0); }); else setTimeout(init, 0);
   setTimeout(retireOld, 0);
-  W.FocusUI = { look: function(){ applyLook(); render(false); }, view: function(){ return cur; }, soon: function(){ soon(); }, render: render, go: go, classic: classic, back: back, study: openStudy, cmd: openCmd };
+  W.FocusUI = { dayData: dayData, look: function(){ applyLook(); render(false); }, view: function(){ return cur; }, soon: function(){ soon(); }, render: render, go: go, classic: classic, back: back, study: openStudy, cmd: openCmd };
 })();
